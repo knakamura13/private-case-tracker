@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { optionalDateLoose, priorityEnum, stringOrEmpty } from './common';
+import { optionalDateLoose, optionalId, priorityEnum, stringOrEmpty } from './common';
 
 export const questionStatusEnum = z.enum(['OPEN', 'RESEARCHING', 'ANSWERED', 'WONT_FIX']);
 export const questionSourceEnum = z.enum([
@@ -25,9 +25,9 @@ export const questionCreateSchema = z.object({
 		.or(z.literal(''))
 		.transform((v) => (v && v.length ? v : null)),
 	answeredAt: optionalDateLoose,
-	relatedTaskId: z.string().nullish(),
-	relatedFormId: z.string().nullish(),
-	relatedEvidenceId: z.string().nullish()
+	relatedTaskId: optionalId,
+	relatedFormId: optionalId,
+	relatedEvidenceId: optionalId
 });
 
 export const questionUpdateSchema = questionCreateSchema.partial();

@@ -1,12 +1,13 @@
 import { z } from 'zod';
+import { optionalId } from './common';
 
 export const noteCreateSchema = z.object({
 	title: z.string().min(1).max(200),
 	bodyMd: z.string().max(50_000).default(''),
-	linkedTaskId: z.string().nullish(),
-	linkedFormId: z.string().nullish(),
-	linkedEvidenceId: z.string().nullish(),
-	linkedAppointmentId: z.string().nullish()
+	linkedTaskId: optionalId,
+	linkedFormId: optionalId,
+	linkedEvidenceId: optionalId,
+	linkedAppointmentId: optionalId
 });
 
 export const noteUpdateSchema = noteCreateSchema.partial();
