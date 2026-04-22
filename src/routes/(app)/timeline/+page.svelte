@@ -1,0 +1,104 @@
+<script lang="ts">
+	import PageHeader from '$lib/components/shared/PageHeader.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import Badge from '$lib/components/ui/Badge.svelte';
+	import Card from '$lib/components/ui/Card.svelte';
+	import { Plus, GitBranchPlus } from 'lucide-svelte';
+	import { fmtDate } from '$lib/utils/dates';
+	import { PHASE_ORDER, PHASE_LABELS, PHASE_DESCRIPTIONS } from '$lib/constants/phases';
+	import { titleCase } from '$lib/utils/format';
+	import type { PageData } from './$types';
+	let { data }: { data: PageData } = $props();
+
+	const grouped = $derived(
+		PHASE_ORDER.map((p) => ({
+			phase: p,
+			items: data.milestones.filter((m) => m.phase === p)
+		}))
+	);
+
+	function phaseProgress(items: { status: string }[]) {
+		if (items.length === 0) return 0;
+		const done = items.filter((i) => i.status === 'DONE' || i.status === 'SKIPPED').length;
+		return Math.round((done / items.length) * 100);
+	}
+
+	function statusVariant(s: string) {
+		if (s === 'DONE') return 'success';
+		if (s === 'IN_PROGRESS') return 'warning';
+		if (s === 'BLOCKED') return 'destructive';
+		if (s === 'SKIPPED') return 'secondary';
+		return 'outline';
+	}
+</script>
+
+<PageHeader title="Timeline" description="Case phases from preparation through final outcome.">
+	{#snippet actions()}
+		<Button href="/timeline/new">
+			{#snippet children()}<Plus class="h-4 w-4" /> New milestone{/snippet}
+		</Button>
+	{/snippet}
+</PageHeader>
+
+<Card class="mb-6 p-4">
+	<p class="text-xs uppercase text-muted-foreground">Current phase</p>
+	<p class="text-lg font-semibold">{PHASE_LABELS[data.phase]}</p>
+	<p class="text-sm text-muted-foreground">{PHASE_DESCRIPTIONS[data.phase]}</p>
+</Card>
+
+<div class="space-y-6">
+	{#each grouped as g (g.phase)}
+		<section>
+			<div class="mb-2 flex items-center justify-between">
+				<div>
+					<h2 class="text-base font-semibold">{PHASE_LABELS[g.phase]}</h2>
+					<p class="text-xs text-muted-foreground">{PHASE_DESCRIPTIONS[g.phase]}</p>
+				</div>
+				{#if g.items.length > 0}
+					<span class="text-xs text-muted-foreground">{phaseProgress(g.items)}% complete</span>
+				{/if}
+			</div>
+			{#if g.items.length === 0}
+				<Card class="p-4 text-sm text-muted-foreground">
+					<div class="flex items-center justify-between">
+						<span>No milestones in this phase yet.</span>
+						<Button variant="ghost" size="sm" href={`/timeline/new?phase=${g.phase}`}>Add one</Button>
+					</div>
+				</Card>
+			{:else}
+				<ol class="space-y-2">
+					{#each g.items as m (m.id)}
+						<li>
+							<a href={`/timeline/${m.id}`}>
+								<Card id={m.id} class="flex items-start gap-4 p-4 hover:border-primary/40">
+									<div class="mt-1 h-3 w-3 flex-shrink-0 rounded-full border-2 {m.status === 'DONE' ? 'bg-success border-success' : 'border-border bg-card'}"></div>
+									<div class="min-w-0 flex-1">
+										<div class="flex items-center gap-2">
+											<p class="truncate font-medium">{m.title}</p>
+											<Badge variant={statusVariant(m.status)}>{titleCase(m.status)}</Badge>
+											<Badge variant="outline">{titleCase(m.priority)}</Badge>
+										</div>
+										{#if m.description}<p class="mt-1 text-sm text-muted-foreground">{m.description}</p>{/if}
+										<div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+											{#if m.dueDate}<span>Due {fmtDate(m.dueDate)}</span>{/if}
+											{#if m.owner}<span>· {m.owner.name ?? m.owner.email}</span>{/if}
+										</div>
+									</div>
+								</Card>
+							</a>
+						</li>
+					{/each}
+				</ol>
+			{/if}
+		</section>
+	{/each}
+</div>
+
+{#if data.milestones.length === 0}
+	<div class="mt-6 flex justify-center">
+		<div class="text-center">
+			<GitBranchPlus class="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
+			<p class="text-sm text-muted-foreground">Start by adding a first milestone to a phase above.</p>
+		</div>
+	</div>
+{/if}

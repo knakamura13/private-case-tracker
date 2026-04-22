@@ -1,0 +1,27 @@
+import { z } from 'zod';
+
+export const cuidLike = z.string().min(1).max(64);
+
+export const optionalDate = z
+	.union([z.string().datetime(), z.string().length(0), z.null(), z.undefined()])
+	.transform((v) => (v && v.length ? new Date(v) : null));
+
+export const optionalDateLoose = z
+	.string()
+	.optional()
+	.transform((v) => (v && v.length ? new Date(v) : null));
+
+export const priorityEnum = z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']);
+
+export function stringOrEmpty(max = 2000) {
+	return z
+		.string()
+		.max(max)
+		.optional()
+		.transform((v) => (v === undefined || v === '' ? null : v));
+}
+
+export const tagIdList = z
+	.array(z.string())
+	.default([])
+	.or(z.string().optional().transform((v) => (v ? v.split(',').filter(Boolean) : [])));

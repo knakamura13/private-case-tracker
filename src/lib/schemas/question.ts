@@ -1,0 +1,36 @@
+import { z } from 'zod';
+import { optionalDateLoose, priorityEnum, stringOrEmpty } from './common';
+
+export const questionStatusEnum = z.enum(['OPEN', 'RESEARCHING', 'ANSWERED', 'WONT_FIX']);
+export const questionSourceEnum = z.enum([
+	'ATTORNEY',
+	'NONPROFIT',
+	'USCIS_SITE',
+	'COUNTY_SITE',
+	'COMMUNITY',
+	'OTHER'
+]);
+
+export const questionCreateSchema = z.object({
+	question: z.string().min(1).max(500),
+	category: stringOrEmpty(80),
+	priority: priorityEnum.default('MEDIUM'),
+	status: questionStatusEnum.default('OPEN'),
+	answer: stringOrEmpty(10000),
+	sourceType: questionSourceEnum.default('OTHER'),
+	citationUrl: z
+		.string()
+		.url()
+		.optional()
+		.or(z.literal(''))
+		.transform((v) => (v && v.length ? v : null)),
+	answeredAt: optionalDateLoose,
+	relatedTaskId: z.string().nullish(),
+	relatedFormId: z.string().nullish(),
+	relatedEvidenceId: z.string().nullish()
+});
+
+export const questionUpdateSchema = questionCreateSchema.partial();
+
+export type QuestionCreate = z.infer<typeof questionCreateSchema>;
+export type QuestionUpdate = z.infer<typeof questionUpdateSchema>;
