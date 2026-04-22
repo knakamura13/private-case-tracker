@@ -38,7 +38,7 @@ export const auth = betterAuth({
 		passkey({
 			rpID: new URL(ENV.BETTER_AUTH_URL).hostname,
 			rpName: ENV.PUBLIC_APP_NAME,
-			origin: ENV.BETTER_AUTH_URL
+			origin: new URL(ENV.BETTER_AUTH_URL).origin
 		}),
 		twoFactor({
 			issuer: ENV.PUBLIC_APP_NAME,
