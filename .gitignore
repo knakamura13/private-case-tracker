@@ -1,0 +1,14 @@
+node_modules/
+.DS_Store
+.svelte-kit/
+build/
+dist/
+.env
+.env.*
+!.env.example
+playwright-report/
+test-results/
+coverage/
+*.log
+.idea/
+.vscode/

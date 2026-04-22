@@ -1,0 +1,709 @@
+// Private Case Tracker — Prisma schema
+// Single-workspace, two-user scoped. All domain rows carry workspaceId.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==============================
+// Auth (Better Auth managed)
+// ==============================
+
+model User {
+  id            String    @id
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  name          String?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions      Session[]
+  accounts      Account[]
+  passkeys      Passkey[]
+  twoFactor     TwoFactor?
+  memberships   Membership[]
+  invitations   Invitation[]   @relation("Inviter")
+  ownedWorkspaces Workspace[]  @relation("WorkspaceOwner")
+  activity      ActivityLog[]
+  notes         Note[]
+  tasks         Task[]         @relation("TaskOwner")
+  milestones    TimelineMilestone[] @relation("MilestoneOwner")
+  documents     DocumentFile[] @relation("DocumentUploader")
+}
+
+model Session {
+  id        String   @id
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  idToken               String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@unique([providerId, accountId])
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+model Passkey {
+  id           String   @id
+  name         String?
+  publicKey    String
+  userId       String
+  credentialID String   @unique
+  counter      Int
+  deviceType   String
+  backedUp     Boolean
+  transports   String?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model TwoFactor {
+  id           String  @id @default(cuid())
+  userId       String  @unique
+  secret       String
+  backupCodes  String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ==============================
+// Workspace + membership
+// ==============================
+
+enum MemberRole {
+  OWNER
+  COLLABORATOR
+}
+
+model Workspace {
+  id        String   @id @default(cuid())
+  name      String
+  ownerId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner       User          @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  memberships Membership[]
+  invitations Invitation[]
+  tasks       Task[]
+  forms       FormRecord[]
+  evidence    EvidenceItem[]
+  documents   DocumentFile[]
+  appointments Appointment[]
+  questions   QuestionItem[]
+  notes       Note[]
+  milestones  TimelineMilestone[]
+  tags        Tag[]
+  activity    ActivityLog[]
+}
+
+model Membership {
+  id          String     @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        MemberRole @default(COLLABORATOR)
+  acceptedAt  DateTime?
+  createdAt   DateTime   @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+}
+
+model Invitation {
+  id              String    @id @default(cuid())
+  workspaceId     String
+  email           String
+  token           String    @unique
+  role            MemberRole @default(COLLABORATOR)
+  expiresAt       DateTime
+  invitedByUserId String
+  acceptedAt      DateTime?
+  createdAt       DateTime  @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy User      @relation("Inviter", fields: [invitedByUserId], references: [id])
+
+  @@index([workspaceId])
+  @@index([email])
+}
+
+// ==============================
+// Tagging
+// ==============================
+
+enum TagScope {
+  TASK
+  EVIDENCE
+  NOTE
+  DOCUMENT
+  QUESTION
+}
+
+model Tag {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  color       String   @default("slate")
+  scope       TagScope
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  tasks     TaskTag[]
+  evidence  EvidenceTag[]
+  notes     NoteTag[]
+
+  @@unique([workspaceId, scope, name])
+}
+
+// ==============================
+// Timeline / milestones
+// ==============================
+
+enum MilestonePhase {
+  PREPARATION
+  RELATIONSHIP_EVIDENCE
+  MARRIAGE_LICENSE
+  PACKET_DRAFTING
+  FILING
+  RECEIPT_NOTICES
+  BIOMETRICS
+  INTERVIEW_PREP
+  POST_INTERVIEW
+  OUTCOME
+}
+
+enum MilestoneStatus {
+  PLANNED
+  IN_PROGRESS
+  DONE
+  BLOCKED
+  SKIPPED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model TimelineMilestone {
+  id          String          @id @default(cuid())
+  workspaceId String
+  phase       MilestonePhase
+  title       String
+  description String?
+  dueDate     DateTime?
+  status      MilestoneStatus @default(PLANNED)
+  ownerId     String?
+  priority    Priority        @default(MEDIUM)
+  order       Int             @default(0)
+  notes       String?
+  completedAt DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  deletedAt   DateTime?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  owner     User?     @relation("MilestoneOwner", fields: [ownerId], references: [id])
+  tasks     Task[]
+
+  @@index([workspaceId, phase])
+  @@index([workspaceId, dueDate])
+  @@index([workspaceId, status])
+}
+
+// ==============================
+// Tasks
+// ==============================
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  DONE
+  ARCHIVED
+}
+
+model Task {
+  id                  String     @id @default(cuid())
+  workspaceId         String
+  title               String
+  description         String?
+  dueDate             DateTime?
+  priority            Priority   @default(MEDIUM)
+  status              TaskStatus @default(TODO)
+  ownerId             String?
+  linkedFormId        String?
+  linkedEvidenceId    String?
+  linkedAppointmentId String?
+  linkedMilestoneId   String?
+  order               Int        @default(0)
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  deletedAt           DateTime?
+
+  workspace   Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  owner       User?               @relation("TaskOwner", fields: [ownerId], references: [id])
+  form        FormRecord?         @relation(fields: [linkedFormId], references: [id])
+  evidence    EvidenceItem?       @relation(fields: [linkedEvidenceId], references: [id])
+  appointment Appointment?        @relation(fields: [linkedAppointmentId], references: [id])
+  milestone   TimelineMilestone?  @relation(fields: [linkedMilestoneId], references: [id])
+  checklist   TaskChecklistItem[]
+  tags        TaskTag[]
+  attachments TaskAttachment[]
+  inlineDocs  DocumentFile[]      @relation("InlineTaskDoc")
+  linkedNotes Note[]
+
+  @@index([workspaceId, status])
+  @@index([workspaceId, dueDate])
+  @@index([workspaceId, ownerId])
+}
+
+model TaskChecklistItem {
+  id     String  @id @default(cuid())
+  taskId String
+  text   String
+  done   Boolean @default(false)
+  order  Int     @default(0)
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+}
+
+model TaskTag {
+  taskId String
+  tagId  String
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, tagId])
+}
+
+model TaskAttachment {
+  id     String  @id @default(cuid())
+  taskId String
+  label  String
+  url    String?
+  fileId String?
+
+  task Task          @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  file DocumentFile? @relation(fields: [fileId], references: [id])
+
+  @@index([taskId])
+}
+
+// ==============================
+// Forms / packet
+// ==============================
+
+enum FormFilingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  READY_FOR_REVIEW
+  FILED
+  RECEIVED
+  REPLACED
+  NOT_NEEDED
+}
+
+model FormRecord {
+  id                      String            @id @default(cuid())
+  workspaceId             String
+  name                    String
+  code                    String
+  purpose                 String?
+  filingStatus            FormFilingStatus  @default(NOT_STARTED)
+  plannedFilingDate       DateTime?
+  actualFilingDate        DateTime?
+  receiptNumberEncrypted  String?
+  notes                   String?
+  lastUpdatedByUserId     String?
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+  deletedAt               DateTime?
+
+  workspace       Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  supportingItems FormSupportingItem[]
+  tasks           Task[]
+  questions       QuestionItem[]
+  linkedNotes     Note[]
+  documents       DocumentFile[]
+
+  @@index([workspaceId, filingStatus])
+  @@index([workspaceId, plannedFilingDate])
+}
+
+model FormSupportingItem {
+  id                    String   @id @default(cuid())
+  formId                String
+  label                 String
+  required              Boolean  @default(true)
+  satisfiedByEvidenceId String?
+  satisfiedByFileId     String?
+  done                  Boolean  @default(false)
+  order                 Int      @default(0)
+
+  form     FormRecord    @relation(fields: [formId], references: [id], onDelete: Cascade)
+  evidence EvidenceItem? @relation(fields: [satisfiedByEvidenceId], references: [id])
+  file     DocumentFile? @relation(fields: [satisfiedByFileId], references: [id])
+
+  @@index([formId])
+}
+
+// ==============================
+// Evidence
+// ==============================
+
+enum EvidenceStatus {
+  COLLECTED
+  NEEDS_SCAN
+  NEEDS_TRANSLATION
+  NEEDS_BETTER_COPY
+  READY
+}
+
+model EvidenceItem {
+  id               String         @id @default(cuid())
+  workspaceId      String
+  title            String
+  type             String
+  dateStart        DateTime?
+  dateEnd          DateTime?
+  peopleInvolved   String[]
+  description      String?
+  significance     String?
+  status           EvidenceStatus @default(COLLECTED)
+  confidenceScore  Int            @default(3)
+  includedInPacket Boolean        @default(false)
+  notes            String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  deletedAt        DateTime?
+
+  workspace      Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  files          EvidenceFile[]
+  tasks          Task[]
+  supportingFor  FormSupportingItem[]
+  tags           EvidenceTag[]
+  questions      QuestionItem[]
+  linkedNotes    Note[]
+  inlineDocs     DocumentFile[]       @relation("InlineEvidenceDoc")
+
+  @@index([workspaceId, type])
+  @@index([workspaceId, status])
+}
+
+model EvidenceFile {
+  evidenceId String
+  fileId     String
+
+  evidence EvidenceItem @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+  file     DocumentFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@id([evidenceId, fileId])
+}
+
+model EvidenceTag {
+  evidenceId String
+  tagId      String
+
+  evidence EvidenceItem @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+  tag      Tag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([evidenceId, tagId])
+}
+
+// ==============================
+// Documents / file vault
+// ==============================
+
+enum FileStorageMode {
+  UPLOADED
+  EXTERNAL_LINK
+}
+
+enum FileStatus {
+  PENDING
+  READY
+  FAILED
+}
+
+model DocumentFile {
+  id                  String          @id @default(cuid())
+  workspaceId         String
+  title               String
+  category            String
+  storageMode         FileStorageMode @default(UPLOADED)
+  status              FileStatus      @default(READY)
+  mimeType            String?
+  sizeBytes           Int?
+  storageKey          String?
+  externalUrl         String?
+  uploadedByUserId    String?
+  versionOfId         String?
+  linkedTaskId        String?
+  linkedFormId        String?
+  linkedEvidenceId    String?
+  linkedAppointmentId String?
+  notes               String?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  deletedAt           DateTime?
+
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  uploadedBy  User?        @relation("DocumentUploader", fields: [uploadedByUserId], references: [id])
+  form        FormRecord?  @relation(fields: [linkedFormId], references: [id])
+  evidence    EvidenceItem? @relation("InlineEvidenceDoc", fields: [linkedEvidenceId], references: [id])
+  appointment Appointment? @relation("InlineApptDoc", fields: [linkedAppointmentId], references: [id])
+  task        Task?        @relation("InlineTaskDoc", fields: [linkedTaskId], references: [id])
+  versionOf   DocumentFile? @relation("FileVersion", fields: [versionOfId], references: [id])
+  versions    DocumentFile[] @relation("FileVersion")
+  evidenceJoins EvidenceFile[]
+  formSupports FormSupportingItem[]
+  taskAttachments TaskAttachment[]
+
+  @@index([workspaceId, category])
+  @@index([workspaceId, createdAt])
+}
+
+// ==============================
+// Appointments
+// ==============================
+
+enum AppointmentType {
+  CIVIL_MARRIAGE
+  BIOMETRICS
+  ATTORNEY_CONSULT
+  MEDICAL_EXAM
+  INTERVIEW
+  TRANSLATION_OR_NOTARY
+  DOCUMENT_PICKUP
+  OTHER
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  COMPLETED
+  CANCELED
+  RESCHEDULED
+  MISSED
+}
+
+model Appointment {
+  id                  String            @id @default(cuid())
+  workspaceId         String
+  title               String
+  type                AppointmentType
+  scheduledAt         DateTime
+  durationMin         Int?
+  location            String?
+  confirmationDetails String?
+  attendees           String[]
+  status              AppointmentStatus @default(SCHEDULED)
+  notes               String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  deletedAt           DateTime?
+
+  workspace   Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+  documents   DocumentFile[] @relation("InlineApptDoc")
+  linkedNotes Note[]
+
+  @@index([workspaceId, scheduledAt])
+  @@index([workspaceId, status])
+}
+
+// ==============================
+// Questions / research
+// ==============================
+
+enum QuestionStatus {
+  OPEN
+  RESEARCHING
+  ANSWERED
+  WONT_FIX
+}
+
+enum QuestionSourceType {
+  ATTORNEY
+  NONPROFIT
+  USCIS_SITE
+  COUNTY_SITE
+  COMMUNITY
+  OTHER
+}
+
+model QuestionItem {
+  id               String             @id @default(cuid())
+  workspaceId      String
+  question         String
+  category         String?
+  priority         Priority           @default(MEDIUM)
+  status           QuestionStatus     @default(OPEN)
+  answer           String?
+  sourceType       QuestionSourceType @default(OTHER)
+  citationUrl      String?
+  answeredAt       DateTime?
+  relatedTaskId    String?
+  relatedFormId    String?
+  relatedEvidenceId String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  deletedAt        DateTime?
+
+  workspace       Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  relatedForm     FormRecord?   @relation(fields: [relatedFormId], references: [id])
+  relatedEvidence EvidenceItem? @relation(fields: [relatedEvidenceId], references: [id])
+
+  @@index([workspaceId, status])
+  @@index([workspaceId, priority])
+}
+
+// ==============================
+// Notes
+// ==============================
+
+model Note {
+  id                  String    @id @default(cuid())
+  workspaceId         String
+  title               String
+  bodyMd              String
+  authorId            String
+  linkedTaskId        String?
+  linkedFormId        String?
+  linkedEvidenceId    String?
+  linkedAppointmentId String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  deletedAt           DateTime?
+
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  author      User          @relation(fields: [authorId], references: [id])
+  task        Task?         @relation(fields: [linkedTaskId], references: [id])
+  form        FormRecord?   @relation(fields: [linkedFormId], references: [id])
+  evidence    EvidenceItem? @relation(fields: [linkedEvidenceId], references: [id])
+  appointment Appointment?  @relation(fields: [linkedAppointmentId], references: [id])
+  tags        NoteTag[]
+
+  @@index([workspaceId, createdAt])
+}
+
+model NoteTag {
+  noteId String
+  tagId  String
+
+  note Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([noteId, tagId])
+}
+
+// ==============================
+// Activity log
+// ==============================
+
+enum ActivityAction {
+  LOGIN
+  LOGOUT
+  USER_INVITED
+  INVITATION_ACCEPTED
+  WORKSPACE_UPDATED
+  TASK_CREATED
+  TASK_UPDATED
+  TASK_DELETED
+  STATUS_CHANGE
+  FORM_CREATED
+  FORM_UPDATED
+  FORM_DELETED
+  EVIDENCE_CREATED
+  EVIDENCE_UPDATED
+  EVIDENCE_DELETED
+  FILE_UPLOAD
+  FILE_DELETE
+  FILE_LINK_ADDED
+  APPOINTMENT_CREATED
+  APPOINTMENT_UPDATED
+  APPOINTMENT_DELETED
+  QUESTION_CREATED
+  QUESTION_UPDATED
+  QUESTION_DELETED
+  NOTE_CREATED
+  NOTE_EDIT
+  NOTE_DELETED
+  MILESTONE_CREATED
+  MILESTONE_UPDATED
+  MILESTONE_DELETED
+  DEMO_DATA_REMOVED
+}
+
+model ActivityLog {
+  id          String         @id @default(cuid())
+  workspaceId String
+  userId      String?
+  action      ActivityAction
+  entityType  String
+  entityId    String
+  summary     String
+  ipHash      String?
+  createdAt   DateTime       @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User?     @relation(fields: [userId], references: [id])
+
+  @@index([workspaceId, createdAt(sort: Desc)])
+  @@index([workspaceId, entityType, entityId])
+}
