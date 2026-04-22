@@ -3,6 +3,7 @@ import type { MemberRole } from '@prisma/client';
 declare global {
 	namespace App {
 		interface Locals {
+			requestId: string;
 			user: {
 				id: string;
 				email: string;
@@ -25,6 +26,9 @@ declare global {
 		}
 		interface Error {
 			message: string;
+			errorId?: string;
+			requestId?: string;
+			stack?: string;
 			code?: string;
 		}
 	}

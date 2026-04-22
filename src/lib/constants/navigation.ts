@@ -8,7 +8,8 @@ import {
 	CalendarDays,
 	HelpCircle,
 	NotebookPen,
-	Settings as SettingsIcon
+	Settings as SettingsIcon,
+	Wrench
 } from 'lucide-svelte';
 
 export interface NavItem {
@@ -16,6 +17,7 @@ export interface NavItem {
 	label: string;
 	icon: typeof LayoutDashboard;
 	description?: string;
+	ownerOnly?: boolean;
 }
 
 export const navigation: NavItem[] = [
@@ -28,6 +30,7 @@ export const navigation: NavItem[] = [
 	{ href: '/appointments', label: 'Appointments', icon: CalendarDays },
 	{ href: '/questions', label: 'Questions', icon: HelpCircle, description: 'Research tracker' },
 	{ href: '/notes', label: 'Notes', icon: NotebookPen },
+	{ href: '/dev', label: 'Dev', icon: Wrench, ownerOnly: true },
 	{ href: '/settings', label: 'Settings', icon: SettingsIcon }
 ];
 

@@ -4,6 +4,7 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import Label from '$lib/components/ui/Label.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
 
 	interface Option {
 		id: string;
@@ -18,7 +19,8 @@
 		milestones,
 		members,
 		submitLabel = 'Save',
-		error
+		error,
+		errorId
 	}: {
 		initial?: Record<string, unknown>;
 		forms: Option[];
@@ -28,6 +30,7 @@
 		members: { id: string; name: string | null; email: string }[];
 		submitLabel?: string;
 		error?: string | null;
+		errorId?: string | null;
 	} = $props();
 
 	function val(name: string, fallback = '') {
@@ -108,7 +111,9 @@
 		</Select>
 	</div>
 	{#if error}
-		<p class="md:col-span-2 text-sm text-destructive">{error}</p>
+		<div class="md:col-span-2">
+			<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />
+		</div>
 	{/if}
 	<div class="md:col-span-2 flex gap-2">
 		<Button type="submit">{submitLabel}</Button>
