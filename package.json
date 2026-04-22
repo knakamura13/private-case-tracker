@@ -29,6 +29,7 @@
     "@aws-sdk/s3-request-presigner": "^3.700.0",
     "@better-auth/passkey": "^1.6.6",
     "@node-rs/argon2": "^2.0.2",
+    "@opentelemetry/api": "^1.9.0",
     "@prisma/client": "^5.22.0",
     "better-auth": "^1.1.14",
     "date-fns": "^4.1.0",
