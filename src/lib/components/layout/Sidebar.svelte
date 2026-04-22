@@ -4,6 +4,8 @@
 	import { cn } from '$lib/utils/cn';
 	import { ShieldCheck } from 'lucide-svelte';
 
+	const isOwner = $page.data.workspace?.role === 'OWNER';
+
 	let { workspaceName, onNavigate }: { workspaceName: string; onNavigate?: () => void } = $props();
 </script>
 
@@ -17,7 +19,7 @@
 	</div>
 	<nav class="flex-1 overflow-y-auto p-2" aria-label="Primary">
 		<ul class="space-y-1">
-			{#each navigation as item (item.href)}
+			{#each navigation.filter((i) => !i.ownerOnly || isOwner) as item (item.href)}
 				{@const active = $page.url.pathname === item.href || $page.url.pathname.startsWith(`${item.href}/`)}
 				<li>
 					<a

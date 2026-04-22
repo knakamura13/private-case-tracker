@@ -1,9 +1,21 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 import { building } from '$app/environment';
 import { auth } from '$lib/server/auth';
 import { db } from '$lib/server/db';
+
+function makeRequestId() {
+	// Short-ish id that’s useful in logs and UI.
+	return crypto.randomUUID().replace(/-/g, '').slice(0, 12);
+}
+
+const requestIdHandle: Handle = async ({ event, resolve }) => {
+	event.locals.requestId = makeRequestId();
+	const response = await resolve(event);
+	response.headers.set('x-request-id', event.locals.requestId);
+	return response;
+};
 
 const sessionHandle: Handle = async ({ event, resolve }) => {
 	event.locals.user = null;
@@ -47,4 +59,50 @@ const sessionHandle: Handle = async ({ event, resolve }) => {
 const betterAuthHandle: Handle = async ({ event, resolve }) =>
 	svelteKitHandler({ event, resolve, auth, building });
 
-export const handle = sequence(betterAuthHandle, sessionHandle);
+export const handle = sequence(betterAuthHandle, requestIdHandle, sessionHandle);
+
+export const handleError: HandleServerError = async ({ error, event, status, message }) => {
+	const requestId = event.locals.requestId;
+	const isOwner = event.locals.workspace?.role === 'OWNER';
+
+	const err = error instanceof Error ? error : new Error(String(error));
+	const stack = err.stack ?? null;
+	const contentLength = event.request.headers.get('content-length');
+
+	let errorId: string | undefined;
+	try {
+		const created = await db.errorLog.create({
+			data: {
+				requestId,
+				source: 'SERVER',
+				status,
+				route: event.url.pathname,
+				method: event.request.method,
+				message: err.message || message,
+				stack: stack,
+				userId: event.locals.user?.id ?? null,
+				workspaceId: event.locals.workspace?.id ?? null,
+				userAgent: event.request.headers.get('user-agent'),
+				context: {
+					params: event.params,
+					query: Object.fromEntries(event.url.searchParams.entries()),
+					bodySummary: {
+						hasBody: event.request.headers.has('content-length') || event.request.headers.has('transfer-encoding'),
+						contentType: event.request.headers.get('content-type'),
+						size: contentLength ? Number(contentLength) : null
+					}
+				}
+			}
+		});
+		errorId = created.id;
+	} catch (logErr) {
+		console.error('[hooks] error persistence failed', logErr);
+	}
+
+	return {
+		message: err.message || message,
+		errorId,
+		requestId,
+		...(isOwner ? { stack: stack ?? undefined } : {})
+	};
+};

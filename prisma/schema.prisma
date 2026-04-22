@@ -708,3 +708,35 @@ model ActivityLog {
   @@index([workspaceId, createdAt(sort: Desc)])
   @@index([workspaceId, entityType, entityId])
 }
+
+
+// ==============================
+// Error logging / diagnostics
+// ==============================
+
+enum ErrorSource {
+  SERVER
+  CLIENT
+  ACTION
+  API
+}
+
+model ErrorLog {
+  id          String      @id @default(cuid())
+  requestId   String?
+  occurredAt  DateTime    @default(now())
+  source      ErrorSource
+  status      Int?
+  route       String?
+  method      String?
+  message     String
+  stack       String?     @db.Text
+  userId      String?
+  workspaceId String?
+  userAgent   String?
+  context     Json?
+
+  @@index([occurredAt(sort: Desc)])
+  @@index([status])
+  @@index([workspaceId, occurredAt(sort: Desc)])
+}

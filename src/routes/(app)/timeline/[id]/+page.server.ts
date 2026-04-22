@@ -1,6 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { requireWorkspace } from '$lib/server/guards';
+import { logActionError } from '$lib/server/services/actionError.service';
 import {
 	getMilestone,
 	updateMilestone,
@@ -28,7 +29,10 @@ export const actions: Actions = {
 		const { workspace, user } = requireWorkspace(event);
 		const raw = Object.fromEntries(await event.request.formData());
 		const parsed = milestoneUpdateSchema.safeParse(raw);
-		if (!parsed.success) return fail(400, { error: parsed.error.message });
+		if (!parsed.success) {
+			const errorId = await logActionError(event, { message: parsed.error.message, status: 400 });
+			return fail(400, { error: parsed.error.message, errorId });
+		}
 		await updateMilestone(workspace.id, user.id, event.params.id, parsed.data);
 		return { ok: true };
 	},
