@@ -2,6 +2,12 @@ import { z } from 'zod';
 
 export const cuidLike = z.string().min(1).max(64);
 
+// Coerces empty strings (from HTML form selects) to null for optional FK fields.
+export const optionalId = z
+	.string()
+	.optional()
+	.transform((v) => (v && v.length ? v : null));
+
 export const optionalDate = z
 	.union([z.string().datetime(), z.string().length(0), z.null(), z.undefined()])
 	.transform((v) => (v && v.length ? new Date(v) : null));
@@ -24,4 +30,9 @@ export function stringOrEmpty(max = 2000) {
 export const tagIdList = z
 	.array(z.string())
 	.default([])
-	.or(z.string().optional().transform((v) => (v ? v.split(',').filter(Boolean) : [])));
+	.or(
+		z
+			.string()
+			.optional()
+			.transform((v) => (v ? v.split(',').filter(Boolean) : []))
+	);
