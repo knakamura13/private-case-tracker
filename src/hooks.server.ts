@@ -4,6 +4,8 @@ import { svelteKitHandler } from 'better-auth/svelte-kit';
 import { building } from '$app/environment';
 import { auth } from '$lib/server/auth';
 import { db } from '$lib/server/db';
+import { logError } from '$lib/server/services/errorLog.service';
+import { redactSearchParams } from '$lib/server/utils/redact';
 
 function makeRequestId() {
 	// Short-ish id that’s useful in logs and UI.
@@ -59,7 +61,7 @@ const sessionHandle: Handle = async ({ event, resolve }) => {
 const betterAuthHandle: Handle = async ({ event, resolve }) =>
 	svelteKitHandler({ event, resolve, auth, building });
 
-export const handle = sequence(betterAuthHandle, requestIdHandle, sessionHandle);
+export const handle = sequence(requestIdHandle, betterAuthHandle, sessionHandle);
 
 export const handleError: HandleServerError = async ({ error, event, status, message }) => {
 	const requestId = event.locals.requestId;
@@ -67,30 +69,31 @@ export const handleError: HandleServerError = async ({ error, event, status, mes
 
 	const err = error instanceof Error ? error : new Error(String(error));
 	const stack = err.stack ?? null;
+	const rawMessage = err.message || message;
 	const contentLength = event.request.headers.get('content-length');
 
 	let errorId: string | undefined;
 	try {
-		const created = await db.errorLog.create({
-			data: {
-				requestId,
-				source: 'SERVER',
-				status,
-				route: event.url.pathname,
-				method: event.request.method,
-				message: err.message || message,
-				stack: stack,
-				userId: event.locals.user?.id ?? null,
-				workspaceId: event.locals.workspace?.id ?? null,
-				userAgent: event.request.headers.get('user-agent'),
-				context: {
-					params: event.params,
-					query: Object.fromEntries(event.url.searchParams.entries()),
-					bodySummary: {
-						hasBody: event.request.headers.has('content-length') || event.request.headers.has('transfer-encoding'),
-						contentType: event.request.headers.get('content-type'),
-						size: contentLength ? Number(contentLength) : null
-					}
+		const created = await logError({
+			requestId,
+			source: 'SERVER',
+			status: status ?? null,
+			route: event.url.pathname,
+			method: event.request.method,
+			message: rawMessage,
+			stack,
+			userId: event.locals.user?.id ?? null,
+			workspaceId: event.locals.workspace?.id ?? null,
+			userAgent: event.request.headers.get('user-agent'),
+			context: {
+				params: event.params,
+				query: redactSearchParams(event.url.searchParams),
+				bodySummary: {
+					hasBody:
+						event.request.headers.has('content-length') ||
+						event.request.headers.has('transfer-encoding'),
+					contentType: event.request.headers.get('content-type'),
+					size: contentLength ? Number(contentLength) : null
 				}
 			}
 		});
@@ -100,7 +103,10 @@ export const handleError: HandleServerError = async ({ error, event, status, mes
 	}
 
 	return {
-		message: err.message || message,
+		// Non-owners only see SvelteKit's sanitized `message` ("Internal Error"
+		// for unhandled 500s) so raw exception text — DB constraint names,
+		// integration errors, stack fragments — never leaks to end users.
+		message: isOwner ? rawMessage : message,
 		errorId,
 		requestId,
 		...(isOwner ? { stack: stack ?? undefined } : {})

@@ -14,6 +14,7 @@
 
 	const data = $page.data as unknown as {
 		errors: Row[];
+		errorsLoadFailed: boolean;
 		railwayProjectUrl: string;
 		processInfo: {
 			node: string;
@@ -70,7 +71,11 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#if data.errors.length === 0}
+				{#if data.errorsLoadFailed}
+					<tr><td class="px-3 py-4 text-muted-foreground" colspan="6">
+						Could not load errors{data.dbHealth.ok ? '' : ' — database is unreachable'}.
+					</td></tr>
+				{:else if data.errors.length === 0}
 					<tr><td class="px-3 py-4 text-muted-foreground" colspan="6">No errors logged yet.</td></tr>
 				{:else}
 					{#each data.errors as e}

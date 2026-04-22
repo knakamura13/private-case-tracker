@@ -43,6 +43,17 @@ describe('errorLog.service', () => {
 		expect(arg.data.stack.length).toBeLessThanOrEqual(50_000);
 	});
 
+	it('logError truncates long messages', async () => {
+		mocks.create.mockResolvedValue({ id: 'e2' });
+		const longMessage = 'm'.repeat(5_000);
+
+		await logError({ source: 'CLIENT', message: longMessage, workspaceId: 'w1' });
+
+		expect(mocks.create).toHaveBeenCalled();
+		const arg = mocks.create.mock.calls[0]?.[0] as any;
+		expect(arg.data.message.length).toBeLessThanOrEqual(2_000);
+	});
+
 	it('listErrors scopes by workspace', async () => {
 		mocks.findMany.mockResolvedValue([]);
 		await listErrors({ workspaceId: 'w1', includeGlobal: false, limit: 50 });

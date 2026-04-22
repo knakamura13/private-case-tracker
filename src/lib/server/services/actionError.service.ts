@@ -1,4 +1,5 @@
 import { logError } from '$lib/server/services/errorLog.service';
+import { redactSearchParams } from '$lib/server/utils/redact';
 import type { RequestEvent } from '@sveltejs/kit';
 
 export async function logActionError(
@@ -25,7 +26,7 @@ export async function logActionError(
 			context: {
 				...(input.context ?? {}),
 				params: event.params,
-				query: Object.fromEntries(event.url.searchParams.entries())
+				query: redactSearchParams(event.url.searchParams)
 			}
 		});
 		return created.id;

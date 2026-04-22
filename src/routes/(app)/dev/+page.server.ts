@@ -31,17 +31,32 @@ export const load: PageServerLoad = async (event) => {
 		dbMs = Math.round(performance.now() - t0);
 	}
 
-	const errors = await listErrors({
-		workspaceId: workspace.id,
-		includeGlobal: true,
-		limit,
-		status: Number.isFinite(status) ? status : undefined,
-		source,
-		route: routeParam ?? undefined
-	});
+	// If the DB is already known to be down, don't throw on the /dev page —
+	// the whole point of this route is to stay reachable during an outage so
+	// owners can see the health summary and deep links.
+	let errors: Awaited<ReturnType<typeof listErrors>> = [];
+	let errorsLoadFailed = false;
+	if (dbOk) {
+		try {
+			errors = await listErrors({
+				workspaceId: workspace.id,
+				includeGlobal: true,
+				limit,
+				status: Number.isFinite(status) ? status : undefined,
+				source,
+				route: routeParam ?? undefined
+			});
+		} catch (err) {
+			console.error('[dev] listErrors failed', err);
+			errorsLoadFailed = true;
+		}
+	} else {
+		errorsLoadFailed = true;
+	}
 
 	return {
 		errors,
+		errorsLoadFailed,
 		railwayProjectUrl: RAILWAY_PROJECT_URL,
 		processInfo: {
 			node: process.version,

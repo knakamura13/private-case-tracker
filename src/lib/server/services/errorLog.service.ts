@@ -1,6 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import { db } from '$lib/server/db';
 
+const MAX_MESSAGE_CHARS = 2_000;
 const MAX_STACK_CHARS = 50_000;
 
 export type LogErrorInput = {
@@ -18,6 +19,10 @@ export type LogErrorInput = {
 };
 
 export async function logError(input: LogErrorInput) {
+	const message =
+		input.message.length > MAX_MESSAGE_CHARS
+			? input.message.slice(0, MAX_MESSAGE_CHARS)
+			: input.message;
 	const stack =
 		typeof input.stack === 'string' && input.stack.length > MAX_STACK_CHARS
 			? input.stack.slice(0, MAX_STACK_CHARS)
@@ -30,7 +35,7 @@ export async function logError(input: LogErrorInput) {
 			status: input.status ?? null,
 			route: input.route ?? null,
 			method: input.method ?? null,
-			message: input.message,
+			message,
 			stack,
 			userId: input.userId ?? null,
 			workspaceId: input.workspaceId ?? null,

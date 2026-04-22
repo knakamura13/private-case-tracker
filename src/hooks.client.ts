@@ -1,8 +1,21 @@
 import type { HandleClientError } from '@sveltejs/kit';
 import { showErrorToast } from '$lib/stores/errorToast';
 
+// Must stay in sync with the caps on `/api/errors/client`; there's no point
+// shipping a 2 MB stack trace over the wire just to have it rejected.
+const MAX_MESSAGE_CHARS = 2_000;
+const MAX_STACK_CHARS = 50_000;
+
+function clip(value: string | undefined, max: number): string | undefined {
+	if (!value) return value;
+	return value.length > max ? value.slice(0, max) : value;
+}
+
 export const handleError: HandleClientError = async ({ error, event, message }) => {
 	const err = error instanceof Error ? error : new Error(String(error));
+	const displayMessage = err.message || message;
+	const truncatedMessage = clip(displayMessage, MAX_MESSAGE_CHARS) ?? displayMessage;
+	const truncatedStack = clip(err.stack, MAX_STACK_CHARS);
 
 	// Best-effort: persist client-side failures for later diagnosis.
 	try {
@@ -10,8 +23,8 @@ export const handleError: HandleClientError = async ({ error, event, message }) 
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
-				message: err.message || message,
-				stack: err.stack,
+				message: truncatedMessage,
+				stack: truncatedStack,
 				url: event.url?.toString?.() ?? String(event.url),
 				userAgent: navigator.userAgent
 			})
@@ -20,6 +33,6 @@ export const handleError: HandleClientError = async ({ error, event, message }) 
 		// ignore
 	}
 
-	showErrorToast({ message: err.message || message, stack: err.stack });
-	return { message: err.message || message };
+	showErrorToast({ message: displayMessage, stack: truncatedStack });
+	return { message: displayMessage };
 };
