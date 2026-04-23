@@ -65,7 +65,10 @@ export const dynamoBetterAuthAdapter = (config: DynamoBetterAuthAdapterConfig = 
 			usePlural: false,
 			debugLogs: config.debugLogs ?? false,
 			supportsJSON: true,
-			supportsDates: true,
+			// DynamoDB has no native Date type; we store ISO strings at the ops layer.
+			// Telling Better Auth the adapter doesn't support dates makes it pass strings
+			// in and reconstruct Date on read.
+			supportsDates: false,
 			supportsBooleans: true,
 			supportsNumericIds: false,
 			// DynamoDB transactions exist, but we keep this disabled to run sequentially.
