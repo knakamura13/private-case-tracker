@@ -6,13 +6,20 @@ import { ddbQuery } from '$lib/server/dynamo/ops';
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) throw redirect(303, '/login');
 	if (locals.workspace) throw redirect(303, '/dashboard');
-	const totalWorkspaces = (
-		await ddbQuery({
-			KeyConditionExpression: 'PK = :pk',
-			ExpressionAttributeValues: { ':pk': 'WS_INDEX' },
-			Limit: 1
-		})
-	).length;
+	let totalWorkspaces = 0;
+	try {
+		totalWorkspaces = (
+			await ddbQuery({
+				KeyConditionExpression: 'PK = :pk',
+				ExpressionAttributeValues: { ':pk': 'WS_INDEX' },
+				Limit: 1
+			})
+		).length;
+	} catch (err) {
+		console.error('[onboarding] failed to query workspaces', err);
+		// Assume not first user on error to be safe
+		totalWorkspaces = 1;
+	}
 	return { isFirstUser: totalWorkspaces === 0 };
 };
 
@@ -20,13 +27,20 @@ export const actions: Actions = {
 	create: async ({ request, locals }) => {
 		if (!locals.user) throw redirect(303, '/login');
 		if (locals.workspace) throw redirect(303, '/dashboard');
-		const totalWorkspaces = (
-			await ddbQuery({
-				KeyConditionExpression: 'PK = :pk',
-				ExpressionAttributeValues: { ':pk': 'WS_INDEX' },
-				Limit: 1
-			})
-		).length;
+		let totalWorkspaces = 0;
+		try {
+			totalWorkspaces = (
+				await ddbQuery({
+					KeyConditionExpression: 'PK = :pk',
+					ExpressionAttributeValues: { ':pk': 'WS_INDEX' },
+					Limit: 1
+				})
+			).length;
+		} catch (err) {
+			console.error('[onboarding] failed to query workspaces in create action', err);
+			// Assume workspace exists on error to be safe
+			totalWorkspaces = 1;
+		}
 		if (totalWorkspaces > 0) {
 			return fail(403, { error: 'Workspace already exists. Ask the owner to invite you.' });
 		}

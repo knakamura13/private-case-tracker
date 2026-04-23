@@ -26,16 +26,16 @@ export const GET: RequestHandler = async ({ locals }) => {
 		activity,
 		quickLinks
 	] = await Promise.all([
-		listTasks(wsId),
-		listForms(wsId),
-		listEvidence(wsId),
-		listDocuments(wsId),
-		listAppointments(wsId),
-		listQuestions(wsId),
-		listNotes(wsId),
-		listMilestones(wsId),
+		listTasks(wsId, { limit: 5000 }),
+		listForms(wsId, { limit: 5000 }),
+		listEvidence(wsId, { limit: 5000 }),
+		listDocuments(wsId, { limit: 5000 }),
+		listAppointments(wsId, { limit: 5000 }),
+		listQuestions(wsId, { limit: 5000 }),
+		listNotes(wsId, { limit: 5000 }),
+		listMilestones(wsId, { limit: 5000 }),
 		recentActivity(wsId, 500),
-		listQuickLinks(wsId)
+		listQuickLinks(wsId, 5000)
 	]);
 	return new Response(
 		JSON.stringify(

@@ -19,12 +19,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const workspaceId = locals.workspace.id;
 
 	const [tasks, forms, evidence, questions, notes, files, quickLinks] = await Promise.all([
-		listTasks(workspaceId, { q }).then((r) => r.slice(0, LIMIT_PER_GROUP)),
-		listForms(workspaceId, { q }).then((r) => r.slice(0, LIMIT_PER_GROUP)),
-		listEvidence(workspaceId, { q }).then((r) => r.slice(0, LIMIT_PER_GROUP)),
-		listQuestions(workspaceId, { q }).then((r) => r.slice(0, LIMIT_PER_GROUP)),
-		listNotes(workspaceId, { q }).then((r) => r.slice(0, LIMIT_PER_GROUP)),
-		listDocuments(workspaceId, { q }).then((r) => r.slice(0, LIMIT_PER_GROUP)),
+		listTasks(workspaceId, { q, limit: LIMIT_PER_GROUP }),
+		listForms(workspaceId, { q, limit: LIMIT_PER_GROUP }),
+		listEvidence(workspaceId, { q, limit: LIMIT_PER_GROUP }),
+		listQuestions(workspaceId, { q, limit: LIMIT_PER_GROUP }),
+		listNotes(workspaceId, { q, limit: LIMIT_PER_GROUP }),
+		listDocuments(workspaceId, { q, limit: LIMIT_PER_GROUP }),
 		listQuickLinks(workspaceId).then((r) =>
 			r
 				.filter((l) =>

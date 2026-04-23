@@ -5,6 +5,7 @@ import type { FormCreate, FormUpdate } from '$lib/schemas/form';
 import { randomUUID } from 'node:crypto';
 import { ddbGet, ddbPut, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
+import type { FormItem } from '$lib/server/dynamo/types';
 
 export type FormSupportingItemRow = {
 	id: string;
@@ -62,16 +63,17 @@ export function maskReceipt(encrypted: string | null): string | null {
 
 export async function listForms(
 	workspaceId: string,
-	filter: { status?: FormFilingStatus; q?: string } = {}
+	filter: { status?: FormFilingStatus; q?: string; limit?: number } = {}
 ): Promise<FormRow[]> {
-	const rows = await ddbQuery<any>({
+	const rows = await ddbQuery<FormItem>({
 		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
-		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'FormRecord#' }
+		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'FormRecord#' },
+		Limit: filter.limit ?? 1000
 	});
 	const q = filter.q?.toLowerCase();
 	const filtered = rows
 		.filter((f) => !f.deletedAt)
-		.filter((f) => (filter.status ? f.filingStatus === filter.status : true))
+		.filter((f) => (filter.status ? (f.filingStatus as FormFilingStatus) === filter.status : true))
 		.filter((f) =>
 			q
 				? String(f.name ?? '')
@@ -87,9 +89,13 @@ export async function listForms(
 		)
 		.map((f) => ({
 			...f,
+			filingStatus: f.filingStatus as FormFilingStatus,
+			createdAt: f.createdAt ?? '',
+			updatedAt: f.updatedAt ?? '',
+			deletedAt: f.deletedAt ?? null,
 			supportingItems: (f.supportingItems ?? [])
 				.slice()
-				.sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0)),
+				.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
 			receiptNumberEncrypted: f.receiptNumberEncrypted ?? null,
 			_count: { tasks: 0, documents: 0 }
 		}));
@@ -102,13 +108,17 @@ export async function listForms(
 }
 
 export async function getForm(workspaceId: string, id: string) {
-	const form = await ddbGet<FormRow>({ PK: wsPk(workspaceId), SK: entitySk('FormRecord', id) });
+	const form = await ddbGet<FormItem>({ PK: wsPk(workspaceId), SK: entitySk('FormRecord', id) });
 	if (!form || form.deletedAt) return null;
 	return {
 		...form,
+		filingStatus: form.filingStatus as FormFilingStatus,
+		createdAt: form.createdAt ?? '',
+		updatedAt: form.updatedAt ?? '',
+		deletedAt: form.deletedAt ?? null,
 		supportingItems: (form.supportingItems ?? [])
 			.slice()
-			.sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0)),
+			.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
 		receiptNumberEncrypted: form.receiptNumberEncrypted ?? null,
 		documents: [],
 		tasks: [],

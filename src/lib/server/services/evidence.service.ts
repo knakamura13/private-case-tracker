@@ -4,19 +4,21 @@ import type { EvidenceCreate, EvidenceUpdate } from '$lib/schemas/evidence';
 import { randomUUID } from 'node:crypto';
 import { ddbGet, ddbPut, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
+import type { EvidenceItem } from '$lib/server/dynamo/types';
 
 export async function listEvidence(
 	workspaceId: string,
-	filter: { status?: EvidenceStatus; type?: string; q?: string } = {}
+	filter: { status?: EvidenceStatus; type?: string; q?: string; limit?: number } = {}
 ) {
-	const rows = await ddbQuery<any>({
+	const rows = await ddbQuery<EvidenceItem>({
 		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
-		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'EvidenceItem#' }
+		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'EvidenceItem#' },
+		Limit: filter.limit ?? 1000
 	});
 	const q = filter.q?.toLowerCase();
 	const filtered = rows
 		.filter((e) => !e.deletedAt)
-		.filter((e) => (filter.status ? e.status === filter.status : true))
+		.filter((e) => (filter.status ? (e.status as EvidenceStatus) === filter.status : true))
 		.filter((e) => (filter.type ? e.type === filter.type : true))
 		.filter((e) =>
 			q
@@ -45,7 +47,7 @@ export async function listEvidence(
 }
 
 export async function getEvidence(workspaceId: string, id: string) {
-	const evidence = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('EvidenceItem', id) });
+	const evidence = await ddbGet<EvidenceItem>({ PK: wsPk(workspaceId), SK: entitySk('EvidenceItem', id) });
 	if (!evidence || evidence.deletedAt) return null;
 	return {
 		...evidence,

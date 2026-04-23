@@ -71,7 +71,10 @@ export const dynamoBetterAuthAdapter = (config: DynamoBetterAuthAdapterConfig = 
 			supportsDates: false,
 			supportsBooleans: true,
 			supportsNumericIds: false,
-			// DynamoDB transactions exist, but we keep this disabled to run sequentially.
+			// DynamoDB transactions disabled - Better Auth's transaction API requires
+			// adapter-specific implementation that doesn't align with DynamoDB's model.
+			// Multi-write operations run sequentially; partial failures should be handled
+			// at the service layer with compensation logic if needed.
 			transaction: false
 		},
 		adapter: ({ transformInput, transformOutput, transformWhereClause }) => {

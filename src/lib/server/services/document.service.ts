@@ -3,14 +3,16 @@ import { logActivity } from '$lib/server/activity';
 import type { DocumentMetadata } from '$lib/schemas/document';
 import { ddbGet, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
+import type { DocumentFileItem } from '$lib/server/dynamo/types';
 
 export async function listDocuments(
 	workspaceId: string,
-	filter: { category?: string; q?: string } = {}
+	filter: { category?: string; q?: string; limit?: number } = {}
 ) {
-	const rows = await ddbQuery<any>({
+	const rows = await ddbQuery<DocumentFileItem>({
 		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
-		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'DocumentFile#' }
+		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'DocumentFile#' },
+		Limit: filter.limit ?? 1000
 	});
 	const q = filter.q?.toLowerCase();
 	const filtered = rows
@@ -39,7 +41,7 @@ export async function listDocuments(
 }
 
 export async function getDocument(workspaceId: string, id: string) {
-	const doc = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('DocumentFile', id) });
+	const doc = await ddbGet<DocumentFileItem>({ PK: wsPk(workspaceId), SK: entitySk('DocumentFile', id) });
 	if (!doc || doc.deletedAt) return null;
 	return {
 		...doc,

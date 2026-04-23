@@ -4,6 +4,7 @@ import type { TaskCreate, TaskUpdate } from '$lib/schemas/task';
 import { randomUUID } from 'node:crypto';
 import { ddbGet, ddbPut, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
+import type { TaskItem } from '$lib/server/dynamo/types';
 
 export type TaskChecklistRow = {
 	id: string;
@@ -46,12 +47,14 @@ export interface TaskFilter {
 	ownerId?: string;
 	q?: string;
 	overdueOnly?: boolean;
+	limit?: number;
 }
 
 export async function listTasks(workspaceId: string, filter: TaskFilter = {}): Promise<TaskRow[]> {
-	const rows = await ddbQuery<any>({
+	const rows = await ddbQuery<TaskItem>({
 		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
-		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'Task#' }
+		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'Task#' },
+		Limit: filter.limit ?? 1000
 	});
 
 	const now = Date.now();
@@ -79,6 +82,10 @@ export async function listTasks(workspaceId: string, filter: TaskFilter = {}): P
 		})
 		.map((t) => ({
 			...t,
+			status: t.status as TaskStatus,
+			createdAt: t.createdAt ?? '',
+			updatedAt: t.updatedAt ?? '',
+			deletedAt: t.deletedAt ?? null,
 			owner: t.ownerId ? { id: t.ownerId, name: null, email: '' } : null,
 			form: t.linkedFormId ? { id: t.linkedFormId, code: '', name: '' } : null,
 			evidence: t.linkedEvidenceId ? { id: t.linkedEvidenceId, title: '' } : null,
@@ -103,10 +110,14 @@ export async function listTasks(workspaceId: string, filter: TaskFilter = {}): P
 }
 
 export async function getTask(workspaceId: string, id: string): Promise<TaskRow | null> {
-	const task = await ddbGet<TaskRow>({ PK: wsPk(workspaceId), SK: entitySk('Task', id) });
+	const task = await ddbGet<TaskItem>({ PK: wsPk(workspaceId), SK: entitySk('Task', id) });
 	if (!task || task.deletedAt) return null;
 	return {
 		...task,
+		status: task.status as TaskStatus,
+		createdAt: task.createdAt ?? '',
+		updatedAt: task.updatedAt ?? '',
+		deletedAt: task.deletedAt ?? null,
 		owner: task.ownerId ? { id: task.ownerId, name: null, email: '' } : null,
 		form: task.linkedFormId ? { id: task.linkedFormId, code: '', name: '' } : null,
 		evidence: task.linkedEvidenceId ? { id: task.linkedEvidenceId, title: '' } : null,
@@ -116,7 +127,7 @@ export async function getTask(workspaceId: string, id: string): Promise<TaskRow 
 			: null,
 		checklist: (task.checklist ?? [])
 			.slice()
-			.sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0)),
+			.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
 		attachments: task.attachments ?? [],
 		tags: task.tags ?? []
 	};
@@ -154,7 +165,7 @@ export async function updateTask(
 	id: string,
 	input: TaskUpdate
 ) {
-	const existing = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('Task', id) });
+	const existing = await ddbGet<TaskItem>({ PK: wsPk(workspaceId), SK: entitySk('Task', id) });
 	if (!existing) throw new Error('Task not found');
 	if (existing.deletedAt) throw new Error('Task not found');
 
@@ -190,7 +201,7 @@ export async function updateTask(
 }
 
 export async function softDeleteTask(workspaceId: string, actorId: string, id: string) {
-	const existing = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('Task', id) });
+	const existing = await ddbGet<TaskItem>({ PK: wsPk(workspaceId), SK: entitySk('Task', id) });
 	if (!existing) throw new Error('Task not found');
 	if (existing.deletedAt) throw new Error('Task not found');
 	await ddbUpdate(
@@ -210,7 +221,7 @@ export async function softDeleteTask(workspaceId: string, actorId: string, id: s
 }
 
 export async function restoreTask(workspaceId: string, actorId: string, id: string) {
-	const existing = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('Task', id) });
+	const existing = await ddbGet<TaskItem>({ PK: wsPk(workspaceId), SK: entitySk('Task', id) });
 	if (!existing) throw new Error('Task not found');
 	await ddbUpdate(
 		{ PK: wsPk(workspaceId), SK: entitySk('Task', id) },
@@ -234,7 +245,7 @@ export async function setChecklist(
 	taskId: string,
 	items: { id?: string; text: string; done: boolean }[]
 ) {
-	const task = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('Task', taskId) });
+	const task = await ddbGet<TaskItem>({ PK: wsPk(workspaceId), SK: entitySk('Task', taskId) });
 	if (!task) throw new Error('Task not found');
 	if (task.deletedAt) throw new Error('Task not found');
 	const checklist = items.map((item, idx) => ({
@@ -266,7 +277,7 @@ export async function reorderOnBoard(
 	updates: { id: string; status: TaskStatus; order: number }[]
 ) {
 	for (const u of updates) {
-		await ddbUpdate(
+		await ddbUpdate<TaskItem>(
 			{ PK: wsPk(workspaceId), SK: entitySk('Task', u.id) },
 			'SET #status = :s, #order = :o, #updatedAt = :u',
 			{ ':s': u.status, ':o': u.order, ':u': new Date().toISOString() },

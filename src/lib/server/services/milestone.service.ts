@@ -1,23 +1,25 @@
 import type { MilestonePhase, MilestoneStatus } from '$lib/types/enums';
 import { logActivity } from '$lib/server/activity';
-import { PHASE_ORDER } from '$lib/constants/phases';
 import type { MilestoneCreate, MilestoneUpdate } from '$lib/schemas/milestone';
 import { randomUUID } from 'node:crypto';
 import { ddbGet, ddbPut, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
+import type { MilestoneItem } from '$lib/server/dynamo/types';
+import { PHASE_ORDER } from '$lib/constants/phases';
 
 export async function listMilestones(
 	workspaceId: string,
-	filter: { phase?: MilestonePhase; status?: MilestoneStatus } = {}
+	filter: { phase?: MilestonePhase; status?: MilestoneStatus; limit?: number } = {}
 ) {
-	const rows = await ddbQuery<any>({
+	const rows = await ddbQuery<MilestoneItem>({
 		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
-		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'TimelineMilestone#' }
+		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'TimelineMilestone#' },
+		Limit: filter.limit ?? 1000
 	});
 	const filtered = rows
 		.filter((m) => !m.deletedAt)
-		.filter((m) => (filter.phase ? m.phase === filter.phase : true))
-		.filter((m) => (filter.status ? m.status === filter.status : true))
+		.filter((m) => (filter.phase ? (m.phase as MilestonePhase) === filter.phase : true))
+		.filter((m) => (filter.status ? (m.status as MilestoneStatus) === filter.status : true))
 		.map((m) => ({
 			...m,
 			owner: m.ownerId ? { id: m.ownerId, name: null, email: '' } : null
