@@ -31,9 +31,6 @@ export const load: PageServerLoad = async (event) => {
 		dbMs = Math.round(performance.now() - t0);
 	}
 
-	// If the DB is already known to be down, don't throw on the /dev page —
-	// the whole point of this route is to stay reachable during an outage so
-	// owners can see the health summary and deep links.
 	let errors: Awaited<ReturnType<typeof listErrors>> = [];
 	let errorsLoadFailed = false;
 	if (dbOk) {

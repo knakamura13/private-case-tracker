@@ -18,7 +18,7 @@
 </script>
 
 <div class="mx-auto w-full max-w-4xl p-6">
-	<a class="text-sm font-medium text-primary hover:underline" href="/dev">← Back</a>
+	<a class="text-sm font-medium text-primary hover:underline" href="/settings/dev">← Back</a>
 
 	<h1 class="mt-4 text-2xl font-semibold">Error</h1>
 	<p class="mt-1 text-sm text-muted-foreground font-mono">{row.id}</p>

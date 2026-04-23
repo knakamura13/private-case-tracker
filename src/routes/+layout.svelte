@@ -8,7 +8,10 @@
 		afterNavigate(() => {
 			window.scrollTo(0, 0);
 			const main = document.getElementById('main');
-			if (main) main.scrollTo(0, 0);
+			if (main) {
+				main.scrollTo(0, 0);
+				(main as HTMLElement).focus?.();
+			}
 		});
 	}
 </script>

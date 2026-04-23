@@ -88,7 +88,7 @@
 								<span class="line-clamp-2 break-words">{e.message}</span>
 							</td>
 							<td class="px-3 py-2">
-								<a class="text-primary hover:underline" href={`/dev/errors/${e.id}`}>View</a>
+								<a class="text-primary hover:underline" href={`/settings/dev/errors/${e.id}`}>View</a>
 							</td>
 						</tr>
 					{/each}

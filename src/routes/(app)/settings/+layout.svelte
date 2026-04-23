@@ -9,7 +9,8 @@
 		{ href: '/settings/members', label: 'Members' },
 		{ href: '/settings/data', label: 'Data & privacy' },
 		{ href: '/settings/storage', label: 'Storage' },
-		{ href: '/settings/tags', label: 'Tags' }
+		{ href: '/settings/tags', label: 'Tags' },
+		{ href: '/settings/dev', label: 'Dev' }
 	];
 </script>
 

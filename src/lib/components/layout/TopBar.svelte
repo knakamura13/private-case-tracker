@@ -17,6 +17,21 @@
 	} = $props();
 
 	let menuOpen = $state(false);
+	let menuButtonEl = $state<HTMLButtonElement | null>(null);
+
+	function closeMenu() {
+		menuOpen = false;
+		queueMicrotask(() => menuButtonEl?.focus());
+	}
+
+	$effect(() => {
+		if (!menuOpen) return;
+		function onKeydown(e: KeyboardEvent) {
+			if (e.key === 'Escape') closeMenu();
+		}
+		window.addEventListener('keydown', onKeydown);
+		return () => window.removeEventListener('keydown', onKeydown);
+	});
 </script>
 
 <header class="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-card/80 px-4 backdrop-blur">
@@ -44,11 +59,13 @@
 	</Button>
 	<div class="relative">
 		<button
+			bind:this={menuButtonEl}
 			class="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-xs font-semibold"
 			aria-label="Open user menu"
 			type="button"
-			aria-haspopup="menu"
+			aria-haspopup="true"
 			aria-expanded={menuOpen}
+			aria-controls="user-menu"
 			onclick={() => (menuOpen = !menuOpen)}
 		>
 			{initials(user.name, user.email)}
@@ -56,21 +73,30 @@
 		{#if menuOpen}
 			<div
 				class="absolute right-0 mt-2 w-56 rounded-md border border-border bg-card p-2 text-sm shadow-lg"
-				role="menu"
+				id="user-menu"
+				role="group"
+				aria-label="User menu"
 			>
 				<div class="px-2 py-1.5">
 					<p class="truncate font-medium">{user.name ?? user.email}</p>
 					<p class="truncate text-xs text-muted-foreground">{user.email}</p>
 				</div>
 				<div class="my-1 border-t border-border"></div>
-				<a class="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted" href="/settings/profile">Profile</a>
-				<a class="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted" href="/settings/security">Security</a>
-				<a class="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted" href="/settings/members">Members</a>
+				<a class="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted" href="/settings/profile" onclick={closeMenu}>
+					Profile
+				</a>
+				<a class="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted" href="/settings/security" onclick={closeMenu}>
+					Security
+				</a>
+				<a class="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted" href="/settings/members" onclick={closeMenu}>
+					Members
+				</a>
 				<div class="my-1 border-t border-border"></div>
 				<form method="post" action="/logout">
 					<button
 						class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-destructive hover:bg-destructive/10"
 						type="submit"
+						onclick={closeMenu}
 					>
 						<LogOut class="h-4 w-4" /> Sign out
 					</button>

@@ -14,6 +14,39 @@
 	let paletteOpen = $state(false);
 	let quickAddOpen = $state(false);
 
+	let sidebarDialogEl = $state<HTMLDivElement | null>(null);
+	let sidebarOpenerEl = $state<HTMLElement | null>(null);
+
+	function getFocusable(container: HTMLElement): HTMLElement[] {
+		const nodes = container.querySelectorAll<HTMLElement>(
+			'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+		);
+		return Array.from(nodes).filter((el) => {
+			const style = window.getComputedStyle(el);
+			return style.display != 'none' && style.visibility != 'hidden';
+		});
+	}
+
+	function trapTabKey(e: KeyboardEvent, container: HTMLElement) {
+		if (e.key !== 'Tab') return;
+		const focusable = getFocusable(container);
+		if (focusable.length === 0) return;
+		const active = document.activeElement as HTMLElement | null;
+		const first = focusable[0]!;
+		const last = focusable[focusable.length - 1]!;
+		if (e.shiftKey) {
+			if (!active || active === first || !container.contains(active)) {
+				e.preventDefault();
+				last.focus();
+			}
+		} else {
+			if (!active || active === last || !container.contains(active)) {
+				e.preventDefault();
+				first.focus();
+			}
+		}
+	}
+
 	onMount(initTruncateTitles);
 </script>
 
@@ -22,14 +55,26 @@
 		<Sidebar workspaceName={data.workspace.name} />
 	</div>
 	{#if sidebarOpen}
-		<div class="fixed inset-0 z-40 md:hidden">
-			<button
+		<div
+			class="fixed inset-0 z-40 md:hidden"
+			role="dialog"
+			aria-modal="true"
+			aria-label="Sidebar"
+			tabindex="-1"
+			onkeydown={(e) => {
+				if (e.key === 'Escape') sidebarOpen = false;
+				if (sidebarDialogEl) trapTabKey(e, sidebarDialogEl);
+			}}
+		>
+			<div
 				transition:fade={{ duration: 200 }}
 				class="absolute inset-0 bg-background/70 backdrop-blur-sm"
-				aria-label="Close sidebar"
+				aria-hidden="true"
 				onclick={() => (sidebarOpen = false)}
-			></button>
+			></div>
 			<div
+				bind:this={sidebarDialogEl}
+				tabindex="-1"
 				in:fly={{ x: -264, duration: 280, opacity: 1 }}
 				out:fly={{ x: -264, duration: 200, opacity: 1 }}
 				class="relative z-10 h-full w-64"
@@ -43,10 +88,13 @@
 		<TopBar
 			user={data.user}
 			onOpenSearch={() => (paletteOpen = true)}
-			onToggleSidebar={() => (sidebarOpen = !sidebarOpen)}
+			onToggleSidebar={() => {
+				if (!sidebarOpen) sidebarOpenerEl = document.activeElement as HTMLElement | null;
+				sidebarOpen = !sidebarOpen;
+			}}
 			onOpenQuickAdd={() => (quickAddOpen = true)}
 		/>
-		<main id="main" class="flex-1 overflow-y-auto p-4 pb-24 md:p-6 md:pb-32">
+		<main id="main" tabindex="-1" class="flex-1 overflow-y-auto p-4 pb-24 md:p-6 md:pb-32">
 			{@render children()}
 		</main>
 	</div>
@@ -54,3 +102,22 @@
 
 <CommandPalette bind:open={paletteOpen} />
 <QuickAddMenu bind:open={quickAddOpen} />
+
+{#if sidebarOpen && sidebarDialogEl}
+	{@const _focus = (() => {
+		queueMicrotask(() => {
+			if (!sidebarDialogEl) return;
+			const focusable = getFocusable(sidebarDialogEl);
+			(focusable[0] ?? sidebarDialogEl)?.focus();
+		});
+		return null;
+	})()}
+{/if}
+
+{#if !sidebarOpen && sidebarOpenerEl}
+	{@const _restore = (() => {
+		queueMicrotask(() => sidebarOpenerEl?.focus());
+		sidebarOpenerEl = null;
+		return null;
+	})()}
+{/if}
