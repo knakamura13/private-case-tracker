@@ -13,6 +13,14 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const isOwner = $derived($page.data.workspace?.role === 'OWNER');
+
+	let copied = $state(false);
+
+	async function copyToClipboard(url: string) {
+		await navigator.clipboard.writeText(url);
+		copied = true;
+		setTimeout(() => (copied = false), 2000);
+	}
 </script>
 
 <PageHeader title="Members" description="This workspace is designed for two users." />
@@ -55,9 +63,21 @@
 					<option value="OWNER">Owner</option>
 				</Select>
 			</div>
-			<div class="flex items-end"><Button type="submit">Send invite</Button></div>
+			<div class="flex items-end"><Button type="submit">Create invite link</Button></div>
 			{#if form?.error}<p class="md:col-span-3 text-sm text-destructive">{form.error}</p>{/if}
 		</form>
+		{#if form?.ok && form?.inviteUrl}
+			<div class="mt-4 rounded-lg border border-border bg-muted/50 p-3">
+				<p class="mb-2 text-sm font-medium">Invite link created</p>
+				<div class="flex items-center gap-2">
+					<code class="flex-1 truncate rounded bg-background px-2 py-1 text-xs">{form.inviteUrl}</code>
+					<Button onclick={() => copyToClipboard(form.inviteUrl)} size="sm" variant="outline">
+						{copied ? 'Copied!' : 'Copy'}
+					</Button>
+				</div>
+				<p class="mt-2 text-xs text-muted-foreground">Share this link with the user. It expires in 7 days.</p>
+			</div>
+		{/if}
 	</Card>
 
 	{#if data.invitations.length > 0}

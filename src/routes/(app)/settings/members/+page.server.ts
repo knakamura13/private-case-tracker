@@ -24,7 +24,7 @@ export const actions: Actions = {
 		const raw = Object.fromEntries(await event.request.formData());
 		const parsed = inviteSchema.safeParse(raw);
 		if (!parsed.success) return fail(400, { error: parsed.error.message });
-		await createInvitation({
+		const { url } = await createInvitation({
 			workspaceId: workspace.id,
 			email: parsed.data.email,
 			role: parsed.data.role,
@@ -32,7 +32,7 @@ export const actions: Actions = {
 			inviterName: user.name ?? user.email,
 			workspaceName: workspace.name
 		});
-		return { ok: true };
+		return { ok: true, inviteUrl: url };
 	},
 	revoke: async (event) => {
 		const { workspace } = requireOwner(event);

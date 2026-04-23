@@ -2,7 +2,6 @@ import { randomBytes } from 'node:crypto';
 import { addDays } from 'date-fns';
 import { ENV } from '$lib/server/env';
 import { logActivity } from '$lib/server/activity';
-import { sendEmail, inviteEmail } from '$lib/server/email';
 import type { MemberRole } from '$lib/types/enums';
 import { randomUUID } from 'node:crypto';
 import { ddbGet, ddbPut, ddbQuery, ddbUpdate, ddbDelete } from '$lib/server/dynamo/ops';
@@ -39,14 +38,6 @@ export async function createInvitation(input: {
 		GSI1SK: gsi1Sk('Invitation', id)
 	});
 	const url = `${ENV.APP_URL}/invite/${token}`;
-	await sendEmail(
-		inviteEmail({
-			to: invitation.email,
-			inviter: input.inviterName,
-			workspace: input.workspaceName,
-			url
-		})
-	);
 	await logActivity({
 		workspaceId: input.workspaceId,
 		userId: input.invitedByUserId,

@@ -25,8 +25,6 @@ const schema = z.object({
 		.string()
 		.optional()
 		.transform((v) => v === 'true' || v === '1'),
-	RESEND_API_KEY: z.string().optional(),
-	EMAIL_FROM: z.string().default('Case Tracker <noreply@example.com>'),
 	NODE_ENV: z.enum(['development', 'production', 'test']).default('development')
 });
 
@@ -49,8 +47,6 @@ const BUILD_PLACEHOLDER: Env = {
 	S3_ACCESS_KEY_ID: undefined,
 	S3_SECRET_ACCESS_KEY: undefined,
 	S3_FORCE_PATH_STYLE: false,
-	RESEND_API_KEY: undefined,
-	EMAIL_FROM: 'Case Tracker <noreply@example.com>',
 	NODE_ENV: 'production'
 };
 
@@ -72,8 +68,6 @@ function load(): Env {
 		S3_ACCESS_KEY_ID: env.S3_ACCESS_KEY_ID,
 		S3_SECRET_ACCESS_KEY: env.S3_SECRET_ACCESS_KEY,
 		S3_FORCE_PATH_STYLE: env.S3_FORCE_PATH_STYLE,
-		RESEND_API_KEY: env.RESEND_API_KEY,
-		EMAIL_FROM: env.EMAIL_FROM,
 		NODE_ENV: env.NODE_ENV ?? process.env.NODE_ENV
 	});
 	if (!parsed.success) {
