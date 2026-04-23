@@ -25,7 +25,7 @@ export async function sendEmail(mail: Mail): Promise<void> {
 	});
 	if (res.error) {
 		console.error('[email] send failed', res.error);
-		throw new Error('Email send failed');
+		throw new Error(`Email send failed: ${res.error.name} - ${res.error.message}`);
 	}
 }
 
