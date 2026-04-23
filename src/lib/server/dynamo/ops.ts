@@ -30,19 +30,39 @@ function keyStr(k: Key) {
 	return `${k.PK}||${k.SK}`;
 }
 
+// DynamoDB has no native Date type and the DocumentClient marshaller rejects
+// class instances by default. Normalize any Date we see into an ISO string so
+// callers (domain services, Better Auth adapter, future code) never have to
+// think about it. Plain Date values round-trip back as ISO strings; adapters
+// that expect Date objects are responsible for parsing them on read.
+function normalize<T>(value: T): T {
+	if (value instanceof Date) return value.toISOString() as unknown as T;
+	if (Array.isArray(value)) return value.map(normalize) as unknown as T;
+	if (value && typeof value === 'object') {
+		const out: Record<string, unknown> = {};
+		for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+			if (v === undefined) continue;
+			out[k] = normalize(v);
+		}
+		return out as T;
+	}
+	return value;
+}
+
 async function getLive() {
 	const mod = await import('./client');
 	return { ddb: mod.ddb, tableName: mod.tableName() };
 }
 
 export async function ddbPut(item: Record<string, unknown>) {
+	const normalized = normalize(item) as Record<string, unknown>;
 	if (useMem) {
-		const it = item as AnyItem;
+		const it = normalized as AnyItem;
 		memStore().set(keyStr({ PK: it.PK, SK: it.SK }), it);
 		return;
 	}
 	const { ddb, tableName } = await getLive();
-	return ddb.send(new PutCommand({ TableName: tableName, Item: item }));
+	return ddb.send(new PutCommand({ TableName: tableName, Item: normalized }));
 }
 
 export async function ddbGet<T>(key: { PK: string; SK: string }) {
@@ -60,6 +80,7 @@ export async function ddbUpdate<T>(
 	expressionAttributeValues: Record<string, unknown>,
 	expressionAttributeNames?: Record<string, string>
 ) {
+	expressionAttributeValues = normalize(expressionAttributeValues) as Record<string, unknown>;
 	if (useMem) {
 		const store = memStore();
 		const cur = store.get(keyStr(key));
