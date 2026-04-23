@@ -27,23 +27,26 @@
 </PageHeader>
 
 {#if editing}
-	<form method="post" action="?/update" use:enhance={() => ({ update }) => update().then(() => { editing = false; })}>
-		<AppointmentForm
-			initial={{
-				title: data.appointment.title,
-				type: data.appointment.type,
-				status: data.appointment.status,
-				scheduledAt: data.appointment.scheduledAt,
-				durationMin: data.appointment.durationMin,
-				location: data.appointment.location,
-				confirmationDetails: data.appointment.confirmationDetails,
-				attendees: data.appointment.attendees,
-				notes: data.appointment.notes
-			}}
-			submitLabel="Save changes"
-			error={form?.error}
-		/>
-	</form>
+	<AppointmentForm
+		action="?/update"
+		onenhance={() => async ({ update }) => {
+			await update();
+			editing = false;
+		}}
+		initial={{
+			title: data.appointment.title,
+			type: data.appointment.type,
+			status: data.appointment.status,
+			scheduledAt: data.appointment.scheduledAt,
+			durationMin: data.appointment.durationMin,
+			location: data.appointment.location,
+			confirmationDetails: data.appointment.confirmationDetails,
+			attendees: data.appointment.attendees,
+			notes: data.appointment.notes
+		}}
+		submitLabel="Save changes"
+		error={form?.error}
+	/>
 {:else}
 	<Card class="p-4 text-sm">
 		<dl class="grid grid-cols-1 gap-3 md:grid-cols-2">

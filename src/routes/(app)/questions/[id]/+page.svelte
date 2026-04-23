@@ -27,22 +27,25 @@
 </PageHeader>
 
 {#if editing}
-	<form method="post" action="?/update" use:enhance={() => ({ update }) => update().then(() => { editing = false; })}>
-		<QuestionForm
-			initial={{
-				question: data.question.question,
-				category: data.question.category,
-				priority: data.question.priority,
-				status: data.question.status,
-				answer: data.question.answer,
-				sourceType: data.question.sourceType,
-				citationUrl: data.question.citationUrl,
-				answeredAt: data.question.answeredAt
-			}}
-			submitLabel="Save changes"
-			error={form?.error}
-		/>
-	</form>
+	<QuestionForm
+		action="?/update"
+		onenhance={() => async ({ update }) => {
+			await update();
+			editing = false;
+		}}
+		initial={{
+			question: data.question.question,
+			category: data.question.category,
+			priority: data.question.priority,
+			status: data.question.status,
+			answer: data.question.answer,
+			sourceType: data.question.sourceType,
+			citationUrl: data.question.citationUrl,
+			answeredAt: data.question.answeredAt
+		}}
+		submitLabel="Save changes"
+		error={form?.error}
+	/>
 {:else}
 	<Card class="mb-4 p-4">
 		<h2 class="text-lg font-semibold">{data.question.question}</h2>

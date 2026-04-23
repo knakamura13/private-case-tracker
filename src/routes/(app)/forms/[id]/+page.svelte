@@ -67,21 +67,24 @@
 </PageHeader>
 
 {#if editing}
-	<form method="post" action="?/update" use:enhance={() => ({ update }) => update().then(() => { editing = false; })}>
-		<FormForm
-			initial={{
-				code: data.form.code,
-				name: data.form.name,
-				purpose: data.form.purpose,
-				filingStatus: data.form.filingStatus,
-				plannedFilingDate: data.form.plannedFilingDate,
-				actualFilingDate: data.form.actualFilingDate,
-				notes: data.form.notes
-			}}
-			submitLabel="Save changes"
-			error={form?.error}
-		/>
-	</form>
+	<FormForm
+		action="?/update"
+		onenhance={() => async ({ update }) => {
+			await update();
+			editing = false;
+		}}
+		initial={{
+			code: data.form.code,
+			name: data.form.name,
+			purpose: data.form.purpose,
+			filingStatus: data.form.filingStatus,
+			plannedFilingDate: data.form.plannedFilingDate,
+			actualFilingDate: data.form.actualFilingDate,
+			notes: data.form.notes
+		}}
+		submitLabel="Save changes"
+		error={form?.error}
+	/>
 {:else}
 	<div class="grid gap-6 md:grid-cols-3">
 		<Card class="p-4 text-sm md:col-span-1">
