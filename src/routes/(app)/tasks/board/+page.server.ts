@@ -2,7 +2,7 @@ import type { PageServerLoad } from './$types';
 import { requireWorkspace } from '$lib/server/guards';
 import { listTasks, reorderOnBoard } from '$lib/server/services/task.service';
 import type { Actions } from './$types';
-import type { TaskStatus } from '@prisma/client';
+import type { TaskStatus } from '$lib/types/enums';
 
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);

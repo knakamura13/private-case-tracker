@@ -6,20 +6,3 @@ services:
     command: '-jar DynamoDBLocal.jar -inMemory -sharedDb'
     ports:
       - '8000:8000'
-
-  minio:
-    image: minio/minio:latest
-    container_name: case-tracker-minio
-    restart: unless-stopped
-    environment:
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: minio12345
-    command: server /data --console-address ':9001'
-    ports:
-      - '9000:9000'
-      - '9001:9001'
-    volumes:
-      - miniodata:/data
-
-volumes:
-  miniodata:

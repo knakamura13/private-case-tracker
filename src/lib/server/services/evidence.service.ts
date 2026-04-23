@@ -1,4 +1,4 @@
-import type { EvidenceStatus } from '@prisma/client';
+import type { EvidenceStatus } from '$lib/types/enums';
 import { logActivity } from '$lib/server/activity';
 import type { EvidenceCreate, EvidenceUpdate } from '$lib/schemas/evidence';
 import { randomUUID } from 'node:crypto';

@@ -1,7 +1,7 @@
 import { requireWorkspace } from '$lib/server/guards';
 import { listTasks } from '$lib/server/services/task.service';
 import type { PageServerLoad } from './$types';
-import type { TaskStatus } from '@prisma/client';
+import type { TaskStatus } from '$lib/types/enums';
 
 const STATUSES: TaskStatus[] = ['TODO', 'IN_PROGRESS', 'BLOCKED', 'DONE', 'ARCHIVED'];
 

@@ -27,19 +27,19 @@ Not a legal source of truth. Not affiliated with USCIS or any government agency.
 - DynamoDB (single-table) for primary data
 - Better Auth (`better-auth` + `@better-auth/passkey` + built-in TOTP plugin) for email + password + passkeys + 2FA
 - Zod v4 for validation everywhere
-- AWS SDK v3 for any S3-compatible object storage (Railway Buckets, MinIO, S3, R2, etc.)
+- AWS SDK v3 for S3-compatible object storage (AWS S3, Railway Buckets, R2, etc.)
 - Vitest for unit tests, Playwright for integration smoke tests
 
 ## Local setup
 
-Prereqs: Node 22, pnpm 10, Docker (for DynamoDB Local + optional MinIO).
+Prereqs: Node 22, pnpm 10, Docker (for DynamoDB Local).
 
 ```bash
 # 1. Install dependencies
 pnpm install
 
-# 2. Bring up DynamoDB Local and (optional) local MinIO
-docker compose up -d dynamodb minio
+# 2. Bring up DynamoDB Local
+docker compose up -d dynamodb
 
 # 3. Configure environment
 cp .env.example .env
@@ -71,7 +71,6 @@ src/
 ├── lib/
 │   ├── server/
 │   │   ├── auth.ts                  Better Auth instance (passkey + 2FA)
-│   │   ├── db.ts                    Prisma singleton
 │   │   ├── env.ts                   Env validation (Zod)
 │   │   ├── crypto.ts                AES-256-GCM helpers + receipt masking
 │   │   ├── storage.ts               S3 client + presigned URL helpers
@@ -115,7 +114,7 @@ Files are never stored on the application's local disk. Uploads use **server-iss
 | `S3_BUCKET`            | no       | Bucket name                                                                              |
 | `S3_ACCESS_KEY_ID`     | no       | Bucket credentials                                                                       |
 | `S3_SECRET_ACCESS_KEY` | no       | Bucket credentials                                                                       |
-| `S3_FORCE_PATH_STYLE`  | no       | `true` for MinIO/Railway Buckets-style endpoints                                         |
+| `S3_FORCE_PATH_STYLE`  | no       | `true` for Railway Buckets-style endpoints                                               |
 | `RESEND_API_KEY`       | no       | If unset, invitation emails are logged to the console (good for dev)                     |
 | `EMAIL_FROM`           | no       | "Sender Name <noreply@example.com>"                                                      |
 | `PORT` / `HOST`        | no       | Honored by `adapter-node`. Railway injects `PORT` automatically.                         |
@@ -140,17 +139,15 @@ The repo includes `railway.json` so the deploy is hands-off:
    - **Release/Start:** `node build`
    - **Healthcheck:** `GET /health`
 
-The first deploy applies all migrations automatically. Sign up at `/signup` — the very first account becomes the workspace owner. From `Settings → Members`, invite the second user.
-
-To seed demo data on Railway, run `pnpm db:seed` once via Railway's "Run command" UI (or use a one-off container).
+The first deploy provisions the DynamoDB table automatically. Sign up at `/signup` — the very first account becomes the workspace owner. From `Settings → Members`, invite the second user.
 
 ### Why `adapter-node`?
 
-Because Railway runs a long-lived Node container and our auth path expects native Node crypto (`node:crypto` for AES-GCM, Better Auth session signing). The `adapter-node` build is also the simplest path for self-hosted PostgreSQL, S3-compatible buckets, and a healthcheck endpoint.
+Because Railway runs a long-lived Node container and our auth path expects native Node crypto (`node:crypto` for AES-GCM, Better Auth session signing). The `adapter-node` build is also the simplest path for self-hosted deployments with S3-compatible buckets and a healthcheck endpoint.
 
 ## Security model
 
-- **Authentication.** Better Auth stores sessions in our Postgres. Sessions are 7 days, rolling, in HTTP-only secure cookies. Email + password is the primary factor; passkeys (WebAuthn) and TOTP are supported as additional factors. There is **no SMS-only MFA option**.
+- **Authentication.** Better Auth stores sessions in DynamoDB. Sessions are 7 days, rolling, in HTTP-only secure cookies. Email + password is the primary factor; passkeys (WebAuthn) and TOTP are supported as additional factors. There is **no SMS-only MFA option**.
 - **Authorization.** A single workspace per database. Two roles, `OWNER` and `COLLABORATOR`. Owners manage members and can delete the workspace. All domain reads/writes are scoped by `workspaceId`; cross-workspace access is impossible from the API surface.
 - **Encryption at rest.** Receipt numbers are AES-256-GCM-encrypted with `FIELD_ENCRYPTION_KEY`. Lose this key and you lose the cleartext for those fields.
 - **Files.** Never on local disk. Bucket policies should be private. The app issues short-lived presigned URLs for both upload and download.

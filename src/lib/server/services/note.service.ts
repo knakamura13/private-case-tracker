@@ -1,4 +1,3 @@
-import type { Prisma } from '@prisma/client';
 import { logActivity } from '$lib/server/activity';
 import type { NoteCreate, NoteUpdate } from '$lib/schemas/note';
 import { randomUUID } from 'node:crypto';

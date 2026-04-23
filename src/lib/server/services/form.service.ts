@@ -1,4 +1,4 @@
-import type { FormFilingStatus } from '@prisma/client';
+import type { FormFilingStatus } from '$lib/types/enums';
 import { logActivity } from '$lib/server/activity';
 import { encryptString, decryptString, maskReceiptNumber } from '$lib/server/crypto';
 import type { FormCreate, FormUpdate } from '$lib/schemas/form';

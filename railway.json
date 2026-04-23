@@ -5,7 +5,6 @@
 		"buildCommand": "pnpm install --frozen-lockfile && pnpm build"
 	},
 	"deploy": {
-		"preDeployCommand": "node -e \"console.log('preDeploy: Prisma migrate disabled (DynamoDB runtime)')\"",
 		"startCommand": "node build",
 		"healthcheckPath": "/health",
 		"healthcheckTimeout": 30,

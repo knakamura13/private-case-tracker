@@ -1,4 +1,4 @@
-import type { Prisma, QuestionSourceType, QuestionStatus } from '@prisma/client';
+import type { QuestionSourceType, QuestionStatus } from '$lib/types/enums';
 import { logActivity } from '$lib/server/activity';
 import type { QuestionCreate, QuestionUpdate } from '$lib/schemas/question';
 import { randomUUID } from 'node:crypto';

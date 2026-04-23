@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { requireWorkspace } from '$lib/server/guards';
 import { listForms, maskReceipt } from '$lib/server/services/form.service';
-import type { FormFilingStatus } from '@prisma/client';
+import type { FormFilingStatus } from '$lib/types/enums';
 
 const STATUSES: FormFilingStatus[] = [
 	'NOT_STARTED',

@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { InputJsonValue } from '$lib/types/enums';
 import { randomUUID } from 'node:crypto';
 import { ddbPut, ddbQuery, ddbGet } from '$lib/server/dynamo/ops';
 
@@ -16,7 +16,7 @@ export type LogErrorInput = {
 	userId?: string | null;
 	workspaceId?: string | null;
 	userAgent?: string | null;
-	context?: Prisma.InputJsonValue;
+	context?: InputJsonValue;
 };
 
 export async function logError(input: LogErrorInput) {

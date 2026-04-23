@@ -3,8 +3,6 @@ import { building } from '$app/environment';
 import { z } from 'zod';
 
 const schema = z.object({
-	// Legacy (Prisma/Postgres). Kept optional during migration, but not required at runtime once DynamoDB cutover is complete.
-	DATABASE_URL: z.string().url().optional(),
 	APP_URL: z.string().url(),
 	PUBLIC_APP_NAME: z.string().default('Private Case Tracker'),
 	BETTER_AUTH_SECRET: z.string().min(24),
@@ -36,7 +34,6 @@ type Env = z.infer<typeof schema>;
 let cached: Env | null = null;
 
 const BUILD_PLACEHOLDER: Env = {
-	DATABASE_URL: undefined,
 	APP_URL: 'http://localhost:3000',
 	PUBLIC_APP_NAME: 'Private Case Tracker',
 	BETTER_AUTH_SECRET: 'build-placeholder-secret-build-placeholder',
@@ -60,7 +57,6 @@ const BUILD_PLACEHOLDER: Env = {
 function load(): Env {
 	if (building) return BUILD_PLACEHOLDER;
 	const parsed = schema.safeParse({
-		DATABASE_URL: env.DATABASE_URL,
 		APP_URL: env.APP_URL,
 		PUBLIC_APP_NAME: env.PUBLIC_APP_NAME,
 		BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,

@@ -7,7 +7,7 @@ import type {
 	MilestonePhase,
 	MilestoneStatus,
 	QuestionStatus
-} from '@prisma/client';
+} from '$lib/types/enums';
 import { recentActivity } from '$lib/server/activity';
 import { listTasks } from './task.service';
 import { listAppointments } from './appointment.service';

@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { requireWorkspace } from '$lib/server/guards';
 import { listAppointments } from '$lib/server/services/appointment.service';
-import type { AppointmentStatus, AppointmentType } from '@prisma/client';
+import type { AppointmentStatus, AppointmentType } from '$lib/types/enums';
 
 const STATUSES: AppointmentStatus[] = [
 	'SCHEDULED',

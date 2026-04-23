@@ -38,7 +38,6 @@ export default ts.config(
 			'.svelte-kit/',
 			'dist/',
 			'node_modules/',
-			'prisma/migrations/',
 			'playwright-report/',
 			'test-results/'
 		]

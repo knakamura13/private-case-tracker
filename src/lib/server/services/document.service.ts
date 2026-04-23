@@ -1,4 +1,4 @@
-import type { DocumentFile, FileStatus } from '@prisma/client';
+import type { DocumentFile, FileStatus } from '$lib/types/enums';
 import { logActivity } from '$lib/server/activity';
 import { createUploadUrl, createDownloadUrl, deleteObject, headObject } from '$lib/server/storage';
 import type { DocumentMetadata } from '$lib/schemas/document';
