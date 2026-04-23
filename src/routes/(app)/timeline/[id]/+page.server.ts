@@ -17,7 +17,7 @@ export const load: PageServerLoad = async (event) => {
 	const members = await listMembers(workspace.id);
 	return {
 		milestone: milestone as unknown as {
-			phase: import('@prisma/client').MilestonePhase;
+			phase: import('$lib/types/enums').MilestonePhase;
 		} & typeof milestone,
 		members: members.map((m) => ({ id: m.user.id, name: m.user.name, email: m.user.email }))
 	};

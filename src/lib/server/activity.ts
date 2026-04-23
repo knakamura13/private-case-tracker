@@ -1,4 +1,4 @@
-import type { ActivityAction } from '@prisma/client';
+import type { ActivityAction } from '$lib/types/enums';
 import { hashIp } from './crypto';
 import { ddbPut, ddbQuery } from './dynamo/ops';
 import { entitySk, wsPk } from './dynamo/keys';

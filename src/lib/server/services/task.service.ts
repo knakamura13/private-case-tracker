@@ -1,4 +1,4 @@
-import type { TaskStatus } from '@prisma/client';
+import type { TaskStatus } from '$lib/types/enums';
 import { logActivity } from '$lib/server/activity';
 import type { TaskCreate, TaskUpdate } from '$lib/schemas/task';
 import { randomUUID } from 'node:crypto';

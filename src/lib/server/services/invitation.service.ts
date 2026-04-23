@@ -3,7 +3,7 @@ import { addDays } from 'date-fns';
 import { ENV } from '$lib/server/env';
 import { logActivity } from '$lib/server/activity';
 import { sendEmail, inviteEmail } from '$lib/server/email';
-import type { MemberRole } from '@prisma/client';
+import type { MemberRole } from '$lib/types/enums';
 import { randomUUID } from 'node:crypto';
 import { ddbGet, ddbPut, ddbQuery, ddbUpdate, ddbDelete } from '$lib/server/dynamo/ops';
 import { baPk, entitySk, gsi1Sk, gsi1UserPk, wsPk } from '$lib/server/dynamo/keys';

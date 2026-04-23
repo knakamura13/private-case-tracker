@@ -1,4 +1,4 @@
-import type { MemberRole } from '@prisma/client';
+import type { MemberRole } from '$lib/types/enums';
 
 declare global {
 	namespace App {

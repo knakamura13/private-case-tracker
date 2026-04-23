@@ -1,4 +1,4 @@
-import type { MilestonePhase, MilestoneStatus } from '@prisma/client';
+import type { MilestonePhase, MilestoneStatus } from '$lib/types/enums';
 import { logActivity } from '$lib/server/activity';
 import { PHASE_ORDER } from '$lib/constants/phases';
 import type { MilestoneCreate, MilestoneUpdate } from '$lib/schemas/milestone';

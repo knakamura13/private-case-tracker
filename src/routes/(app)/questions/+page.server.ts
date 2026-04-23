@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { requireWorkspace } from '$lib/server/guards';
 import { listQuestions } from '$lib/server/services/question.service';
-import type { QuestionSourceType, QuestionStatus } from '@prisma/client';
+import type { QuestionSourceType, QuestionStatus } from '$lib/types/enums';
 
 const STATUSES: QuestionStatus[] = ['OPEN', 'RESEARCHING', 'ANSWERED', 'WONT_FIX'];
 const SOURCES: QuestionSourceType[] = [

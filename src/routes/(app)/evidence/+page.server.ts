@@ -1,7 +1,7 @@
 import type { PageServerLoad, Actions } from './$types';
 import { requireWorkspace } from '$lib/server/guards';
 import { listEvidence } from '$lib/server/services/evidence.service';
-import type { EvidenceStatus } from '@prisma/client';
+import type { EvidenceStatus } from '$lib/types/enums';
 import { EVIDENCE_CATEGORIES, EVIDENCE_TARGETS } from '$lib/constants/categories';
 import { fail } from '@sveltejs/kit';
 import { ddbGet, ddbPut } from '$lib/server/dynamo/ops';

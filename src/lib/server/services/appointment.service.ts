@@ -1,4 +1,4 @@
-import type { AppointmentStatus, AppointmentType } from '@prisma/client';
+import type { AppointmentStatus, AppointmentType } from '$lib/types/enums';
 import { logActivity } from '$lib/server/activity';
 import type { AppointmentCreate, AppointmentUpdate } from '$lib/schemas/appointment';
 import { randomUUID } from 'node:crypto';

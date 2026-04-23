@@ -1,5 +1,5 @@
 import { logActivity } from '$lib/server/activity';
-import type { MemberRole } from '@prisma/client';
+import type { MemberRole } from '$lib/types/enums';
 import { randomUUID } from 'node:crypto';
 import { ddbPut, ddbGet, ddbQuery, ddbUpdate, ddbDelete } from '$lib/server/dynamo/ops';
 import { entitySk, gsi1Sk, gsi1UserPk, wsPk } from '$lib/server/dynamo/keys';

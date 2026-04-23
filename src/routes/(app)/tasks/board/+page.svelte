@@ -5,7 +5,7 @@
 	import { Plus, List } from 'lucide-svelte';
 	import { invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
-	import type { TaskStatus } from '@prisma/client';
+	import type { TaskStatus } from '$lib/types/enums';
 
 	let { data }: { data: PageData } = $props();
 

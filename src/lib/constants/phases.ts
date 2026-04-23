@@ -1,4 +1,4 @@
-import type { MilestonePhase } from '@prisma/client';
+import type { MilestonePhase } from '$lib/types/enums';
 
 export const PHASE_ORDER: MilestonePhase[] = [
 	'PREPARATION',

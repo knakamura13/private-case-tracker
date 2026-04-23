@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { QuickLink } from '@prisma/client';
+	import type { QuickLink } from '$lib/types/enums';
 	import { enhance } from '$app/forms';
 	import { EllipsisVertical, Plus, Link2 } from 'lucide-svelte';
 	import Input from '$lib/components/ui/Input.svelte';
@@ -118,7 +118,7 @@
 
 				{#if menuOpenId === link.id}
 					<div
-						class="absolute left-1/2 top-full z-20 mt-1 min-w-[8.5rem] -translate-x-1/2 rounded-md border border-border bg-card py-1 text-sm shadow-md"
+						class="absolute left-1/2 top-full z-20 mt-1 min-w-34 -translate-x-1/2 rounded-md border border-border bg-card py-1 text-sm shadow-md"
 						data-quicklink-menu="panel"
 						role="menu"
 					>
