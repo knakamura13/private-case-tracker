@@ -102,7 +102,7 @@
 			class="group flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 hover:bg-muted/40 focus-within:bg-muted/40"
 		>
 			<!-- Circle + ⋮ menu wrapper -->
-			<div class="relative" data-quicklink-menu="container">
+			<div class="relative">
 				<!-- ⋮ button anchored to the top-right corner of the circle -->
 				<button
 					type="button"
@@ -158,6 +158,7 @@
 					href={link.url}
 					target="_blank"
 					rel="noopener noreferrer"
+					aria-label={labelFor(link)}
 					class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60 outline-none focus-visible:ring-2 focus-visible:ring-ring"
 					tabindex="0"
 				>
