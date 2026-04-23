@@ -1,30 +1,53 @@
-import { db } from '$lib/server/db';
 import { logActivity } from '$lib/server/activity';
 import type { QuickLinkCreate, QuickLinkUpdate } from '$lib/schemas/quickLink';
+import { randomUUID } from 'node:crypto';
+import { ddbPut, ddbQuery, ddbGet, ddbUpdate } from '$lib/server/dynamo/ops';
+import { entitySk, wsPk } from '$lib/server/dynamo/keys';
 
 export async function listQuickLinks(workspaceId: string) {
-	return db.quickLink.findMany({
-		where: { workspaceId, deletedAt: null },
-		orderBy: { order: 'asc' }
+	const rows = await ddbQuery<{
+		id: string;
+		workspaceId: string;
+		url: string;
+		title: string | null;
+		description: string | null;
+		notes: string | null;
+		order: number;
+		deletedAt: string | null;
+		createdAt: string;
+		updatedAt: string;
+	}>({
+		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
+		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'QuickLink#' }
 	});
+
+	return rows.filter((r) => !r.deletedAt).sort((a, b) => a.order - b.order);
 }
 
-export async function createQuickLink(workspaceId: string, actorId: string, input: QuickLinkCreate) {
-	const last = await db.quickLink.findFirst({
-		where: { workspaceId, deletedAt: null },
-		orderBy: { order: 'desc' },
-		select: { order: true }
-	});
-	const order = (last?.order ?? -1) + 1;
-	const link = await db.quickLink.create({
-		data: {
-			workspaceId,
-			url: input.url,
-			title: input.title,
-			description: input.description,
-			notes: input.notes,
-			order
-		}
+export async function createQuickLink(
+	workspaceId: string,
+	actorId: string,
+	input: QuickLinkCreate
+) {
+	const existing = await listQuickLinks(workspaceId);
+	const order = (existing.at(-1)?.order ?? -1) + 1;
+	const now = new Date().toISOString();
+	const link = {
+		id: randomUUID(),
+		workspaceId,
+		url: input.url,
+		title: input.title ?? null,
+		description: input.description ?? null,
+		notes: input.notes ?? null,
+		order,
+		deletedAt: null as string | null,
+		createdAt: now,
+		updatedAt: now
+	};
+	await ddbPut({
+		PK: wsPk(workspaceId),
+		SK: entitySk('QuickLink', link.id),
+		...link
 	});
 	const label = link.title ?? new URL(link.url).hostname;
 	await logActivity({
@@ -38,16 +61,53 @@ export async function createQuickLink(workspaceId: string, actorId: string, inpu
 	return link;
 }
 
-export async function updateQuickLink(workspaceId: string, actorId: string, id: string, input: QuickLinkUpdate) {
-	const existing = await db.quickLink.findFirst({
-		where: { id, workspaceId, deletedAt: null }
-	});
+export async function updateQuickLink(
+	workspaceId: string,
+	actorId: string,
+	id: string,
+	input: QuickLinkUpdate
+) {
+	const existing = await ddbGet<{
+		id: string;
+		workspaceId: string;
+		url: string;
+		title: string | null;
+		description: string | null;
+		notes: string | null;
+		order: number;
+		deletedAt: string | null;
+		createdAt: string;
+		updatedAt: string;
+	}>({ PK: wsPk(workspaceId), SK: entitySk('QuickLink', id) });
 	if (!existing) throw new Error('Quick link not found');
-	const { id: _drop, ...patch } = input;
-	const link = await db.quickLink.update({
-		where: { id },
-		data: patch
-	});
+	if (existing.deletedAt) throw new Error('Quick link not found');
+	const patch: Partial<typeof existing> = {};
+	if (input.url !== undefined) patch.url = input.url;
+	if (input.title !== undefined) patch.title = input.title ?? null;
+	if (input.description !== undefined) patch.description = input.description ?? null;
+	if (input.notes !== undefined) patch.notes = input.notes ?? null;
+	patch.updatedAt = new Date().toISOString();
+
+	const exprParts: string[] = [];
+	const values: Record<string, unknown> = {};
+	const names: Record<string, string> = {};
+	for (const [k, v] of Object.entries(patch)) {
+		const nk = `#${k}`;
+		const vk = `:${k}`;
+		names[nk] = k;
+		values[vk] = v;
+		exprParts.push(`${nk} = ${vk}`);
+	}
+	const updated =
+		exprParts.length === 0
+			? existing
+			: ((await ddbUpdate<typeof existing>(
+					{ PK: wsPk(workspaceId), SK: entitySk('QuickLink', id) },
+					`SET ${exprParts.join(', ')}`,
+					values,
+					names
+				)) ?? existing);
+	const link = updated;
 	const label = link.title ?? safeHostname(link.url);
 	await logActivity({
 		workspaceId,
@@ -61,11 +121,23 @@ export async function updateQuickLink(workspaceId: string, actorId: string, id: 
 }
 
 export async function softDeleteQuickLink(workspaceId: string, actorId: string, id: string) {
-	const existing = await db.quickLink.findFirst({
-		where: { id, workspaceId, deletedAt: null }
+	const existing = await ddbGet<{
+		id: string;
+		title: string | null;
+		url: string;
+		deletedAt: string | null;
+	}>({
+		PK: wsPk(workspaceId),
+		SK: entitySk('QuickLink', id)
 	});
 	if (!existing) throw new Error('Quick link not found');
-	await db.quickLink.update({ where: { id }, data: { deletedAt: new Date() } });
+	if (existing.deletedAt) throw new Error('Quick link not found');
+	await ddbUpdate(
+		{ PK: wsPk(workspaceId), SK: entitySk('QuickLink', id) },
+		'SET #deletedAt = :d, #updatedAt = :u',
+		{ ':d': new Date().toISOString(), ':u': new Date().toISOString() },
+		{ '#deletedAt': 'deletedAt', '#updatedAt': 'updatedAt' }
+	);
 	const label = existing.title ?? safeHostname(existing.url);
 	await logActivity({
 		workspaceId,

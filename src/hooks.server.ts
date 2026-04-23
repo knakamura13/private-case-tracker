@@ -3,10 +3,11 @@ import { sequence } from '@sveltejs/kit/hooks';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 import { building, dev } from '$app/environment';
 import { auth } from '$lib/server/auth';
-import { db } from '$lib/server/db';
 import { logError } from '$lib/server/services/errorLog.service';
 import { redactSearchParams } from '$lib/server/utils/redact';
 import { DEV_USER, DEV_WORKSPACE, DEV_SESSION, ensureDevUserSeeded } from '$lib/server/dev-user';
+import { ddbQuery } from '$lib/server/dynamo/ops';
+import { gsi1UserPk } from '$lib/server/dynamo/keys';
 
 function makeRequestId() {
 	// Short-ish id that's useful in logs and UI.
@@ -47,15 +48,24 @@ const sessionHandle: Handle = async ({ event, resolve }) => {
 				expiresAt: new Date(session.session.expiresAt)
 			};
 
-			const membership = await db.membership.findFirst({
-				where: { userId: session.user.id, acceptedAt: { not: null } },
-				include: { workspace: true },
-				orderBy: { createdAt: 'asc' }
+			// Workspace lookup is now DynamoDB-backed (membership items are indexed by GSI1PK=USER#<userId>).
+			const memberships = await ddbQuery<{
+				workspaceId: string;
+				role: 'OWNER' | 'COLLABORATOR';
+				acceptedAt: string | null;
+				workspaceName?: string;
+			}>({
+				IndexName: 'GSI1',
+				KeyConditionExpression: 'GSI1PK = :pk',
+				ExpressionAttributeValues: { ':pk': gsi1UserPk(session.user.id) },
+				Limit: 10
 			});
-			if (membership) {
+
+			const membership = memberships.find((m) => m.acceptedAt != null);
+			if (membership?.workspaceId) {
 				event.locals.workspace = {
-					id: membership.workspace.id,
-					name: membership.workspace.name,
+					id: membership.workspaceId,
+					name: membership.workspaceName ?? 'Workspace',
 					role: membership.role
 				};
 			}

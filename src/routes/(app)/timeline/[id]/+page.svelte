@@ -14,7 +14,7 @@
 	let editing = $state(false);
 </script>
 
-<PageHeader title={data.milestone.title} description={PHASE_LABELS[data.milestone.phase]}>
+<PageHeader title={data.milestone.title} description={PHASE_LABELS[data.milestone.phase as keyof typeof PHASE_LABELS]}>
 	{#snippet actions()}
 		<Badge>{titleCase(data.milestone.status)}</Badge>
 		<Badge variant="outline">{titleCase(data.milestone.priority)}</Badge>

@@ -3,29 +3,20 @@ import type { Actions, PageServerLoad } from './$types';
 import { requireWorkspace } from '$lib/server/guards';
 import { createExternalDocument } from '$lib/server/services/document.service';
 import { documentMetadataSchema } from '$lib/schemas/document';
-import { db } from '$lib/server/db';
 import { DOCUMENT_CATEGORIES } from '$lib/constants/categories';
 import { storageConfigured } from '$lib/server/env';
+import { listTasks } from '$lib/server/services/task.service';
+import { listForms } from '$lib/server/services/form.service';
+import { listEvidence } from '$lib/server/services/evidence.service';
+import { listAppointments } from '$lib/server/services/appointment.service';
 
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);
 	const [tasks, forms, evidence, appointments] = await Promise.all([
-		db.task.findMany({
-			where: { workspaceId: workspace.id, deletedAt: null },
-			select: { id: true, title: true }
-		}),
-		db.formRecord.findMany({
-			where: { workspaceId: workspace.id, deletedAt: null },
-			select: { id: true, code: true, name: true }
-		}),
-		db.evidenceItem.findMany({
-			where: { workspaceId: workspace.id, deletedAt: null },
-			select: { id: true, title: true }
-		}),
-		db.appointment.findMany({
-			where: { workspaceId: workspace.id, deletedAt: null },
-			select: { id: true, title: true }
-		})
+		listTasks(workspace.id).then((r) => r.map((t) => ({ id: t.id, title: t.title }))),
+		listForms(workspace.id).then((r) => r.map((f) => ({ id: f.id, code: f.code, name: f.name }))),
+		listEvidence(workspace.id).then((r) => r.map((e) => ({ id: e.id, title: e.title }))),
+		listAppointments(workspace.id).then((r) => r.map((a) => ({ id: a.id, title: a.title })))
 	]);
 	return {
 		categories: DOCUMENT_CATEGORIES,

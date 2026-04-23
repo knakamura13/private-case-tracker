@@ -1,31 +1,51 @@
-import type { MilestonePhase, MilestoneStatus, Prisma } from '@prisma/client';
-import { db } from '$lib/server/db';
+import type { MilestonePhase, MilestoneStatus } from '@prisma/client';
 import { logActivity } from '$lib/server/activity';
 import { PHASE_ORDER } from '$lib/constants/phases';
 import type { MilestoneCreate, MilestoneUpdate } from '$lib/schemas/milestone';
+import { randomUUID } from 'node:crypto';
+import { ddbGet, ddbPut, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
+import { entitySk, wsPk } from '$lib/server/dynamo/keys';
 
 export async function listMilestones(
 	workspaceId: string,
 	filter: { phase?: MilestonePhase; status?: MilestoneStatus } = {}
 ) {
-	const where: Prisma.TimelineMilestoneWhereInput = { workspaceId, deletedAt: null };
-	if (filter.phase) where.phase = filter.phase;
-	if (filter.status) where.status = filter.status;
-	return db.timelineMilestone.findMany({
-		where,
-		include: { owner: { select: { id: true, name: true, email: true } } },
-		orderBy: [{ phase: 'asc' }, { order: 'asc' }, { dueDate: 'asc' }]
+	const rows = await ddbQuery<any>({
+		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
+		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'TimelineMilestone#' }
 	});
+	const filtered = rows
+		.filter((m) => !m.deletedAt)
+		.filter((m) => (filter.phase ? m.phase === filter.phase : true))
+		.filter((m) => (filter.status ? m.status === filter.status : true))
+		.map((m) => ({
+			...m,
+			owner: m.ownerId ? { id: m.ownerId, name: null, email: '' } : null
+		}));
+	filtered.sort(
+		(a, b) =>
+			String(a.phase).localeCompare(String(b.phase)) ||
+			Number(a.order ?? 0) - Number(b.order ?? 0) ||
+			Number(new Date(a.dueDate ?? 0).getTime()) - Number(new Date(b.dueDate ?? 0).getTime())
+	);
+	return filtered;
 }
 
 export async function getMilestone(workspaceId: string, id: string) {
-	return db.timelineMilestone.findFirst({
-		where: { id, workspaceId, deletedAt: null },
-		include: {
-			owner: { select: { id: true, name: true, email: true } },
-			tasks: { where: { deletedAt: null } }
-		}
+	const milestone = await ddbGet<any>({
+		PK: wsPk(workspaceId),
+		SK: entitySk('TimelineMilestone', id)
 	});
+	if (!milestone || milestone.deletedAt) return null;
+	const phase = milestone.phase as MilestonePhase;
+	const status = milestone.status as MilestoneStatus;
+	return {
+		...milestone,
+		phase,
+		status,
+		owner: milestone.ownerId ? { id: milestone.ownerId, name: null, email: '' } : null,
+		tasks: []
+	};
 }
 
 export async function createMilestone(
@@ -33,11 +53,23 @@ export async function createMilestone(
 	actorId: string,
 	input: MilestoneCreate
 ) {
-	const count = await db.timelineMilestone.count({
-		where: { workspaceId, phase: input.phase, deletedAt: null }
-	});
-	const milestone = await db.timelineMilestone.create({
-		data: { workspaceId, ...input, order: count }
+	const existing = await listMilestones(workspaceId, { phase: input.phase });
+	const order = existing.length;
+	const now = new Date().toISOString();
+	const milestone = {
+		id: randomUUID(),
+		workspaceId,
+		...input,
+		order,
+		completedAt: null as string | null,
+		deletedAt: null as string | null,
+		createdAt: now,
+		updatedAt: now
+	};
+	await ddbPut({
+		PK: wsPk(workspaceId),
+		SK: entitySk('TimelineMilestone', milestone.id),
+		...milestone
 	});
 	await logActivity({
 		workspaceId,
@@ -56,20 +88,36 @@ export async function updateMilestone(
 	id: string,
 	input: MilestoneUpdate
 ) {
-	const existing = await db.timelineMilestone.findFirst({
-		where: { id, workspaceId, deletedAt: null }
+	const existing = await ddbGet<any>({
+		PK: wsPk(workspaceId),
+		SK: entitySk('TimelineMilestone', id)
 	});
 	if (!existing) throw new Error('Milestone not found');
+	if (existing.deletedAt) throw new Error('Milestone not found');
 	const completedAt =
 		input.status === 'DONE' && !existing.completedAt
-			? new Date()
+			? new Date().toISOString()
 			: input.status && input.status !== 'DONE'
 				? null
 				: undefined;
-	const milestone = await db.timelineMilestone.update({
-		where: { id },
-		data: { ...input, completedAt }
-	});
+	const patch: Record<string, unknown> = { ...input, updatedAt: new Date().toISOString() };
+	if (completedAt !== undefined) patch.completedAt = completedAt;
+	const names: Record<string, string> = {};
+	const values: Record<string, unknown> = {};
+	const sets: string[] = [];
+	for (const [k, v] of Object.entries(patch)) {
+		const nk = `#${k}`;
+		const vk = `:${k}`;
+		names[nk] = k;
+		values[vk] = v;
+		sets.push(`${nk} = ${vk}`);
+	}
+	const milestone = (await ddbUpdate<any>(
+		{ PK: wsPk(workspaceId), SK: entitySk('TimelineMilestone', id) },
+		`SET ${sets.join(', ')}`,
+		values,
+		names
+	)) ?? { ...existing, ...patch };
 	const statusChanged = input.status && input.status !== existing.status;
 	await logActivity({
 		workspaceId,
@@ -85,11 +133,18 @@ export async function updateMilestone(
 }
 
 export async function softDeleteMilestone(workspaceId: string, actorId: string, id: string) {
-	const existing = await db.timelineMilestone.findFirst({
-		where: { id, workspaceId, deletedAt: null }
+	const existing = await ddbGet<any>({
+		PK: wsPk(workspaceId),
+		SK: entitySk('TimelineMilestone', id)
 	});
 	if (!existing) throw new Error('Milestone not found');
-	await db.timelineMilestone.update({ where: { id }, data: { deletedAt: new Date() } });
+	if (existing.deletedAt) throw new Error('Milestone not found');
+	await ddbUpdate(
+		{ PK: wsPk(workspaceId), SK: entitySk('TimelineMilestone', id) },
+		'SET #deletedAt = :d, #updatedAt = :u',
+		{ ':d': new Date().toISOString(), ':u': new Date().toISOString() },
+		{ '#deletedAt': 'deletedAt', '#updatedAt': 'updatedAt' }
+	);
 	await logActivity({
 		workspaceId,
 		userId: actorId,

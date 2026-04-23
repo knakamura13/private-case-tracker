@@ -1,7 +1,8 @@
 import type { PageServerLoad } from './$types';
 import { requireOwner } from '$lib/server/guards';
-import { db } from '$lib/server/db';
 import { listErrors } from '$lib/server/services/errorLog.service';
+import { ddbQuery } from '$lib/server/dynamo/ops';
+import { wsPk } from '$lib/server/dynamo/keys';
 
 const RAILWAY_PROJECT_URL =
 	'https://railway.com/project/3a9f57f3-72fb-4ec6-8fc8-c25dae27eaec?environmentId=4e56be4c-f007-4aed-bfdf-4afb3aac814d';
@@ -24,7 +25,11 @@ export const load: PageServerLoad = async (event) => {
 	let dbOk = true;
 	let dbMs = 0;
 	try {
-		await db.$queryRaw`SELECT 1`;
+		await ddbQuery({
+			KeyConditionExpression: 'PK = :pk',
+			ExpressionAttributeValues: { ':pk': wsPk('healthcheck') },
+			Limit: 1
+		});
 		dbMs = Math.round(performance.now() - t0);
 	} catch {
 		dbOk = false;

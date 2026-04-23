@@ -1,24 +1,41 @@
-import { db } from '$lib/server/db';
 import { logActivity } from '$lib/server/activity';
 import type { MemberRole } from '@prisma/client';
+import { randomUUID } from 'node:crypto';
+import { ddbPut, ddbGet, ddbQuery, ddbUpdate, ddbDelete } from '$lib/server/dynamo/ops';
+import { entitySk, gsi1Sk, gsi1UserPk, wsPk } from '$lib/server/dynamo/keys';
 
 export async function createWorkspace(input: { name: string; ownerUserId: string }) {
-	const ws = await db.$transaction(async (tx) => {
-		const workspace = await tx.workspace.create({
-			data: {
-				name: input.name,
-				ownerId: input.ownerUserId
-			}
-		});
-		await tx.membership.create({
-			data: {
-				workspaceId: workspace.id,
-				userId: input.ownerUserId,
-				role: 'OWNER',
-				acceptedAt: new Date()
-			}
-		});
-		return workspace;
+	const now = new Date().toISOString();
+	const workspaceId = randomUUID();
+	const ws = {
+		id: workspaceId,
+		name: input.name,
+		ownerId: input.ownerUserId,
+		evidenceTargets: null as any,
+		createdAt: now,
+		updatedAt: now
+	};
+
+	await ddbPut({
+		PK: wsPk(workspaceId),
+		SK: entitySk('Workspace', workspaceId),
+		...ws
+	});
+	// Singleton marker used by onboarding to detect "first workspace created".
+	await ddbPut({ PK: 'WS_INDEX', SK: `Workspace#${workspaceId}` });
+
+	await ddbPut({
+		PK: wsPk(workspaceId),
+		SK: entitySk('Membership', input.ownerUserId),
+		id: randomUUID(),
+		workspaceId,
+		userId: input.ownerUserId,
+		role: 'OWNER' as const,
+		acceptedAt: now,
+		createdAt: now,
+		GSI1PK: gsi1UserPk(input.ownerUserId),
+		GSI1SK: gsi1Sk('Membership', workspaceId),
+		workspaceName: ws.name
 	});
 	await logActivity({
 		workspaceId: ws.id,
@@ -32,36 +49,61 @@ export async function createWorkspace(input: { name: string; ownerUserId: string
 }
 
 export async function getMembership(workspaceId: string, userId: string) {
-	return db.membership.findUnique({
-		where: { workspaceId_userId: { workspaceId, userId } }
+	return ddbGet<{
+		workspaceId: string;
+		userId: string;
+		role: MemberRole;
+		acceptedAt: string | null;
+	}>({
+		PK: wsPk(workspaceId),
+		SK: entitySk('Membership', userId)
 	});
 }
 
 export async function listMembers(workspaceId: string) {
-	return db.membership.findMany({
-		where: { workspaceId },
-		include: {
-			user: { select: { id: true, email: true, name: true, image: true, createdAt: true } }
-		},
-		orderBy: [{ role: 'asc' }, { createdAt: 'asc' }]
+	const rows = await ddbQuery<any>({
+		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
+		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'Membership#' }
 	});
+	// We no longer have a relational join to user; return userId only.
+	return rows
+		.map((r) => ({
+			id: r.id ?? `${r.workspaceId}:${r.userId}`,
+			workspaceId: r.workspaceId,
+			userId: r.userId,
+			role: r.role,
+			acceptedAt: r.acceptedAt ? new Date(r.acceptedAt) : null,
+			createdAt: r.createdAt ? new Date(r.createdAt) : new Date(),
+			user: { id: r.userId, email: '', name: null, image: null, createdAt: new Date() }
+		}))
+		.sort((a, b) =>
+			a.role === b.role
+				? a.createdAt.getTime() - b.createdAt.getTime()
+				: a.role.localeCompare(b.role)
+		);
 }
 
 export async function changeRole(workspaceId: string, userId: string, role: MemberRole) {
-	return db.membership.update({
-		where: { workspaceId_userId: { workspaceId, userId } },
-		data: { role }
-	});
+	return ddbUpdate(
+		{ PK: wsPk(workspaceId), SK: entitySk('Membership', userId) },
+		'SET #role = :r',
+		{ ':r': role },
+		{ '#role': 'role' }
+	);
 }
 
 export async function removeMember(workspaceId: string, userId: string) {
-	return db.membership.delete({
-		where: { workspaceId_userId: { workspaceId, userId } }
-	});
+	await ddbDelete({ PK: wsPk(workspaceId), SK: entitySk('Membership', userId) });
 }
 
 export async function renameWorkspace(workspaceId: string, name: string, actorId: string) {
-	const updated = await db.workspace.update({ where: { id: workspaceId }, data: { name } });
+	const updated =
+		(await ddbUpdate<any>(
+			{ PK: wsPk(workspaceId), SK: entitySk('Workspace', workspaceId) },
+			'SET #name = :n, #updatedAt = :u',
+			{ ':n': name, ':u': new Date().toISOString() },
+			{ '#name': 'name', '#updatedAt': 'updatedAt' }
+		)) ?? null;
 	await logActivity({
 		workspaceId,
 		userId: actorId,
@@ -74,5 +116,6 @@ export async function renameWorkspace(workspaceId: string, name: string, actorId
 }
 
 export async function deleteWorkspace(workspaceId: string) {
-	await db.workspace.delete({ where: { id: workspaceId } });
+	// Minimal delete: remove workspace root item. (Full cleanup can be added later.)
+	await ddbDelete({ PK: wsPk(workspaceId), SK: entitySk('Workspace', workspaceId) });
 }

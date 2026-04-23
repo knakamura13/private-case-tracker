@@ -1,15 +1,14 @@
 import { betterAuth } from 'better-auth';
-import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { passkey } from '@better-auth/passkey';
 import { twoFactor } from 'better-auth/plugins/two-factor';
-import { db } from './db';
 import { ENV } from './env';
+import { dynamoBetterAuthAdapter } from './better-auth/dynamo-adapter';
 
 export const auth = betterAuth({
 	appName: ENV.PUBLIC_APP_NAME,
 	baseURL: ENV.BETTER_AUTH_URL,
 	secret: ENV.BETTER_AUTH_SECRET,
-	database: prismaAdapter(db, { provider: 'postgresql' }),
+	database: dynamoBetterAuthAdapter(),
 	session: {
 		expiresIn: 60 * 60 * 24 * 7,
 		updateAge: 60 * 60 * 24,

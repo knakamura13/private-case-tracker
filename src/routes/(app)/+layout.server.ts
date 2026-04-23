@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
-import { db } from '$lib/server/db';
+import { listMembers } from '$lib/server/services/workspace.service';
 
 export const load: LayoutServerLoad = async ({ locals, url }) => {
 	if (!locals.user) {
@@ -9,10 +9,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 	}
 	if (!locals.workspace) throw redirect(303, '/onboarding');
 
-	const members = await db.membership.findMany({
-		where: { workspaceId: locals.workspace.id, acceptedAt: { not: null } },
-		include: { user: { select: { id: true, email: true, name: true, image: true } } }
-	});
+	const members = await listMembers(locals.workspace.id);
 
 	return {
 		user: locals.user,

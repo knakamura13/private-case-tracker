@@ -3,8 +3,9 @@ import { requireWorkspace } from '$lib/server/guards';
 import { listEvidence } from '$lib/server/services/evidence.service';
 import type { EvidenceStatus } from '@prisma/client';
 import { EVIDENCE_CATEGORIES, EVIDENCE_TARGETS } from '$lib/constants/categories';
-import { db } from '$lib/server/db';
 import { fail } from '@sveltejs/kit';
+import { ddbGet, ddbPut } from '$lib/server/dynamo/ops';
+import { entitySk, wsPk } from '$lib/server/dynamo/keys';
 
 const STATUSES: EvidenceStatus[] = [
 	'COLLECTED',
@@ -29,10 +30,7 @@ export const load: PageServerLoad = async (event) => {
 	});
 
 	// Fetch workspace to get stored evidence target overrides
-	const ws = await db.workspace.findUnique({
-		where: { id: workspace.id },
-		select: { evidenceTargets: true }
-	});
+	const ws = await ddbGet<any>({ PK: wsPk(workspace.id), SK: entitySk('Workspace', workspace.id) });
 	const storedTargets = (ws?.evidenceTargets as Record<string, number> | null) ?? {};
 	const effectiveTargets: Record<string, number> = { ...EVIDENCE_TARGETS, ...storedTargets };
 
@@ -45,13 +43,13 @@ export const load: PageServerLoad = async (event) => {
 		if (it.status === 'READY') c.ready += 1;
 		counts.set(it.type, c);
 	}
-	const gaps = EVIDENCE_CATEGORIES.filter((cat) => (counts.get(cat)?.total ?? 0) < (effectiveTargets[cat] ?? 0)).map(
-		(cat) => ({
-			category: cat,
-			have: counts.get(cat)?.total ?? 0,
-			target: effectiveTargets[cat] ?? 0
-		})
-	);
+	const gaps = EVIDENCE_CATEGORIES.filter(
+		(cat) => (counts.get(cat)?.total ?? 0) < (effectiveTargets[cat] ?? 0)
+	).map((cat) => ({
+		category: cat,
+		have: counts.get(cat)?.total ?? 0,
+		target: effectiveTargets[cat] ?? 0
+	}));
 
 	return { items, gaps, categories: EVIDENCE_CATEGORIES, effectiveTargets };
 };
@@ -68,16 +66,20 @@ export const actions: Actions = {
 			return fail(400, { error: 'Invalid input' });
 		}
 
-		const ws = await db.workspace.findUnique({
-			where: { id: workspace.id },
-			select: { evidenceTargets: true }
+		const ws = await ddbGet<any>({
+			PK: wsPk(workspace.id),
+			SK: entitySk('Workspace', workspace.id)
 		});
 		const current = (ws?.evidenceTargets as Record<string, number> | null) ?? {};
 		const updated = { ...current, [category]: target };
 
-		await db.workspace.update({
-			where: { id: workspace.id },
-			data: { evidenceTargets: updated }
+		// naive overwrite of workspace item (only mutates evidenceTargets)
+		await ddbPut({
+			...(ws ?? { id: workspace.id, name: workspace.name, ownerId: null }),
+			PK: wsPk(workspace.id),
+			SK: entitySk('Workspace', workspace.id),
+			evidenceTargets: updated,
+			updatedAt: new Date().toISOString()
 		});
 
 		return {};

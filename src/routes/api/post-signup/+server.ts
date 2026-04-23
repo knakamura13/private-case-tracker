@@ -1,9 +1,10 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { auth } from '$lib/server/auth';
-import { db } from '$lib/server/db';
 import { createWorkspace } from '$lib/server/services/workspace.service';
 import { acceptInvitation } from '$lib/server/services/invitation.service';
+import { getMembership } from '$lib/server/services/workspace.service';
+import { ddbQuery } from '$lib/server/dynamo/ops';
 
 // Called immediately after successful sign-up.
 // - First user in the system becomes an OWNER of a freshly created workspace.
@@ -18,7 +19,14 @@ export const POST: RequestHandler = async ({ request }) => {
 	const workspaceName = ((form.get('workspaceName') as string) || 'Our case').trim();
 	const inviteToken = (form.get('inviteToken') as string) || null;
 
-	const existing = await db.membership.findFirst({ where: { userId: session.user.id } });
+	// We don't know the workspaceId yet; simplest is to rely on hooks membership load later.
+	// If the user is already attached, no-op.
+	const existing = await ddbQuery<any>({
+		IndexName: 'GSI1',
+		KeyConditionExpression: 'GSI1PK = :pk',
+		ExpressionAttributeValues: { ':pk': `USER#${session.user.id}` },
+		Limit: 1
+	});
 	if (existing) return json({ ok: true });
 
 	if (inviteToken) {
@@ -30,7 +38,13 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 	}
 
-	const totalWorkspaces = await db.workspace.count();
+	const totalWorkspaces = (
+		await ddbQuery({
+			KeyConditionExpression: 'PK = :pk',
+			ExpressionAttributeValues: { ':pk': 'WS_INDEX' },
+			Limit: 1
+		}).catch(() => [] as any[])
+	).length;
 	if (totalWorkspaces > 0) {
 		return json(
 			{ error: 'Signup is closed. Ask the workspace owner for an invitation.' },

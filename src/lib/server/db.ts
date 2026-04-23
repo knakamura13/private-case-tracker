@@ -1,14 +1,14 @@
-import { env } from '$env/dynamic/private';
-import { PrismaClient } from '@prisma/client';
-import { dev } from '$app/environment';
+// Deprecated: Prisma/Postgres is no longer used at runtime.
+// Kept only to avoid breaking any leftover imports during the migration.
+// If this is still being imported, that is a bug.
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
-
-export const db =
-	globalForPrisma.prisma ??
-	new PrismaClient({
-		log: dev ? ['query', 'error', 'warn'] : ['error'],
-		datasources: { db: { url: env.DATABASE_URL } }
-	});
-
-if (dev) globalForPrisma.prisma = db;
+export const db = new Proxy(
+	{},
+	{
+		get(_t, prop) {
+			throw new Error(
+				`Prisma db access is disabled (attempted to read "${String(prop)}"). Remove $lib/server/db usage.`
+			);
+		}
+	}
+) as never;

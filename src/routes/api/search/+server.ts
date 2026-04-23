@@ -1,7 +1,13 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { db } from '$lib/server/db';
 import { truncate } from '$lib/utils/format';
+import { listTasks } from '$lib/server/services/task.service';
+import { listForms } from '$lib/server/services/form.service';
+import { listEvidence } from '$lib/server/services/evidence.service';
+import { listQuestions } from '$lib/server/services/question.service';
+import { listNotes } from '$lib/server/services/note.service';
+import { listDocuments } from '$lib/server/services/document.service';
+import { listQuickLinks } from '$lib/server/services/quickLink.service';
 
 const LIMIT_PER_GROUP = 6;
 
@@ -11,77 +17,25 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	if (!q) return json({});
 
 	const workspaceId = locals.workspace.id;
-	const contains = { contains: q, mode: 'insensitive' as const };
 
 	const [tasks, forms, evidence, questions, notes, files, quickLinks] = await Promise.all([
-		db.task.findMany({
-			where: {
-				workspaceId,
-				deletedAt: null,
-				OR: [{ title: contains }, { description: contains }]
-			},
-			take: LIMIT_PER_GROUP,
-			orderBy: { updatedAt: 'desc' }
-		}),
-		db.formRecord.findMany({
-			where: {
-				workspaceId,
-				deletedAt: null,
-				OR: [{ name: contains }, { code: contains }, { purpose: contains }, { notes: contains }]
-			},
-			take: LIMIT_PER_GROUP,
-			orderBy: { updatedAt: 'desc' }
-		}),
-		db.evidenceItem.findMany({
-			where: {
-				workspaceId,
-				deletedAt: null,
-				OR: [
-					{ title: contains },
-					{ description: contains },
-					{ significance: contains },
-					{ notes: contains }
-				]
-			},
-			take: LIMIT_PER_GROUP,
-			orderBy: { updatedAt: 'desc' }
-		}),
-		db.questionItem.findMany({
-			where: {
-				workspaceId,
-				deletedAt: null,
-				OR: [{ question: contains }, { answer: contains }, { category: contains }]
-			},
-			take: LIMIT_PER_GROUP,
-			orderBy: { updatedAt: 'desc' }
-		}),
-		db.note.findMany({
-			where: {
-				workspaceId,
-				deletedAt: null,
-				OR: [{ title: contains }, { bodyMd: contains }]
-			},
-			take: LIMIT_PER_GROUP,
-			orderBy: { updatedAt: 'desc' }
-		}),
-		db.documentFile.findMany({
-			where: {
-				workspaceId,
-				deletedAt: null,
-				OR: [{ title: contains }, { notes: contains }, { category: contains }]
-			},
-			take: LIMIT_PER_GROUP,
-			orderBy: { updatedAt: 'desc' }
-		}),
-		db.quickLink.findMany({
-			where: {
-				workspaceId,
-				deletedAt: null,
-				OR: [{ title: contains }, { url: contains }, { description: contains }, { notes: contains }]
-			},
-			take: LIMIT_PER_GROUP,
-			orderBy: { updatedAt: 'desc' }
-		})
+		listTasks(workspaceId, { q }).then((r) => r.slice(0, LIMIT_PER_GROUP)),
+		listForms(workspaceId, { q }).then((r) => r.slice(0, LIMIT_PER_GROUP)),
+		listEvidence(workspaceId, { q }).then((r) => r.slice(0, LIMIT_PER_GROUP)),
+		listQuestions(workspaceId, { q }).then((r) => r.slice(0, LIMIT_PER_GROUP)),
+		listNotes(workspaceId, { q }).then((r) => r.slice(0, LIMIT_PER_GROUP)),
+		listDocuments(workspaceId, { q }).then((r) => r.slice(0, LIMIT_PER_GROUP)),
+		listQuickLinks(workspaceId).then((r) =>
+			r
+				.filter((l) =>
+					[l.title, l.url, l.description, l.notes].some((x) =>
+						String(x ?? '')
+							.toLowerCase()
+							.includes(q.toLowerCase())
+					)
+				)
+				.slice(0, LIMIT_PER_GROUP)
+		)
 	]);
 
 	return json({

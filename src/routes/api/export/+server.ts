@@ -1,23 +1,42 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { db } from '$lib/server/db';
+import { listTasks } from '$lib/server/services/task.service';
+import { listForms } from '$lib/server/services/form.service';
+import { listEvidence } from '$lib/server/services/evidence.service';
+import { listDocuments } from '$lib/server/services/document.service';
+import { listAppointments } from '$lib/server/services/appointment.service';
+import { listQuestions } from '$lib/server/services/question.service';
+import { listNotes } from '$lib/server/services/note.service';
+import { listMilestones } from '$lib/server/services/milestone.service';
+import { recentActivity } from '$lib/server/activity';
+import { listQuickLinks } from '$lib/server/services/quickLink.service';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	if (!locals.user || !locals.workspace) return json({ error: 'Unauthorized' }, { status: 401 });
 	const wsId = locals.workspace.id;
-	const [tasks, forms, evidence, documents, appointments, questions, notes, milestones, activity, quickLinks] =
-		await Promise.all([
-			db.task.findMany({ where: { workspaceId: wsId, deletedAt: null }, include: { checklist: true } }),
-			db.formRecord.findMany({ where: { workspaceId: wsId, deletedAt: null }, include: { supportingItems: true } }),
-			db.evidenceItem.findMany({ where: { workspaceId: wsId, deletedAt: null } }),
-			db.documentFile.findMany({ where: { workspaceId: wsId, deletedAt: null } }),
-			db.appointment.findMany({ where: { workspaceId: wsId, deletedAt: null } }),
-			db.questionItem.findMany({ where: { workspaceId: wsId, deletedAt: null } }),
-			db.note.findMany({ where: { workspaceId: wsId, deletedAt: null } }),
-			db.timelineMilestone.findMany({ where: { workspaceId: wsId, deletedAt: null } }),
-			db.activityLog.findMany({ where: { workspaceId: wsId } }),
-			db.quickLink.findMany({ where: { workspaceId: wsId, deletedAt: null } })
-		]);
+	const [
+		tasks,
+		forms,
+		evidence,
+		documents,
+		appointments,
+		questions,
+		notes,
+		milestones,
+		activity,
+		quickLinks
+	] = await Promise.all([
+		listTasks(wsId),
+		listForms(wsId),
+		listEvidence(wsId),
+		listDocuments(wsId),
+		listAppointments(wsId),
+		listQuestions(wsId),
+		listNotes(wsId),
+		listMilestones(wsId),
+		recentActivity(wsId, 500),
+		listQuickLinks(wsId)
+	]);
 	return new Response(
 		JSON.stringify(
 			{
@@ -26,7 +45,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 				tasks,
 				forms,
 				evidence,
-				documents: documents.map((d) => ({ ...d, storageKey: undefined })),
+				documents: documents.map((d: any) => ({ ...d, storageKey: undefined })),
 				appointments,
 				questions,
 				notes,
