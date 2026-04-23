@@ -15,6 +15,8 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:components": "vitest run --config vitest.component.config.ts",
+    "test:components:watch": "vitest --config vitest.component.config.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -39,6 +41,8 @@
     "@sveltejs/kit": "^2.57.1",
     "@sveltejs/vite-plugin-svelte": "^5.0.1",
     "@tailwindcss/vite": "^4.2.4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/svelte": "^5.3.1",
     "@types/node": "^22.10.2",
     "@typescript-eslint/eslint-plugin": "^8.18.0",
     "@typescript-eslint/parser": "^8.18.0",
@@ -48,6 +52,8 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-svelte": "^2.46.1",
     "globals": "^15.14.0",
+    "happy-dom": "^20.9.0",
+    "jsdom": "^29.0.2",
     "lucide-svelte": "^0.468.0",
     "prettier": "^3.4.2",
     "prettier-plugin-svelte": "^3.3.2",
