@@ -35,8 +35,8 @@
 		const focusable = getFocusable(container);
 		if (focusable.length === 0) return;
 		const active = document.activeElement as HTMLElement | null;
-		const first = focusable[0];
-		const last = focusable[focusable.length - 1];
+		const first = focusable[0]!;
+		const last = focusable[focusable.length - 1]!;
 		if (e.shiftKey) {
 			if (!active || active === first || !container.contains(active)) {
 				e.preventDefault();
@@ -72,13 +72,12 @@
 		aria-modal="true"
 		aria-labelledby="quick-add-title"
 		tabindex="-1"
-		onkeydown={trapTabKey}
+		onkeydown={(e) => {
+			if (e.key === 'Escape') open = false;
+			trapTabKey(e);
+		}}
 	>
-		<button
-			class="absolute inset-0 z-0 cursor-default"
-			aria-label="Close"
-			onclick={() => (open = false)}
-		></button>
+		<div class="absolute inset-0 z-0 cursor-default" aria-hidden="true" onclick={() => (open = false)}></div>
 		<div bind:this={dialogEl} class="relative z-10 w-full max-w-sm overflow-hidden rounded-lg border border-border bg-card shadow-xl">
 			<div class="flex items-center justify-between border-b border-border px-4 py-3">
 				<h2 id="quick-add-title" class="text-sm font-semibold">Quick create</h2>

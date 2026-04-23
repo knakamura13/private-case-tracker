@@ -40,8 +40,8 @@
 		const focusable = getFocusable(container);
 		if (focusable.length === 0) return;
 		const active = document.activeElement as HTMLElement | null;
-		const first = focusable[0];
-		const last = focusable[focusable.length - 1];
+		const first = focusable[0]!;
+		const last = focusable[focusable.length - 1]!;
 		if (e.shiftKey) {
 			if (!active || active === first || !container.contains(active)) {
 				e.preventDefault();
@@ -56,6 +56,7 @@
 	}
 
 	const flat = $derived(Object.values(results).flat());
+	const activeItem = $derived(flat[activeIndex]);
 
 	$effect(() => {
 		if (open) {
@@ -128,16 +129,31 @@
 </script>
 
 {#if open}
-	<div class="fixed inset-0 z-50 flex items-start justify-center bg-background/60 p-4 pt-24 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Search" tabindex="-1" onkeydown={trapTabKey}>
-		<button class="absolute inset-0 z-0 cursor-default" aria-label="Close" onclick={() => (open = false)}></button>
+	<div
+		class="fixed inset-0 z-50 flex items-start justify-center bg-background/60 p-4 pt-24 backdrop-blur-sm"
+		role="dialog"
+		aria-modal="true"
+		aria-label="Search"
+		tabindex="-1"
+		onkeydown={(e) => {
+			if (e.key === 'Escape') open = false;
+			trapTabKey(e);
+		}}
+	>
+		<div class="absolute inset-0 z-0 cursor-default" aria-hidden="true" onclick={() => (open = false)}></div>
 		<div bind:this={dialogContentEl} class="relative z-10 w-full max-w-xl overflow-hidden rounded-lg border border-border bg-card shadow-xl">
 			<div class="flex items-center gap-2 border-b border-border px-3">
 				<Search class="h-4 w-4 text-muted-foreground" />
+				<label class="sr-only" for="command-palette-input">Search</label>
 				<input
+					id="command-palette-input"
 					bind:this={inputEl}
 					bind:value={query}
 					oninput={onInput}
 					onkeydown={onKeydown}
+					aria-controls="command-palette-results"
+					aria-activedescendant={activeItem ? `cp-opt-${activeItem.type}-${activeItem.id}` : undefined}
+					aria-autocomplete="list"
 					placeholder="Search across tasks, forms, evidence, questions, notes, files…"
 					class="h-12 w-full bg-transparent text-sm outline-none"
 				/>
@@ -157,10 +173,11 @@
 						{#if items.length > 0}
 							<div>
 								<p class="bg-muted/60 px-3 py-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">{group}</p>
-								<ul>
+								<ul id="command-palette-results" role="listbox" aria-label="Search results">
 									{#each items as item, i (item.type + item.id)}
 										{@const globalIndex = flat.findIndex((f) => f.type === item.type && f.id === item.id)}
-										<li>
+										{@const optionId = `cp-opt-${item.type}-${item.id}`}
+										<li role="option" id={optionId} aria-selected={activeIndex === globalIndex}>
 											<a
 												href={item.href}
 												target={item.type === 'quicklink' ? '_blank' : undefined}
