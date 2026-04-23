@@ -3,7 +3,6 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
-	import Disclaimer from '$lib/components/shared/Disclaimer.svelte';
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
 	import type { ActionData, PageData } from './$types';
@@ -14,7 +13,6 @@
 </script>
 
 <PageHeader title="Data & privacy" description="Export, audit, demo data, and danger zone." />
-<Disclaimer detailed class="mb-4" />
 
 <div class="space-y-4">
 	<Card class="p-4">

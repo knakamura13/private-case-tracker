@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Disclaimer from '$lib/components/shared/Disclaimer.svelte';
 	import { ShieldCheck } from 'lucide-svelte';
 	let {
 		title,
@@ -22,7 +21,7 @@
 		{#if subtitle}<p class="mt-1 text-sm text-muted-foreground">{subtitle}</p>{/if}
 		<div class="mt-8">{@render children()}</div>
 		<div class="mt-8">
-			<Disclaimer detailed />
+			
 		</div>
 	</div>
 </main>

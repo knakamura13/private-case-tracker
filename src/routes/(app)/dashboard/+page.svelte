@@ -1,6 +1,5 @@
 <script lang="ts">
 	import PageHeader from '$lib/components/shared/PageHeader.svelte';
-	import Disclaimer from '$lib/components/shared/Disclaimer.svelte';
 	import Widget from '$lib/components/dashboard/Widget.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import { fmtDate, fmtDateTime, fmtRelative, daysUntil, isOverdue } from '$lib/utils/dates';
@@ -11,8 +10,7 @@
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 </script>
 
-<PageHeader title="Dashboard" description={`Current phase: ${data.phaseLabel}`} />
-<Disclaimer class="mb-6" />
+<PageHeader title="Dashboard" />
 
 <div class="mb-4">
 	<Widget title="Quick links">

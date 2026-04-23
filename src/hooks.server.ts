@@ -1,14 +1,15 @@
 import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
-import { building } from '$app/environment';
+import { building, dev } from '$app/environment';
 import { auth } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import { logError } from '$lib/server/services/errorLog.service';
 import { redactSearchParams } from '$lib/server/utils/redact';
+import { DEV_USER, DEV_WORKSPACE, DEV_SESSION, ensureDevUserSeeded } from '$lib/server/dev-user';
 
 function makeRequestId() {
-	// Short-ish id that’s useful in logs and UI.
+	// Short-ish id that's useful in logs and UI.
 	return crypto.randomUUID().replace(/-/g, '').slice(0, 12);
 }
 
@@ -23,6 +24,14 @@ const sessionHandle: Handle = async ({ event, resolve }) => {
 	event.locals.user = null;
 	event.locals.session = null;
 	event.locals.workspace = null;
+
+	if (dev) {
+		await ensureDevUserSeeded();
+		event.locals.user = DEV_USER;
+		event.locals.session = DEV_SESSION;
+		event.locals.workspace = DEV_WORKSPACE;
+		return resolve(event);
+	}
 
 	try {
 		const session = await auth.api.getSession({ headers: event.request.headers });
