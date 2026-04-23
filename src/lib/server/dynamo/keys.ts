@@ -15,6 +15,7 @@ export type EntityType =
 	| 'NoteTag'
 	| 'Tag'
 	| 'QuickLink'
+	| 'QuickLinkFolder'
 	| 'DocumentFile'
 	| 'ActivityLog'
 	| 'ErrorLog'

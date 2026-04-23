@@ -5,14 +5,20 @@ import { ddbGet, ddbPut, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
 import type { QuickLinkItem } from '$lib/server/dynamo/types';
 
-export async function listQuickLinks(workspaceId: string, limit?: number) {
+export async function listQuickLinks(workspaceId: string, limit?: number, folderId?: string | null) {
 	const rows = await ddbQuery<QuickLinkItem>({
 		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
 		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'QuickLink#' },
 		Limit: limit ?? 1000
 	});
 
-	return rows.filter((r) => !r.deletedAt).sort((a, b) => a.order - b.order);
+	let filtered = rows.filter((r) => !r.deletedAt);
+
+	if (folderId !== undefined) {
+		filtered = filtered.filter((r) => r.folderId === folderId);
+	}
+
+	return filtered.sort((a, b) => a.order - b.order);
 }
 
 export async function createQuickLink(
