@@ -6,12 +6,19 @@
 	import { fmtDate, fmtDateTime, fmtRelative, daysUntil, isOverdue } from '$lib/utils/dates';
 	import { titleCase } from '$lib/utils/format';
 	import { CalendarClock, AlertTriangle } from 'lucide-svelte';
-	import type { PageData } from './$types';
-	let { data }: { data: PageData } = $props();
+	import QuickLinksWidget from '$lib/components/dashboard/QuickLinksWidget.svelte';
+	import type { ActionData, PageData } from './$types';
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 </script>
 
 <PageHeader title="Dashboard" description={`Current phase: ${data.phaseLabel}`} />
 <Disclaimer class="mb-6" />
+
+<div class="mb-4">
+	<Widget title="Quick links">
+		<QuickLinksWidget links={data.quickLinks} form={form as { error?: string; errorId?: string | null } | undefined} />
+	</Widget>
+</div>
 
 <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
 	<Widget title="Case progress" href="/timeline">
