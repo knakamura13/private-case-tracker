@@ -8,18 +8,17 @@ import {
 	softDeleteMilestone
 } from '$lib/server/services/milestone.service';
 import { milestoneUpdateSchema } from '$lib/schemas/milestone';
-import { db } from '$lib/server/db';
+import { listMembers } from '$lib/server/services/workspace.service';
 
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);
 	const milestone = await getMilestone(workspace.id, event.params.id);
 	if (!milestone) throw error(404, { message: 'Milestone not found' });
-	const members = await db.membership.findMany({
-		where: { workspaceId: workspace.id, acceptedAt: { not: null } },
-		include: { user: { select: { id: true, name: true, email: true } } }
-	});
+	const members = await listMembers(workspace.id);
 	return {
-		milestone,
+		milestone: milestone as unknown as {
+			phase: import('@prisma/client').MilestonePhase;
+		} & typeof milestone,
 		members: members.map((m) => ({ id: m.user.id, name: m.user.name, email: m.user.email }))
 	};
 };

@@ -4,31 +4,22 @@ import { requireWorkspace } from '$lib/server/guards';
 import { logActionError } from '$lib/server/services/actionError.service';
 import { createTask } from '$lib/server/services/task.service';
 import { taskCreateSchema } from '$lib/schemas/task';
-import { db } from '$lib/server/db';
+import { listForms } from '$lib/server/services/form.service';
+import { listEvidence } from '$lib/server/services/evidence.service';
+import { listAppointments } from '$lib/server/services/appointment.service';
+import { listMilestones } from '$lib/server/services/milestone.service';
+import { listMembers } from '$lib/server/services/workspace.service';
 
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);
 	const [forms, evidence, appointments, milestones, members] = await Promise.all([
-		db.formRecord.findMany({
-			where: { workspaceId: workspace.id, deletedAt: null },
-			select: { id: true, code: true, name: true }
-		}),
-		db.evidenceItem.findMany({
-			where: { workspaceId: workspace.id, deletedAt: null },
-			select: { id: true, title: true }
-		}),
-		db.appointment.findMany({
-			where: { workspaceId: workspace.id, deletedAt: null },
-			select: { id: true, title: true }
-		}),
-		db.timelineMilestone.findMany({
-			where: { workspaceId: workspace.id, deletedAt: null },
-			select: { id: true, title: true, phase: true }
-		}),
-		db.membership.findMany({
-			where: { workspaceId: workspace.id, acceptedAt: { not: null } },
-			include: { user: { select: { id: true, name: true, email: true } } }
-		})
+		listForms(workspace.id).then((r) => r.map((f) => ({ id: f.id, code: f.code, name: f.name }))),
+		listEvidence(workspace.id).then((r) => r.map((e) => ({ id: e.id, title: e.title }))),
+		listAppointments(workspace.id).then((r) => r.map((a) => ({ id: a.id, title: a.title }))),
+		listMilestones(workspace.id).then((r) =>
+			r.map((m) => ({ id: m.id, title: m.title, phase: m.phase }))
+		),
+		listMembers(workspace.id)
 	]);
 	return {
 		forms,

@@ -9,42 +9,29 @@ import {
 	setChecklist
 } from '$lib/server/services/task.service';
 import { taskUpdateSchema } from '$lib/schemas/task';
-import { db } from '$lib/server/db';
+import { listForms } from '$lib/server/services/form.service';
+import { listEvidence } from '$lib/server/services/evidence.service';
+import { listMembers } from '$lib/server/services/workspace.service';
 
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);
 	const task = await getTask(workspace.id, event.params.id);
 	if (!task) throw error(404, { message: 'Task not found' });
 
-	const [forms, evidence, appointments, milestones, members] = await Promise.all([
-		db.formRecord.findMany({
-			where: { workspaceId: workspace.id, deletedAt: null },
-			select: { id: true, code: true, name: true }
-		}),
-		db.evidenceItem.findMany({
-			where: { workspaceId: workspace.id, deletedAt: null },
-			select: { id: true, title: true }
-		}),
-		db.appointment.findMany({
-			where: { workspaceId: workspace.id, deletedAt: null },
-			select: { id: true, title: true }
-		}),
-		db.timelineMilestone.findMany({
-			where: { workspaceId: workspace.id, deletedAt: null },
-			select: { id: true, title: true, phase: true }
-		}),
-		db.membership.findMany({
-			where: { workspaceId: workspace.id, acceptedAt: { not: null } },
-			include: { user: { select: { id: true, name: true, email: true } } }
-		})
+	const [forms, evidence, members] = await Promise.all([
+		listForms(workspace.id).then((rows) =>
+			rows.map((f) => ({ id: f.id, code: f.code, name: f.name }))
+		),
+		listEvidence(workspace.id).then((rows) => rows.map((e) => ({ id: e.id, title: e.title }))),
+		listMembers(workspace.id)
 	]);
 
 	return {
 		task,
 		forms,
 		evidence,
-		appointments,
-		milestones,
+		appointments: [] as { id: string; title: string }[],
+		milestones: [] as { id: string; title: string; phase: string }[],
 		members: members.map((m) => ({ id: m.user.id, name: m.user.name, email: m.user.email }))
 	};
 };

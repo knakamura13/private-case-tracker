@@ -1,8 +1,45 @@
-import type { FormFilingStatus, Prisma } from '@prisma/client';
-import { db } from '$lib/server/db';
+import type { FormFilingStatus } from '@prisma/client';
 import { logActivity } from '$lib/server/activity';
 import { encryptString, decryptString, maskReceiptNumber } from '$lib/server/crypto';
 import type { FormCreate, FormUpdate } from '$lib/schemas/form';
+import { randomUUID } from 'node:crypto';
+import { ddbGet, ddbPut, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
+import { entitySk, wsPk } from '$lib/server/dynamo/keys';
+
+export type FormSupportingItemRow = {
+	id: string;
+	formId: string;
+	label: string;
+	required: boolean;
+	done: boolean;
+	satisfiedByEvidenceId: string | null;
+	satisfiedByFileId: string | null;
+	order: number;
+};
+
+export type FormRow = {
+	id: string;
+	workspaceId: string;
+	name: string;
+	code: string;
+	purpose?: string | null;
+	filingStatus: FormFilingStatus;
+	plannedFilingDate?: Date | string | null;
+	actualFilingDate?: Date | string | null;
+	receiptNumberEncrypted: string | null;
+	notes?: string | null;
+	lastUpdatedByUserId?: string | null;
+	deletedAt: string | null;
+	createdAt: string;
+	updatedAt: string;
+	supportingItems: FormSupportingItemRow[];
+	// hydrated placeholders
+	documents?: any[];
+	tasks?: any[];
+	questions?: any[];
+	linkedNotes?: any[];
+	_count: { tasks: number; documents: number };
+};
 
 function encodeReceipt(raw: string | null | undefined): string | null {
 	if (!raw) return null;
@@ -23,52 +60,79 @@ export function maskReceipt(encrypted: string | null): string | null {
 	return raw ? maskReceiptNumber(raw) : null;
 }
 
-export async function listForms(workspaceId: string, filter: { status?: FormFilingStatus; q?: string } = {}) {
-	const where: Prisma.FormRecordWhereInput = { workspaceId, deletedAt: null };
-	if (filter.status) where.filingStatus = filter.status;
-	if (filter.q) {
-		where.OR = [
-			{ name: { contains: filter.q, mode: 'insensitive' } },
-			{ code: { contains: filter.q, mode: 'insensitive' } },
-			{ purpose: { contains: filter.q, mode: 'insensitive' } }
-		];
-	}
-	return db.formRecord.findMany({
-		where,
-		include: {
-			supportingItems: { orderBy: { order: 'asc' } },
-			_count: { select: { tasks: true, documents: true } }
-		},
-		orderBy: [{ filingStatus: 'asc' }, { updatedAt: 'desc' }]
+export async function listForms(
+	workspaceId: string,
+	filter: { status?: FormFilingStatus; q?: string } = {}
+): Promise<FormRow[]> {
+	const rows = await ddbQuery<any>({
+		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
+		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'FormRecord#' }
 	});
+	const q = filter.q?.toLowerCase();
+	const filtered = rows
+		.filter((f) => !f.deletedAt)
+		.filter((f) => (filter.status ? f.filingStatus === filter.status : true))
+		.filter((f) =>
+			q
+				? String(f.name ?? '')
+						.toLowerCase()
+						.includes(q) ||
+					String(f.code ?? '')
+						.toLowerCase()
+						.includes(q) ||
+					String(f.purpose ?? '')
+						.toLowerCase()
+						.includes(q)
+				: true
+		)
+		.map((f) => ({
+			...f,
+			supportingItems: (f.supportingItems ?? [])
+				.slice()
+				.sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0)),
+			receiptNumberEncrypted: f.receiptNumberEncrypted ?? null,
+			_count: { tasks: 0, documents: 0 }
+		}));
+	filtered.sort(
+		(a, b) =>
+			String(a.filingStatus).localeCompare(String(b.filingStatus)) ||
+			String(b.updatedAt ?? '').localeCompare(String(a.updatedAt ?? ''))
+	);
+	return filtered;
 }
 
 export async function getForm(workspaceId: string, id: string) {
-	return db.formRecord.findFirst({
-		where: { id, workspaceId, deletedAt: null },
-		include: {
-			supportingItems: {
-				include: { evidence: true, file: true },
-				orderBy: { order: 'asc' }
-			},
-			documents: { where: { deletedAt: null } },
-			tasks: { where: { deletedAt: null } },
-			questions: { where: { deletedAt: null } },
-			linkedNotes: { where: { deletedAt: null } }
-		}
-	});
+	const form = await ddbGet<FormRow>({ PK: wsPk(workspaceId), SK: entitySk('FormRecord', id) });
+	if (!form || form.deletedAt) return null;
+	return {
+		...form,
+		supportingItems: (form.supportingItems ?? [])
+			.slice()
+			.sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0)),
+		receiptNumberEncrypted: form.receiptNumberEncrypted ?? null,
+		documents: [],
+		tasks: [],
+		questions: [],
+		linkedNotes: [],
+		_count: { tasks: 0, documents: 0 }
+	};
 }
 
 export async function createForm(workspaceId: string, actorId: string, input: FormCreate) {
 	const { receiptNumber, ...rest } = input;
-	const form = await db.formRecord.create({
-		data: {
-			workspaceId,
-			...rest,
-			receiptNumberEncrypted: encodeReceipt(receiptNumber),
-			lastUpdatedByUserId: actorId
-		}
-	});
+	const now = new Date().toISOString();
+	const form = {
+		id: randomUUID(),
+		workspaceId,
+		...rest,
+		receiptNumberEncrypted: encodeReceipt(receiptNumber),
+		lastUpdatedByUserId: actorId,
+		deletedAt: null as string | null,
+		createdAt: now,
+		updatedAt: now,
+		supportingItems: []
+	};
+	await ddbPut({ PK: wsPk(workspaceId), SK: entitySk('FormRecord', form.id), ...form });
 	await logActivity({
 		workspaceId,
 		userId: actorId,
@@ -86,14 +150,34 @@ export async function updateForm(
 	id: string,
 	input: FormUpdate
 ) {
-	const existing = await db.formRecord.findFirst({ where: { id, workspaceId, deletedAt: null } });
+	const existing = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('FormRecord', id) });
 	if (!existing) throw new Error('Form not found');
+	if (existing.deletedAt) throw new Error('Form not found');
 	const { receiptNumber, ...rest } = input;
-	const data: Prisma.FormRecordUpdateInput = { ...rest, lastUpdatedByUserId: actorId };
+	const data: Record<string, unknown> = {
+		...rest,
+		lastUpdatedByUserId: actorId,
+		updatedAt: new Date().toISOString()
+	};
 	if (receiptNumber !== undefined) {
 		data.receiptNumberEncrypted = encodeReceipt(receiptNumber);
 	}
-	const form = await db.formRecord.update({ where: { id }, data });
+	const names: Record<string, string> = {};
+	const values: Record<string, unknown> = {};
+	const sets: string[] = [];
+	for (const [k, v] of Object.entries(data)) {
+		const nk = `#${k}`;
+		const vk = `:${k}`;
+		names[nk] = k;
+		values[vk] = v;
+		sets.push(`${nk} = ${vk}`);
+	}
+	const form = (await ddbUpdate<any>(
+		{ PK: wsPk(workspaceId), SK: entitySk('FormRecord', id) },
+		`SET ${sets.join(', ')}`,
+		values,
+		names
+	)) ?? { ...existing, ...data };
 	const statusChanged = input.filingStatus && input.filingStatus !== existing.filingStatus;
 	await logActivity({
 		workspaceId,
@@ -109,9 +193,15 @@ export async function updateForm(
 }
 
 export async function softDeleteForm(workspaceId: string, actorId: string, id: string) {
-	const existing = await db.formRecord.findFirst({ where: { id, workspaceId, deletedAt: null } });
+	const existing = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('FormRecord', id) });
 	if (!existing) throw new Error('Form not found');
-	await db.formRecord.update({ where: { id }, data: { deletedAt: new Date() } });
+	if (existing.deletedAt) throw new Error('Form not found');
+	await ddbUpdate(
+		{ PK: wsPk(workspaceId), SK: entitySk('FormRecord', id) },
+		'SET #deletedAt = :d, #updatedAt = :u',
+		{ ':d': new Date().toISOString(), ':u': new Date().toISOString() },
+		{ '#deletedAt': 'deletedAt', '#updatedAt': 'updatedAt' }
+	);
 	await logActivity({
 		workspaceId,
 		userId: actorId,
@@ -134,24 +224,25 @@ export async function replaceSupportingItems(
 		satisfiedByFileId: string | null;
 	}>
 ) {
-	const form = await db.formRecord.findFirst({ where: { id: formId, workspaceId, deletedAt: null } });
+	const form = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('FormRecord', formId) });
 	if (!form) throw new Error('Form not found');
-	await db.$transaction(async (tx) => {
-		await tx.formSupportingItem.deleteMany({ where: { formId } });
-		if (items.length) {
-			await tx.formSupportingItem.createMany({
-				data: items.map((it, idx) => ({
-					formId,
-					label: it.label,
-					required: it.required,
-					done: it.done,
-					satisfiedByEvidenceId: it.satisfiedByEvidenceId,
-					satisfiedByFileId: it.satisfiedByFileId,
-					order: idx
-				}))
-			});
-		}
-	});
+	if (form.deletedAt) throw new Error('Form not found');
+	const supportingItems = items.map((it, idx) => ({
+		id: randomUUID(),
+		formId,
+		label: it.label,
+		required: it.required,
+		done: it.done,
+		satisfiedByEvidenceId: it.satisfiedByEvidenceId,
+		satisfiedByFileId: it.satisfiedByFileId,
+		order: idx
+	}));
+	await ddbUpdate(
+		{ PK: wsPk(workspaceId), SK: entitySk('FormRecord', formId) },
+		'SET #supportingItems = :s, #updatedAt = :u',
+		{ ':s': supportingItems, ':u': new Date().toISOString() },
+		{ '#supportingItems': 'supportingItems', '#updatedAt': 'updatedAt' }
+	);
 	await logActivity({
 		workspaceId,
 		userId: actorId,

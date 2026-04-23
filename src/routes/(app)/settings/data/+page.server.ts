@@ -1,27 +1,39 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { requireOwner, requireWorkspace } from '$lib/server/guards';
-import { db } from '$lib/server/db';
 import { logActivity } from '$lib/server/activity';
 import { deleteWorkspace } from '$lib/server/services/workspace.service';
+import { listTasks } from '$lib/server/services/task.service';
+import { listForms } from '$lib/server/services/form.service';
+import { listEvidence } from '$lib/server/services/evidence.service';
+import { listDocuments } from '$lib/server/services/document.service';
+import { listAppointments } from '$lib/server/services/appointment.service';
+import { listQuestions } from '$lib/server/services/question.service';
+import { listNotes } from '$lib/server/services/note.service';
+import { listMilestones } from '$lib/server/services/milestone.service';
 
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);
-	const [trashedTasks, trashedForms, trashedEvidence, trashedDocs, trashedAppts, trashedQuestions, trashedNotes, trashedMilestones, hasDemo] =
-		await Promise.all([
-			db.task.count({ where: { workspaceId: workspace.id, deletedAt: { not: null } } }),
-			db.formRecord.count({ where: { workspaceId: workspace.id, deletedAt: { not: null } } }),
-			db.evidenceItem.count({ where: { workspaceId: workspace.id, deletedAt: { not: null } } }),
-			db.documentFile.count({ where: { workspaceId: workspace.id, deletedAt: { not: null } } }),
-			db.appointment.count({ where: { workspaceId: workspace.id, deletedAt: { not: null } } }),
-			db.questionItem.count({ where: { workspaceId: workspace.id, deletedAt: { not: null } } }),
-			db.note.count({ where: { workspaceId: workspace.id, deletedAt: { not: null } } }),
-			db.timelineMilestone.count({ where: { workspaceId: workspace.id, deletedAt: { not: null } } }),
-			db.task.findFirst({
-				where: { workspaceId: workspace.id, title: { startsWith: '[Demo] ' } },
-				select: { id: true }
-			})
-		]);
+	const [tasks, forms, evidence, docs, appts, questions, notes, milestones] = await Promise.all([
+		listTasks(workspace.id),
+		listForms(workspace.id),
+		listEvidence(workspace.id),
+		listDocuments(workspace.id),
+		listAppointments(workspace.id),
+		listQuestions(workspace.id),
+		listNotes(workspace.id),
+		listMilestones(workspace.id)
+	]);
+
+	const trashedTasks = tasks.filter((t) => t.deletedAt != null).length;
+	const trashedForms = forms.filter((f) => f.deletedAt != null).length;
+	const trashedEvidence = evidence.filter((e) => e.deletedAt != null).length;
+	const trashedDocs = docs.filter((d: any) => d.deletedAt != null).length;
+	const trashedAppts = appts.filter((a) => a.deletedAt != null).length;
+	const trashedQuestions = questions.filter((q) => q.deletedAt != null).length;
+	const trashedNotes = notes.filter((n) => n.deletedAt != null).length;
+	const trashedMilestones = milestones.filter((m) => m.deletedAt != null).length;
+	const hasDemo = tasks.some((t) => String(t.title ?? '').startsWith('[Demo] '));
 	return {
 		trashedCounts: {
 			tasks: trashedTasks,
@@ -39,53 +51,13 @@ export const load: PageServerLoad = async (event) => {
 
 export const actions: Actions = {
 	purgeTrash: async (event) => {
-		const { workspace } = requireOwner(event);
-		await db.$transaction([
-			db.task.deleteMany({ where: { workspaceId: workspace.id, deletedAt: { not: null } } }),
-			db.formRecord.deleteMany({ where: { workspaceId: workspace.id, deletedAt: { not: null } } }),
-			db.evidenceItem.deleteMany({ where: { workspaceId: workspace.id, deletedAt: { not: null } } }),
-			db.documentFile.deleteMany({ where: { workspaceId: workspace.id, deletedAt: { not: null } } }),
-			db.appointment.deleteMany({ where: { workspaceId: workspace.id, deletedAt: { not: null } } }),
-			db.questionItem.deleteMany({ where: { workspaceId: workspace.id, deletedAt: { not: null } } }),
-			db.note.deleteMany({ where: { workspaceId: workspace.id, deletedAt: { not: null } } }),
-			db.timelineMilestone.deleteMany({
-				where: { workspaceId: workspace.id, deletedAt: { not: null } }
-			})
-		]);
-		return { ok: true };
+		// Not implemented yet for DynamoDB single-table without scan + batch delete.
+		return fail(501, {
+			error: 'Not implemented yet for DynamoDB. Use S3 lifecycle + PITR for recovery.'
+		});
 	},
 	removeDemo: async (event) => {
-		const { workspace, user } = requireOwner(event);
-		await db.$transaction(async (tx) => {
-			await tx.task.deleteMany({ where: { workspaceId: workspace.id, title: { startsWith: '[Demo] ' } } });
-			await tx.formRecord.deleteMany({
-				where: { workspaceId: workspace.id, name: { startsWith: '[Demo] ' } }
-			});
-			await tx.evidenceItem.deleteMany({
-				where: { workspaceId: workspace.id, title: { startsWith: '[Demo] ' } }
-			});
-			await tx.appointment.deleteMany({
-				where: { workspaceId: workspace.id, title: { startsWith: '[Demo] ' } }
-			});
-			await tx.questionItem.deleteMany({
-				where: { workspaceId: workspace.id, question: { startsWith: '[Demo] ' } }
-			});
-			await tx.note.deleteMany({
-				where: { workspaceId: workspace.id, title: { startsWith: '[Demo] ' } }
-			});
-			await tx.timelineMilestone.deleteMany({
-				where: { workspaceId: workspace.id, title: { startsWith: '[Demo] ' } }
-			});
-		});
-		await logActivity({
-			workspaceId: workspace.id,
-			userId: user.id,
-			action: 'DEMO_DATA_REMOVED',
-			entityType: 'Workspace',
-			entityId: workspace.id,
-			summary: 'Removed all demo data'
-		});
-		return { ok: true };
+		return fail(501, { error: 'Not implemented yet for DynamoDB.' });
 	},
 	deleteWorkspace: async (event) => {
 		const { workspace } = requireOwner(event);

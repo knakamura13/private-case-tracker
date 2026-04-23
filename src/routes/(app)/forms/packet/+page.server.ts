@@ -1,35 +1,32 @@
 import type { PageServerLoad } from './$types';
 import { requireWorkspace } from '$lib/server/guards';
-import { db } from '$lib/server/db';
+import { listForms } from '$lib/server/services/form.service';
+import { listEvidence } from '$lib/server/services/evidence.service';
 
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);
 	const [forms, evidence, translations, photos] = await Promise.all([
-		db.formRecord.findMany({
-			where: { workspaceId: workspace.id, deletedAt: null },
-			include: { supportingItems: true, _count: { select: { documents: true } } },
-			orderBy: { code: 'asc' }
-		}),
-		db.evidenceItem.findMany({
-			where: { workspaceId: workspace.id, deletedAt: null, includedInPacket: true },
-			orderBy: { type: 'asc' }
-		}),
-		db.evidenceItem.findMany({
-			where: { workspaceId: workspace.id, deletedAt: null, status: 'NEEDS_TRANSLATION' }
-		}),
-		db.evidenceItem.findMany({
-			where: { workspaceId: workspace.id, deletedAt: null, type: 'Photos' }
-		})
+		listForms(workspace.id),
+		listEvidence(workspace.id).then((r) =>
+			r
+				.filter((e) => e.includedInPacket)
+				.sort((a, b) => String(a.type).localeCompare(String(b.type)))
+		),
+		listEvidence(workspace.id, { status: 'NEEDS_TRANSLATION' as any }),
+		listEvidence(workspace.id, { type: 'Photos' })
 	]);
 
-	const readyForms = forms.filter((f) =>
-		f.filingStatus === 'READY_FOR_REVIEW' || f.filingStatus === 'FILED' || f.filingStatus === 'RECEIVED'
+	forms.sort((a, b) => String(a.code).localeCompare(String(b.code)));
+
+	const readyForms = forms.filter(
+		(f) =>
+			f.filingStatus === 'READY_FOR_REVIEW' ||
+			f.filingStatus === 'FILED' ||
+			f.filingStatus === 'RECEIVED'
 	);
 
 	const supportingUnsatisfied = forms
-		.flatMap((f) =>
-			f.supportingItems.map((s) => ({ ...s, formCode: f.code, formId: f.id }))
-		)
+		.flatMap((f) => f.supportingItems.map((s) => ({ ...s, formCode: f.code, formId: f.id })))
 		.filter((s) => s.required && !s.done);
 
 	return {

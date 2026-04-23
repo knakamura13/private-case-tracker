@@ -1,52 +1,73 @@
-import type { EvidenceStatus, Prisma } from '@prisma/client';
-import { db } from '$lib/server/db';
+import type { EvidenceStatus } from '@prisma/client';
 import { logActivity } from '$lib/server/activity';
 import type { EvidenceCreate, EvidenceUpdate } from '$lib/schemas/evidence';
+import { randomUUID } from 'node:crypto';
+import { ddbGet, ddbPut, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
+import { entitySk, wsPk } from '$lib/server/dynamo/keys';
 
 export async function listEvidence(
 	workspaceId: string,
 	filter: { status?: EvidenceStatus; type?: string; q?: string } = {}
 ) {
-	const where: Prisma.EvidenceItemWhereInput = { workspaceId, deletedAt: null };
-	if (filter.status) where.status = filter.status;
-	if (filter.type) where.type = filter.type;
-	if (filter.q) {
-		where.OR = [
-			{ title: { contains: filter.q, mode: 'insensitive' } },
-			{ description: { contains: filter.q, mode: 'insensitive' } },
-			{ significance: { contains: filter.q, mode: 'insensitive' } }
-		];
-	}
-	return db.evidenceItem.findMany({
-		where,
-		include: {
-			files: { include: { file: true } },
-			_count: { select: { tasks: true } }
-		},
-		orderBy: [{ type: 'asc' }, { updatedAt: 'desc' }]
+	const rows = await ddbQuery<any>({
+		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
+		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'EvidenceItem#' }
 	});
+	const q = filter.q?.toLowerCase();
+	const filtered = rows
+		.filter((e) => !e.deletedAt)
+		.filter((e) => (filter.status ? e.status === filter.status : true))
+		.filter((e) => (filter.type ? e.type === filter.type : true))
+		.filter((e) =>
+			q
+				? String(e.title ?? '')
+						.toLowerCase()
+						.includes(q) ||
+					String(e.description ?? '')
+						.toLowerCase()
+						.includes(q) ||
+					String(e.significance ?? '')
+						.toLowerCase()
+						.includes(q)
+				: true
+		)
+		.map((e) => ({
+			...e,
+			files: (e.files ?? []).map((f: any) => ({ ...f, file: f.file ?? null })),
+			_count: { tasks: 0 }
+		}));
+	filtered.sort(
+		(a, b) =>
+			String(a.type ?? '').localeCompare(String(b.type ?? '')) ||
+			String(b.updatedAt ?? '').localeCompare(String(a.updatedAt ?? ''))
+	);
+	return filtered;
 }
 
 export async function getEvidence(workspaceId: string, id: string) {
-	return db.evidenceItem.findFirst({
-		where: { id, workspaceId, deletedAt: null },
-		include: {
-			files: { include: { file: true } },
-			tasks: { where: { deletedAt: null } },
-			supportingFor: { include: { form: true } },
-			linkedNotes: { where: { deletedAt: null } }
-		}
-	});
+	const evidence = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('EvidenceItem', id) });
+	if (!evidence || evidence.deletedAt) return null;
+	return {
+		...evidence,
+		files: (evidence.files ?? []).map((f: any) => ({ ...f, file: f.file ?? null })),
+		tasks: [],
+		supportingFor: [],
+		linkedNotes: []
+	};
 }
 
-export async function createEvidence(
-	workspaceId: string,
-	actorId: string,
-	input: EvidenceCreate
-) {
-	const evidence = await db.evidenceItem.create({
-		data: { workspaceId, ...input }
-	});
+export async function createEvidence(workspaceId: string, actorId: string, input: EvidenceCreate) {
+	const now = new Date().toISOString();
+	const evidence = {
+		id: randomUUID(),
+		workspaceId,
+		...input,
+		deletedAt: null as string | null,
+		createdAt: now,
+		updatedAt: now,
+		files: []
+	};
+	await ddbPut({ PK: wsPk(workspaceId), SK: entitySk('EvidenceItem', evidence.id), ...evidence });
 	await logActivity({
 		workspaceId,
 		userId: actorId,
@@ -64,9 +85,26 @@ export async function updateEvidence(
 	id: string,
 	input: EvidenceUpdate
 ) {
-	const existing = await db.evidenceItem.findFirst({ where: { id, workspaceId, deletedAt: null } });
+	const existing = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('EvidenceItem', id) });
 	if (!existing) throw new Error('Evidence not found');
-	const evidence = await db.evidenceItem.update({ where: { id }, data: input });
+	if (existing.deletedAt) throw new Error('Evidence not found');
+	const patch: Record<string, unknown> = { ...input, updatedAt: new Date().toISOString() };
+	const names: Record<string, string> = {};
+	const values: Record<string, unknown> = {};
+	const sets: string[] = [];
+	for (const [k, v] of Object.entries(patch)) {
+		const nk = `#${k}`;
+		const vk = `:${k}`;
+		names[nk] = k;
+		values[vk] = v;
+		sets.push(`${nk} = ${vk}`);
+	}
+	const evidence = (await ddbUpdate<any>(
+		{ PK: wsPk(workspaceId), SK: entitySk('EvidenceItem', id) },
+		`SET ${sets.join(', ')}`,
+		values,
+		names
+	)) ?? { ...existing, ...patch };
 	const statusChanged = input.status && input.status !== existing.status;
 	await logActivity({
 		workspaceId,
@@ -82,9 +120,15 @@ export async function updateEvidence(
 }
 
 export async function softDeleteEvidence(workspaceId: string, actorId: string, id: string) {
-	const existing = await db.evidenceItem.findFirst({ where: { id, workspaceId, deletedAt: null } });
+	const existing = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('EvidenceItem', id) });
 	if (!existing) throw new Error('Evidence not found');
-	await db.evidenceItem.update({ where: { id }, data: { deletedAt: new Date() } });
+	if (existing.deletedAt) throw new Error('Evidence not found');
+	await ddbUpdate(
+		{ PK: wsPk(workspaceId), SK: entitySk('EvidenceItem', id) },
+		'SET #deletedAt = :d, #updatedAt = :u',
+		{ ':d': new Date().toISOString(), ':u': new Date().toISOString() },
+		{ '#deletedAt': 'deletedAt', '#updatedAt': 'updatedAt' }
+	);
 	await logActivity({
 		workspaceId,
 		userId: actorId,
@@ -96,15 +140,22 @@ export async function softDeleteEvidence(workspaceId: string, actorId: string, i
 }
 
 export async function linkFile(workspaceId: string, evidenceId: string, fileId: string) {
-	const evidence = await db.evidenceItem.findFirst({
-		where: { id: evidenceId, workspaceId, deletedAt: null }
+	const evidence = await ddbGet<any>({
+		PK: wsPk(workspaceId),
+		SK: entitySk('EvidenceItem', evidenceId)
 	});
 	if (!evidence) throw new Error('Evidence not found');
-	await db.evidenceFile.upsert({
-		where: { evidenceId_fileId: { evidenceId, fileId } },
-		create: { evidenceId, fileId },
-		update: {}
-	});
+	if (evidence.deletedAt) throw new Error('Evidence not found');
+	const files = Array.isArray(evidence.files) ? evidence.files : [];
+	if (!files.some((f: any) => f.fileId === fileId)) {
+		files.push({ evidenceId, fileId });
+		await ddbUpdate(
+			{ PK: wsPk(workspaceId), SK: entitySk('EvidenceItem', evidenceId) },
+			'SET #files = :f, #updatedAt = :u',
+			{ ':f': files, ':u': new Date().toISOString() },
+			{ '#files': 'files', '#updatedAt': 'updatedAt' }
+		);
+	}
 }
 
 export function summarizeCoverage(items: { type: string; status: string }[]) {

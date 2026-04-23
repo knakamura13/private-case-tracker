@@ -1,21 +1,11 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: case-tracker-pg
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    container_name: case-tracker-dynamodb
     restart: unless-stopped
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: case_tracker
+    command: '-jar DynamoDBLocal.jar -inMemory -sharedDb'
     ports:
-      - '5432:5432'
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres']
-      interval: 5s
-      timeout: 5s
-      retries: 10
+      - '8000:8000'
 
   minio:
     image: minio/minio:latest
@@ -32,5 +22,4 @@ services:
       - miniodata:/data
 
 volumes:
-  pgdata:
   miniodata:

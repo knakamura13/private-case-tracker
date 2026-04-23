@@ -10,21 +10,16 @@ import {
 	maskReceipt
 } from '$lib/server/services/form.service';
 import { formUpdateSchema } from '$lib/schemas/form';
-import { db } from '$lib/server/db';
+import { listEvidence } from '$lib/server/services/evidence.service';
+import { listDocuments } from '$lib/server/services/document.service';
 
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);
 	const form = await getForm(workspace.id, event.params.id);
 	if (!form) throw error(404, { message: 'Form not found' });
 	const [evidence, files] = await Promise.all([
-		db.evidenceItem.findMany({
-			where: { workspaceId: workspace.id, deletedAt: null },
-			select: { id: true, title: true }
-		}),
-		db.documentFile.findMany({
-			where: { workspaceId: workspace.id, deletedAt: null },
-			select: { id: true, title: true }
-		})
+		listEvidence(workspace.id).then((r) => r.map((e) => ({ id: e.id, title: e.title }))),
+		listDocuments(workspace.id).then((r) => r.map((d: any) => ({ id: d.id, title: d.title })))
 	]);
 	return {
 		form: {

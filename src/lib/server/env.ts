@@ -3,7 +3,8 @@ import { building } from '$app/environment';
 import { z } from 'zod';
 
 const schema = z.object({
-	DATABASE_URL: z.string().url(),
+	// Legacy (Prisma/Postgres). Kept optional during migration, but not required at runtime once DynamoDB cutover is complete.
+	DATABASE_URL: z.string().url().optional(),
 	APP_URL: z.string().url(),
 	PUBLIC_APP_NAME: z.string().default('Private Case Tracker'),
 	BETTER_AUTH_SECRET: z.string().min(24),
@@ -13,6 +14,10 @@ const schema = z.object({
 		.optional()
 		.transform((v) => v === 'true' || v === '1'),
 	FIELD_ENCRYPTION_KEY: z.string().min(32),
+	AWS_REGION: z.string().min(1).default('us-east-1'),
+	// Required in production; defaulted in dev/test to keep local tooling and unit tests simple.
+	DYNAMO_TABLE: z.string().min(1).default('case-tracker-dev'),
+	DYNAMO_ENDPOINT: z.string().url().optional(),
 	S3_ENDPOINT: z.string().url().optional(),
 	S3_REGION: z.string().default('auto'),
 	S3_BUCKET: z.string().optional(),
@@ -31,13 +36,16 @@ type Env = z.infer<typeof schema>;
 let cached: Env | null = null;
 
 const BUILD_PLACEHOLDER: Env = {
-	DATABASE_URL: 'postgresql://build:build@localhost:5432/build',
+	DATABASE_URL: undefined,
 	APP_URL: 'http://localhost:3000',
 	PUBLIC_APP_NAME: 'Private Case Tracker',
 	BETTER_AUTH_SECRET: 'build-placeholder-secret-build-placeholder',
 	BETTER_AUTH_URL: 'http://localhost:3000',
 	ALLOW_OPEN_SIGNUP: false,
 	FIELD_ENCRYPTION_KEY: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+	AWS_REGION: 'us-east-1',
+	DYNAMO_TABLE: 'build-placeholder-table',
+	DYNAMO_ENDPOINT: undefined,
 	S3_ENDPOINT: undefined,
 	S3_REGION: 'auto',
 	S3_BUCKET: undefined,
@@ -59,6 +67,9 @@ function load(): Env {
 		BETTER_AUTH_URL: env.BETTER_AUTH_URL,
 		ALLOW_OPEN_SIGNUP: env.ALLOW_OPEN_SIGNUP,
 		FIELD_ENCRYPTION_KEY: env.FIELD_ENCRYPTION_KEY,
+		AWS_REGION: env.AWS_REGION,
+		DYNAMO_TABLE: env.DYNAMO_TABLE,
+		DYNAMO_ENDPOINT: env.DYNAMO_ENDPOINT,
 		S3_ENDPOINT: env.S3_ENDPOINT,
 		S3_REGION: env.S3_REGION,
 		S3_BUCKET: env.S3_BUCKET,
@@ -71,6 +82,13 @@ function load(): Env {
 	});
 	if (!parsed.success) {
 		console.error('[env] invalid environment', parsed.error.flatten().fieldErrors);
+		throw new Error('Invalid environment configuration');
+	}
+	if (
+		parsed.data.NODE_ENV === 'production' &&
+		(!env.DYNAMO_TABLE || env.DYNAMO_TABLE.trim() === '')
+	) {
+		console.error('[env] invalid environment', { DYNAMO_TABLE: ['Required in production'] });
 		throw new Error('Invalid environment configuration');
 	}
 	return parsed.data;
