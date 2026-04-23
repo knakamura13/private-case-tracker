@@ -1,8 +1,7 @@
 <script lang="ts">
 	import type { QuickLink, QuickLinkFolder } from '$lib/types/enums';
-	import type { ActionResult } from '@sveltejs/kit';
-	import { enhance, deserialize } from '$app/forms';
-	import { invalidate } from '$app/navigation';
+	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import { EllipsisVertical, Plus, Link2, Folder } from 'lucide-svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
@@ -11,7 +10,7 @@
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
 
 	type ActionForm = { error?: string; errorId?: string | null } | undefined;
-	type FolderActionResult = ActionResult<{ folder: QuickLinkFolder }, { error: string; errorId?: string }>;
+	type DropIntent = 'reorder' | 'merge' | 'move-into';
 
 	let { links, folders, form }: { links: QuickLink[]; folders: QuickLinkFolder[]; form?: ActionForm } = $props();
 
@@ -29,6 +28,8 @@
 	let brokenFavicons = $state<Set<string>>(new Set());
 	let draggingId = $state<string | null>(null);
 	let dropTargetId = $state<string | null>(null);
+	let dropIntent = $state<DropIntent | null>(null);
+	let dragEnterCount = $state(0);
 
 	// Separate root links and folder links
 	let rootLinks = $derived(links.filter((l) => !l.folderId));
@@ -155,9 +156,48 @@
 	function handleDragStart(event: DragEvent, id: string) {
 		draggingId = id;
 		dropTargetId = null;
+		dropIntent = null;
+		dragEnterCount = 0;
 		if (event.dataTransfer) {
 			event.dataTransfer.effectAllowed = 'move';
 			event.dataTransfer.setData('text/plain', id);
+			event.dataTransfer.setData('application/x-quicklink-id', id);
+		}
+	}
+
+	function handleDragEnd() {
+		draggingId = null;
+		dropTargetId = null;
+		dropIntent = null;
+		dragEnterCount = 0;
+	}
+
+	function handleDragEnter(event: DragEvent, id: string) {
+		event.preventDefault();
+		dragEnterCount++;
+		if (draggingId && draggingId !== id) {
+			dropTargetId = id;
+			// Determine drop intent based on what's being dragged and what it's over
+			const activeLink = links.find((l) => l.id === draggingId);
+			const targetLink = links.find((l) => l.id === id);
+			const targetFolder = folders.find((f) => f.id === id);
+
+			if (activeLink && targetLink && !activeLink.folderId && !targetLink.folderId) {
+				dropIntent = 'merge';
+			} else if (activeLink && targetFolder && !activeLink.folderId) {
+				dropIntent = 'move-into';
+			} else {
+				dropIntent = 'reorder';
+			}
+		}
+	}
+
+	function handleDragLeave() {
+		dragEnterCount--;
+		if (dragEnterCount <= 0) {
+			dragEnterCount = 0;
+			dropTargetId = null;
+			dropIntent = null;
 		}
 	}
 
@@ -166,101 +206,93 @@
 		if (event.dataTransfer) {
 			event.dataTransfer.dropEffect = 'move';
 		}
-		if (draggingId && draggingId !== id) {
-			dropTargetId = id;
-		}
-	}
-
-	function handleDragLeave() {
-		dropTargetId = null;
 	}
 
 	async function handleDrop(event: DragEvent, targetId: string) {
 		event.preventDefault();
-		if (!draggingId) return;
-
 		const activeId = draggingId;
+		// Reset immediately so UI clears
 		draggingId = null;
 		dropTargetId = null;
+		dropIntent = null;
+		dragEnterCount = 0;
+		if (!activeId || activeId === targetId) return;
 
-		// Check if we're merging two links to create a folder
 		const activeLink = links.find((l) => l.id === activeId);
 		const targetLink = links.find((l) => l.id === targetId);
+		const targetFolder = folders.find((f) => f.id === targetId);
 
+		// 1. Drop a root link onto another root link → create folder with both
 		if (activeLink && targetLink && !activeLink.folderId && !targetLink.folderId) {
-			// Create a folder with both links
-			const formData = new FormData();
-			formData.append('name', '');
-			const response = await fetch('?/createFolder', {
+			const response = await fetch('api/quick-link-folders', {
 				method: 'POST',
-				body: formData
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ name: null })
 			});
-			const result = deserialize(await response.json()) as FolderActionResult;
+			if (!response.ok) return;
+			const folder = await response.json();
 
-			if (result.type === 'success' && result.data?.folder) {
-				const folderId = result.data.folder.id;
-				// Move both links to the folder
-				const moveFormData1 = new FormData();
-				moveFormData1.append('linkId', activeId);
-				moveFormData1.append('folderId', folderId);
-				await fetch('?/moveToFolder', {
-					method: 'POST',
-					body: moveFormData1
-				});
-
-				const moveFormData2 = new FormData();
-				moveFormData2.append('linkId', targetId);
-				moveFormData2.append('folderId', folderId);
-				await fetch('?/moveToFolder', {
-					method: 'POST',
-					body: moveFormData2
-				});
-
-				// Invalidate to refetch data without full page reload
-				invalidate('dashboard');
+			if (folder?.id) {
+				await Promise.all([
+					moveLinkToFolderAction(activeId, folder.id),
+					moveLinkToFolderAction(targetId, folder.id)
+				]);
+				await invalidateAll();
 			}
 			return;
 		}
 
-		// Handle reordering
+		// 2. Drop a link onto a folder → move link into that folder
+		if (activeLink && targetFolder) {
+			await moveLinkToFolderAction(activeId, targetFolder.id);
+			await invalidateAll();
+			return;
+		}
+
+		// 3. Reorder (folders and root links share the same order)
 		const oldIndex = itemIds.indexOf(activeId);
 		const newIndex = itemIds.indexOf(targetId);
 
-		if (oldIndex !== newIndex) {
+		if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
 			const newOrder = [...itemIds];
 			newOrder.splice(oldIndex, 1);
 			newOrder.splice(newIndex, 0, activeId);
 
+			const isFolderDrag = folders.some((f) => f.id === activeId);
 			const formData = new FormData();
-			newOrder.forEach((id) => formData.append('linkIds', id));
-			await fetch('?/reorderLinks', {
-				method: 'POST',
-				body: formData
-			});
-			invalidate('dashboard');
+			if (isFolderDrag) {
+				newOrder
+					.filter((id) => folders.some((f) => f.id === id))
+					.forEach((id) => formData.append('folderIds', id));
+				await fetch('?/reorderFolders', { method: 'POST', body: formData });
+			} else {
+				newOrder
+					.filter((id) => rootLinks.some((l) => l.id === id))
+					.forEach((id) => formData.append('linkIds', id));
+				await fetch('?/reorderLinks', { method: 'POST', body: formData });
+			}
+			await invalidateAll();
 		}
 	}
 
-	async function moveLinkToRoot(linkId: string) {
+	async function moveLinkToFolderAction(linkId: string, folderId: string | null) {
 		const formData = new FormData();
 		formData.append('linkId', linkId);
-		formData.append('folderId', '');
-		await fetch('?/moveToFolder', {
-			method: 'POST',
-			body: formData
-		});
-		window.location.reload();
+		if (folderId) formData.append('folderId', folderId);
+		await fetch('?/moveToFolder', { method: 'POST', body: formData });
+	}
+
+	async function moveLinkToRoot(linkId: string) {
+		await moveLinkToFolderAction(linkId, null);
+		await invalidateAll();
 	}
 
 	async function deleteFolder(folderId: string) {
 		if (!confirm('Delete this folder? Links will be moved to the root level.')) return;
 		const formData = new FormData();
 		formData.append('id', folderId);
-		await fetch('?/deleteFolder', {
-			method: 'POST',
-			body: formData
-		});
-		window.location.reload();
+		await fetch('?/deleteFolder', { method: 'POST', body: formData });
+		await invalidateAll();
 	}
 </script>
 
@@ -274,15 +306,18 @@
 		{@const folderLinks = folderLinksMap[folder.id] ?? []}
 		{@const previewLinks = folderLinks.slice(0, 4)}
 		<div
-			class="group flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 hover:bg-muted/40 focus-within:bg-muted/40"
+			class="group flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 transition-shadow hover:bg-muted/40 focus-within:bg-muted/40"
 			draggable={true}
 			ondragstart={(e) => handleDragStart(e, folder.id)}
+			ondragenter={(e) => handleDragEnter(e, folder.id)}
 			ondragover={(e) => handleDragOver(e, folder.id)}
 			ondragleave={handleDragLeave}
 			ondrop={(e) => handleDrop(e, folder.id)}
-			class:ring-2={dropTargetId === folder.id}
-			class:ring-primary={dropTargetId === folder.id}
-			class:ring-offset-2={dropTargetId === folder.id}
+			ondragend={handleDragEnd}
+			class:ring-2={dropTargetId === folder.id && (dropIntent === 'reorder' || dropIntent === 'move-into')}
+			class:ring-primary={dropTargetId === folder.id && dropIntent === 'reorder'}
+			class:ring-emerald-500={dropTargetId === folder.id && dropIntent === 'move-into'}
+			class:ring-offset-2={dropTargetId === folder.id && (dropIntent === 'reorder' || dropIntent === 'move-into')}
 			class:opacity-50={draggingId === folder.id}
 			role="button"
 			tabindex="0"
@@ -490,15 +525,18 @@
 
 	{#each rootLinks as link (link.id)}
 		<div
-			class="group flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 hover:bg-muted/40 focus-within:bg-muted/40"
+			class="group flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 transition-shadow hover:bg-muted/40 focus-within:bg-muted/40"
 			draggable={true}
 			ondragstart={(e) => handleDragStart(e, link.id)}
+			ondragenter={(e) => handleDragEnter(e, link.id)}
 			ondragover={(e) => handleDragOver(e, link.id)}
 			ondragleave={handleDragLeave}
 			ondrop={(e) => handleDrop(e, link.id)}
-			class:ring-2={dropTargetId === link.id}
-			class:ring-primary={dropTargetId === link.id}
-			class:ring-offset-2={dropTargetId === link.id}
+			ondragend={handleDragEnd}
+			class:ring-2={dropTargetId === link.id && (dropIntent === 'reorder' || dropIntent === 'merge')}
+			class:ring-primary={dropTargetId === link.id && dropIntent === 'reorder'}
+			class:ring-amber-500={dropTargetId === link.id && dropIntent === 'merge'}
+			class:ring-offset-2={dropTargetId === link.id && (dropIntent === 'reorder' || dropIntent === 'merge')}
 			class:opacity-50={draggingId === link.id}
 			role="button"
 			tabindex="0"

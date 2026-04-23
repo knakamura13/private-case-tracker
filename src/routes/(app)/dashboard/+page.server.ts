@@ -133,13 +133,13 @@ export const actions: Actions = {
 		}
 		try {
 			await deleteQuickLinkFolder(workspace.id, user.id, parsed.data.id);
+			return { success: true };
 		} catch (e) {
 			const message = e instanceof Error ? e.message : 'Failed to delete folder';
 			const status = message === 'Quick link folder not found' ? 404 : 500;
 			const errorId = await logActionError(event, { message, status });
 			return fail(status, { error: message, errorId });
 		}
-		throw redirect(303, '/dashboard');
 	},
 	moveToFolder: async (event) => {
 		const { workspace, user } = requireWorkspace(event);
@@ -151,13 +151,13 @@ export const actions: Actions = {
 		}
 		try {
 			await moveLinkToFolder(workspace.id, user.id, parsed.data.linkId, parsed.data.folderId ?? null);
+			return { success: true };
 		} catch (e) {
 			const message = e instanceof Error ? e.message : 'Failed to move link';
 			const status = message === 'Quick link not found' ? 404 : 500;
 			const errorId = await logActionError(event, { message, status });
 			return fail(status, { error: message, errorId });
 		}
-		throw redirect(303, '/dashboard');
 	},
 	reorderLinks: async (event) => {
 		const { workspace, user } = requireWorkspace(event);
@@ -169,12 +169,12 @@ export const actions: Actions = {
 		}
 		try {
 			await reorderQuickLinks(workspace.id, user.id, parsed.data.linkIds);
+			return { success: true };
 		} catch (e) {
 			const message = e instanceof Error ? e.message : 'Failed to reorder links';
 			const errorId = await logActionError(event, { message, status: 500 });
 			return fail(500, { error: message, errorId });
 		}
-		throw redirect(303, '/dashboard');
 	},
 	reorderFolders: async (event) => {
 		const { workspace, user } = requireWorkspace(event);
@@ -186,11 +186,11 @@ export const actions: Actions = {
 		}
 		try {
 			await reorderQuickLinkFolders(workspace.id, user.id, parsed.data.folderIds);
+			return { success: true };
 		} catch (e) {
 			const message = e instanceof Error ? e.message : 'Failed to reorder folders';
 			const errorId = await logActionError(event, { message, status: 500 });
 			return fail(500, { error: message, errorId });
 		}
-		throw redirect(303, '/dashboard');
 	}
 };
