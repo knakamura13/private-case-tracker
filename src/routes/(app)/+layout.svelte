@@ -17,8 +17,8 @@
 	onMount(initTruncateTitles);
 </script>
 
-<div class="flex min-h-screen bg-background">
-	<div class="hidden md:block">
+<div class="flex h-screen bg-background">
+	<div class="hidden md:block sticky top-0 h-screen">
 		<Sidebar workspaceName={data.workspace.name} />
 	</div>
 	{#if sidebarOpen}
@@ -39,14 +39,14 @@
 		</div>
 	{/if}
 
-	<div class="flex min-w-0 flex-1 flex-col">
+	<div class="flex min-w-0 flex-1 min-h-0 flex-col">
 		<TopBar
 			user={data.user}
 			onOpenSearch={() => (paletteOpen = true)}
 			onToggleSidebar={() => (sidebarOpen = !sidebarOpen)}
 			onOpenQuickAdd={() => (quickAddOpen = true)}
 		/>
-		<main id="main" class="flex-1 overflow-y-auto p-4 md:p-6">
+		<main id="main" class="flex-1 overflow-y-auto p-4 pb-24 md:p-6 md:pb-32">
 			{@render children()}
 		</main>
 	</div>

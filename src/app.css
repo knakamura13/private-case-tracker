@@ -48,6 +48,17 @@ body {
 	font-family: var(--font-sans);
 }
 
+:root {
+	--page-overscroll-space: clamp(4rem, 10vh, 8rem);
+}
+
+main::after {
+	content: '';
+	display: block;
+	height: max(var(--page-overscroll-space), env(safe-area-inset-bottom));
+	pointer-events: none;
+}
+
 button,
 select {
 	cursor: pointer;
