@@ -35,19 +35,19 @@
 	<div class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
 		<div class="rounded-lg border border-border bg-card p-4">
 			<p class="text-xs text-muted-foreground">{data.processInfo.uptimeLabel}</p>
-			<p class="mt-1 font-mono text-sm">{data.processInfo.uptimeSec}s</p>
+			<p class="mt-1 truncate font-mono text-sm">{data.processInfo.uptimeSec}s</p>
 		</div>
 		<div class="rounded-lg border border-border bg-card p-4">
 			<p class="text-xs text-muted-foreground">Node</p>
-			<p class="mt-1 font-mono text-sm">{data.processInfo.node}</p>
+			<p class="mt-1 truncate font-mono text-sm">{data.processInfo.node}</p>
 		</div>
 		<div class="rounded-lg border border-border bg-card p-4">
 			<p class="text-xs text-muted-foreground">Commit SHA</p>
-			<p class="mt-1 font-mono text-sm">{data.processInfo.commitSha ?? '—'}</p>
+			<p class="mt-1 truncate font-mono text-sm">{data.processInfo.commitSha ?? '—'}</p>
 		</div>
 		<div class="rounded-lg border border-border bg-card p-4">
 			<p class="text-xs text-muted-foreground">DB latency</p>
-			<p class="mt-1 font-mono text-sm">{data.dbHealth.ok ? `${data.dbHealth.ms}ms` : 'down'}</p>
+			<p class="mt-1 truncate font-mono text-sm">{data.dbHealth.ok ? `${data.dbHealth.ms}ms` : 'down'}</p>
 		</div>
 	</div>
 

@@ -69,7 +69,11 @@
 			const item = flat[activeIndex];
 			if (item) {
 				open = false;
-				goto(item.href);
+				if (item.type === 'quicklink') {
+					window.open(item.href, '_blank', 'noopener,noreferrer');
+				} else {
+					goto(item.href);
+				}
 			}
 		}
 	}
@@ -122,6 +126,8 @@
 										<li>
 											<a
 												href={item.href}
+												target={item.type === 'quicklink' ? '_blank' : undefined}
+												rel={item.type === 'quicklink' ? 'noopener noreferrer' : undefined}
 												onclick={() => (open = false)}
 												class="flex flex-col border-b border-border/50 px-3 py-2 text-sm hover:bg-muted {activeIndex === globalIndex ? 'bg-muted' : ''}"
 											>

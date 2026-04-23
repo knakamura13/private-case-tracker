@@ -10,13 +10,13 @@
 </script>
 
 <aside class="flex h-full w-64 flex-col border-r border-border bg-card">
-	<div class="flex items-center gap-2 border-b border-border px-5 py-4">
+	<a href="/dashboard" class="flex h-14 items-center gap-2 border-b border-border px-5 hover:bg-muted/50 transition-colors">
 		<ShieldCheck class="h-5 w-5 text-primary" />
 		<div class="min-w-0">
 			<p class="text-sm font-semibold leading-tight">Case Tracker</p>
 			<p class="truncate text-xs text-muted-foreground" title={workspaceName}>{workspaceName}</p>
 		</div>
-	</div>
+	</a>
 	<nav class="flex-1 overflow-y-auto p-2" aria-label="Primary">
 		<ul class="space-y-1">
 			{#each navigation.filter((i) => !i.ownerOnly || isOwner) as item (item.href)}
@@ -40,9 +40,4 @@
 			{/each}
 		</ul>
 	</nav>
-	<div class="border-t border-border p-3">
-		<p class="text-[10px] leading-tight text-muted-foreground">
-			Private organizational dashboard — not a legal source of truth.
-		</p>
-	</div>
 </aside>

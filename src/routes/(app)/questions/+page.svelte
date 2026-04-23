@@ -5,7 +5,6 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
-	import Disclaimer from '$lib/components/shared/Disclaimer.svelte';
 	import { HelpCircle, Plus } from 'lucide-svelte';
 	import { titleCase } from '$lib/utils/format';
 	import type { PageData } from './$types';
@@ -31,8 +30,6 @@
 		</Button>
 	{/snippet}
 </PageHeader>
-
-<Disclaimer class="mb-4" />
 
 <FilterBar
 	filters={[

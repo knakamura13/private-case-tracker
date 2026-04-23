@@ -1,12 +1,14 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import PageHeader from '$lib/components/shared/PageHeader.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Label from '$lib/components/ui/Label.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import Disclaimer from '$lib/components/shared/Disclaimer.svelte';
+	import FileDropZone from '$lib/components/ui/FileDropZone.svelte';
 	import { goto, invalidateAll } from '$app/navigation';
+	import { consumePendingUpload } from '$lib/stores/pendingUpload';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -14,6 +16,24 @@
 	let mode = $state<'link' | 'upload'>('link');
 	let uploading = $state(false);
 	let uploadError = $state<string | null>(null);
+	let uploadFile = $state<File | null>(null);
+	let titleValue = $state('');
+
+	// Auto-fill title from filename when a file is first selected
+	$effect(() => {
+		if (uploadFile && !titleValue) {
+			titleValue = uploadFile.name.replace(/\.[^/.]+$/, '');
+		}
+	});
+
+	onMount(() => {
+		const pending = consumePendingUpload();
+		if (pending) {
+			uploadFile = pending;
+			mode = 'upload';
+			titleValue = pending.name.replace(/\.[^/.]+$/, '');
+		}
+	});
 
 	async function handleUpload(event: SubmitEvent) {
 		event.preventDefault();
@@ -21,7 +41,7 @@
 		uploadError = null;
 		try {
 			const fd = new FormData(event.currentTarget as HTMLFormElement);
-			const file = fd.get('file') as File;
+			const file = uploadFile;
 			if (!file || file.size === 0) throw new Error('Select a file to upload.');
 			const body = {
 				filename: file.name,
@@ -60,8 +80,6 @@
 </script>
 
 <PageHeader title="Add document" description="Prefer a secure external link when possible. Uploads go to private object storage." />
-
-<Disclaimer class="mb-4" />
 
 <div class="mb-4 inline-flex rounded-md border border-border bg-muted/30 p-1 text-sm">
 	<button class={`rounded px-3 py-1 ${mode === 'link' ? 'bg-card shadow-sm' : 'text-muted-foreground'}`} onclick={() => (mode = 'link')}>Secure link</button>
@@ -121,8 +139,8 @@
 			<Label for="notes">Notes</Label>
 			<Textarea id="notes" name="notes" />
 		</div>
-		{#if form?.error}<p class="md:col-span-2 text-sm text-destructive">{form.error}</p>{/if}
-		<div class="md:col-span-2 flex gap-2">
+		{#if form?.error}<p class="text-sm text-destructive md:col-span-2">{form.error}</p>{/if}
+		<div class="flex gap-2 md:col-span-2">
 			<Button type="submit">Save link</Button>
 			<Button type="button" variant="outline" onclick={() => history.back()}>Cancel</Button>
 		</div>
@@ -130,13 +148,11 @@
 {:else}
 	<form class="grid grid-cols-1 gap-4 md:grid-cols-2" onsubmit={handleUpload}>
 		<div class="md:col-span-2">
-			<Label for="file">File</Label>
-			<input id="file" name="file" type="file" required class="block w-full text-sm" />
-			<p class="mt-1 text-xs text-muted-foreground">Max 50 MB. File is stored privately; access is mediated by this app.</p>
+			<FileDropZone bind:file={uploadFile} class="md:col-span-2" />
 		</div>
 		<div>
 			<Label for="titleU">Title</Label>
-			<Input id="titleU" name="title" required />
+			<Input id="titleU" name="title" bind:value={titleValue} required />
 		</div>
 		<div>
 			<Label for="categoryU">Category</Label>
@@ -172,9 +188,9 @@
 				{#each data.links.appointments as a (a.id)}<option value={a.id}>{a.title}</option>{/each}
 			</Select>
 		</div>
-		{#if uploadError}<p class="md:col-span-2 text-sm text-destructive">{uploadError}</p>{/if}
-		<div class="md:col-span-2 flex gap-2">
-			<Button type="submit" disabled={uploading}>{uploading ? 'Uploading…' : 'Upload file'}</Button>
+		{#if uploadError}<p class="text-sm text-destructive md:col-span-2">{uploadError}</p>{/if}
+		<div class="flex gap-2 md:col-span-2">
+			<Button type="submit" disabled={uploading || !uploadFile}>{uploading ? 'Uploading…' : 'Upload file'}</Button>
 			<Button type="button" variant="outline" onclick={() => history.back()}>Cancel</Button>
 		</div>
 	</form>

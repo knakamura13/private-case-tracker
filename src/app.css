@@ -48,10 +48,35 @@ body {
 	font-family: var(--font-sans);
 }
 
-*:focus-visible {
-	outline: 2px solid var(--color-ring);
-	outline-offset: 2px;
-	border-radius: var(--radius);
+button,
+select {
+	cursor: pointer;
+}
+
+/* Smooth hover feedback on all interactive elements */
+input:not(:disabled),
+select:not(:disabled),
+textarea:not(:disabled) {
+	transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+input:not(:disabled):hover,
+select:not(:disabled):hover,
+textarea:not(:disabled):hover {
+	border-color: color-mix(in oklch, var(--color-ring) 50%, var(--color-border));
+}
+
+button:not(:disabled),
+a {
+	transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease;
+}
+
+@layer base {
+	*:focus-visible {
+		outline: 2px solid var(--color-ring);
+		outline-offset: 2px;
+		border-radius: var(--radius);
+	}
 }
 
 .sr-only {

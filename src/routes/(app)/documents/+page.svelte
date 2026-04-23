@@ -5,10 +5,43 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
-	import { FolderLock, Plus, ExternalLink } from 'lucide-svelte';
+	import { FolderLock, Plus, ExternalLink, Upload } from 'lucide-svelte';
 	import { fmtDateTime } from '$lib/utils/dates';
+	import { goto } from '$app/navigation';
+	import { setPendingUpload } from '$lib/stores/pendingUpload';
 	import type { PageData } from './$types';
+
 	let { data }: { data: PageData } = $props();
+
+	let pageDragging = $state(false);
+
+	function onDragEnter(e: DragEvent) {
+		if (e.dataTransfer?.types.includes('Files')) pageDragging = true;
+	}
+
+	function onDragOver(e: DragEvent) {
+		if (e.dataTransfer?.types.includes('Files')) {
+			e.preventDefault();
+			pageDragging = true;
+		}
+	}
+
+	function onDragLeave(e: DragEvent) {
+		// Only clear when leaving the page entirely
+		if (!e.relatedTarget || !(document.documentElement.contains(e.relatedTarget as Node) && e.relatedTarget !== document.documentElement)) {
+			pageDragging = false;
+		}
+	}
+
+	async function onDrop(e: DragEvent) {
+		e.preventDefault();
+		pageDragging = false;
+		const file = e.dataTransfer?.files[0];
+		if (file) {
+			setPendingUpload(file);
+			await goto('/documents/new');
+		}
+	}
 
 	function bytes(n: number | null): string {
 		if (!n) return '';
@@ -17,6 +50,23 @@
 		return `${(n / (1024 * 1024)).toFixed(1)} MB`;
 	}
 </script>
+
+<svelte:window
+	ondragenter={onDragEnter}
+	ondragover={onDragOver}
+	ondragleave={onDragLeave}
+	ondrop={onDrop}
+/>
+
+{#if pageDragging}
+	<div class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+		<div class="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-primary bg-primary/5 px-16 py-12 text-center">
+			<Upload class="h-12 w-12 text-primary" />
+			<p class="text-lg font-semibold text-primary">Drop to upload</p>
+			<p class="text-sm text-muted-foreground">File will open in the upload form</p>
+		</div>
+	</div>
+{/if}
 
 <PageHeader title="Documents" description="Files and secure external links. Prefer metadata + link when possible.">
 	{#snippet actions()}

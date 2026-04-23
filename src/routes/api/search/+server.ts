@@ -13,7 +13,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const workspaceId = locals.workspace.id;
 	const contains = { contains: q, mode: 'insensitive' as const };
 
-	const [tasks, forms, evidence, questions, notes, files] = await Promise.all([
+	const [tasks, forms, evidence, questions, notes, files, quickLinks] = await Promise.all([
 		db.task.findMany({
 			where: {
 				workspaceId,
@@ -72,6 +72,15 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			},
 			take: LIMIT_PER_GROUP,
 			orderBy: { updatedAt: 'desc' }
+		}),
+		db.quickLink.findMany({
+			where: {
+				workspaceId,
+				deletedAt: null,
+				OR: [{ title: contains }, { url: contains }, { description: contains }, { notes: contains }]
+			},
+			take: LIMIT_PER_GROUP,
+			orderBy: { updatedAt: 'desc' }
 		})
 	]);
 
@@ -117,6 +126,13 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			title: f.title,
 			description: f.category,
 			href: `/documents/${f.id}`
+		})),
+		'Quick links': quickLinks.map((l) => ({
+			type: 'quicklink',
+			id: l.id,
+			title: l.title ?? l.url,
+			description: l.url,
+			href: l.url
 		}))
 	});
 };

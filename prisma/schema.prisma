@@ -123,11 +123,12 @@ enum MemberRole {
 }
 
 model Workspace {
-  id        String   @id @default(cuid())
-  name      String
-  ownerId   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String   @id @default(cuid())
+  name             String
+  ownerId          String
+  evidenceTargets  Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   owner       User          @relation("WorkspaceOwner", fields: [ownerId], references: [id])
   memberships Membership[]

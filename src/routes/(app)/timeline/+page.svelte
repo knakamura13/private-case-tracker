@@ -3,7 +3,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
-	import { Plus, GitBranchPlus } from 'lucide-svelte';
+	import { Plus } from 'lucide-svelte';
 	import { fmtDate } from '$lib/utils/dates';
 	import { PHASE_ORDER, PHASE_LABELS, PHASE_DESCRIPTIONS } from '$lib/constants/phases';
 	import { titleCase } from '$lib/utils/format';
@@ -40,12 +40,6 @@
 	{/snippet}
 </PageHeader>
 
-<Card class="mb-6 p-4">
-	<p class="text-xs uppercase text-muted-foreground">Current phase</p>
-	<p class="text-lg font-semibold">{PHASE_LABELS[data.phase]}</p>
-	<p class="text-sm text-muted-foreground">{PHASE_DESCRIPTIONS[data.phase]}</p>
-</Card>
-
 <div class="space-y-6">
 	{#each grouped as g (g.phase)}
 		<section>
@@ -62,7 +56,7 @@
 				<Card class="p-4 text-sm text-muted-foreground">
 					<div class="flex items-center justify-between">
 						<span>No milestones in this phase yet.</span>
-						<Button variant="ghost" size="sm" href={`/timeline/new?phase=${g.phase}`}>Add one</Button>
+						<Button variant="ghost" size="sm" href={`/timeline/new?phase=${g.phase}`}>{#snippet children()}<Plus class="h-4 w-4" /> Add{/snippet}</Button>
 					</div>
 				</Card>
 			{:else}
@@ -94,11 +88,3 @@
 	{/each}
 </div>
 
-{#if data.milestones.length === 0}
-	<div class="mt-6 flex justify-center">
-		<div class="text-center">
-			<GitBranchPlus class="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-			<p class="text-sm text-muted-foreground">Start by adding a first milestone to a phase above.</p>
-		</div>
-	</div>
-{/if}
