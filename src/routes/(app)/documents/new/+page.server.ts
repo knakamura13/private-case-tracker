@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { requireWorkspace } from '$lib/server/guards';
-import { createExternalDocument } from '$lib/server/services/document.service';
+import { createExternalLink } from '$lib/server/services/external-link.service';
 import { documentMetadataSchema } from '$lib/schemas/document';
 import { DOCUMENT_CATEGORIES } from '$lib/constants/categories';
 import { storageConfigured } from '$lib/server/env';
@@ -34,7 +34,7 @@ export const actions: Actions = {
 		if (!parsed.data.externalUrl) {
 			return fail(400, { error: 'External URL required' });
 		}
-		const doc = await createExternalDocument(workspace.id, user.id, {
+		const doc = await createExternalLink(workspace.id, user.id, {
 			...parsed.data,
 			externalUrl: parsed.data.externalUrl
 		});

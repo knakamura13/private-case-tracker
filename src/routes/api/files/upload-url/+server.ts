@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requestUpload } from '$lib/server/services/document.service';
+import { createUploadedDocument } from '$lib/server/services/uploaded-document.service';
 import { uploadUrlRequestSchema } from '$lib/schemas/document';
 import { storageConfigured } from '$lib/server/env';
 
@@ -19,7 +19,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!parsed.success) return json({ error: parsed.error.message }, { status: 400 });
 
 	try {
-		const { doc, uploadUrl, expiresIn } = await requestUpload(
+		const { doc, uploadUrl, expiresIn } = await createUploadedDocument(
 			locals.workspace.id,
 			locals.user.id,
 			parsed.data
