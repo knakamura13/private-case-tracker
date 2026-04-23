@@ -9,6 +9,25 @@ export default defineConfig({
 		sveltekit(),
 		SvelteKitPWA({
 			registerType: 'autoUpdate',
+			strategies: 'generateSW',
+			workbox: {
+				runtimeCaching: [
+					{
+						urlPattern: /\/_app\/immutable\/.*/,
+						handler: 'NetworkFirst',
+						options: {
+							cacheName: 'sveltekit-immutable',
+							expiration: {
+								maxEntries: 100,
+								maxAgeSeconds: 60 * 60 * 24
+							},
+							cacheableResponse: {
+								statuses: [0, 200]
+							}
+						}
+					}
+				]
+			},
 			manifest: {
 				name: 'Private Case Tracker',
 				short_name: 'Case Tracker',
