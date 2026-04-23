@@ -140,6 +140,7 @@ model Workspace {
   questions   QuestionItem[]
   notes       Note[]
   milestones  TimelineMilestone[]
+  quickLinks  QuickLink[]
   tags        Tag[]
   activity    ActivityLog[]
 }
@@ -261,6 +262,27 @@ model TimelineMilestone {
   @@index([workspaceId, phase])
   @@index([workspaceId, dueDate])
   @@index([workspaceId, status])
+}
+
+// ==============================
+// Dashboard quick links
+// ==============================
+
+model QuickLink {
+  id          String    @id @default(cuid())
+  workspaceId String
+  url         String
+  title       String?
+  description String?
+  notes       String?
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, order])
 }
 
 // ==============================
@@ -689,6 +711,9 @@ enum ActivityAction {
   MILESTONE_UPDATED
   MILESTONE_DELETED
   DEMO_DATA_REMOVED
+  QUICK_LINK_CREATED
+  QUICK_LINK_UPDATED
+  QUICK_LINK_DELETED
 }
 
 model ActivityLog {

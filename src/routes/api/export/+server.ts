@@ -5,7 +5,7 @@ import { db } from '$lib/server/db';
 export const GET: RequestHandler = async ({ locals }) => {
 	if (!locals.user || !locals.workspace) return json({ error: 'Unauthorized' }, { status: 401 });
 	const wsId = locals.workspace.id;
-	const [tasks, forms, evidence, documents, appointments, questions, notes, milestones, activity] =
+	const [tasks, forms, evidence, documents, appointments, questions, notes, milestones, activity, quickLinks] =
 		await Promise.all([
 			db.task.findMany({ where: { workspaceId: wsId, deletedAt: null }, include: { checklist: true } }),
 			db.formRecord.findMany({ where: { workspaceId: wsId, deletedAt: null }, include: { supportingItems: true } }),
@@ -15,7 +15,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 			db.questionItem.findMany({ where: { workspaceId: wsId, deletedAt: null } }),
 			db.note.findMany({ where: { workspaceId: wsId, deletedAt: null } }),
 			db.timelineMilestone.findMany({ where: { workspaceId: wsId, deletedAt: null } }),
-			db.activityLog.findMany({ where: { workspaceId: wsId } })
+			db.activityLog.findMany({ where: { workspaceId: wsId } }),
+			db.quickLink.findMany({ where: { workspaceId: wsId, deletedAt: null } })
 		]);
 	return new Response(
 		JSON.stringify(
@@ -30,6 +31,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 				questions,
 				notes,
 				milestones,
+				quickLinks,
 				activity
 			},
 			null,

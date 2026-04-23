@@ -24,7 +24,8 @@ export async function dashboardFor(workspaceId: string) {
 		openQuestionsByPriority,
 		milestonesAll,
 		activity,
-		docsByCategoryRaw
+		docsByCategoryRaw,
+		quickLinks
 	] = await Promise.all([
 		db.task.findMany({
 			where: {
@@ -78,6 +79,10 @@ export async function dashboardFor(workspaceId: string) {
 			by: ['category'],
 			where: { workspaceId, deletedAt: null },
 			_count: { _all: true }
+		}),
+		db.quickLink.findMany({
+			where: { workspaceId, deletedAt: null },
+			orderBy: { order: 'asc' }
 		})
 	]);
 
@@ -163,7 +168,8 @@ export async function dashboardFor(workspaceId: string) {
 		activity,
 		docsByCategory,
 		missingCritical,
-		countdowns
+		countdowns,
+		quickLinks
 	};
 }
 
