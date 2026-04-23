@@ -44,8 +44,16 @@ Resources:
             Effect: Allow
             Principal:
               AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
-            Action: 'kms:*'
-            Resource: '*'
+            Action:
+              - 'kms:Encrypt'
+              - 'kms:Decrypt'
+              - 'kms:GenerateDataKey'
+              - 'kms:GenerateDataKeyWithoutPlaintext'
+              - 'kms:DescribeKey'
+              - 'kms:CreateGrant'
+              - 'kms:RevokeGrant'
+            Resource:
+              - !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${DataKey}'
 
   DataKeyAlias:
     Type: AWS::KMS::Alias
