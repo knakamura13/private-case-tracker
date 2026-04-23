@@ -20,12 +20,49 @@
 	let inputEl = $state<HTMLInputElement | null>(null);
 	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
+	let dialogContentEl = $state<HTMLDivElement | null>(null);
+	let lastActiveEl = $state<HTMLElement | null>(null);
+
+	function getFocusable(container: HTMLElement): HTMLElement[] {
+		const nodes = container.querySelectorAll<HTMLElement>(
+			'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+		);
+		return Array.from(nodes).filter((el) => {
+			const style = window.getComputedStyle(el);
+			return style.display != 'none' && style.visibility != 'hidden';
+		});
+	}
+
+	function trapTabKey(e: KeyboardEvent) {
+		if (e.key !== 'Tab') return;
+		const container = dialogContentEl;
+		if (!container) return;
+		const focusable = getFocusable(container);
+		if (focusable.length === 0) return;
+		const active = document.activeElement as HTMLElement | null;
+		const first = focusable[0];
+		const last = focusable[focusable.length - 1];
+		if (e.shiftKey) {
+			if (!active || active === first || !container.contains(active)) {
+				e.preventDefault();
+				last.focus();
+			}
+		} else {
+			if (!active || active === last || !container.contains(active)) {
+				e.preventDefault();
+				first.focus();
+			}
+		}
+	}
+
 	const flat = $derived(Object.values(results).flat());
 
 	$effect(() => {
 		if (open) {
+			lastActiveEl = document.activeElement as HTMLElement | null;
 			setTimeout(() => inputEl?.focus(), 20);
 		} else {
+			lastActiveEl?.focus();
 			query = '';
 			results = {};
 			activeIndex = 0;
@@ -91,9 +128,9 @@
 </script>
 
 {#if open}
-	<div class="fixed inset-0 z-50 flex items-start justify-center bg-background/60 p-4 pt-24 backdrop-blur-sm" role="dialog" aria-modal="true">
+	<div class="fixed inset-0 z-50 flex items-start justify-center bg-background/60 p-4 pt-24 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Search" tabindex="-1" onkeydown={trapTabKey}>
 		<button class="absolute inset-0 z-0 cursor-default" aria-label="Close" onclick={() => (open = false)}></button>
-		<div class="relative z-10 w-full max-w-xl overflow-hidden rounded-lg border border-border bg-card shadow-xl">
+		<div bind:this={dialogContentEl} class="relative z-10 w-full max-w-xl overflow-hidden rounded-lg border border-border bg-card shadow-xl">
 			<div class="flex items-center gap-2 border-b border-border px-3">
 				<Search class="h-4 w-4 text-muted-foreground" />
 				<input

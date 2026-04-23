@@ -21,6 +21,7 @@
 
 <header class="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-card/80 px-4 backdrop-blur">
 	<button
+		type="button"
 		class="flex h-9 w-9 items-center justify-center rounded-md hover:bg-muted md:hidden"
 		aria-label="Open sidebar"
 		onclick={onToggleSidebar}
@@ -28,6 +29,7 @@
 		<Menu class="h-4 w-4" />
 	</button>
 	<button
+		type="button"
 		onclick={onOpenSearch}
 		class={cn(
 			'flex h-9 min-w-[220px] flex-1 items-center gap-2 rounded-md border border-input bg-card px-3 text-sm text-muted-foreground hover:bg-muted max-w-xl'
@@ -43,6 +45,8 @@
 	<div class="relative">
 		<button
 			class="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-xs font-semibold"
+			aria-label="Open user menu"
+			type="button"
 			aria-haspopup="menu"
 			aria-expanded={menuOpen}
 			onclick={() => (menuOpen = !menuOpen)}
