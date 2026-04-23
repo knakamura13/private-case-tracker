@@ -5,6 +5,8 @@
 	import Label from '$lib/components/ui/Label.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
+	import { enhance } from '$app/forms';
+	import type { SubmitFunction } from '@sveltejs/kit';
 
 	interface Option {
 		id: string;
@@ -20,7 +22,9 @@
 		members,
 		submitLabel = 'Save',
 		error,
-		errorId
+		errorId,
+		action,
+		onenhance
 	}: {
 		initial?: Record<string, unknown>;
 		forms: Option[];
@@ -31,6 +35,8 @@
 		submitLabel?: string;
 		error?: string | null;
 		errorId?: string | null;
+		action?: string;
+		onenhance?: SubmitFunction;
 	} = $props();
 
 	function val(name: string, fallback = '') {
@@ -41,7 +47,7 @@
 	}
 </script>
 
-<form method="post" class="grid grid-cols-1 gap-4 md:grid-cols-2">
+<form method="post" {action} use:enhance={onenhance} class="grid grid-cols-1 gap-4 md:grid-cols-2">
 	<div class="md:col-span-2">
 		<Label for="title">Title</Label>
 		<Input id="title" name="title" required value={val('title')} />

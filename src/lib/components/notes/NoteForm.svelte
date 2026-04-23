@@ -4,12 +4,16 @@
 	import Label from '$lib/components/ui/Label.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import MarkdownEditor from '$lib/components/shared/MarkdownEditor.svelte';
+	import { enhance } from '$app/forms';
+	import type { SubmitFunction } from '@sveltejs/kit';
 
 	let {
 		initial = {},
 		links = { tasks: [], forms: [], evidence: [], appointments: [] },
 		submitLabel = 'Save',
-		error
+		error,
+		action,
+		onenhance
 	}: {
 		initial?: Record<string, unknown>;
 		links?: {
@@ -20,6 +24,8 @@
 		};
 		submitLabel?: string;
 		error?: string | null;
+		action?: string;
+		onenhance?: SubmitFunction;
 	} = $props();
 
 	function val(name: string, fallback = '') {
@@ -31,7 +37,7 @@
 	let body = $state(val('bodyMd'));
 </script>
 
-<form method="post" class="space-y-4">
+<form method="post" {action} use:enhance={onenhance} class="space-y-4">
 	<div>
 		<Label for="title">Title</Label>
 		<Input id="title" name="title" required value={val('title')} />

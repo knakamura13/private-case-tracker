@@ -28,25 +28,28 @@
 </PageHeader>
 
 {#if editing}
-	<form method="post" action="?/update" use:enhance={() => ({ update }) => update().then(() => { editing = false; })}>
-		<EvidenceForm
-			initial={{
-				title: data.evidence.title,
-				type: data.evidence.type,
-				status: data.evidence.status,
-				dateStart: data.evidence.dateStart,
-				dateEnd: data.evidence.dateEnd,
-				peopleInvolved: data.evidence.peopleInvolved,
-				description: data.evidence.description,
-				significance: data.evidence.significance,
-				confidenceScore: data.evidence.confidenceScore,
-				includedInPacket: data.evidence.includedInPacket,
-				notes: data.evidence.notes
-			}}
-			submitLabel="Save changes"
-			error={form?.error}
-		/>
-	</form>
+	<EvidenceForm
+		action="?/update"
+		onenhance={() => async ({ update }) => {
+			await update();
+			editing = false;
+		}}
+		initial={{
+			title: data.evidence.title,
+			type: data.evidence.type,
+			status: data.evidence.status,
+			dateStart: data.evidence.dateStart,
+			dateEnd: data.evidence.dateEnd,
+			peopleInvolved: data.evidence.peopleInvolved,
+			description: data.evidence.description,
+			significance: data.evidence.significance,
+			confidenceScore: data.evidence.confidenceScore,
+			includedInPacket: data.evidence.includedInPacket,
+			notes: data.evidence.notes
+		}}
+		submitLabel="Save changes"
+		error={form?.error}
+	/>
 {:else}
 	<div class="grid gap-6 md:grid-cols-3">
 		<Card class="p-4 text-sm md:col-span-2">

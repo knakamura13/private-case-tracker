@@ -51,30 +51,33 @@
 
 {#if editing}
 	<div class="mb-8">
-		<form method="post" action="?/update" use:enhance={({ formElement }) => ({ update }) => update().then(() => formElement.reset())}>
-			<TaskForm
-				initial={{
-					title: data.task.title,
-					description: data.task.description,
-					dueDate: data.task.dueDate,
-					priority: data.task.priority,
-					status: data.task.status,
-					ownerId: data.task.owner?.id,
-					linkedFormId: data.task.form?.id,
-					linkedEvidenceId: data.task.evidence?.id,
-					linkedAppointmentId: data.task.appointment?.id,
-					linkedMilestoneId: data.task.milestone?.id
-				}}
-				forms={formOptions}
-				evidence={evidenceOptions}
-				appointments={appointmentOptions}
-				milestones={milestoneOptions}
-				members={data.members}
-				submitLabel="Save changes"
-				error={form?.error}
-	errorId={form?.errorId}
-			/>
-		</form>
+		<TaskForm
+			action="?/update"
+			onenhance={() => async ({ update }) => {
+				await update();
+				editing = false;
+			}}
+			initial={{
+				title: data.task.title,
+				description: data.task.description,
+				dueDate: data.task.dueDate,
+				priority: data.task.priority,
+				status: data.task.status,
+				ownerId: data.task.owner?.id,
+				linkedFormId: data.task.form?.id,
+				linkedEvidenceId: data.task.evidence?.id,
+				linkedAppointmentId: data.task.appointment?.id,
+				linkedMilestoneId: data.task.milestone?.id
+			}}
+			forms={formOptions}
+			evidence={evidenceOptions}
+			appointments={appointmentOptions}
+			milestones={milestoneOptions}
+			members={data.members}
+			submitLabel="Save changes"
+			error={form?.error}
+			errorId={form?.errorId}
+		/>
 	</div>
 {:else}
 	<div class="grid gap-6 md:grid-cols-3">

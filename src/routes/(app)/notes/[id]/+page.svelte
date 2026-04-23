@@ -25,21 +25,24 @@
 </PageHeader>
 
 {#if editing}
-	<form method="post" action="?/update" use:enhance={() => ({ update }) => update().then(() => { editing = false; })}>
-		<NoteForm
-			initial={{
-				title: data.note.title,
-				bodyMd: data.note.bodyMd,
-				linkedTaskId: data.note.linkedTaskId,
-				linkedFormId: data.note.linkedFormId,
-				linkedEvidenceId: data.note.linkedEvidenceId,
-				linkedAppointmentId: data.note.linkedAppointmentId
-			}}
-			links={data.links}
-			submitLabel="Save changes"
-			error={form?.error}
-		/>
-	</form>
+	<NoteForm
+		action="?/update"
+		onenhance={() => async ({ update }) => {
+			await update();
+			editing = false;
+		}}
+		initial={{
+			title: data.note.title,
+			bodyMd: data.note.bodyMd,
+			linkedTaskId: data.note.linkedTaskId,
+			linkedFormId: data.note.linkedFormId,
+			linkedEvidenceId: data.note.linkedEvidenceId,
+			linkedAppointmentId: data.note.linkedAppointmentId
+		}}
+		links={data.links}
+		submitLabel="Save changes"
+		error={form?.error}
+	/>
 {:else}
 	<article class="prose prose-sm max-w-none rounded-lg border border-border bg-card p-5">
 		<pre class="whitespace-pre-wrap font-sans leading-relaxed">{data.note.bodyMd}</pre>

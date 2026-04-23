@@ -5,12 +5,22 @@
 	import Label from '$lib/components/ui/Label.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { EVIDENCE_CATEGORIES } from '$lib/constants/categories';
+	import { enhance } from '$app/forms';
+	import type { SubmitFunction } from '@sveltejs/kit';
 
 	let {
 		initial = {},
 		submitLabel = 'Save',
-		error
-	}: { initial?: Record<string, unknown>; submitLabel?: string; error?: string | null } = $props();
+		error,
+		action,
+		onenhance
+	}: {
+		initial?: Record<string, unknown>;
+		submitLabel?: string;
+		error?: string | null;
+		action?: string;
+		onenhance?: SubmitFunction;
+	} = $props();
 
 	function val(name: string, fallback = '') {
 		const v = initial[name];
@@ -22,7 +32,7 @@
 	const includedInPacket = $derived(Boolean(initial.includedInPacket));
 </script>
 
-<form method="post" class="grid grid-cols-1 gap-4 md:grid-cols-2">
+<form method="post" {action} use:enhance={onenhance} class="grid grid-cols-1 gap-4 md:grid-cols-2">
 	<div class="md:col-span-2">
 		<Label for="title">Title</Label>
 		<Input id="title" name="title" required value={val('title')} />

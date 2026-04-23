@@ -28,24 +28,27 @@
 </PageHeader>
 
 {#if editing}
-	<form method="post" action="?/update" use:enhance={() => ({ update }) => update().then(() => { editing = false; })}>
-		<MilestoneForm
-			members={data.members}
-			initial={{
-				title: data.milestone.title,
-				description: data.milestone.description,
-				phase: data.milestone.phase,
-				status: data.milestone.status,
-				priority: data.milestone.priority,
-				ownerId: data.milestone.owner?.id,
-				dueDate: data.milestone.dueDate,
-				notes: data.milestone.notes
-			}}
-			submitLabel="Save changes"
-			error={form?.error}
-	errorId={form?.errorId}
-		/>
-	</form>
+	<MilestoneForm
+		action="?/update"
+		onenhance={() => async ({ update }) => {
+			await update();
+			editing = false;
+		}}
+		members={data.members}
+		initial={{
+			title: data.milestone.title,
+			description: data.milestone.description,
+			phase: data.milestone.phase,
+			status: data.milestone.status,
+			priority: data.milestone.priority,
+			ownerId: data.milestone.owner?.id,
+			dueDate: data.milestone.dueDate,
+			notes: data.milestone.notes
+		}}
+		submitLabel="Save changes"
+		error={form?.error}
+		errorId={form?.errorId}
+	/>
 {:else}
 	<div class="grid gap-6 md:grid-cols-3">
 		<Card class="p-4 text-sm md:col-span-2">
