@@ -31,6 +31,9 @@ const schema = z.object({
 type Env = z.infer<typeof schema>;
 let cached: Env | null = null;
 
+// BUILD_PLACEHOLDER is used ONLY during SvelteKit build/prerender when runtime env vars are not available.
+// These values must NEVER be used in production. The load() function validates that real env vars
+// are provided in production and will fail if these placeholders are detected at runtime.
 const BUILD_PLACEHOLDER: Env = {
 	APP_URL: 'http://localhost:3000',
 	PUBLIC_APP_NAME: 'Private Case Tracker',

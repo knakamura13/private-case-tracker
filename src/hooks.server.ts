@@ -8,6 +8,7 @@ import { redactSearchParams } from '$lib/server/utils/redact';
 import { DEV_USER, DEV_WORKSPACE, DEV_SESSION, ensureDevUserSeeded } from '$lib/server/dev-user';
 import { ddbQuery } from '$lib/server/dynamo/ops';
 import { gsi1UserPk } from '$lib/server/dynamo/keys';
+import { ENV } from '$lib/server/env';
 
 function makeRequestId() {
 	// Short-ish id that's useful in logs and UI.
@@ -18,6 +19,18 @@ const requestIdHandle: Handle = async ({ event, resolve }) => {
 	event.locals.requestId = makeRequestId();
 	const response = await resolve(event);
 	response.headers.set('x-request-id', event.locals.requestId);
+	return response;
+};
+
+const securityHeadersHandle: Handle = async ({ event, resolve }) => {
+	const response = await resolve(event);
+	response.headers.set('X-Content-Type-Options', 'nosniff');
+	response.headers.set('X-Frame-Options', 'DENY');
+	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+	// HSTS only in production when we know HTTPS is available
+	if (ENV.NODE_ENV === 'production') {
+		response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+	}
 	return response;
 };
 
@@ -80,7 +93,7 @@ const sessionHandle: Handle = async ({ event, resolve }) => {
 const betterAuthHandle: Handle = async ({ event, resolve }) =>
 	svelteKitHandler({ event, resolve, auth, building });
 
-export const handle = sequence(requestIdHandle, betterAuthHandle, sessionHandle);
+export const handle = sequence(requestIdHandle, securityHeadersHandle, sessionHandle, betterAuthHandle);
 
 export const handleError: HandleServerError = async ({ error, event, status, message }) => {
 	const requestId = event.locals.requestId;
