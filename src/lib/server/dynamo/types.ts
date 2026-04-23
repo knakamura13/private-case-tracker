@@ -141,5 +141,13 @@ export type QuickLinkItem = DynamoBaseItem & {
 	title: string | null;
 	description: string | null;
 	notes: string | null;
+	folderId: string | null;
+	order: number;
+};
+
+export type QuickLinkFolderItem = DynamoBaseItem & {
+	id: string;
+	workspaceId: string;
+	name: string | null;
 	order: number;
 };

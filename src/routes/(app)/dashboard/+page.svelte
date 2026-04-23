@@ -14,7 +14,7 @@
 
 <div class="mb-4">
 	<Widget title="Quick links">
-		<QuickLinksWidget links={data.quickLinks} form={form as { error?: string; errorId?: string | null } | undefined} />
+		<QuickLinksWidget links={data.quickLinks} folders={data.quickLinkFolders} form={form as { error?: string; errorId?: string | null } | undefined} />
 	</Widget>
 </div>
 

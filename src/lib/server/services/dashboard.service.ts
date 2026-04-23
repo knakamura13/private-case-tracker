@@ -17,6 +17,7 @@ import { listQuestions } from './question.service';
 import { listMilestones } from './milestone.service';
 import { listDocuments } from './document.service';
 import { listQuickLinks } from './quickLink.service';
+import { listQuickLinkFolders } from './quickLinkFolder.service';
 
 export async function dashboardFor(workspaceId: string) {
 	const now = new Date();
@@ -32,7 +33,8 @@ export async function dashboardFor(workspaceId: string) {
 		milestonesAll,
 		activity,
 		docsAll,
-		quickLinks
+		quickLinks,
+		quickLinkFolders
 	] = await Promise.all([
 		listTasks(workspaceId, {
 			overdueOnly: false
@@ -61,7 +63,8 @@ export async function dashboardFor(workspaceId: string) {
 		listMilestones(workspaceId),
 		recentActivity(workspaceId, 10),
 		listDocuments(workspaceId),
-		listQuickLinks(workspaceId)
+		listQuickLinks(workspaceId),
+		listQuickLinkFolders(workspaceId)
 	]);
 
 	const formsByStatus: Record<FormFilingStatus, number> = {
@@ -177,6 +180,12 @@ export async function dashboardFor(workspaceId: string) {
 			createdAt: l.createdAt ? new Date(l.createdAt) : new Date(),
 			updatedAt: l.updatedAt ? new Date(l.updatedAt) : new Date(),
 			deletedAt: l.deletedAt ? new Date(l.deletedAt) : null
+		})),
+		quickLinkFolders: quickLinkFolders.map((f: any) => ({
+			...f,
+			createdAt: f.createdAt ? new Date(f.createdAt) : new Date(),
+			updatedAt: f.updatedAt ? new Date(f.updatedAt) : new Date(),
+			deletedAt: f.deletedAt ? new Date(f.deletedAt) : null
 		}))
 	};
 }

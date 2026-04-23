@@ -46,5 +46,42 @@ export const quickLinkDeleteSchema = z.object({
 	id: z.string().min(1)
 });
 
+const optionalFolderName = z
+	.string()
+	.max(200)
+	.optional()
+	.transform((v) => (v === undefined || v.trim() === '' ? null : v.trim()));
+
+export const quickLinkFolderCreateSchema = z.object({
+	name: optionalFolderName
+});
+
+export const quickLinkFolderUpdateSchema = z.object({
+	id: z.string().min(1),
+	name: optionalFolderName
+});
+
+export const quickLinkFolderDeleteSchema = z.object({
+	id: z.string().min(1)
+});
+
+export const quickLinkMoveToFolderSchema = z.object({
+	linkId: z.string().min(1),
+	folderId: z.string().nullable().optional()
+});
+
+export const quickLinkReorderSchema = z.object({
+	linkIds: z.array(z.string().min(1))
+});
+
+export const quickLinkFolderReorderSchema = z.object({
+	folderIds: z.array(z.string().min(1))
+});
+
 export type QuickLinkCreate = z.infer<typeof quickLinkCreateSchema>;
 export type QuickLinkUpdate = z.infer<typeof quickLinkUpdateSchema>;
+export type QuickLinkFolderCreate = z.infer<typeof quickLinkFolderCreateSchema>;
+export type QuickLinkFolderUpdate = z.infer<typeof quickLinkFolderUpdateSchema>;
+export type QuickLinkMoveToFolder = z.infer<typeof quickLinkMoveToFolderSchema>;
+export type QuickLinkReorder = z.infer<typeof quickLinkReorderSchema>;
+export type QuickLinkFolderReorder = z.infer<typeof quickLinkFolderReorderSchema>;

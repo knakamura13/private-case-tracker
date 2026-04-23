@@ -105,7 +105,13 @@ export type ActivityAction =
 	| 'DEMO_DATA_REMOVED'
 	| 'QUICK_LINK_CREATED'
 	| 'QUICK_LINK_UPDATED'
-	| 'QUICK_LINK_DELETED';
+	| 'QUICK_LINK_DELETED'
+	| 'QUICK_LINK_FOLDER_CREATED'
+	| 'QUICK_LINK_FOLDER_UPDATED'
+	| 'QUICK_LINK_FOLDER_DELETED'
+	| 'QUICK_LINK_MOVED_TO_FOLDER'
+	| 'QUICK_LINK_REORDERED'
+	| 'QUICK_LINK_FOLDER_REORDERED';
 
 export type ErrorSource = 'SERVER' | 'CLIENT' | 'ACTION' | 'API';
 
@@ -143,6 +149,17 @@ export type QuickLink = {
 	title?: string | null;
 	description?: string | null;
 	notes?: string | null;
+	folderId?: string | null;
+	order: number;
+	createdAt: string;
+	updatedAt: string;
+	deletedAt?: string | null;
+};
+
+export type QuickLinkFolder = {
+	id: string;
+	workspaceId: string;
+	name?: string | null;
 	order: number;
 	createdAt: string;
 	updatedAt: string;
