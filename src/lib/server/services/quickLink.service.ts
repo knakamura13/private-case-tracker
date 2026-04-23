@@ -1,24 +1,15 @@
 import { logActivity } from '$lib/server/activity';
 import type { QuickLinkCreate, QuickLinkUpdate } from '$lib/schemas/quickLink';
 import { randomUUID } from 'node:crypto';
-import { ddbPut, ddbQuery, ddbGet, ddbUpdate } from '$lib/server/dynamo/ops';
+import { ddbGet, ddbPut, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
+import type { QuickLinkItem } from '$lib/server/dynamo/types';
 
-export async function listQuickLinks(workspaceId: string) {
-	const rows = await ddbQuery<{
-		id: string;
-		workspaceId: string;
-		url: string;
-		title: string | null;
-		description: string | null;
-		notes: string | null;
-		order: number;
-		deletedAt: string | null;
-		createdAt: string;
-		updatedAt: string;
-	}>({
+export async function listQuickLinks(workspaceId: string, limit?: number) {
+	const rows = await ddbQuery<QuickLinkItem>({
 		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
-		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'QuickLink#' }
+		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'QuickLink#' },
+		Limit: limit ?? 1000
 	});
 
 	return rows.filter((r) => !r.deletedAt).sort((a, b) => a.order - b.order);
@@ -67,18 +58,7 @@ export async function updateQuickLink(
 	id: string,
 	input: QuickLinkUpdate
 ) {
-	const existing = await ddbGet<{
-		id: string;
-		workspaceId: string;
-		url: string;
-		title: string | null;
-		description: string | null;
-		notes: string | null;
-		order: number;
-		deletedAt: string | null;
-		createdAt: string;
-		updatedAt: string;
-	}>({ PK: wsPk(workspaceId), SK: entitySk('QuickLink', id) });
+	const existing = await ddbGet<QuickLinkItem>({ PK: wsPk(workspaceId), SK: entitySk('QuickLink', id) });
 	if (!existing) throw new Error('Quick link not found');
 	if (existing.deletedAt) throw new Error('Quick link not found');
 	const patch: Partial<typeof existing> = {};
@@ -121,12 +101,7 @@ export async function updateQuickLink(
 }
 
 export async function softDeleteQuickLink(workspaceId: string, actorId: string, id: string) {
-	const existing = await ddbGet<{
-		id: string;
-		title: string | null;
-		url: string;
-		deletedAt: string | null;
-	}>({
+	const existing = await ddbGet<QuickLinkItem>({
 		PK: wsPk(workspaceId),
 		SK: entitySk('QuickLink', id)
 	});

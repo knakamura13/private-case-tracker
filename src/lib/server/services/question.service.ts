@@ -4,20 +4,22 @@ import type { QuestionCreate, QuestionUpdate } from '$lib/schemas/question';
 import { randomUUID } from 'node:crypto';
 import { ddbGet, ddbPut, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
+import type { QuestionItem } from '$lib/server/dynamo/types';
 
 export async function listQuestions(
 	workspaceId: string,
-	filter: { status?: QuestionStatus; sourceType?: QuestionSourceType; q?: string } = {}
+	filter: { status?: QuestionStatus; sourceType?: QuestionSourceType; q?: string; limit?: number } = {}
 ) {
-	const rows = await ddbQuery<any>({
+	const rows = await ddbQuery<QuestionItem>({
 		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
-		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'QuestionItem#' }
+		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'QuestionItem#' },
+		Limit: filter.limit ?? 1000
 	});
 	const q = filter.q?.toLowerCase();
 	const filtered = rows
 		.filter((r) => !r.deletedAt)
-		.filter((r) => (filter.status ? r.status === filter.status : true))
-		.filter((r) => (filter.sourceType ? r.sourceType === filter.sourceType : true))
+		.filter((r) => (filter.status ? (r.status as QuestionStatus) === filter.status : true))
+		.filter((r) => (filter.sourceType ? (r.sourceType as QuestionSourceType) === filter.sourceType : true))
 		.filter((r) =>
 			q
 				? String(r.question ?? '')
@@ -38,7 +40,7 @@ export async function listQuestions(
 }
 
 export async function getQuestion(workspaceId: string, id: string) {
-	const q = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('QuestionItem', id) });
+	const q = await ddbGet<QuestionItem>({ PK: wsPk(workspaceId), SK: entitySk('QuestionItem', id) });
 	if (!q || q.deletedAt) return null;
 	return {
 		...q,

@@ -3,11 +3,13 @@ import type { NoteCreate, NoteUpdate } from '$lib/schemas/note';
 import { randomUUID } from 'node:crypto';
 import { ddbGet, ddbPut, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
+import type { NoteItem } from '$lib/server/dynamo/types';
 
-export async function listNotes(workspaceId: string, filter: { q?: string } = {}) {
-	const rows = await ddbQuery<any>({
+export async function listNotes(workspaceId: string, filter: { q?: string; limit?: number } = {}) {
+	const rows = await ddbQuery<NoteItem>({
 		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
-		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'Note#' }
+		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'Note#' },
+		Limit: filter.limit ?? 1000
 	});
 	const q = filter.q?.toLowerCase();
 	const filtered = rows
@@ -31,7 +33,7 @@ export async function listNotes(workspaceId: string, filter: { q?: string } = {}
 }
 
 export async function getNote(workspaceId: string, id: string) {
-	const note = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('Note', id) });
+	const note = await ddbGet<NoteItem>({ PK: wsPk(workspaceId), SK: entitySk('Note', id) });
 	if (!note || note.deletedAt) return null;
 	return {
 		...note,

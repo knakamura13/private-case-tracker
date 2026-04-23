@@ -11,7 +11,23 @@ const schema = z.object({
 		.string()
 		.optional()
 		.transform((v) => v === 'true' || v === '1'),
-	FIELD_ENCRYPTION_KEY: z.string().min(32),
+	FIELD_ENCRYPTION_KEY: z
+		.string()
+		.min(32)
+		.refine(
+			(key) => {
+				try {
+					const buf = Buffer.from(key, 'base64');
+					return buf.length === 32;
+				} catch {
+					return false;
+				}
+			},
+			{
+				message:
+					'FIELD_ENCRYPTION_KEY must be a base64-encoded 32-byte key. Generate with: openssl rand -base64 32'
+			}
+		),
 	AWS_REGION: z.string().min(1).default('us-east-1'),
 	// Required in production; defaulted in dev/test to keep local tooling and unit tests simple.
 	DYNAMO_TABLE: z.string().min(1).default('case-tracker-dev'),

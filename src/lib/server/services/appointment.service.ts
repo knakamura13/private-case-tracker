@@ -4,20 +4,22 @@ import type { AppointmentCreate, AppointmentUpdate } from '$lib/schemas/appointm
 import { randomUUID } from 'node:crypto';
 import { ddbGet, ddbPut, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
+import type { AppointmentItem } from '$lib/server/dynamo/types';
 
 export async function listAppointments(
 	workspaceId: string,
-	filter: { status?: AppointmentStatus; type?: AppointmentType; range?: 'upcoming' | 'past' } = {}
+	filter: { status?: AppointmentStatus; type?: AppointmentType; range?: 'upcoming' | 'past'; limit?: number } = {}
 ) {
 	const now = new Date();
-	const rows = await ddbQuery<any>({
+	const rows = await ddbQuery<AppointmentItem>({
 		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
-		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'Appointment#' }
+		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'Appointment#' },
+		Limit: filter.limit ?? 1000
 	});
 	const filtered = rows
 		.filter((a) => !a.deletedAt)
-		.filter((a) => (filter.status ? a.status === filter.status : true))
-		.filter((a) => (filter.type ? a.type === filter.type : true))
+		.filter((a) => (filter.status ? (a.status as AppointmentStatus) === filter.status : true))
+		.filter((a) => (filter.type ? (a.type as AppointmentType) === filter.type : true))
 		.filter((a) => {
 			const t = a.scheduledAt ? new Date(a.scheduledAt).getTime() : NaN;
 			if (!Number.isFinite(t)) return true;
@@ -35,7 +37,7 @@ export async function listAppointments(
 }
 
 export async function getAppointment(workspaceId: string, id: string) {
-	const appt = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('Appointment', id) });
+	const appt = await ddbGet<AppointmentItem>({ PK: wsPk(workspaceId), SK: entitySk('Appointment', id) });
 	if (!appt || appt.deletedAt) return null;
 	return { ...appt, tasks: [], documents: [], linkedNotes: [] };
 }

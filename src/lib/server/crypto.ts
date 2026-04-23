@@ -5,9 +5,12 @@ const ALG = 'aes-256-gcm';
 
 function key(): Buffer {
 	const buf = Buffer.from(ENV.FIELD_ENCRYPTION_KEY, 'base64');
-	if (buf.length === 32) return buf;
-	// Fallback: derive 32 bytes from whatever string the user provided.
-	return createHash('sha256').update(ENV.FIELD_ENCRYPTION_KEY).digest();
+	if (buf.length !== 32) {
+		throw new Error(
+			'FIELD_ENCRYPTION_KEY must be a base64-encoded 32-byte key. Generate with: openssl rand -base64 32'
+		);
+	}
+	return buf;
 }
 
 export function encryptString(plaintext: string): string {

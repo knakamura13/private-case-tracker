@@ -104,7 +104,9 @@ export async function deleteUploadedDocument(workspaceId: string, actorId: strin
 		try {
 			await deleteObject(doc.storageKey);
 		} catch (err) {
-			console.error('[storage] delete failed', err);
+			console.error('[storage] S3 delete failed for document', id, err);
+			// Proceed with DynamoDB soft delete anyway to maintain consistency
+			// Orphaned S3 objects can be cleaned up later
 		}
 	}
 	
