@@ -2,7 +2,6 @@
 	import { page } from '$app/stores';
 	import { navigation } from '$lib/constants/navigation';
 	import { cn } from '$lib/utils/cn';
-	import { ShieldCheck } from 'lucide-svelte';
 
 	const isOwner = $page.data.workspace?.role === 'OWNER';
 
@@ -11,7 +10,7 @@
 
 <aside class="flex h-full w-64 flex-col border-r border-border bg-card">
 	<a href="/dashboard" class="flex h-14 items-center gap-2 border-b border-border px-5 hover:bg-muted/50 transition-colors">
-		<ShieldCheck class="h-5 w-5 text-primary" />
+		<img src="/pwa/icon-192.png" alt="" class="h-5 w-5 rounded-sm" aria-hidden="true" />
 		<div class="min-w-0">
 			<p class="text-sm font-semibold leading-tight">Case Tracker</p>
 			<p class="truncate text-xs text-muted-foreground" title={workspaceName}>{workspaceName}</p>

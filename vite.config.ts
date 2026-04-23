@@ -1,9 +1,46 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
+import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-	plugins: [tailwindcss(), sveltekit()],
+	plugins: [
+		tailwindcss(),
+		sveltekit(),
+		SvelteKitPWA({
+			registerType: 'autoUpdate',
+			manifest: {
+				name: 'Private Case Tracker',
+				short_name: 'Case Tracker',
+				description: 'Track case evidence, timelines, forms, and tasks.',
+				start_url: '/',
+				scope: '/',
+				display: 'standalone',
+				theme_color: '#0f172a',
+				background_color: '#0f172a',
+				icons: [
+					{
+						src: '/pwa/icon-192.png',
+						sizes: '192x192',
+						type: 'image/png',
+						purpose: 'any'
+					},
+					{
+						src: '/pwa/icon-512.png',
+						sizes: '512x512',
+						type: 'image/png',
+						purpose: 'any'
+					},
+					{
+						src: '/pwa/icon-512.png',
+						sizes: '512x512',
+						type: 'image/png',
+						purpose: 'maskable'
+					}
+				]
+			}
+		})
+	],
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}', 'tests/unit/**/*.{test,spec}.{js,ts}'],
 		environment: 'node',
