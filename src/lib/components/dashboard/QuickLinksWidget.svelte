@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { QuickLink, QuickLinkFolder } from '$lib/types/enums';
-	import { enhance } from '$app/forms';
+	import type { ActionResult } from '@sveltejs/kit';
+	import { enhance, deserialize } from '$app/forms';
 	import { invalidate } from '$app/navigation';
 	import { EllipsisVertical, Plus, Link2, Folder } from 'lucide-svelte';
 	import Input from '$lib/components/ui/Input.svelte';
@@ -10,6 +11,7 @@
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
 
 	type ActionForm = { error?: string; errorId?: string | null } | undefined;
+	type FolderActionResult = ActionResult<{ folder: QuickLinkFolder }, { error: string; errorId?: string }>;
 
 	let { links, folders, form }: { links: QuickLink[]; folders: QuickLinkFolder[]; form?: ActionForm } = $props();
 
@@ -193,10 +195,10 @@
 				method: 'POST',
 				body: formData
 			});
-			const result = await response.json();
+			const result = deserialize(await response.json()) as FolderActionResult;
 
-			if (result.success && result.folder) {
-				const folderId = result.folder.id;
+			if (result.type === 'success' && result.data?.folder) {
+				const folderId = result.data.folder.id;
 				// Move both links to the folder
 				const moveFormData1 = new FormData();
 				moveFormData1.append('linkId', activeId);
@@ -230,7 +232,7 @@
 			newOrder.splice(newIndex, 0, activeId);
 
 			const formData = new FormData();
-			formData.append('linkIds', JSON.stringify(newOrder));
+			newOrder.forEach((id) => formData.append('linkIds', id));
 			await fetch('?/reorderLinks', {
 				method: 'POST',
 				body: formData
