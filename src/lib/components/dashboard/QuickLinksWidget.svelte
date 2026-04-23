@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { QuickLink } from '@prisma/client';
-		import { enhance } from '$app/forms';
+	import { enhance } from '$app/forms';
 	import { EllipsisVertical, Plus, Link2 } from 'lucide-svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
@@ -32,7 +32,7 @@
 	function faviconForUrl(url: string): string {
 		try {
 			const h = new URL(url).hostname;
-			return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(h)}&sz=64`;
+			return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(h)}&sz=128`;
 		} catch {
 			return '';
 		}
@@ -91,26 +91,34 @@
 	});
 </script>
 
-<div class="flex flex-wrap items-start justify-center gap-3 sm:justify-start">
+<!--
+  Each tile: fixed width, flex-col, circle on top, label below.
+  The ⋮ button is positioned relative to the circle span itself,
+  so it doesn't push the circle down or affect alignment.
+-->
+<div class="flex flex-wrap items-start gap-1 sm:gap-2">
 	{#each links as link (link.id)}
 		<div
-			class="group relative flex w-[5.5rem] shrink-0 flex-col items-center rounded-lg px-1 pb-2 pt-1 hover:bg-muted/40 focus-within:bg-muted/40"
+			class="group flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 hover:bg-muted/40 focus-within:bg-muted/40"
 		>
-			<div class="relative flex w-full flex-col items-center">
+			<!-- Circle + ⋮ menu wrapper -->
+			<div class="relative" data-quicklink-menu="container">
+				<!-- ⋮ button anchored to the top-right corner of the circle -->
 				<button
 					type="button"
-					class="absolute right-0 top-0 z-10 rounded-full bg-background/80 p-1 text-muted-foreground opacity-0 shadow-sm ring-1 ring-border transition-opacity hover:text-foreground group-hover:opacity-100 group-focus-within:opacity-100"
+					class="absolute -right-1 -top-1 z-10 rounded-full bg-background/90 p-0.5 text-muted-foreground opacity-0 shadow ring-1 ring-border transition-opacity hover:text-foreground group-hover:opacity-100 group-focus-within:opacity-100"
 					aria-label={`Actions for ${labelFor(link)}`}
 					aria-expanded={menuOpenId === link.id}
 					aria-haspopup="true"
 					data-quicklink-menu="trigger"
 					onclick={(e) => toggleMenu(link.id, e)}
 				>
-					<EllipsisVertical class="h-4 w-4" />
+					<EllipsisVertical class="h-3.5 w-3.5" />
 				</button>
+
 				{#if menuOpenId === link.id}
 					<div
-						class="absolute right-0 top-8 z-20 min-w-[8.5rem] rounded-md border border-border bg-card py-1 text-sm shadow-md"
+						class="absolute left-1/2 top-full z-20 mt-1 min-w-[8.5rem] -translate-x-1/2 rounded-md border border-border bg-card py-1 text-sm shadow-md"
 						data-quicklink-menu="panel"
 						role="menu"
 					>
@@ -144,45 +152,50 @@
 						</form>
 					</div>
 				{/if}
+
+				<!-- Favicon circle is a plain anchor (no extra padding) -->
 				<a
 					href={link.url}
 					target="_blank"
 					rel="noopener noreferrer"
-					class="flex flex-col items-center gap-2 rounded-md px-1 pt-6 outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+					class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+					tabindex="0"
 				>
-					<span
-						class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60"
-					>
-						{#if brokenFavicons.has(link.id)}
-							<Link2 class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
-						{:else}
-							<img
-								src={faviconForUrl(link.url)}
-								alt=""
-								class="h-7 w-7"
-								referrerpolicy="no-referrer"
-								loading="lazy"
-								onerror={() => markFaviconBroken(link.id)}
-							/>
-						{/if}
-					</span>
-					<span class="max-w-full truncate text-center text-[11px] leading-tight text-foreground">
-						{labelFor(link)}
-					</span>
+					{#if brokenFavicons.has(link.id)}
+						<Link2 class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+					{:else}
+						<img
+							src={faviconForUrl(link.url)}
+							alt=""
+							class="h-8 w-8 rounded-sm object-contain"
+							referrerpolicy="no-referrer"
+							loading="lazy"
+							onerror={() => markFaviconBroken(link.id)}
+						/>
+					{/if}
 				</a>
 			</div>
+
+			<!-- Label: up to 2 lines, then ellipsis -->
+			<span
+				class="line-clamp-2 w-full text-center text-[11px] leading-tight text-foreground"
+				title={labelFor(link)}
+			>
+				{labelFor(link)}
+			</span>
 		</div>
 	{/each}
 
+	<!-- Add shortcut tile — same structure: circle on top, label below -->
 	<button
 		type="button"
-		class="flex w-[5.5rem] shrink-0 flex-col items-center gap-2 rounded-lg px-1 pb-2 pt-1 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+		class="flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
 		onclick={openAdd}
 	>
 		<span class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60">
 			<Plus class="h-6 w-6" aria-hidden="true" />
 		</span>
-		<span class="max-w-full truncate text-center text-[11px] leading-tight">Add shortcut</span>
+		<span class="line-clamp-2 w-full text-center text-[11px] leading-tight">Add shortcut</span>
 	</button>
 </div>
 
