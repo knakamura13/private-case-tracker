@@ -101,11 +101,7 @@ export async function deleteUploadedDocument(workspaceId: string, actorId: strin
 	
 	// Delete from S3 first
 	if (doc.storageKey) {
-		try {
-			await deleteObject(doc.storageKey);
-		} catch (err) {
-			console.error('[storage] delete failed', err);
-		}
+		await deleteObject(doc.storageKey);
 	}
 	
 	// Soft delete from DynamoDB using helper

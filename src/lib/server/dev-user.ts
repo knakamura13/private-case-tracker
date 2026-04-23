@@ -1,5 +1,6 @@
 import { ddbPut, ddbGet } from './dynamo/ops';
 import { baPk, entitySk, gsi1Sk, gsi1UserPk, wsPk } from './dynamo/keys';
+import { ENV } from './env';
 
 export const DEV_USER = {
 	id: 'dev_user_local',
@@ -22,6 +23,14 @@ export const DEV_SESSION = {
 let seeded = false;
 
 export async function ensureDevUserSeeded(): Promise<void> {
+	if (ENV.NODE_ENV === 'production') {
+		throw new Error('Dev user seeding is not allowed in production');
+	}
+	if (process.env.DEV_MODE !== 'unsafe') {
+		throw new Error(
+			'Dev user seeding requires DEV_MODE=unsafe. This bypasses authentication and should only be used in local development.'
+		);
+	}
 	if (seeded) return;
 	// Seed Better Auth user record (minimal fields used by session load).
 	await ddbPut({

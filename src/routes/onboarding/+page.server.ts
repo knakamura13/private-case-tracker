@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			KeyConditionExpression: 'PK = :pk',
 			ExpressionAttributeValues: { ':pk': 'WS_INDEX' },
 			Limit: 1
-		}).catch(() => [] as any[])
+		})
 	).length;
 	return { isFirstUser: totalWorkspaces === 0 };
 };
@@ -25,7 +25,7 @@ export const actions: Actions = {
 				KeyConditionExpression: 'PK = :pk',
 				ExpressionAttributeValues: { ':pk': 'WS_INDEX' },
 				Limit: 1
-			}).catch(() => [] as any[])
+			})
 		).length;
 		if (totalWorkspaces > 0) {
 			return fail(403, { error: 'Workspace already exists. Ask the owner to invite you.' });

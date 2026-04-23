@@ -10,12 +10,7 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 
 const isTest = Boolean(process.env.VITEST) || process.env.NODE_ENV === 'test';
-const isDevNoAwsCreds =
-	process.env.NODE_ENV === 'development' &&
-	!process.env.DYNAMO_ENDPOINT &&
-	!process.env.AWS_ACCESS_KEY_ID &&
-	!process.env.AWS_PROFILE;
-const useMem = isTest || isDevNoAwsCreds;
+const useMem = isTest;
 
 type Key = { PK: string; SK: string };
 type AnyItem = Record<string, any> & Key;
