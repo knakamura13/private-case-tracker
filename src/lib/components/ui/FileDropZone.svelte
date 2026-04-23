@@ -76,7 +76,7 @@
 	<input bind:this={inputEl} type="file" {accept} class="sr-only" onchange={onInputChange} />
 
 	{#if dragging}
-		<Upload class="h-9 w-9 animate-bounce text-primary" />
+		<Upload class="h-9 w-9 scale-110 text-primary transition-transform duration-200" />
 		<p class="text-sm font-medium text-primary">Drop to select</p>
 	{:else if file}
 		<FileText class="h-9 w-9 text-success" />
