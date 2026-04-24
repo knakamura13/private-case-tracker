@@ -12,16 +12,34 @@
 	import { fmtDate } from '$lib/utils/dates';
 	import { PHASE_ORDER, PHASE_LABELS, PHASE_DESCRIPTIONS } from '$lib/constants/phases';
 	import { titleCase } from '$lib/utils/format';
+	import { page } from '$app/stores';
 	import type { PageData } from './$types';
 
 	interface TimelinePageData extends PageData {
-		members?: { id: string; name: string | null; email: string }[];
+		members: { id: string; name: string | null; email: string }[];
 	}
 
 	let { data, form }: { data: TimelinePageData; form: { error?: string; errorId?: string } } = $props();
 
 	let showCreateForPhase = $state<string | null>(null);
 	let editingMilestone = $state<{ id: string } | null>(null);
+
+	$effect(() => {
+		const editParam = $page.url.searchParams.get('edit');
+		if (editParam && !editingMilestone) {
+			editingMilestone = { id: editParam };
+		}
+	});
+
+	function updateUrl(id: string | null) {
+		const url = new URL(window.location.href);
+		if (id) {
+			url.searchParams.set('edit', id);
+		} else {
+			url.searchParams.delete('edit');
+		}
+		window.history.replaceState({}, '', url.toString());
+	}
 
 	const grouped = $derived(
 		PHASE_ORDER.map((p) => ({
@@ -82,7 +100,10 @@
 						<li in:fly={{ y: 30, duration: 500, delay: i * 50 + 100, easing: cubicOut }}>
 							<button
 								type="button"
-								onclick={() => (editingMilestone = { id: m.id })}
+								onclick={() => {
+									editingMilestone = { id: m.id };
+									updateUrl(m.id);
+								}}
 								class="w-full text-left"
 							>
 								<Card id={m.id} class="flex items-start gap-4 p-4 hover:border-primary/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5 dark:hover:shadow-primary/10 hover:bg-card/90">
@@ -130,12 +151,17 @@
 	{#if milestone}
 		<MilestoneEditModal
 			open={true}
-			onClose={() => (editingMilestone = null)}
+			onClose={() => {
+				editingMilestone = null;
+				updateUrl(null);
+			}}
 			action="?/update"
+			deleteAction="?/delete"
 			onenhance={() => {
 				return async ({ update }: { update: () => Promise<void> }) => {
 					await update();
 					editingMilestone = null;
+					updateUrl(null);
 				};
 			}}
 			members={data.members}

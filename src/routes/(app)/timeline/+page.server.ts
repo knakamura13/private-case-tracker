@@ -1,8 +1,8 @@
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { requireWorkspace } from '$lib/server/guards';
 import { logActionError } from '$lib/server/services/actionError.service';
-import { listMilestones, currentPhase, updateMilestone } from '$lib/server/services/milestone.service';
+import { listMilestones, currentPhase, updateMilestone, softDeleteMilestone } from '$lib/server/services/milestone.service';
 import { milestoneUpdateSchema } from '$lib/schemas/milestone';
 import { getMembers } from '$lib/server/cache/membersCache';
 import type { MilestonePhase, MilestoneStatus } from '$lib/types/enums';
@@ -35,5 +35,12 @@ export const actions: Actions = {
 		}
 		await updateMilestone(workspace.id, user.id, id, parsed.data);
 		return { ok: true };
+	},
+	delete: async (event) => {
+		const { workspace, user } = requireWorkspace(event);
+		const raw = Object.fromEntries(await event.request.formData());
+		const id = raw.id as string;
+		await softDeleteMilestone(workspace.id, user.id, id);
+		throw redirect(303, '/timeline');
 	}
 };

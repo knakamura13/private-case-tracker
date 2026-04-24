@@ -8,7 +8,7 @@
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
 	import { PHASE_LABELS, PHASE_ORDER } from '$lib/constants/phases';
 	import { enhance } from '$app/forms';
-	import { X, Plus, Check, Calendar, Tag, List, Paperclip, MapPin } from 'lucide-svelte';
+	import { X, Plus, Check, Calendar, Tag, List, Paperclip, MapPin, Trash2 } from 'lucide-svelte';
 	import { fmtDate } from '$lib/utils/dates';
 
 	let {
@@ -19,7 +19,8 @@
 		error,
 		errorId,
 		action,
-		onenhance
+		onenhance,
+		deleteAction
 	}: {
 		open: boolean;
 		onClose: () => void;
@@ -28,7 +29,8 @@
 		error?: string | null;
 		errorId?: string | null;
 		action?: string;
-		onenhance?: (params: unknown) => void;
+		onenhance?: (params: { formData: FormData; cancel: () => void }) => void;
+		deleteAction?: string;
 	} = $props();
 
 	interface SubTask {
@@ -273,8 +275,21 @@
 				<div class="border-t border-border p-4">
 					{#if error}<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />{/if}
 					<input type="hidden" name="subTasks" value={subTasksJson} />
-					<div class="flex justify-end gap-2">
-						<Button type="submit">Save</Button>
+					<input type="hidden" name="id" value={val('id')} />
+					<div class="flex justify-between gap-2">
+						{#if deleteAction}
+							<Button type="button" variant="destructive" onclick={async () => {
+								const formData = new FormData();
+								formData.append('id', val('id'));
+								await fetch(deleteAction, { method: 'POST', body: formData });
+								window.location.href = '/timeline';
+							}}>
+								{#snippet children()}<Trash2 class="h-4 w-4" /> Delete{/snippet}
+							</Button>
+						{/if}
+						<div class="flex gap-2 ml-auto">
+							<Button type="submit">Save</Button>
+						</div>
 					</div>
 				</div>
 			</form>
