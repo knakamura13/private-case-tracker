@@ -6,6 +6,8 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import { FolderLock, Plus, ExternalLink, Upload } from 'lucide-svelte';
+	import { fly } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	import { fmtDateTime } from '$lib/utils/dates';
 	import { goto } from '$app/navigation';
 	import { setPendingUpload } from '$lib/stores/pendingUpload';
@@ -91,10 +93,10 @@
 	</EmptyState>
 {:else}
 	<ul class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-		{#each data.docs as doc (doc.id)}
-			<li>
-				<a href={`/documents/${doc.id}`}>
-					<Card class="p-4 hover:border-primary/40">
+		{#each data.docs as doc, i (doc.id)}
+			<li in:fly={{ y: 30, duration: 500, delay: i * 50 + 100, easing: cubicOut }}>
+							<a href={`/documents/${doc.id}`}>
+					<Card class="p-4 hover:border-primary/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5 dark:hover:shadow-primary/10 hover:bg-card/90">
 						<div class="flex items-start justify-between gap-2">
 							<div class="min-w-0">
 								<p class="truncate font-medium">{doc.title}</p>

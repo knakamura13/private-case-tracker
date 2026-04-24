@@ -8,6 +8,8 @@
 	import StatusBadge from '$lib/components/signature/StatusBadge.svelte';
 	import { enhance } from '$app/forms';
 	import { Plus, Layers, Pencil, Check, X } from 'lucide-svelte';
+	import { fly } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	import { fmtDate } from '$lib/utils/dates';
 	import { titleCase } from '$lib/utils/format';
 	import type { PageData } from './$types';
@@ -53,7 +55,7 @@
 		<h2 class="text-sm font-semibold">Evidence gaps</h2>
 		<p class="text-xs text-muted-foreground">Target counts below are guidance only, not legal requirements.</p>
 		<ul class="mt-2 flex flex-wrap gap-2 text-xs">
-			{#each data.gaps as g (g.category)}
+			{#each data.gaps as g, i (g.category)}
 				<li class="group relative rounded-full border border-border bg-card px-2 py-1">
 					{#if editingCategory === g.category}
 						<form
@@ -135,9 +137,9 @@
 		<section class="mb-6">
 			<h2 class="mb-2 text-sm font-semibold text-muted-foreground">{type}</h2>
 			<div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-				{#each items as it (it.id)}
+				{#each items as it, i (it.id)}
 					<a href={`/evidence/${it.id}`} class="block">
-						<Card class="p-4 hover:border-primary/40">
+						<Card class="p-4 hover:border-primary/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5 dark:hover:shadow-primary/10 hover:bg-card/90">
 							<div class="flex items-start justify-between gap-2">
 								<h3 class="font-medium">{it.title}</h3>
 								<StatusBadge variant={statusVariant(it.status)} status={titleCase(it.status)} />

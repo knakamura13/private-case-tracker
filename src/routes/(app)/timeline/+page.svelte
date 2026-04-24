@@ -6,6 +6,8 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import MarkdownRenderer from '$lib/components/shared/MarkdownRenderer.svelte';
 	import { Plus } from 'lucide-svelte';
+	import { fly } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	import { fmtDate } from '$lib/utils/dates';
 	import { PHASE_ORDER, PHASE_LABELS, PHASE_DESCRIPTIONS } from '$lib/constants/phases';
 	import { titleCase } from '$lib/utils/format';
@@ -43,7 +45,7 @@
 </PageHeader>
 
 <div class="space-y-6">
-	{#each grouped as g (g.phase)}
+	{#each grouped as g, i (g.phase)}
 		<section>
 			<div class="mb-2 flex items-center justify-between">
 				<div>
@@ -66,10 +68,10 @@
 				</Card>
 			{:else}
 				<ol class="space-y-2">
-					{#each g.items as m (m.id)}
-						<li>
+					{#each g.items as m, i (m.id)}
+						<li in:fly={{ y: 30, duration: 500, delay: i * 50 + 100, easing: cubicOut }}>
 							<a href={`/timeline/${m.id}`}>
-								<Card id={m.id} class="flex items-start gap-4 p-4 hover:border-primary/40">
+								<Card id={m.id} class="flex items-start gap-4 p-4 hover:border-primary/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5 dark:hover:shadow-primary/10 hover:bg-card/90">
 									<div class="mt-1 h-3 w-3 shrink-0 rounded-full border-2 {m.status === 'DONE' ? 'bg-success border-success' : 'border-border bg-card'}"></div>
 									<div class="min-w-0 flex-1">
 										<div class="flex items-center gap-2">

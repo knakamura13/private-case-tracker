@@ -44,7 +44,7 @@
 </script>
 
 <header
-	class="sticky top-0 z-30 flex h-14 items-center justify-between gap-1 border-b border-border bg-card/80 px-3 sm:gap-2 sm:px-4 backdrop-blur"
+	class="sticky top-0 z-30 flex h-14 items-center justify-between gap-1 border-b border-border/50 bg-card/70 px-3 sm:gap-2 sm:px-4 backdrop-blur-xl transition-all duration-300"
 >
 	<div class="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
 		<button

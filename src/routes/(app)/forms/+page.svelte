@@ -7,6 +7,8 @@
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import StatusBadge from '$lib/components/signature/StatusBadge.svelte';
 	import { Plus, FileText, ClipboardList } from 'lucide-svelte';
+	import { fly } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	import { fmtDate } from '$lib/utils/dates';
 	import { titleCase } from '$lib/utils/format';
 	import type { PageData } from './$types';
@@ -57,9 +59,9 @@
 	</EmptyState>
 {:else}
 	<div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-		{#each data.forms as form (form.id)}
+		{#each data.forms as form, i (form.id)}
 			<a href={`/forms/${form.id}`} class="block">
-				<Card class="p-4 hover:border-primary/40">
+				<Card class="p-4 hover:border-primary/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5 dark:hover:shadow-primary/10 hover:bg-card/90">
 					<div class="flex items-start justify-between gap-2">
 						<div>
 							<p class="text-xs font-mono uppercase text-muted-foreground">{form.code}</p>

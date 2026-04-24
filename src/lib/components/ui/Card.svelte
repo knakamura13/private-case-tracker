@@ -11,6 +11,6 @@
 	/* eslint-enable svelte/valid-compile */
 </script>
 
-<div class={cn('rounded-lg border border-border bg-card text-card-foreground shadow-sm', klass)} {...rest}>
+<div class={cn('rounded-lg border border-border bg-card text-card-foreground shadow-sm transition-all duration-300 ease-out', klass)} {...rest}>
 	{#if children}{@render children()}{/if}
 </div>
