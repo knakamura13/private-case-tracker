@@ -8,7 +8,10 @@
 				success: 'border-l-success',
 				warning: 'border-l-warning',
 				error: 'border-l-destructive',
+				destructive: 'border-l-destructive', // Legacy compatibility
 				neutral: 'border-l-muted-foreground',
+				secondary: 'border-l-muted-foreground', // Legacy compatibility
+				outline: 'border-l-border', // Legacy compatibility
 				default: 'border-l-primary'
 			}
 		},

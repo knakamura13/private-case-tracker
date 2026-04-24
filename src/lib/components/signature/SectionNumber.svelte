@@ -13,7 +13,7 @@
 		class?: string;
 	} = $props();
 	
-	const formattedNumber = String(number).padStart(2, '0');
+	const formattedNumber = $derived(String(number).padStart(2, '0'));
 </script>
 
 <div class={cn("relative flex flex-col", klass)}>
