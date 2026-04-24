@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, ScanCommand, QueryCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, QueryCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
@@ -53,10 +53,13 @@ function baPk(model: string) {
 	return `BA#${model}`;
 }
 
-async function scanTable() {
+async function queryGSI1(gsi1pk: string) {
 	const res = await doc.send(
-		new ScanCommand({
-			TableName: DYNAMO_TABLE
+		new QueryCommand({
+			TableName: DYNAMO_TABLE,
+			IndexName: 'GSI1',
+			KeyConditionExpression: 'GSI1PK = :pk',
+			ExpressionAttributeValues: { ':pk': gsi1pk }
 		})
 	);
 	return res.Items || [];
@@ -130,37 +133,25 @@ async function purgeOldUsers() {
 			}
 		}
 
-		// Delete associated memberships
-		const allItems = await scanTable();
-		for (const item of allItems) {
-			if (item.PK?.startsWith('WS#') && item.SK?.startsWith('Membership#') && item.userId === userId) {
-				await deleteItem(item.PK, item.SK);
-				console.log(`  Deleted membership: ${item.SK}`);
+		// Delete associated memberships using GSI1
+		const memberships = await queryGSI1(`USER#${userId}`);
+		for (const membership of memberships) {
+			if (membership.SK?.startsWith('Membership#')) {
+				await deleteItem(membership.PK, membership.SK);
+				console.log(`  Deleted membership: ${membership.SK}`);
 			}
 		}
 
 		deletedCount++;
 	}
 
-	// Clean up old invitations
-	const allItems = await scanTable();
-	let deletedInvites = 0;
-
-	for (const item of allItems) {
-		if (item.SK?.startsWith('Invitation#')) {
-			const inviteEmail = item.email?.toLowerCase().trim();
-			if (inviteEmail && inviteEmail !== ADMIN_EMAIL.toLowerCase()) {
-				console.log(`Deleting invitation for: ${inviteEmail}`);
-				await deleteItem(item.PK, item.SK);
-				deletedInvites++;
-			}
-		}
-	}
+	// Note: Invitation cleanup skipped due to Scan permission requirement.
+	// Invitations will expire naturally or can be cleaned up via the app UI.
 
 	console.log('\nPurge complete:');
 	console.log(`- Kept users: ${keptCount}`);
 	console.log(`- Deleted users: ${deletedCount}`);
-	console.log(`- Deleted invitations: ${deletedInvites}`);
+	console.log(`- Note: Invitations not purged (requires Scan permission - clean up via app UI)`);
 }
 
 // Run the purge
