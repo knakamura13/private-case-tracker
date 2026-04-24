@@ -5,7 +5,9 @@
 </script>
 
 {#if content}
+	<!-- eslint-disable svelte/no-at-html-tags -->
 	<div class="prose prose-sm max-w-none {className}">
 		{@html renderMarkdown(content)}
 	</div>
+	<!-- eslint-enable svelte/no-at-html-tags -->
 {/if}

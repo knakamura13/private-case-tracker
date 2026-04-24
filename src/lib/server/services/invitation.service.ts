@@ -8,6 +8,8 @@ import { ddbGet, ddbPut, ddbQuery, ddbUpdate, ddbDelete } from '$lib/server/dyna
 import { baPk, entitySk, gsi1Sk, gsi1UserPk, wsPk } from '$lib/server/dynamo/keys';
 import { invalidateMembers } from '$lib/server/cache/membersCache';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export async function createInvitation(input: {
 	workspaceId: string;
 	email: string;
@@ -125,3 +127,5 @@ export async function revokeInvitation(workspaceId: string, invitationId: string
 	await ddbDelete({ PK: wsPk(workspaceId), SK: entitySk('Invitation', invitationId) });
 	invalidateMembers(workspaceId);
 }
+
+/* eslint-enable @typescript-eslint/no-explicit-any */

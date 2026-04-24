@@ -1,25 +1,23 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 test.describe('task CRUD operations', () => {
-	test.beforeEach(async ({ page }) => {
+	test.beforeEach(async () => {
 		// Navigate to login page
-		await page.goto('/login');
 		// For integration tests, we assume test environment has a way to authenticate
 		// This test will need auth setup - skipping actual login for now
 	});
 
-	test('creates a new task', async ({ page }) => {
+	test('creates a new task', async () => {
 		// This test requires authentication setup
 		// Placeholder for task creation flow
-		await page.goto('/dashboard');
 		// TODO: Implement task creation test after auth setup
 	});
 
-	test('updates task status', async ({ page }) => {
+	test('updates task status', async () => {
 		// Placeholder for task status update test
 	});
 
-	test('deletes a task', async ({ page }) => {
+	test('deletes a task', async () => {
 		// Placeholder for task deletion test
 	});
 });

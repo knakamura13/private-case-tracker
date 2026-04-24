@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import {
 	createNote,
 	getNote,
@@ -55,7 +57,7 @@ function workspaceId() {
 
 describe('cross-domain DynamoDB smoke', () => {
 	beforeEach(() => {
-		(globalThis as any).__ddbMem = new Map();
+		(globalThis as unknown as { __ddbMem?: Map<string, unknown> }).__ddbMem = new Map();
 	});
 
 	it('notes: create → list → update → softDelete', async () => {
@@ -149,7 +151,8 @@ describe('cross-domain DynamoDB smoke', () => {
 			status: 'PLANNED',
 			ownerId: null,
 			priority: 'MEDIUM',
-			notes: ''
+			notes: '',
+			subTasks: []
 		} as any);
 
 		expect((await listMilestones(ws)).some((m) => m.id === created.id)).toBe(true);
@@ -211,7 +214,8 @@ describe('cross-domain DynamoDB smoke', () => {
 			status: 'PLANNED',
 			ownerId: null,
 			priority: 'MEDIUM',
-			notes: ''
+			notes: '',
+			subTasks: []
 		} as any);
 
 		const d = await dashboardFor(ws);

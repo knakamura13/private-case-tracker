@@ -5,7 +5,7 @@ import { logError, listErrors, getError } from '$lib/server/services/errorLog.se
 describe('errorLog.service', () => {
 	beforeEach(() => {
 		// Reset in-memory DynamoDB between tests.
-		(globalThis as any).__ddbMem = new Map();
+		(globalThis as unknown as { __ddbMem?: Map<string, unknown> }).__ddbMem = new Map();
 	});
 
 	it('logError truncates long stacks', async () => {

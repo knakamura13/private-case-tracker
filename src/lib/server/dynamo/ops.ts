@@ -13,7 +13,7 @@ const isTest = Boolean(process.env.VITEST) || process.env.NODE_ENV === 'test';
 const useMem = isTest;
 
 type Key = { PK: string; SK: string };
-type AnyItem = Record<string, any> & Key;
+type AnyItem = Record<string, unknown> & Key;
 
 const globalForMem = globalThis as unknown as { __ddbMem?: Map<string, AnyItem> };
 function memStore() {
@@ -94,7 +94,7 @@ export async function ddbUpdate<T>(
 			const field =
 				expressionAttributeNames?.[lhsRaw] ?? (lhsRaw.startsWith('#') ? lhsRaw.slice(1) : lhsRaw);
 			const val = expressionAttributeValues[rhsRaw];
-			(cur as any)[field] = val;
+			(cur as Record<string, unknown>)[field] = val;
 		}
 		store.set(keyStr(key), cur);
 		return cur as unknown as T;
@@ -129,7 +129,7 @@ export async function ddbQuery<T>(input: Omit<QueryCommandInput, 'TableName'>) {
 		// - PK equality
 		// - SK begins_with prefix
 		// - optional GSI1PK equality when IndexName === 'GSI1'
-		const vals = (input.ExpressionAttributeValues ?? {}) as Record<string, any>;
+		const vals = (input.ExpressionAttributeValues ?? {}) as Record<string, unknown>;
 		if (input.IndexName === 'GSI1') {
 			const pk = vals[':pk'];
 			return items.filter((it) => it.GSI1PK === pk) as unknown as T[];

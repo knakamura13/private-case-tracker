@@ -23,18 +23,16 @@ export const load: PageServerLoad = async (event) => {
 
 	const t0 = performance.now();
 	let dbOk = true;
-	let dbMs = 0;
 	try {
 		await ddbQuery({
 			KeyConditionExpression: 'PK = :pk',
 			ExpressionAttributeValues: { ':pk': wsPk('healthcheck') },
 			Limit: 1
 		});
-		dbMs = Math.round(performance.now() - t0);
 	} catch {
 		dbOk = false;
-		dbMs = Math.round(performance.now() - t0);
 	}
+	const dbMs = Math.round(performance.now() - t0);
 
 	let errors: Awaited<ReturnType<typeof listErrors>> = [];
 	let errorsLoadFailed = false;

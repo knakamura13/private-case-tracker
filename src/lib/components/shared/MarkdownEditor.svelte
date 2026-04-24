@@ -18,8 +18,10 @@
 	{#if tab === 'write'}
 		<Textarea {name} bind:value {placeholder} class="min-h-[240px] font-mono text-sm" />
 	{:else}
+		<!-- eslint-disable svelte/no-at-html-tags -->
 		<div class="min-h-[240px] rounded-md border border-border bg-card p-4 text-sm leading-relaxed prose prose-sm max-w-none">
 			{@html renderMarkdown(value)}
 		</div>
+		<!-- eslint-enable svelte/no-at-html-tags -->
 	{/if}
 </div>

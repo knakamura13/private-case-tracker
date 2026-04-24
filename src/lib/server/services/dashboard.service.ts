@@ -1,4 +1,3 @@
-import { addDays } from 'date-fns';
 import { PHASE_ORDER, PHASE_LABELS } from '$lib/constants/phases';
 import { currentPhase } from './milestone.service';
 import { EVIDENCE_CATEGORIES, EVIDENCE_TARGETS } from '$lib/constants/categories';
@@ -20,7 +19,6 @@ import { listQuickLinkFolders } from './quickLinkFolder.service';
 
 export async function dashboardFor(workspaceId: string) {
 	const now = new Date();
-	const in30 = addDays(now, 30);
 
 	const [
 		upcomingAppointments,
@@ -101,7 +99,7 @@ export async function dashboardFor(workspaceId: string) {
 	});
 
 	const docsByCategory = Object.entries(
-		docsAll.reduce((acc: Record<string, number>, d: any) => {
+		docsAll.reduce((acc: Record<string, number>, d: { category: string }) => {
 			acc[d.category] = (acc[d.category] ?? 0) + 1;
 			return acc;
 		}, {})
@@ -159,18 +157,8 @@ export async function dashboardFor(workspaceId: string) {
 		docsByCategory,
 		missingCritical,
 		countdowns,
-		quickLinks: quickLinks.map((l: any) => ({
-			...l,
-			createdAt: l.createdAt ? new Date(l.createdAt) : new Date(),
-			updatedAt: l.updatedAt ? new Date(l.updatedAt) : new Date(),
-			deletedAt: l.deletedAt ? new Date(l.deletedAt) : null
-		})),
-		quickLinkFolders: quickLinkFolders.map((f: any) => ({
-			...f,
-			createdAt: f.createdAt ? new Date(f.createdAt) : new Date(),
-			updatedAt: f.updatedAt ? new Date(f.updatedAt) : new Date(),
-			deletedAt: f.deletedAt ? new Date(f.deletedAt) : null
-		}))
+		quickLinks: quickLinks,
+		quickLinkFolders: quickLinkFolders
 	};
 }
 

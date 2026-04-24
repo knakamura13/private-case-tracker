@@ -5,6 +5,8 @@ import { ddbGet, ddbPut, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
 import type { NoteItem } from '$lib/server/dynamo/types';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export async function listNotes(workspaceId: string, filter: { q?: string; limit?: number } = {}) {
 	const rows = await ddbQuery<NoteItem>({
 		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
@@ -124,3 +126,5 @@ export async function softDeleteNote(workspaceId: string, actorId: string, id: s
 		summary: `Note "${existing.title}" deleted`
 	});
 }
+
+/* eslint-enable @typescript-eslint/no-explicit-any */

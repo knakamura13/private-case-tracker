@@ -70,7 +70,7 @@ export async function updateDocumentMetadata(
 	id: string,
 	input: Partial<DocumentMetadata>
 ) {
-	const doc = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('DocumentFile', id) });
+	const doc = await ddbGet<Record<string, unknown>>({ PK: wsPk(workspaceId), SK: entitySk('DocumentFile', id) });
 	if (!doc) throw new Error('Document not found');
 	const patch: Record<string, unknown> = { updatedAt: new Date().toISOString() };
 	if (input.title !== undefined) patch.title = input.title;
@@ -92,7 +92,7 @@ export async function updateDocumentMetadata(
 		values[vk] = v;
 		sets.push(`${nk} = ${vk}`);
 	}
-	const updated = (await ddbUpdate<any>(
+	const updated = (await ddbUpdate<Record<string, unknown>>(
 		{ PK: wsPk(workspaceId), SK: entitySk('DocumentFile', id) },
 		`SET ${sets.join(', ')}`,
 		values,

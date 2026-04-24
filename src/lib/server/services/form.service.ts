@@ -35,10 +35,12 @@ export type FormRow = {
 	updatedAt: string;
 	supportingItems: FormSupportingItemRow[];
 	// hydrated placeholders
+	/* eslint-disable @typescript-eslint/no-explicit-any */
 	documents?: any[];
 	tasks?: any[];
 	questions?: any[];
 	linkedNotes?: any[];
+	/* eslint-enable @typescript-eslint/no-explicit-any */
 	_count: { tasks: number; documents: number };
 };
 
@@ -160,7 +162,7 @@ export async function updateForm(
 	id: string,
 	input: FormUpdate
 ) {
-	const existing = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('FormRecord', id) });
+	const existing = await ddbGet<Record<string, unknown>>({ PK: wsPk(workspaceId), SK: entitySk('FormRecord', id) });
 	if (!existing) throw new Error('Form not found');
 	if (existing.deletedAt) throw new Error('Form not found');
 	const { receiptNumber, ...rest } = input;
@@ -182,28 +184,28 @@ export async function updateForm(
 		values[vk] = v;
 		sets.push(`${nk} = ${vk}`);
 	}
-	const form = (await ddbUpdate<any>(
+	const form = (await ddbUpdate<Record<string, unknown>>(
 		{ PK: wsPk(workspaceId), SK: entitySk('FormRecord', id) },
 		`SET ${sets.join(', ')}`,
 		values,
 		names
 	)) ?? { ...existing, ...data };
-	const statusChanged = input.filingStatus && input.filingStatus !== existing.filingStatus;
+	const statusChanged = input.filingStatus && input.filingStatus !== (existing.filingStatus as string);
 	await logActivity({
 		workspaceId,
 		userId: actorId,
 		action: statusChanged ? 'STATUS_CHANGE' : 'FORM_UPDATED',
 		entityType: 'FormRecord',
-		entityId: form.id,
+		entityId: form.id as string,
 		summary: statusChanged
-			? `Form ${form.code} moved to ${form.filingStatus}`
-			: `Form ${form.code} updated`
+			? `Form ${form.code as string} moved to ${form.filingStatus as string}`
+			: `Form ${form.code as string} updated`
 	});
 	return form;
 }
 
 export async function softDeleteForm(workspaceId: string, actorId: string, id: string) {
-	const existing = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('FormRecord', id) });
+	const existing = await ddbGet<Record<string, unknown>>({ PK: wsPk(workspaceId), SK: entitySk('FormRecord', id) });
 	if (!existing) throw new Error('Form not found');
 	if (existing.deletedAt) throw new Error('Form not found');
 	await ddbUpdate(
@@ -218,7 +220,7 @@ export async function softDeleteForm(workspaceId: string, actorId: string, id: s
 		action: 'FORM_DELETED',
 		entityType: 'FormRecord',
 		entityId: id,
-		summary: `Form ${existing.code} deleted`
+		summary: `Form ${existing.code as string} deleted`
 	});
 }
 
@@ -234,7 +236,7 @@ export async function replaceSupportingItems(
 		satisfiedByFileId: string | null;
 	}>
 ) {
-	const form = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('FormRecord', formId) });
+	const form = await ddbGet<Record<string, unknown>>({ PK: wsPk(workspaceId), SK: entitySk('FormRecord', formId) });
 	if (!form) throw new Error('Form not found');
 	if (form.deletedAt) throw new Error('Form not found');
 	const supportingItems = items.map((it, idx) => ({

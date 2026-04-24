@@ -1,7 +1,7 @@
 import type { ActivityAction } from '$lib/types/enums';
 import { hashIp } from './crypto';
 import { ddbPut, ddbQuery } from './dynamo/ops';
-import { entitySk, wsPk } from './dynamo/keys';
+import { wsPk } from './dynamo/keys';
 import { randomUUID } from 'node:crypto';
 
 interface LogInput {

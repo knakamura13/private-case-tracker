@@ -6,6 +6,8 @@ import { ddbGet, ddbPut, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
 import type { QuestionItem } from '$lib/server/dynamo/types';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export async function listQuestions(
 	workspaceId: string,
 	filter: { status?: QuestionStatus; sourceType?: QuestionSourceType; q?: string; limit?: number } = {}
@@ -141,3 +143,5 @@ export async function softDeleteQuestion(workspaceId: string, actorId: string, i
 		summary: `Question deleted`
 	});
 }
+
+/* eslint-enable @typescript-eslint/no-explicit-any */

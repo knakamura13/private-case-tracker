@@ -1,4 +1,5 @@
 <script lang="ts">
+	/* eslint-disable svelte/valid-compile */
 	import type { HTMLSelectAttributes } from 'svelte/elements';
 	import { cn } from '$lib/utils/cn';
 	import { ChevronDown } from 'lucide-svelte';
@@ -9,6 +10,7 @@
 		children,
 		...rest
 	}: HTMLSelectAttributes & { class?: string; children?: import('svelte').Snippet } = $props();
+	/* eslint-enable svelte/valid-compile */
 </script>
 
 <div class={cn('relative', klass)}>

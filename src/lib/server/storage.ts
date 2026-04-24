@@ -42,7 +42,7 @@ const MAX_UPLOAD_BYTES = 50 * 1024 * 1024; // 50 MB
 function safeName(name: string): string {
 	return name
 		.normalize('NFKD')
-		.replace(/[^\w.\-]+/g, '_')
+		.replace(/[^\w.-]+/g, '_')
 		.slice(0, 180);
 }
 

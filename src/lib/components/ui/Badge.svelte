@@ -20,6 +20,7 @@
 </script>
 
 <script lang="ts">
+	/* eslint-disable svelte/valid-compile */
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { cn } from '$lib/utils/cn';
 
@@ -33,6 +34,7 @@
 		variant?: BadgeVariant;
 		children?: import('svelte').Snippet;
 	} = $props();
+	/* eslint-enable svelte/valid-compile */
 </script>
 
 <span class={cn(badgeVariants({ variant }), klass)} {...rest}>

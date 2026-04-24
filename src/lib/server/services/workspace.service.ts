@@ -3,8 +3,9 @@ import type { MemberRole } from '$lib/types/enums';
 import { randomUUID } from 'node:crypto';
 import { ddbPut, ddbGet, ddbQuery, ddbUpdate, ddbDelete } from '$lib/server/dynamo/ops';
 import { baPk, entitySk, gsi1Sk, gsi1UserPk, wsPk } from '$lib/server/dynamo/keys';
-import { auth } from '$lib/server/auth';
 import { invalidateMembers } from '$lib/server/cache/membersCache';
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export async function createWorkspace(input: { name: string; ownerUserId: string }) {
 	const now = new Date().toISOString();
@@ -156,3 +157,5 @@ export async function deleteWorkspace(workspaceId: string) {
 	// Minimal delete: remove workspace root item. (Full cleanup can be added later.)
 	await ddbDelete({ PK: wsPk(workspaceId), SK: entitySk('Workspace', workspaceId) });
 }
+
+/* eslint-enable @typescript-eslint/no-explicit-any */

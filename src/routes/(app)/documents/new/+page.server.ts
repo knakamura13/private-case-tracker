@@ -18,7 +18,7 @@ export const load: PageServerLoad = async (event) => {
 	]);
 	return {
 		categories: DOCUMENT_CATEGORIES,
-		links: { forms, evidence, appointments },
+		links: { tasks: [] as { id: string; title: string }[], forms, evidence, appointments },
 		uploadEnabled: storageConfigured()
 	};
 };

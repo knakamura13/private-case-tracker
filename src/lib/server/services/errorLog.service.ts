@@ -1,6 +1,6 @@
 import type { InputJsonValue } from '$lib/types/enums';
 import { randomUUID } from 'node:crypto';
-import { ddbPut, ddbQuery, ddbGet } from '$lib/server/dynamo/ops';
+import { ddbPut, ddbQuery } from '$lib/server/dynamo/ops';
 
 const MAX_MESSAGE_CHARS = 2_000;
 const MAX_STACK_CHARS = 50_000;
@@ -82,13 +82,25 @@ export async function listErrors(input: ListErrorsInput) {
 	}> = [];
 
 	for (const pk of pks) {
-		const rows = await ddbQuery<any>({
+		const rows = await ddbQuery<Record<string, unknown>>({
 			KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
 			ExpressionAttributeValues: { ':pk': pk, ':prefix': 'ErrorLog#' },
 			ScanIndexForward: false,
 			Limit: input.limit + (input.cursor ? 1 : 0)
 		});
-		for (const r of rows) all.push(r);
+	for (const r of rows) {
+		all.push(r as unknown as {
+			id: string;
+			occurredAt: string;
+			source: LogErrorInput['source'];
+			status: number | null;
+			route: string | null;
+			method: string | null;
+			message: string;
+			requestId: string | null;
+			workspaceId: string | null;
+		});
+	}
 	}
 
 	const filtered = all
@@ -118,14 +130,18 @@ export async function getError(id: string, workspaceId: string | null, includeGl
 	if (includeGlobal) pks.push('ERR#GLOBAL');
 
 	for (const pk of pks) {
-		const rows = await ddbQuery<any>({
+		const rows = await ddbQuery<Record<string, unknown>>({
 			KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
 			ExpressionAttributeValues: { ':pk': pk, ':prefix': 'ErrorLog#' },
 			ScanIndexForward: false,
 			Limit: 50
 		});
-		const hit = rows.find((r) => r.id === id);
-		if (hit) return { ...hit, occurredAt: new Date(hit.occurredAt) };
+		const hit = rows.find((r) => (r as Record<string, unknown>).id === id);
+		if (hit) {
+			const hitRecord = hit as Record<string, unknown>;
+			const occurredAt = hitRecord.occurredAt as string | undefined;
+			return { ...hit, occurredAt: occurredAt ? new Date(occurredAt) : new Date() };
+		}
 	}
 
 	return null;

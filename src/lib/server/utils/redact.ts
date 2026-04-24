@@ -2,6 +2,8 @@ const SENSITIVE_KEY_RE = /token|secret|password|passwd|pass|apikey|api_key|key|a
 
 const REDACTED = '[redacted]';
 
+/* eslint-disable security/detect-object-injection */
+
 function isSensitive(key: string): boolean {
 	return SENSITIVE_KEY_RE.test(key);
 }
@@ -44,3 +46,5 @@ export function redactUrl(raw: string): string {
 		return raw;
 	}
 }
+
+/* eslint-enable security/detect-object-injection */

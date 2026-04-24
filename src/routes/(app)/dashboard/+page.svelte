@@ -2,7 +2,7 @@
 	import PageHeader from '$lib/components/shared/PageHeader.svelte';
 	import Widget from '$lib/components/dashboard/Widget.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
-	import { fmtDate, fmtDateTime, fmtRelative, daysUntil, isOverdue } from '$lib/utils/dates';
+	import { fmtDateTime, fmtRelative, daysUntil } from '$lib/utils/dates';
 	import { titleCase } from '$lib/utils/format';
 	import { CalendarClock, AlertTriangle } from 'lucide-svelte';
 	import QuickLinksWidget from '$lib/components/dashboard/QuickLinksWidget.svelte';

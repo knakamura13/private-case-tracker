@@ -2,7 +2,7 @@
 	import { page } from '$app/stores';
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
 
-	const row = ($page.data as any).row as {
+	const row = ($page.data as unknown as { row: { id: string; occurredAt: string | Date; source: string; status: number | null; route: string | null; method: string | null; message: string; stack: string | null; requestId: string | null; userAgent: string | null; context: unknown } }).row as {
 		id: string;
 		occurredAt: string | Date;
 		source: string;

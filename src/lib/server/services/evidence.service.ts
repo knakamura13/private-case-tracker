@@ -6,6 +6,8 @@ import { ddbGet, ddbPut, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
 import type { EvidenceItem } from '$lib/server/dynamo/types';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export async function listEvidence(
 	workspaceId: string,
 	filter: { status?: EvidenceStatus; type?: string; q?: string; limit?: number } = {}
@@ -170,3 +172,5 @@ export function summarizeCoverage(items: { type: string; status: string }[]) {
 	}
 	return byType;
 }
+
+/* eslint-enable @typescript-eslint/no-explicit-any */

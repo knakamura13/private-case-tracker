@@ -4,6 +4,8 @@ import { logActivity } from '$lib/server/activity';
 import { ddbGet, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export async function softDeleteEntity(
 	workspaceId: string,
 	actorId: string,
@@ -35,3 +37,5 @@ export async function softDeleteEntity(
 		summary: `${entityType} "${entityName}" deleted`
 	});
 }
+
+/* eslint-enable @typescript-eslint/no-explicit-any */

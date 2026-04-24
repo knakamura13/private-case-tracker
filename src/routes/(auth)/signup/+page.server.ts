@@ -6,7 +6,7 @@ import { baPk } from '$lib/server/dynamo/keys';
 import { findActiveInvitation } from '$lib/server/services/invitation.service';
 
 export const load: PageServerLoad = async ({ url }) => {
-	const users = await ddbQuery<any>({
+	const users = await ddbQuery<Record<string, unknown>>({
 		KeyConditionExpression: 'PK = :pk',
 		ExpressionAttributeValues: { ':pk': baPk('user') },
 		Limit: 1

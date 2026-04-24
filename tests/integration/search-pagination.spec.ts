@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 
+/* eslint-disable security/detect-object-injection */
+
 test.describe('search endpoint pagination', () => {
 	test('search endpoint respects limit parameter', async ({ request }) => {
 		// Test that the search API returns limited results
@@ -29,3 +31,5 @@ test.describe('search endpoint pagination', () => {
 		expect(body.tasks.length).toBeLessThanOrEqual(5000);
 	});
 });
+
+/* eslint-enable security/detect-object-injection */

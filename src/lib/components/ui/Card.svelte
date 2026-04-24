@@ -1,4 +1,5 @@
 <script lang="ts">
+	/* eslint-disable svelte/valid-compile */
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { cn } from '$lib/utils/cn';
 
@@ -7,6 +8,7 @@
 		children,
 		...rest
 	}: HTMLAttributes<HTMLDivElement> & { class?: string; children?: import('svelte').Snippet } = $props();
+	/* eslint-enable svelte/valid-compile */
 </script>
 
 <div class={cn('rounded-lg border border-border bg-card text-card-foreground shadow-sm', klass)} {...rest}>

@@ -30,7 +30,7 @@ export const load: PageServerLoad = async (event) => {
 	});
 
 	// Fetch workspace to get stored evidence target overrides
-	const ws = await ddbGet<any>({ PK: wsPk(workspace.id), SK: entitySk('Workspace', workspace.id) });
+	const ws = await ddbGet<Record<string, unknown>>({ PK: wsPk(workspace.id), SK: entitySk('Workspace', workspace.id) });
 	const storedTargets = (ws?.evidenceTargets as Record<string, number> | null) ?? {};
 	const effectiveTargets: Record<string, number> = { ...EVIDENCE_TARGETS, ...storedTargets };
 
@@ -66,7 +66,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'Invalid input' });
 		}
 
-		const ws = await ddbGet<any>({
+		const ws = await ddbGet<Record<string, unknown>>({
 			PK: wsPk(workspace.id),
 			SK: entitySk('Workspace', workspace.id)
 		});

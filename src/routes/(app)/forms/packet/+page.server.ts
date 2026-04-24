@@ -12,7 +12,7 @@ export const load: PageServerLoad = async (event) => {
 				.filter((e) => e.includedInPacket)
 				.sort((a, b) => String(a.type).localeCompare(String(b.type)))
 		),
-		listEvidence(workspace.id, { status: 'NEEDS_TRANSLATION' as any }),
+		listEvidence(workspace.id, { status: 'NEEDS_TRANSLATION' as const }),
 		listEvidence(workspace.id, { type: 'Photos' })
 	]);
 

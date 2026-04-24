@@ -6,6 +6,8 @@ import { ddbGet, ddbPut, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
 import { softDeleteEntity } from './shared/softDeleteEntity';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export interface UploadedDocumentCreate {
 	filename: string;
 	contentType: string;
@@ -120,3 +122,5 @@ export async function deleteUploadedDocument(workspaceId: string, actorId: strin
 		'FILE_DELETE'
 	);
 }
+
+/* eslint-enable @typescript-eslint/no-explicit-any */

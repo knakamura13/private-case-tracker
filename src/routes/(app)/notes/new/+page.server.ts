@@ -14,7 +14,7 @@ export const load: PageServerLoad = async (event) => {
 		listEvidence(workspace.id).then((r) => r.map((e) => ({ id: e.id, title: e.title }))),
 		listAppointments(workspace.id).then((r) => r.map((a) => ({ id: a.id, title: a.title })))
 	]);
-	return { links: { forms, evidence, appointments } };
+	return { links: { tasks: [] as { id: string; title: string }[], forms, evidence, appointments } };
 };
 
 export const actions: Actions = {

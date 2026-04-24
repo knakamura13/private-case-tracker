@@ -6,7 +6,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
-	import { Trash2, Eye, EyeOff } from 'lucide-svelte';
+	import { Trash2 } from 'lucide-svelte';
 	import { enhance } from '$app/forms';
 	import { fmtDate } from '$lib/utils/dates';
 	import { titleCase } from '$lib/utils/format';

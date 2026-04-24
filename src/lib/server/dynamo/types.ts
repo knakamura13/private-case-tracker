@@ -12,8 +12,8 @@ export type DynamoBaseItem = {
 	GSI3SK?: string;
 	// Soft-delete marker used across entities
 	deletedAt?: string | null;
-	createdAt?: string;
-	updatedAt?: string;
+	createdAt: string;
+	updatedAt: string;
 };
 
 // Entity-specific types to replace `any` in service layer
@@ -77,9 +77,9 @@ export type EvidenceItem = DynamoBaseItem & {
 	includedInPacket: boolean;
 	notes: string | null;
 	files?: Array<{ id: string; file: string | null; title: string }>;
-	tasks: any[];
-	supportingFor: any[];
-	linkedNotes: any[];
+	tasks: Array<{ id: string; title: string }>;
+	supportingFor: Array<{ id: string; title: string }>;
+	linkedNotes: Array<{ id: string; title: string }>;
 };
 
 export type QuestionItem = DynamoBaseItem & {
@@ -151,9 +151,9 @@ export type AppointmentItem = DynamoBaseItem & {
 	confirmationDetails: string | null;
 	attendees: string[];
 	notes: string | null;
-	tasks: any[];
-	documents: any[];
-	linkedNotes: any[];
+	tasks: Array<{ id: string; title: string }>;
+	documents: Array<{ id: string; title: string }>;
+	linkedNotes: Array<{ id: string; title: string }>;
 };
 
 export type MilestoneItem = DynamoBaseItem & {

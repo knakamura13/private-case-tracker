@@ -23,6 +23,8 @@ export function renderMarkdown(src: string): string {
 	html = html.replace(/(<li>.*<\/li>)(?!\s*<li>)/gs, '<ul class="list-disc pl-6">$1</ul>');
 	// Convert single newlines to <br> (but not after block elements)
 	html = html.replace(/(?<!<\/(?:h[1-6]|li|ul|p)>)\n(?!\n)/g, '<br />');
+	// Collapse 3+ newlines into 2 newlines (preserve single blank lines)
+	html = html.replace(/\n{3,}/g, '\n\n');
 	html = html.replace(/\n\n+/g, '</p><p class="mt-3">');
 	return `<p>${html}</p>`;
 }

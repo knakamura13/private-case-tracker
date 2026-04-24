@@ -30,6 +30,7 @@
 </script>
 
 <script lang="ts">
+	/* eslint-disable svelte/valid-compile */
 	import type { HTMLButtonAttributes, HTMLAnchorAttributes } from 'svelte/elements';
 	import { cn } from '$lib/utils/cn';
 
@@ -48,6 +49,7 @@
 		class?: string;
 		children?: import('svelte').Snippet;
 	} = $props();
+	/* eslint-enable svelte/valid-compile */
 
 	const classes = $derived(cn(buttonVariants({ variant, size }), klass));
 </script>
@@ -57,7 +59,7 @@
 		{#if children}{@render children()}{/if}
 	</a>
 {:else}
-	<button class={classes} {...rest as HTMLButtonAttributes}>
+<button class={classes} {...rest as HTMLButtonAttributes}>
 		{#if children}{@render children()}{/if}
 	</button>
 {/if}

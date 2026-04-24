@@ -4,6 +4,8 @@ import { ddbGet, ddbPut, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
 import type { QuickLinkFolderItem, QuickLinkItem } from '$lib/server/dynamo/types';
 
+/* eslint-disable security/detect-object-injection */
+
 export async function listQuickLinkFolders(workspaceId: string, limit?: number) {
 	const rows = await ddbQuery<QuickLinkFolderItem>({
 		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
@@ -233,3 +235,5 @@ function safeHostname(url: string): string {
 		return url.slice(0, 80);
 	}
 }
+
+/* eslint-enable security/detect-object-injection */

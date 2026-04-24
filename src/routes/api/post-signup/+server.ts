@@ -29,20 +29,20 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	// We don't know the workspaceId yet; simplest is to rely on hooks membership load later.
 	// If the user is already attached to any workspace, no-op.
-	const existing = await ddbQuery<any>({
+	const existing = await ddbQuery<Record<string, unknown>>({
 		IndexName: 'GSI1',
 		KeyConditionExpression: 'GSI1PK = :pk',
 		ExpressionAttributeValues: { ':pk': `USER#${session.user.id}` },
 		Limit: 1
-	});
+	}).catch(() => [] as Record<string, unknown>[]);
 	if (existing) return json({ ok: true });
 
 	const totalWorkspaces = (
-		await ddbQuery({
+		await ddbQuery<Record<string, unknown>>({
 			KeyConditionExpression: 'PK = :pk',
 			ExpressionAttributeValues: { ':pk': 'WS_INDEX' },
 			Limit: 1
-		}).catch(() => [] as any[])
+		}).catch(() => [] as Record<string, unknown>[])
 	).length;
 	if (totalWorkspaces > 0) {
 		return json(

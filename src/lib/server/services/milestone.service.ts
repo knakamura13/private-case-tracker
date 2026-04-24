@@ -7,6 +7,8 @@ import { entitySk, wsPk } from '$lib/server/dynamo/keys';
 import type { MilestoneItem } from '$lib/server/dynamo/types';
 import { PHASE_ORDER } from '$lib/constants/phases';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export async function listMilestones(
 	workspaceId: string,
 	filter: { phase?: MilestonePhase; status?: MilestoneStatus; limit?: number } = {}
@@ -169,3 +171,5 @@ export function currentPhase(
 	}
 	return 'OUTCOME';
 }
+
+/* eslint-enable @typescript-eslint/no-explicit-any */

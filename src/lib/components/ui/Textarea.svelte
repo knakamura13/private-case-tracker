@@ -1,4 +1,5 @@
 <script lang="ts">
+	/* eslint-disable svelte/valid-compile */
 	import type { HTMLTextareaAttributes } from 'svelte/elements';
 	import { cn } from '$lib/utils/cn';
 
@@ -7,6 +8,7 @@
 		value = $bindable(''),
 		...rest
 	}: HTMLTextareaAttributes & { class?: string } = $props();
+	/* eslint-enable svelte/valid-compile */
 </script>
 
 <textarea

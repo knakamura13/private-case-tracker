@@ -41,7 +41,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 				workspace: { id: locals.workspace.id, name: locals.workspace.name },
 				forms,
 				evidence,
-				documents: documents.map((d: any) => ({ ...d, storageKey: undefined })),
+				documents: documents.map((d) => ({ ...d, storageKey: undefined })),
 				appointments,
 				questions,
 				notes,

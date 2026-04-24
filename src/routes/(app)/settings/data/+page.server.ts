@@ -1,7 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { requireOwner, requireWorkspace } from '$lib/server/guards';
-import { logActivity } from '$lib/server/activity';
 import { deleteWorkspace } from '$lib/server/services/workspace.service';
 import { listForms } from '$lib/server/services/form.service';
 import { listEvidence } from '$lib/server/services/evidence.service';
@@ -25,7 +24,7 @@ export const load: PageServerLoad = async (event) => {
 
 	const trashedForms = forms.filter((f) => f.deletedAt != null).length;
 	const trashedEvidence = evidence.filter((e) => e.deletedAt != null).length;
-	const trashedDocs = docs.filter((d: any) => d.deletedAt != null).length;
+	const trashedDocs = docs.filter((d) => d.deletedAt != null).length;
 	const trashedAppts = appts.filter((a) => a.deletedAt != null).length;
 	const trashedQuestions = questions.filter((q) => q.deletedAt != null).length;
 	const trashedNotes = notes.filter((n) => n.deletedAt != null).length;
@@ -45,13 +44,13 @@ export const load: PageServerLoad = async (event) => {
 };
 
 export const actions: Actions = {
-	purgeTrash: async (event) => {
+	purgeTrash: async () => {
 		// Not implemented yet for DynamoDB single-table without scan + batch delete.
 		return fail(501, {
 			error: 'Not implemented yet for DynamoDB. Use S3 lifecycle + PITR for recovery.'
 		});
 	},
-	removeDemo: async (event) => {
+	removeDemo: async () => {
 		return fail(501, { error: 'Not implemented yet for DynamoDB.' });
 	},
 	deleteWorkspace: async (event) => {

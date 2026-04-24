@@ -1,4 +1,4 @@
-import { ddbPut, ddbGet } from './dynamo/ops';
+import { ddbPut } from './dynamo/ops';
 import { baPk, entitySk, gsi1Sk, gsi1UserPk, wsPk } from './dynamo/keys';
 import { ENV } from './env';
 

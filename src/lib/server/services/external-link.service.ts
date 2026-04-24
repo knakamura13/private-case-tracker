@@ -42,14 +42,14 @@ export async function createExternalLink(
 }
 
 export async function getExternalLinkUrl(workspaceId: string, id: string) {
-	const doc = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('DocumentFile', id) });
+	const doc = await ddbGet<Record<string, unknown>>({ PK: wsPk(workspaceId), SK: entitySk('DocumentFile', id) });
 	if (!doc) return null;
 	if (doc.storageMode !== 'EXTERNAL_LINK') return null;
 	return doc.externalUrl;
 }
 
 export async function deleteExternalLink(workspaceId: string, actorId: string, id: string) {
-	const doc = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('DocumentFile', id) });
+	const doc = await ddbGet<Record<string, unknown>>({ PK: wsPk(workspaceId), SK: entitySk('DocumentFile', id) });
 	if (!doc) throw new Error('Document not found');
 	
 	await softDeleteEntity(
@@ -57,7 +57,7 @@ export async function deleteExternalLink(workspaceId: string, actorId: string, i
 		actorId,
 		'DocumentFile',
 		id,
-		doc.title,
+		doc.title as string,
 		'FILE_DELETE'
 	);
 }
@@ -68,7 +68,7 @@ export async function updateExternalLinkMetadata(
 	id: string,
 	input: Partial<DocumentMetadata>
 ) {
-	const doc = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('DocumentFile', id) });
+	const doc = await ddbGet<Record<string, unknown>>({ PK: wsPk(workspaceId), SK: entitySk('DocumentFile', id) });
 	if (!doc) throw new Error('Document not found');
 	const patch: Record<string, unknown> = { updatedAt: new Date().toISOString() };
 	if (input.title !== undefined) patch.title = input.title;
@@ -91,7 +91,7 @@ export async function updateExternalLinkMetadata(
 		values[vk] = v;
 		sets.push(`${nk} = ${vk}`);
 	}
-	const updated = (await ddbUpdate<any>(
+	const updated = (await ddbUpdate<Record<string, unknown>>(
 		{ PK: wsPk(workspaceId), SK: entitySk('DocumentFile', id) },
 		`SET ${sets.join(', ')}`,
 		values,

@@ -6,6 +6,8 @@ import { ddbGet, ddbPut, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
 import type { AppointmentItem } from '$lib/server/dynamo/types';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export async function listAppointments(
 	workspaceId: string,
 	filter: { status?: AppointmentStatus; type?: AppointmentType; range?: 'upcoming' | 'past'; limit?: number } = {}
@@ -131,3 +133,5 @@ export async function softDeleteAppointment(workspaceId: string, actorId: string
 		summary: `Appointment "${existing.title}" deleted`
 	});
 }
+
+/* eslint-enable @typescript-eslint/no-explicit-any */

@@ -19,7 +19,7 @@ export const load: PageServerLoad = async (event) => {
 	if (!form) throw error(404, { message: 'Form not found' });
 	const [evidence, files] = await Promise.all([
 		listEvidence(workspace.id).then((r) => r.map((e) => ({ id: e.id, title: e.title }))),
-		listDocuments(workspace.id).then((r) => r.map((d: any) => ({ id: d.id, title: d.title })))
+		listDocuments(workspace.id).then((r) => r.map((d) => ({ id: d.id, title: d.title })))
 	]);
 	return {
 		form: {

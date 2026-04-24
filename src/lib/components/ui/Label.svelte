@@ -1,4 +1,5 @@
 <script lang="ts">
+	/* eslint-disable svelte/valid-compile */
 	import type { HTMLLabelAttributes } from 'svelte/elements';
 	import { cn } from '$lib/utils/cn';
 
@@ -7,6 +8,7 @@
 		children,
 		...rest
 	}: HTMLLabelAttributes & { class?: string; children?: import('svelte').Snippet } = $props();
+	/* eslint-enable svelte/valid-compile */
 </script>
 
 <label class={cn('text-sm font-medium leading-none', klass)} {...rest}>

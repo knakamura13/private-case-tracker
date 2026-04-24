@@ -58,10 +58,10 @@ export const actions: Actions = {
 		if (!doc) throw error(404, { message: 'Document not found' });
 		
 		let url: string | null;
-		if (doc.storageMode === 'EXTERNAL_LINK') {
-			url = await getExternalLinkUrl(workspace.id, event.params.id);
+		if ((doc as Record<string, unknown>).storageMode === 'EXTERNAL_LINK') {
+			url = (await getExternalLinkUrl(workspace.id, event.params.id)) as string | null;
 		} else {
-			url = await getUploadedDocumentUrl(workspace.id, event.params.id);
+			url = (await getUploadedDocumentUrl(workspace.id, event.params.id)) as string | null;
 		}
 		
 		if (!url) throw error(404, { message: 'No downloadable content' });
