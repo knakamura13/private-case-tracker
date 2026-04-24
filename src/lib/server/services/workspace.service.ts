@@ -2,7 +2,7 @@ import { logActivity } from '$lib/server/activity';
 import type { MemberRole } from '$lib/types/enums';
 import { randomUUID } from 'node:crypto';
 import { ddbPut, ddbGet, ddbQuery, ddbUpdate, ddbDelete } from '$lib/server/dynamo/ops';
-import { entitySk, gsi1Sk, gsi1UserPk, wsPk } from '$lib/server/dynamo/keys';
+import { baPk, entitySk, gsi1Sk, gsi1UserPk, wsPk } from '$lib/server/dynamo/keys';
 
 export async function createWorkspace(input: { name: string; ownerUserId: string }) {
 	const now = new Date().toISOString();
@@ -65,22 +65,36 @@ export async function listMembers(workspaceId: string) {
 		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
 		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'Membership#' }
 	});
-	// We no longer have a relational join to user; return userId only.
-	return rows
-		.map((r) => ({
-			id: r.id ?? `${r.workspaceId}:${r.userId}`,
-			workspaceId: r.workspaceId,
-			userId: r.userId,
-			role: r.role,
-			acceptedAt: r.acceptedAt ? new Date(r.acceptedAt) : null,
-			createdAt: r.createdAt ? new Date(r.createdAt) : new Date(),
-			user: { id: r.userId, email: '', name: null, image: null, createdAt: new Date() }
-		}))
-		.sort((a, b) =>
-			a.role === b.role
-				? a.createdAt.getTime() - b.createdAt.getTime()
-				: a.role.localeCompare(b.role)
-		);
+
+	// Fetch user data for each member from Better Auth table
+	const membersWithUsers = await Promise.all(
+		rows.map(async (r) => {
+			const user = await ddbGet<any>({ PK: baPk('user'), SK: r.userId });
+			return {
+				id: r.id ?? `${r.workspaceId}:${r.userId}`,
+				workspaceId: r.workspaceId,
+				userId: r.userId,
+				role: r.role,
+				acceptedAt: r.acceptedAt ? new Date(r.acceptedAt) : null,
+				createdAt: r.createdAt ? new Date(r.createdAt) : new Date(),
+				user: user
+					? {
+							id: user.id,
+							email: user.email,
+							name: user.name,
+							image: user.image,
+							createdAt: user.createdAt ? new Date(user.createdAt) : new Date()
+						}
+					: { id: r.userId, email: '', name: null, image: null, createdAt: new Date() }
+			};
+		})
+	);
+
+	return membersWithUsers.sort((a, b) =>
+		a.role === b.role
+			? a.createdAt.getTime() - b.createdAt.getTime()
+			: a.role.localeCompare(b.role)
+	);
 }
 
 export async function changeRole(workspaceId: string, userId: string, role: MemberRole) {
