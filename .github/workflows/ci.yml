@@ -39,6 +39,8 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Sync SvelteKit
+        run: pnpm check
       - name: Run unit tests
         run: pnpm test
       - name: Run component tests
