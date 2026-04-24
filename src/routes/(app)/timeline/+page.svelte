@@ -45,7 +45,7 @@
 </PageHeader>
 
 <div class="space-y-6">
-	{#each grouped as g, i (g.phase)}
+	{#each grouped as g, _i (g.phase)}
 		<section>
 			<div class="mb-2 flex items-center justify-between">
 				<div>
@@ -61,10 +61,7 @@
 			</div>
 			{#if g.items.length === 0}
 				<Card class="p-4 text-sm text-muted-foreground">
-					<div class="flex items-center justify-between">
-						<span>No milestones in this phase yet.</span>
-						<Button variant="ghost" size="sm" href={`/timeline/new?phase=${g.phase}`}>{#snippet children()}<Plus class="h-4 w-4" /> Add{/snippet}</Button>
-					</div>
+					<span>No milestones in this phase yet.</span>
 				</Card>
 			{:else}
 				<ol class="space-y-2">
