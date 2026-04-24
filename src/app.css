@@ -81,7 +81,7 @@ textarea:not(:disabled):hover {
 
 button:not(:disabled),
 a {
-	transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease;
+	transition: background-color 50ms ease, border-color 50ms ease, color 50ms ease, opacity 50ms ease;
 }
 
 @layer base {

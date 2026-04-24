@@ -6,6 +6,7 @@
 	import Label from '$lib/components/ui/Label.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
+	import { Trash2 } from 'lucide-svelte';
 	import { enhance } from '$app/forms';
 	import { fmtDate } from '$lib/utils/dates';
 	import type { ActionData, PageData } from './$types';
@@ -35,13 +36,15 @@
 					<p class="text-xs text-muted-foreground">{m.user.email}</p>
 				</div>
 				<div class="flex items-center gap-2">
-					<Badge>{m.role}</Badge>
 					{#if isOwner && m.user.id !== $page.data.user?.id}
 						<form method="post" action="?/removeMember" use:enhance>
 							<input type="hidden" name="userId" value={m.user.id} />
-							<Button type="submit" variant="destructive" size="sm">Remove</Button>
+							<Button type="submit" variant="destructive" size="sm" aria-label="Remove member">
+								<Trash2 class="h-4 w-4" />
+							</Button>
 						</form>
 					{/if}
+					<Badge>{m.role}</Badge>
 				</div>
 			</li>
 		{/each}
