@@ -44,7 +44,7 @@
 </script>
 
 <header
-	class="sticky top-0 z-30 flex h-14 items-center justify-between gap-1 border-b border-border bg-card/80 px-3 sm:gap-2 sm:px-4 backdrop-blur"
+	class="sticky top-0 z-30 flex h-14 items-center justify-between gap-1 border-b border-border/50 bg-card/70 px-3 sm:gap-2 sm:px-4 backdrop-blur-xl transition-all duration-300"
 >
 	<div class="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
 		<button
@@ -59,7 +59,7 @@
 			type="button"
 			onclick={onOpenSearch}
 			class={cn(
-				'flex h-9 w-full min-w-[120px] sm:min-w-[220px] max-w-xl items-center gap-2 rounded-md border border-input bg-card px-2 sm:px-3 text-sm text-muted-foreground hover:bg-muted'
+				'flex h-9 w-full min-w-[120px] sm:min-w-[220px] max-w-xl items-center gap-2 rounded-md border border-input bg-card px-2 sm:px-3 text-sm text-muted-foreground transition-colors duration-150 hover:border-muted-foreground'
 			)}
 		>
 			<Search class="h-4 w-4" />

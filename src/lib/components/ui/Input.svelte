@@ -14,7 +14,7 @@
 <input
 	bind:value
 	class={cn(
-		'flex h-11 w-full touch-action-manipulation rounded-md border border-input bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
+		'flex h-11 w-full touch-action-manipulation rounded-md border border-input bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground transition-colors duration-150 hover:border-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
 		klass
 	)}
 	{...rest}

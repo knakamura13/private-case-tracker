@@ -8,7 +8,7 @@
 	let { workspaceName, onNavigate }: { workspaceName: string; onNavigate?: () => void } = $props();
 </script>
 
-<aside class="flex h-full w-64 flex-col border-r border-border bg-card">
+<aside class="flex h-full w-60 flex-col border-r border-border bg-card">
 	<a href="/dashboard" class="flex h-14 items-center gap-2 px-5 hover:bg-muted/50 transition-colors border-b-0">
 		<img src="/pwa/icon-192.png" alt="" class="h-5 w-5 rounded-sm" aria-hidden="true" />
 		<div class="min-w-0">

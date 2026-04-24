@@ -5,13 +5,15 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import { NotebookPen, Plus } from 'lucide-svelte';
+	import { fly } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	import { fmtDateTime } from '$lib/utils/dates';
 	import { truncate } from '$lib/utils/format';
 	import type { PageData } from './$types';
 	let { data }: { data: PageData } = $props();
 </script>
 
-<PageHeader title="Notes" description="Meeting notes, call logs, and reminders.">
+<PageHeader title="Notes" description="Meeting notes, call logs, and reminders." number="8">
 	{#snippet actions()}
 		<Button href="/notes/new">
 			{#snippet children()}<Plus class="h-4 w-4" /> New note{/snippet}
@@ -26,10 +28,10 @@
 	</EmptyState>
 {:else}
 	<ul class="grid grid-cols-1 gap-3 md:grid-cols-2">
-		{#each data.notes as n (n.id)}
-			<li>
-				<a href={`/notes/${n.id}`}>
-					<Card class="p-4 hover:border-primary/40">
+		{#each data.notes as n, i (n.id)}
+			<li in:fly={{ y: 30, duration: 500, delay: i * 50 + 100, easing: cubicOut }}>
+							<a href={`/notes/${n.id}`}>
+					<Card class="p-4 hover:border-primary/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5 dark:hover:shadow-primary/10 hover:bg-card/90">
 						<h3 class="font-semibold">{n.title}</h3>
 						<p class="mt-1 line-clamp-3 text-sm text-muted-foreground">{truncate(n.bodyMd.replace(/[#*_`>]/g, ''), 240)}</p>
 						<p class="mt-2 text-xs text-muted-foreground">{fmtDateTime(n.updatedAt)}{n.author ? ` · ${n.author.name ?? n.author.email}` : ''}</p>

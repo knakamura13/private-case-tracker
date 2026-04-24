@@ -5,7 +5,10 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
+	import StatusBadge from '$lib/components/signature/StatusBadge.svelte';
 	import { Plus, CalendarDays } from 'lucide-svelte';
+	import { fly } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	import { fmtDateTime, daysUntil } from '$lib/utils/dates';
 	import { titleCase } from '$lib/utils/format';
 	import type { PageData } from './$types';
@@ -20,7 +23,7 @@
 	}
 </script>
 
-<PageHeader title="Appointments" description="Upcoming and past appointments.">
+<PageHeader title="Appointments" description="Upcoming and past appointments." number="6">
 	{#snippet actions()}
 		<Button href="/appointments/new">
 			{#snippet children()}<Plus class="h-4 w-4" /> New appointment{/snippet}
@@ -71,11 +74,11 @@
 	</EmptyState>
 {:else}
 	<ul class="space-y-3">
-		{#each data.appointments as a (a.id)}
+		{#each data.appointments as a, i (a.id)}
 			{@const d = daysUntil(a.scheduledAt)}
-			<li>
-				<a href={`/appointments/${a.id}`}>
-					<Card class="flex items-start gap-4 p-4 hover:border-primary/40">
+			<li in:fly={{ y: 30, duration: 500, delay: i * 50 + 100, easing: cubicOut }}>
+							<a href={`/appointments/${a.id}`}>
+					<Card class="flex items-start gap-4 p-4 hover:border-primary/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5 dark:hover:shadow-primary/10 hover:bg-card/90">
 						<div class="text-center">
 							<p class="text-xs text-muted-foreground">{fmtDateTime(a.scheduledAt).split(' at ')[0]}</p>
 							<p class="text-sm font-semibold">{fmtDateTime(a.scheduledAt).split(' at ')[1] ?? ''}</p>
@@ -89,7 +92,7 @@
 							<div class="flex items-center gap-2">
 								<p class="truncate font-medium">{a.title}</p>
 								<Badge>{titleCase(a.type)}</Badge>
-								<Badge variant="outline">{titleCase(a.status)}</Badge>
+								<StatusBadge variant="neutral" status={titleCase(a.status)} />
 							</div>
 							{#if a.location}<p class="mt-1 truncate text-sm text-muted-foreground">{a.location}</p>{/if}
 						</div>

@@ -7,10 +7,17 @@
 	import { CalendarClock, AlertTriangle } from 'lucide-svelte';
 	import QuickLinksWidget from '$lib/components/dashboard/QuickLinksWidget.svelte';
 	import type { ActionData, PageData } from './$types';
+	import { onMount } from 'svelte';
 	let { data, form }: { data: PageData; form: ActionData } = $props();
+
+	let mounted = $state(false);
+	onMount(() => {
+		// Small delay ensures the transition registers after initial render
+		setTimeout(() => { mounted = true; }, 50);
+	});
 </script>
 
-<PageHeader title="Dashboard" />
+<PageHeader title="Dashboard" number="1" />
 
 <div class="mb-4">
 	<Widget title="Quick links">
@@ -25,7 +32,7 @@
 				<li class="flex items-center gap-2">
 					<span class="w-32 truncate text-muted-foreground">{p.label}</span>
 					<div class="h-1.5 flex-1 overflow-hidden rounded bg-muted">
-						<div class="h-full bg-primary" style:width={`${p.total === 0 ? 0 : (p.done / p.total) * 100}%`}></div>
+						<div class="h-full bg-primary transition-all duration-1000 ease-out" style:width={mounted ? `${p.total === 0 ? 0 : (p.done / p.total) * 100}%` : '0%'}></div>
 					</div>
 					<span class="w-10 text-right text-[10px] text-muted-foreground">{p.done}/{p.total}</span>
 				</li>
@@ -88,7 +95,7 @@
 			{#each Object.entries(data.formsByStatus) as [s, n]}
 				<li class="flex items-center justify-between">
 					<span class="text-muted-foreground">{titleCase(s)}</span>
-					<span class="font-mono">{n}</span>
+					<span class="font-mono text-foreground">{n}</span>
 				</li>
 			{/each}
 		</ul>
@@ -101,8 +108,8 @@
 					<span class="w-32 truncate text-muted-foreground">{c.category}</span>
 					<div class="h-1.5 flex-1 overflow-hidden rounded bg-muted">
 						<div
-							class="h-full {c.target > 0 && c.total < c.target ? 'bg-warning' : 'bg-primary'}"
-							style:width={`${Math.min(100, c.target > 0 ? (c.total / c.target) * 100 : c.total > 0 ? 100 : 0)}%`}
+							class="h-full transition-all duration-1000 ease-out {c.target > 0 && c.total < c.target ? 'bg-warning' : 'bg-primary'}"
+							style:width={mounted ? `${Math.min(100, c.target > 0 ? (c.total / c.target) * 100 : c.total > 0 ? 100 : 0)}%` : '0%'}
 						></div>
 					</div>
 					<span class="w-10 text-right text-[10px] text-muted-foreground">
@@ -118,7 +125,7 @@
 			{#each Object.entries(data.openQuestionsCount) as [p, n]}
 				<li class="flex items-center justify-between">
 					<span class="text-muted-foreground">{titleCase(p)}</span>
-					<span class="font-mono">{n}</span>
+					<span class="font-mono text-foreground">{n}</span>
 				</li>
 			{/each}
 		</ul>
@@ -132,7 +139,7 @@
 				{#each data.docsByCategory as d}
 					<li class="flex items-center justify-between">
 						<span class="text-muted-foreground">{d.category}</span>
-						<span class="font-mono">{d.count}</span>
+						<span class="font-mono text-foreground">{d.count}</span>
 					</li>
 				{/each}
 			</ul>
