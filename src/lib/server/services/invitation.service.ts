@@ -74,11 +74,6 @@ export async function acceptInvitation(token: string, userId: string) {
 	// Better Auth user record is stored in DynamoDB under BA#user.
 	const user = await ddbGet<any>({ PK: baPk('user'), SK: userId });
 	if (!user) throw new Error('User not found');
-	if (user.email.toLowerCase() !== invitation.email.toLowerCase()) {
-		throw new Error(
-			`This invitation was sent to ${invitation.email}. Sign in with that account to accept.`
-		);
-	}
 
 	const membershipKey = { PK: wsPk(invitation.workspaceId), SK: entitySk('Membership', userId) };
 	const existingMembership = await ddbGet<any>(membershipKey);
