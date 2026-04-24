@@ -4,6 +4,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import MarkdownRenderer from '$lib/components/shared/MarkdownRenderer.svelte';
 	import { Trash2 } from 'lucide-svelte';
 	import { enhance } from '$app/forms';
 	import { fmtDate } from '$lib/utils/dates';
@@ -52,10 +53,10 @@
 {:else}
 	<div class="grid gap-6 md:grid-cols-3">
 		<Card class="p-4 text-sm md:col-span-2">
-			{#if data.milestone.description}<p class="text-muted-foreground">{data.milestone.description}</p>{/if}
+			{#if data.milestone.description}<MarkdownRenderer content={data.milestone.description} class="text-muted-foreground prose prose-sm max-w-none" />{/if}
 			{#if data.milestone.notes}
 				<h3 class="mt-3 font-semibold">Notes</h3>
-				<p class="whitespace-pre-wrap text-muted-foreground">{data.milestone.notes}</p>
+				<MarkdownRenderer content={data.milestone.notes} class="text-muted-foreground prose prose-sm max-w-none" />
 			{/if}
 		</Card>
 		<Card class="p-4 text-sm">

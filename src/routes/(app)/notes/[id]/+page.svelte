@@ -2,6 +2,7 @@
 	import PageHeader from '$lib/components/shared/PageHeader.svelte';
 	import NoteForm from '$lib/components/notes/NoteForm.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import MarkdownRenderer from '$lib/components/shared/MarkdownRenderer.svelte';
 	import { Trash2 } from 'lucide-svelte';
 	import { enhance } from '$app/forms';
 	import { fmtDateTime } from '$lib/utils/dates';
@@ -45,6 +46,6 @@
 	/>
 {:else}
 	<article class="prose prose-sm max-w-none rounded-lg border border-border bg-card p-5">
-		<pre class="whitespace-pre-wrap font-sans leading-relaxed">{data.note.bodyMd}</pre>
+		<MarkdownRenderer content={data.note.bodyMd} />
 	</article>
 {/if}

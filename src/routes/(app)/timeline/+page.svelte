@@ -3,6 +3,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import MarkdownRenderer from '$lib/components/shared/MarkdownRenderer.svelte';
 	import { Plus } from 'lucide-svelte';
 	import { fmtDate } from '$lib/utils/dates';
 	import { PHASE_ORDER, PHASE_LABELS, PHASE_DESCRIPTIONS } from '$lib/constants/phases';
@@ -72,7 +73,7 @@
 											<Badge variant={statusVariant(m.status)}>{titleCase(m.status)}</Badge>
 											<Badge variant="outline">{titleCase(m.priority)}</Badge>
 										</div>
-										{#if m.description}<p class="mt-1 text-sm text-muted-foreground">{m.description}</p>{/if}
+										{#if m.description}<MarkdownRenderer content={m.description} class="mt-1 text-sm text-muted-foreground prose prose-sm max-w-none" />{/if}
 										<div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
 											{#if m.dueDate}<span>Due {fmtDate(m.dueDate)}</span>{/if}
 											{#if m.owner}<span>· {m.owner.name ?? m.owner.email}</span>{/if}

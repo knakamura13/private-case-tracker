@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Badge from '$lib/components/ui/Badge.svelte';
+	import MarkdownRenderer from '$lib/components/shared/MarkdownRenderer.svelte';
 	import { fmtDate, isOverdue } from '$lib/utils/dates';
 	import { cn } from '$lib/utils/cn';
 	import { Calendar, User, Link as LinkIcon } from 'lucide-svelte';
@@ -48,7 +49,7 @@
 		<Badge variant={priorityVariant}>{task.priority.toLowerCase()}</Badge>
 	</div>
 	{#if !compact && task.description}
-		<p class="mt-1 line-clamp-2 text-xs text-muted-foreground">{task.description}</p>
+		<MarkdownRenderer content={task.description} class="mt-1 line-clamp-2 text-xs text-muted-foreground prose prose-sm max-w-none" />
 	{/if}
 	<div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
 		{#if task.dueDate}
