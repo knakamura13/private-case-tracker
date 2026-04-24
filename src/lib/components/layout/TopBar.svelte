@@ -18,6 +18,7 @@
 
 	let menuOpen = $state(false);
 	let menuButtonEl = $state<HTMLButtonElement | null>(null);
+	let menuEl = $state<HTMLDivElement | null>(null);
 
 	function closeMenu() {
 		menuOpen = false;
@@ -29,8 +30,16 @@
 		function onKeydown(e: KeyboardEvent) {
 			if (e.key === 'Escape') closeMenu();
 		}
+		function onClick(e: MouseEvent) {
+			if (menuButtonEl?.contains(e.target as Node) || menuEl?.contains(e.target as Node)) return;
+			closeMenu();
+		}
 		window.addEventListener('keydown', onKeydown);
-		return () => window.removeEventListener('keydown', onKeydown);
+		window.addEventListener('click', onClick, { capture: true });
+		return () => {
+			window.removeEventListener('keydown', onKeydown);
+			window.removeEventListener('click', onClick, { capture: true });
+		};
 	});
 </script>
 
@@ -78,6 +87,7 @@
 			</button>
 			{#if menuOpen}
 				<div
+					bind:this={menuEl}
 					class="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-56 rounded-md border border-border bg-card p-2 text-sm shadow-lg"
 					id="user-menu"
 					role="group"

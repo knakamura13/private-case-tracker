@@ -34,10 +34,13 @@
 		done: boolean;
 	}
 
-	let editableSubTasks = $state<SubTask[]>(
-		(initial.subTasks as SubTask[])?.map((st) => ({ ...st })) ?? []
-	);
+	let editableSubTasks = $state<SubTask[]>([]);
 	let newSubTaskText = $state('');
+	let subTasksJson = $derived(JSON.stringify(editableSubTasks));
+
+	$effect(() => {
+		editableSubTasks = (initial.subTasks as SubTask[])?.map((st) => ({ ...st })) ?? [];
+	});
 
 	function val(name: string, fallback = '') {
 		const v = initial[name];
@@ -152,7 +155,7 @@
 				</Button>
 			</div>
 		</div>
-		<input type="hidden" name="subTasks" value={JSON.stringify(editableSubTasks)} />
+		<input type="hidden" name="subTasks" value={subTasksJson} />
 	</div>
 	{#if error}<div class="md:col-span-2"><ErrorDetails status={400} message={error} errorId={errorId ?? undefined} /></div>{/if}
 	<div class="md:col-span-2 flex gap-2">

@@ -49,9 +49,12 @@
 					<h2 class="text-base font-semibold">{PHASE_LABELS[g.phase]}</h2>
 					<p class="text-xs text-muted-foreground">{PHASE_DESCRIPTIONS[g.phase]}</p>
 				</div>
-				{#if g.items.length > 0}
-					<span class="text-xs text-muted-foreground">{phaseProgress(g.items)}% complete</span>
-				{/if}
+				<div class="flex items-center gap-2">
+					{#if g.items.length > 0}
+						<span class="text-xs text-muted-foreground">{phaseProgress(g.items)}% complete</span>
+					{/if}
+					<Button variant="ghost" size="sm" href={`/timeline/new?phase=${g.phase}`}>{#snippet children()}<Plus class="h-4 w-4" /> Add{/snippet}</Button>
+				</div>
 			</div>
 			{#if g.items.length === 0}
 				<Card class="p-4 text-sm text-muted-foreground">
@@ -66,7 +69,7 @@
 						<li>
 							<a href={`/timeline/${m.id}`}>
 								<Card id={m.id} class="flex items-start gap-4 p-4 hover:border-primary/40">
-									<div class="mt-1 h-3 w-3 flex-shrink-0 rounded-full border-2 {m.status === 'DONE' ? 'bg-success border-success' : 'border-border bg-card'}"></div>
+									<div class="mt-1 h-3 w-3 shrink-0 rounded-full border-2 {m.status === 'DONE' ? 'bg-success border-success' : 'border-border bg-card'}"></div>
 									<div class="min-w-0 flex-1">
 										<div class="flex items-center gap-2">
 											<p class="truncate font-medium">{m.title}</p>
