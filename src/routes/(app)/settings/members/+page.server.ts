@@ -6,13 +6,14 @@ import {
 	listPendingInvitations,
 	revokeInvitation
 } from '$lib/server/services/invitation.service';
-import { listMembers, removeMember } from '$lib/server/services/workspace.service';
+import { removeMember } from '$lib/server/services/workspace.service';
+import { getMembers } from '$lib/server/cache/membersCache';
 import { inviteSchema } from '$lib/schemas/auth';
 
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);
 	const [members, invitations] = await Promise.all([
-		listMembers(workspace.id),
+		getMembers(workspace.id),
 		listPendingInvitations(workspace.id)
 	]);
 	return { members, invitations };

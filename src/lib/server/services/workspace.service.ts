@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { ddbPut, ddbGet, ddbQuery, ddbUpdate, ddbDelete } from '$lib/server/dynamo/ops';
 import { baPk, entitySk, gsi1Sk, gsi1UserPk, wsPk } from '$lib/server/dynamo/keys';
 import { auth } from '$lib/server/auth';
+import { invalidateMembers } from '$lib/server/cache/membersCache';
 
 export async function createWorkspace(input: { name: string; ownerUserId: string }) {
 	const now = new Date().toISOString();
@@ -99,17 +100,19 @@ export async function listMembers(workspaceId: string) {
 }
 
 export async function changeRole(workspaceId: string, userId: string, role: MemberRole) {
-	return ddbUpdate(
+	await ddbUpdate(
 		{ PK: wsPk(workspaceId), SK: entitySk('Membership', userId) },
 		'SET #role = :r',
 		{ ':r': role },
 		{ '#role': 'role' }
 	);
+	invalidateMembers(workspaceId);
 }
 
 export async function removeMember(workspaceId: string, userId: string) {
 	// Delete the membership
 	await ddbDelete({ PK: wsPk(workspaceId), SK: entitySk('Membership', userId) });
+	invalidateMembers(workspaceId);
 
 	// Invalidate all sessions for the user to immediately revoke access
 	try {

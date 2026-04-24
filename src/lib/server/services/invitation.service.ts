@@ -6,6 +6,7 @@ import type { MemberRole } from '$lib/types/enums';
 import { randomUUID } from 'node:crypto';
 import { ddbGet, ddbPut, ddbQuery, ddbUpdate, ddbDelete } from '$lib/server/dynamo/ops';
 import { baPk, entitySk, gsi1Sk, gsi1UserPk, wsPk } from '$lib/server/dynamo/keys';
+import { invalidateMembers } from '$lib/server/cache/membersCache';
 
 export async function createInvitation(input: {
 	workspaceId: string;
@@ -37,6 +38,7 @@ export async function createInvitation(input: {
 		GSI1PK: `INVITE#${token}`,
 		GSI1SK: gsi1Sk('Invitation', id)
 	});
+	invalidateMembers(input.workspaceId);
 	const url = `${ENV.APP_URL}/invite/${token}`;
 	await logActivity({
 		workspaceId: input.workspaceId,
@@ -89,6 +91,7 @@ export async function acceptInvitation(token: string, userId: string) {
 		workspaceName: invitation.workspace?.name ?? 'Workspace'
 	};
 	await ddbPut({ ...membershipKey, ...membership });
+	invalidateMembers(invitation.workspaceId);
 
 	await ddbUpdate(
 		{ PK: wsPk(invitation.workspaceId), SK: entitySk('Invitation', invitation.id) },
@@ -120,4 +123,5 @@ export async function listPendingInvitations(workspaceId: string) {
 
 export async function revokeInvitation(workspaceId: string, invitationId: string) {
 	await ddbDelete({ PK: wsPk(workspaceId), SK: entitySk('Invitation', invitationId) });
+	invalidateMembers(workspaceId);
 }

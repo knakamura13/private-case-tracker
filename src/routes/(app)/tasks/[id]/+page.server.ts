@@ -11,7 +11,7 @@ import {
 import { taskUpdateSchema } from '$lib/schemas/task';
 import { listForms } from '$lib/server/services/form.service';
 import { listEvidence } from '$lib/server/services/evidence.service';
-import { listMembers } from '$lib/server/services/workspace.service';
+import { getMembers } from '$lib/server/cache/membersCache';
 
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);
@@ -23,7 +23,7 @@ export const load: PageServerLoad = async (event) => {
 			rows.map((f) => ({ id: f.id, code: f.code, name: f.name }))
 		),
 		listEvidence(workspace.id).then((rows) => rows.map((e) => ({ id: e.id, title: e.title }))),
-		listMembers(workspace.id)
+		getMembers(workspace.id)
 	]);
 
 	return {

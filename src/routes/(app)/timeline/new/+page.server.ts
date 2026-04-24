@@ -4,11 +4,11 @@ import { requireWorkspace } from '$lib/server/guards';
 import { logActionError } from '$lib/server/services/actionError.service';
 import { createMilestone } from '$lib/server/services/milestone.service';
 import { milestoneCreateSchema } from '$lib/schemas/milestone';
-import { listMembers } from '$lib/server/services/workspace.service';
+import { getMembers } from '$lib/server/cache/membersCache';
 
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);
-	const members = await listMembers(workspace.id);
+	const members = await getMembers(workspace.id);
 	return {
 		members: members.map((m) => ({ id: m.user.id, name: m.user.name, email: m.user.email })),
 		defaultPhase: event.url.searchParams.get('phase') ?? 'PREPARATION'
