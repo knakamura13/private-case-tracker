@@ -5,6 +5,7 @@
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
+	import MarkdownRenderer from '$lib/components/shared/MarkdownRenderer.svelte';
 	import { Trash2, Check } from 'lucide-svelte';
 	import { enhance } from '$app/forms';
 	import { fmtDateTime } from '$lib/utils/dates';
@@ -34,7 +35,12 @@
 	}
 </script>
 
-<PageHeader title={data.task.title} description={data.task.description ?? undefined}>
+<PageHeader title={data.task.title}>
+	{#snippet description()}
+		{#if data.task.description}
+			<MarkdownRenderer content={data.task.description} class="prose prose-sm max-w-none" />
+		{/if}
+	{/snippet}
 	{#snippet actions()}
 		<Badge>{data.task.status.replaceAll('_', ' ').toLowerCase()}</Badge>
 		<Badge variant="outline">{data.task.priority.toLowerCase()}</Badge>
