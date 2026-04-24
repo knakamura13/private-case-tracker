@@ -9,7 +9,6 @@
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import { Plus, X } from 'lucide-svelte';
-	import { randomUUID } from 'node:crypto';
 
 	let {
 		initial = {},
@@ -49,7 +48,7 @@
 
 	function addSubTask() {
 		if (!newSubTaskText.trim()) return;
-		editableSubTasks = [...editableSubTasks, { id: randomUUID(), text: newSubTaskText.trim(), done: false }];
+		editableSubTasks = [...editableSubTasks, { id: crypto.randomUUID(), text: newSubTaskText.trim(), done: false }];
 		newSubTaskText = '';
 	}
 
