@@ -32,7 +32,7 @@
 					<Card class="p-4 hover:border-primary/40">
 						<h3 class="font-semibold">{n.title}</h3>
 						<p class="mt-1 line-clamp-3 text-sm text-muted-foreground">{truncate(n.bodyMd.replace(/[#*_`>]/g, ''), 240)}</p>
-						<p class="mt-2 text-xs text-muted-foreground">{fmtDateTime(n.updatedAt)} · {n.author.name ?? n.author.email}</p>
+						<p class="mt-2 text-xs text-muted-foreground">{fmtDateTime(n.updatedAt)}{n.author ? ` · ${n.author.name ?? n.author.email}` : ''}</p>
 					</Card>
 				</a>
 			</li>
