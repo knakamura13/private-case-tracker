@@ -1,19 +1,16 @@
 <script lang="ts">
-	import Button from '$lib/components/ui/Button.svelte';
-	import { Menu, Search, Plus, LogOut, Settings } from 'lucide-svelte';
+	import { Menu, Search, LogOut, Settings } from 'lucide-svelte';
 	import { initials } from '$lib/utils/format';
 	import { cn } from '$lib/utils/cn';
 
 	let {
 		user,
 		onOpenSearch,
-		onToggleSidebar,
-		onOpenQuickAdd
+		onToggleSidebar
 	}: {
 		user: { email: string; name: string | null; image: string | null };
 		onOpenSearch: () => void;
 		onToggleSidebar: () => void;
-		onOpenQuickAdd: () => void;
 	} = $props();
 
 	let menuOpen = $state(false);
@@ -69,9 +66,6 @@
 	</div>
 
 	<div class="flex items-center gap-1 sm:gap-2">
-		<Button variant="outline" size="sm" onclick={onOpenQuickAdd} class="px-2 sm:px-3">
-			{#snippet children()}<Plus class="h-4 w-4" /><span class="hidden sm:inline ml-1">New</span>{/snippet}
-		</Button>
 		<div class="relative">
 			<button
 				bind:this={menuButtonEl}

@@ -6,7 +6,6 @@
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
 	import TopBar from '$lib/components/layout/TopBar.svelte';
 	import CommandPalette from '$lib/components/shared/CommandPalette.svelte';
-	import QuickAddMenu from '$lib/components/shared/QuickAddMenu.svelte';
 	import { initTruncateTitles } from '$lib/utils/truncate-titles';
 	import type { LayoutData } from './$types';
 
@@ -14,7 +13,6 @@
 
 	let sidebarOpen = $state(false);
 	let paletteOpen = $state(false);
-	let quickAddOpen = $state(false);
 
 	let sidebarDialogEl = $state<HTMLDivElement | null>(null);
 	let sidebarOpenerEl = $state<HTMLElement | null>(null);
@@ -94,7 +92,6 @@
 				if (!sidebarOpen) sidebarOpenerEl = document.activeElement as HTMLElement | null;
 				sidebarOpen = !sidebarOpen;
 			}}
-			onOpenQuickAdd={() => (quickAddOpen = true)}
 		/>
 		<main id="main" tabindex="-1" class="flex-1 overflow-y-auto overflow-x-hidden p-4 pb-24 md:p-12 md:pb-32">
 			{#key $page.url.pathname}
@@ -107,7 +104,6 @@
 </div>
 
 <CommandPalette bind:open={paletteOpen} />
-<QuickAddMenu bind:open={quickAddOpen} />
 
 {#if sidebarOpen && sidebarDialogEl}
 	{@const _focus = (() => {
