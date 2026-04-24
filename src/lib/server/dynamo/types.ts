@@ -168,6 +168,7 @@ export type MilestoneItem = DynamoBaseItem & {
 	order: number;
 	ownerId: string | null;
 	owner: { id: string; name: string | null; email: string } | null;
+	subTasks?: Array<{ id: string; text: string; done: boolean }>;
 };
 
 export type QuickLinkItem = DynamoBaseItem & {

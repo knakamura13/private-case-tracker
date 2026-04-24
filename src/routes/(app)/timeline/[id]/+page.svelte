@@ -44,7 +44,8 @@
 			priority: data.milestone.priority,
 			ownerId: data.milestone.owner?.id,
 			dueDate: data.milestone.dueDate,
-			notes: data.milestone.notes
+			notes: data.milestone.notes,
+			subTasks: data.milestone.subTasks
 		}}
 		submitLabel="Save changes"
 		error={form?.error}
@@ -68,12 +69,15 @@
 		</Card>
 	</div>
 
-	{#if data.milestone.tasks.length > 0}
+	{#if data.milestone.subTasks && data.milestone.subTasks.length > 0}
 		<section class="mt-6">
-			<h3 class="mb-2 text-sm font-semibold">Linked tasks</h3>
+			<h3 class="mb-2 text-sm font-semibold">Sub-tasks</h3>
 			<ul class="space-y-1 text-sm">
-				{#each data.milestone.tasks as t (t.id)}
-					<li><a href={`/tasks/${t.id}`} class="text-primary underline-offset-4 hover:underline">{t.title}</a></li>
+				{#each data.milestone.subTasks as st (st.id)}
+					<li class="flex items-center gap-2">
+						<input type="checkbox" checked={st.done} disabled class="h-4 w-4 rounded border-border" />
+						<span class={st.done ? 'line-through text-muted-foreground' : ''}>{st.text}</span>
+					</li>
 				{/each}
 			</ul>
 		</section>

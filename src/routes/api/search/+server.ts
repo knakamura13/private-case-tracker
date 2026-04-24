@@ -1,13 +1,13 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { truncate } from '$lib/utils/format';
-import { listTasks } from '$lib/server/services/task.service';
 import { listForms } from '$lib/server/services/form.service';
 import { listEvidence } from '$lib/server/services/evidence.service';
 import { listQuestions } from '$lib/server/services/question.service';
 import { listNotes } from '$lib/server/services/note.service';
 import { listDocuments } from '$lib/server/services/document.service';
 import { listQuickLinks } from '$lib/server/services/quickLink.service';
+import { listMilestones } from '$lib/server/services/milestone.service';
 
 const LIMIT_PER_GROUP = 6;
 
@@ -18,8 +18,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 	const workspaceId = locals.workspace.id;
 
-	const [tasks, forms, evidence, questions, notes, files, quickLinks] = await Promise.all([
-		listTasks(workspaceId, { q, limit: LIMIT_PER_GROUP }),
+	const [milestones, forms, evidence, questions, notes, files, quickLinks] = await Promise.all([
+		listMilestones(workspaceId, { limit: LIMIT_PER_GROUP }),
 		listForms(workspaceId, { q, limit: LIMIT_PER_GROUP }),
 		listEvidence(workspaceId, { q, limit: LIMIT_PER_GROUP }),
 		listQuestions(workspaceId, { q, limit: LIMIT_PER_GROUP }),
@@ -38,13 +38,17 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		)
 	]);
 
+	const filteredMilestones = milestones.filter((m) =>
+		[m.title, m.description].some((x) => String(x ?? '').toLowerCase().includes(q.toLowerCase()))
+	);
+
 	return json({
-		Tasks: tasks.map((t) => ({
-			type: 'task',
-			id: t.id,
-			title: t.title,
-			description: t.description ? truncate(t.description, 80) : undefined,
-			href: `/tasks/${t.id}`
+		Milestones: filteredMilestones.slice(0, LIMIT_PER_GROUP).map((m) => ({
+			type: 'milestone',
+			id: m.id,
+			title: m.title,
+			description: m.description ? truncate(m.description, 80) : undefined,
+			href: `/timeline/${m.id}`
 		})),
 		Forms: forms.map((f) => ({
 			type: 'form',

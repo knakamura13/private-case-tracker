@@ -3,7 +3,6 @@ import type { Actions, PageServerLoad } from './$types';
 import { requireOwner, requireWorkspace } from '$lib/server/guards';
 import { logActivity } from '$lib/server/activity';
 import { deleteWorkspace } from '$lib/server/services/workspace.service';
-import { listTasks } from '$lib/server/services/task.service';
 import { listForms } from '$lib/server/services/form.service';
 import { listEvidence } from '$lib/server/services/evidence.service';
 import { listDocuments } from '$lib/server/services/document.service';
@@ -14,8 +13,7 @@ import { listMilestones } from '$lib/server/services/milestone.service';
 
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);
-	const [tasks, forms, evidence, docs, appts, questions, notes, milestones] = await Promise.all([
-		listTasks(workspace.id),
+	const [forms, evidence, docs, appts, questions, notes, milestones] = await Promise.all([
 		listForms(workspace.id),
 		listEvidence(workspace.id),
 		listDocuments(workspace.id),
@@ -25,7 +23,6 @@ export const load: PageServerLoad = async (event) => {
 		listMilestones(workspace.id)
 	]);
 
-	const trashedTasks = tasks.filter((t) => t.deletedAt != null).length;
 	const trashedForms = forms.filter((f) => f.deletedAt != null).length;
 	const trashedEvidence = evidence.filter((e) => e.deletedAt != null).length;
 	const trashedDocs = docs.filter((d: any) => d.deletedAt != null).length;
@@ -33,10 +30,8 @@ export const load: PageServerLoad = async (event) => {
 	const trashedQuestions = questions.filter((q) => q.deletedAt != null).length;
 	const trashedNotes = notes.filter((n) => n.deletedAt != null).length;
 	const trashedMilestones = milestones.filter((m) => m.deletedAt != null).length;
-	const hasDemo = tasks.some((t) => String(t.title ?? '').startsWith('[Demo] '));
 	return {
 		trashedCounts: {
-			tasks: trashedTasks,
 			forms: trashedForms,
 			evidence: trashedEvidence,
 			documents: trashedDocs,
@@ -45,7 +40,7 @@ export const load: PageServerLoad = async (event) => {
 			notes: trashedNotes,
 			milestones: trashedMilestones
 		},
-		hasDemo: Boolean(hasDemo)
+		hasDemo: false
 	};
 };
 

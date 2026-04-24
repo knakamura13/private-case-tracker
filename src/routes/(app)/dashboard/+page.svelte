@@ -66,23 +66,6 @@
 		{/if}
 	</Widget>
 
-	<Widget title="Next deadlines (30d)" href="/tasks">
-		{#if data.upcomingTasks.length === 0}
-			<p class="text-sm text-muted-foreground">No tasks due in the next 30 days.</p>
-		{:else}
-			<ul class="space-y-2 text-sm">
-				{#each data.upcomingTasks as t}
-					<li class="flex items-center justify-between gap-2">
-						<a class="truncate hover:underline" href={`/tasks/${t.id}`}>{t.title}</a>
-						<span class={isOverdue(t.dueDate) ? 'text-xs text-destructive' : 'text-xs text-muted-foreground'}>
-							{fmtDate(t.dueDate)}
-						</span>
-					</li>
-				{/each}
-			</ul>
-		{/if}
-	</Widget>
-
 	<Widget title="Upcoming appointments" href="/appointments">
 		{#if data.upcomingAppointments.length === 0}
 			<p class="text-sm text-muted-foreground">Nothing scheduled.</p>

@@ -16,6 +16,12 @@ export const milestonePhaseEnum = z.enum([
 
 export const milestoneStatusEnum = z.enum(['PLANNED', 'IN_PROGRESS', 'DONE', 'BLOCKED', 'SKIPPED']);
 
+export const subTaskSchema = z.object({
+	id: z.string().uuid(),
+	text: z.string().min(1).max(200),
+	done: z.coerce.boolean().default(false)
+});
+
 export const milestoneCreateSchema = z.object({
 	title: z.string().min(1).max(200),
 	description: stringOrEmpty(2000),
@@ -24,7 +30,8 @@ export const milestoneCreateSchema = z.object({
 	status: milestoneStatusEnum.default('PLANNED'),
 	ownerId: optionalId,
 	priority: priorityEnum.default('MEDIUM'),
-	notes: stringOrEmpty(5000)
+	notes: stringOrEmpty(5000),
+	subTasks: z.array(subTaskSchema).default([])
 });
 
 export const milestoneUpdateSchema = milestoneCreateSchema.partial();
