@@ -3,7 +3,6 @@ import type { RequestHandler } from './$types';
 import { auth } from '$lib/server/auth';
 import { createWorkspace } from '$lib/server/services/workspace.service';
 import { acceptInvitation } from '$lib/server/services/invitation.service';
-import { getMembership } from '$lib/server/services/workspace.service';
 import { ddbQuery } from '$lib/server/dynamo/ops';
 
 // Called immediately after successful sign-up.
