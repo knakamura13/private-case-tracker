@@ -1,13 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
 import {
-	createTask,
-	getTask,
-	listTasks,
-	updateTask,
-	softDeleteTask
-} from '$lib/server/services/task.service';
-import {
 	createNote,
 	getNote,
 	listNotes,
@@ -63,32 +56,6 @@ function workspaceId() {
 describe('cross-domain DynamoDB smoke', () => {
 	beforeEach(() => {
 		(globalThis as any).__ddbMem = new Map();
-	});
-
-	it('tasks: create → list → update → get → softDelete', async () => {
-		const ws = workspaceId();
-		const created = await createTask(ws, actorId, {
-			title: 'Filing task',
-			description: 'Draft I-130',
-			dueDate: null,
-			priority: 'HIGH',
-			status: 'TODO',
-			ownerId: null,
-			linkedFormId: null,
-			linkedEvidenceId: null,
-			linkedAppointmentId: null,
-			linkedMilestoneId: null
-		} as any);
-
-		const listed = await listTasks(ws);
-		expect(listed.some((t) => t.id === created.id)).toBe(true);
-
-		await updateTask(ws, actorId, created.id, { title: 'Filing task (edited)' } as any);
-		const got = await getTask(ws, created.id);
-		expect(got?.title).toBe('Filing task (edited)');
-
-		await softDeleteTask(ws, actorId, created.id);
-		expect((await listTasks(ws)).some((t) => t.id === created.id)).toBe(false);
 	});
 
 	it('notes: create → list → update → softDelete', async () => {
@@ -236,18 +203,6 @@ describe('cross-domain DynamoDB smoke', () => {
 
 	it('dashboard: aggregates across domains without error', async () => {
 		const ws = workspaceId();
-		await createTask(ws, actorId, {
-			title: 'T1',
-			description: '',
-			dueDate: null,
-			priority: 'MEDIUM',
-			status: 'TODO',
-			ownerId: null,
-			linkedFormId: null,
-			linkedEvidenceId: null,
-			linkedAppointmentId: null,
-			linkedMilestoneId: null
-		} as any);
 		await createMilestone(ws, actorId, {
 			title: 'M1',
 			description: '',
@@ -261,7 +216,6 @@ describe('cross-domain DynamoDB smoke', () => {
 
 		const d = await dashboardFor(ws);
 		expect(d).toBeTruthy();
-		expect(Array.isArray(d.upcomingTasks)).toBe(true);
 		expect(Array.isArray(d.phaseProgress)).toBe(true);
 	});
 });

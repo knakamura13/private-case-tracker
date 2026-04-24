@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { taskCreateSchema } from '$lib/schemas/task';
 import { formCreateSchema } from '$lib/schemas/form';
 import { evidenceCreateSchema } from '$lib/schemas/evidence';
 import { appointmentCreateSchema } from '$lib/schemas/appointment';
@@ -10,17 +9,6 @@ import { uploadUrlRequestSchema } from '$lib/schemas/document';
 import { loginSchema, signupSchema } from '$lib/schemas/auth';
 
 describe('zod schemas', () => {
-	it('taskCreateSchema accepts a minimal payload', () => {
-		const r = taskCreateSchema.parse({ title: 'Buy stamps' });
-		expect(r.title).toBe('Buy stamps');
-		expect(r.status).toBe('TODO');
-		expect(r.priority).toBe('MEDIUM');
-	});
-
-	it('taskCreateSchema rejects missing title', () => {
-		expect(taskCreateSchema.safeParse({ title: '' }).success).toBe(false);
-	});
-
 	it('formCreateSchema requires code and name', () => {
 		expect(formCreateSchema.safeParse({ name: 'X' }).success).toBe(false);
 		expect(formCreateSchema.safeParse({ name: 'Petition', code: 'I-130' }).success).toBe(true);
