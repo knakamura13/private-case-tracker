@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { render } from '@testing-library/svelte';
 import Input from '$lib/components/ui/Input.svelte';
 
 describe('Input', () => {
@@ -30,7 +30,7 @@ describe('Input', () => {
 	it('applies default base classes', () => {
 		const { container } = render(Input);
 		const input = container.querySelector('input');
-		expect(input).toHaveClass('h-10');
+		expect(input).toHaveClass('h-11');
 		expect(input).toHaveClass('w-full');
 	});
 });
