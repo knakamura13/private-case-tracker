@@ -158,10 +158,13 @@
 			action="?/update"
 			deleteAction="?/delete"
 			onenhance={() => {
-				return async ({ update }: { update: () => Promise<void> }) => {
-					await update();
-					editingMilestone = null;
-					updateUrl(null);
+				return async ({ formData, cancel }: { formData: FormData; cancel: () => void }) => {
+					cancel();
+					const response = await fetch('?/update', { method: 'POST', body: formData });
+					if (response.ok) {
+						editingMilestone = null;
+						updateUrl(null);
+					}
 				};
 			}}
 			members={data.members}
