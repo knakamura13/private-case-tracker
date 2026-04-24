@@ -8,7 +8,7 @@
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
 	import { PHASE_LABELS, PHASE_ORDER } from '$lib/constants/phases';
 	import { enhance } from '$app/forms';
-	import { X, Plus, Check, Calendar, Tag, List, Paperclip, MapPin, Trash2 } from 'lucide-svelte';
+	import { X, Plus, Calendar, Paperclip, MapPin, Trash2 } from 'lucide-svelte';
 	import { fmtDate } from '$lib/utils/dates';
 
 	let {
@@ -43,11 +43,38 @@
 	let newSubTaskText = $state('');
 	let subTasksJson = $derived(JSON.stringify(editableSubTasks));
 
+	// Button visibility states
+	let showAttachmentInput = $state(false);
+	let showLocationInput = $state(false);
+	let showDueDatePicker = $state(false);
+	let showChecklistInput = $state(false);
+
+	// Input values
+	let attachmentUrl = $state('');
+	let locationAddress = $state('');
+	let dueDateValue = $state(val('dueDate'));
+
+	// Auto-save state
+	let isSaving = $state(false);
+	let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	// Cleanup timeout on unmount
+	$effect(() => {
+		return () => {
+			if (saveTimeout) clearTimeout(saveTimeout);
+		};
+	});
+
+	// Make dueDateValue reactive to initial.dueDate changes
+	$effect(() => {
+		dueDateValue = val('dueDate');
+	});
+
 	$effect(() => {
 		editableSubTasks = (initial.subTasks as SubTask[])?.map((st) => ({ ...st })) ?? [];
 	});
 
-	const ALLOWED_FIELDS = ['id', 'title', 'description', 'phase', 'status', 'priority', 'ownerId', 'dueDate', 'notes', 'subTasks', 'owner'] as const;
+	const ALLOWED_FIELDS = ['id', 'title', 'description', 'phase', 'status', 'priority', 'ownerId', 'dueDate', 'notes', 'subTasks', 'owner', 'attachments', 'location'] as const;
 
 	function val(name: string, fallback = '') {
 		if (!ALLOWED_FIELDS.includes(name as (typeof ALLOWED_FIELDS)[number])) {
@@ -91,6 +118,85 @@
 		const o = owner as { name?: string; email?: string };
 		return o?.name?.[0] || o?.email?.[0] || 'U';
 	}
+
+	function openGoogleMaps(address: string) {
+		if (!address.trim()) return;
+		const query = encodeURIComponent(address.trim());
+		window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+	}
+
+	function handleAttachmentAdd() {
+		if (!attachmentUrl.trim()) return;
+		// Store attachment in a hidden form field
+		const existingAttachments = val('attachments', '');
+		const newAttachments = existingAttachments ? `${existingAttachments},${attachmentUrl.trim()}` : attachmentUrl.trim();
+		const hiddenInput = document.querySelector('input[name="attachments"]') as HTMLInputElement;
+		if (hiddenInput) {
+			hiddenInput.value = newAttachments;
+		}
+		attachmentUrl = '';
+		showAttachmentInput = false;
+		triggerAutoSave();
+	}
+
+	function handleLocationSave() {
+		if (!locationAddress.trim()) return;
+		// Store location in a hidden form field
+		const hiddenInput = document.querySelector('input[name="location"]') as HTMLInputElement;
+		if (hiddenInput) {
+			hiddenInput.value = locationAddress.trim();
+		}
+		openGoogleMaps(locationAddress);
+		locationAddress = '';
+		showLocationInput = false;
+		triggerAutoSave();
+	}
+
+	function handleDueDateSave() {
+		// Store due date in a hidden form field
+		const hiddenInput = document.querySelector('input[name="dueDate"]') as HTMLInputElement;
+		if (hiddenInput) {
+			hiddenInput.value = dueDateValue;
+		}
+		showDueDatePicker = false;
+		triggerAutoSave();
+	}
+
+	function triggerAutoSave() {
+		if (saveTimeout) clearTimeout(saveTimeout);
+		// Only trigger if dialog is open and action is valid
+		if (!open || !action) return;
+		try {
+			new URL(action); // Validate action is a valid URL
+		} catch {
+			return;
+		}
+		saveTimeout = setTimeout(() => {
+			const form = document.querySelector('form[method="post"]') as HTMLFormElement;
+			if (form && onenhance) {
+				isSaving = true;
+				const formData = new FormData(form);
+				onenhance({ formData, cancel: () => { isSaving = false; } });
+				// If cancel wasn't called, proceed with fetch
+				fetch(action, { method: 'POST', body: formData })
+					.then(() => {
+						isSaving = false;
+					})
+					.catch(() => {
+						isSaving = false;
+					});
+			}
+		}, 1000);
+	}
+
+	// Watch for changes and trigger auto-save
+	$effect(() => {
+		// Only trigger if dialog is open
+		if (!open) return;
+		// Trigger auto-save when subTasks change
+		subTasksJson;
+		triggerAutoSave();
+	});
 </script>
 
 {#if open}
@@ -113,8 +219,7 @@
 			<form method="post" {action} use:enhance={onenhance} class="flex flex-col">
 				<!-- Header -->
 				<div class="flex items-start justify-between border-b border-border p-4">
-					<div class="flex flex-1 items-start gap-3">
-						<Check class="mt-1 h-5 w-5 shrink-0 text-muted-foreground" />
+					<div class="flex flex-1 items-start">
 						<Input
 							name="title"
 							value={val('title')}
@@ -133,22 +238,55 @@
 					<div class="flex-1 space-y-4">
 						<!-- Actions Bar -->
 						<div class="flex flex-wrap gap-2">
-							<Button type="button" variant="outline" size="sm">
-								{#snippet children()}<Plus class="h-4 w-4" /> Add{/snippet}
-							</Button>
-							<Button type="button" variant="outline" size="sm">
-								{#snippet children()}<Tag class="h-4 w-4" /> Labels{/snippet}
-							</Button>
-							<Button type="button" variant="outline" size="sm">
-								{#snippet children()}<List class="h-4 w-4" /> Checklist{/snippet}
-							</Button>
-							<Button type="button" variant="outline" size="sm">
+							<Button type="button" variant="outline" size="sm" onclick={() => showAttachmentInput = !showAttachmentInput}>
 								{#snippet children()}<Paperclip class="h-4 w-4" /> Attachment{/snippet}
 							</Button>
-							<Button type="button" variant="outline" size="sm">
+							<Button type="button" variant="outline" size="sm" onclick={() => showLocationInput = !showLocationInput}>
 								{#snippet children()}<MapPin class="h-4 w-4" /> Location{/snippet}
 							</Button>
+							<Button type="button" variant="outline" size="sm" onclick={() => showDueDatePicker = !showDueDatePicker}>
+								{#snippet children()}<Calendar class="h-4 w-4" /> Due date{/snippet}
+							</Button>
 						</div>
+
+						<!-- Attachment Input -->
+						{#if showAttachmentInput}
+							<div class="mt-2 flex gap-2">
+								<Input
+									bind:value={attachmentUrl}
+									placeholder="Enter attachment URL..."
+									class="flex-1 text-sm"
+								/>
+								<Button type="button" size="sm" onclick={handleAttachmentAdd}>Add</Button>
+								<Button type="button" variant="ghost" size="sm" onclick={() => showAttachmentInput = false}>Cancel</Button>
+							</div>
+						{/if}
+
+						<!-- Location Input -->
+						{#if showLocationInput}
+							<div class="mt-2 flex gap-2">
+								<Input
+									bind:value={locationAddress}
+									placeholder="Enter address..."
+									class="flex-1 text-sm"
+								/>
+								<Button type="button" size="sm" onclick={handleLocationSave}>Open Maps</Button>
+								<Button type="button" variant="ghost" size="sm" onclick={() => showLocationInput = false}>Cancel</Button>
+							</div>
+						{/if}
+
+						<!-- Due Date Picker -->
+						{#if showDueDatePicker}
+							<div class="mt-2 flex gap-2">
+								<Input
+									bind:value={dueDateValue}
+									type="date"
+									class="text-sm"
+								/>
+								<Button type="button" size="sm" onclick={handleDueDateSave}>Save</Button>
+								<Button type="button" variant="ghost" size="sm" onclick={() => showDueDatePicker = false}>Cancel</Button>
+							</div>
+						{/if}
 
 						<!-- Members -->
 						<div class="flex items-center gap-2">
@@ -157,21 +295,7 @@
 									{ownerInitial(initial.owner)}
 								</div>
 							{/if}
-							<Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-full p-0">
-								{#snippet children()}<Plus class="h-4 w-4" />{/snippet}
-							</Button>
 						</div>
-
-						<!-- Due Date -->
-						{#if val('dueDate')}
-							<div class="flex items-center gap-2">
-								<Calendar class="h-4 w-4 text-muted-foreground" />
-								<span class="text-sm">{fmtDate(val('dueDate'))}</span>
-								{#if isDueSoon(val('dueDate'))}
-									<Badge variant="outline" class="text-xs">Due soon</Badge>
-								{/if}
-							</div>
-						{/if}
 
 						<!-- Description -->
 						<div>
@@ -185,46 +309,62 @@
 						</div>
 
 						<!-- Checklist -->
-						{#if editableSubTasks.length > 0}
+						{#if editableSubTasks.length > 0 || showChecklistInput}
 							<Card class="p-3">
-								<div class="mb-2 flex items-center justify-between">
-									<span class="text-sm font-medium">Checklist</span>
-								</div>
-								<div class="mb-3 h-1.5 w-full rounded-full bg-muted">
-									<div class="h-1.5 rounded-full bg-primary transition-all" style="width: {checklistProgress()}%"></div>
-								</div>
-								<div class="space-y-2">
-									{#each editableSubTasks as st (st.id)}
-										<div class="flex items-start gap-2">
-											<input
-												type="checkbox"
-												checked={st.done}
-												onchange={() => toggleSubTask(st.id)}
-												class="mt-0.5 h-4 w-4 rounded border-border"
-											/>
-											<span class={st.done ? 'line-through text-muted-foreground' : 'text-sm'}>{st.text}</span>
-											<Button type="button" variant="ghost" size="sm" class="ml-auto h-6 w-6 p-0" onclick={() => _removeSubTask(st.id)}>
-												{#snippet children()}<Trash2 class="h-3 w-3" />{/snippet}
-											</Button>
-										</div>
-									{/each}
-								</div>
-								<div class="mt-2 flex items-center gap-2">
-									<Input
-										bind:value={newSubTaskText}
-										placeholder="Add an item"
-										onkeydown={(e) => {
-											if (e.key === 'Enter') {
-												e.preventDefault();
-												addSubTask();
-											}
-										}}
-										class="h-8 text-sm"
-									/>
-									<Button type="button" variant="ghost" size="sm" onclick={addSubTask} class="h-8">
-										{#snippet children()}<Plus class="h-4 w-4" />{/snippet}
+								{#if editableSubTasks.length > 0}
+									<div class="mb-2 flex items-center justify-between">
+										<span class="text-sm font-medium">Checklist</span>
+									</div>
+									<div class="mb-3 h-1.5 w-full rounded-full bg-muted">
+										<div class="h-1.5 rounded-full bg-primary transition-all" style="width: {checklistProgress()}%"></div>
+									</div>
+									<div class="space-y-2">
+										{#each editableSubTasks as st (st.id)}
+											<div class="flex items-start gap-2">
+												<input
+													type="checkbox"
+													checked={st.done}
+													onchange={() => toggleSubTask(st.id)}
+													class="mt-0.5 h-4 w-4 rounded border-border"
+												/>
+												<span class={st.done ? 'line-through text-muted-foreground' : 'text-sm'}>{st.text}</span>
+												<Button type="button" variant="ghost" size="sm" class="ml-auto h-6 w-6 p-0" onclick={() => _removeSubTask(st.id)}>
+													{#snippet children()}<Trash2 class="h-3 w-3" />{/snippet}
+												</Button>
+											</div>
+										{/each}
+									</div>
+								{/if}
+								{#if !showChecklistInput}
+									<Button type="button" variant="ghost" size="sm" onclick={() => showChecklistInput = true} class="w-full justify-start text-muted-foreground">
+										{#snippet children()}Add an item{/snippet}
 									</Button>
-								</div>
+								{:else}
+									<div class="space-y-2">
+										<Input
+											bind:value={newSubTaskText}
+											placeholder="Enter item..."
+											onkeydown={(e) => {
+												if (e.key === 'Enter') {
+													e.preventDefault();
+													addSubTask();
+													showChecklistInput = false;
+												}
+											}}
+											class="w-full text-sm"
+										/>
+										<div class="flex justify-start gap-2">
+											<Button type="button" size="sm" onclick={() => {
+												addSubTask();
+												showChecklistInput = false;
+											}}>Add</Button>
+											<Button type="button" variant="ghost" size="sm" onclick={() => {
+												newSubTaskText = '';
+												showChecklistInput = false;
+											}}>Cancel</Button>
+										</div>
+									</div>
+								{/if}
 							</Card>
 						{/if}
 					</div>
@@ -265,10 +405,6 @@
 								</Select>
 							</div>
 							<div>
-								<label for="dueDate" class="mb-1 block text-xs font-medium text-muted-foreground">Due date</label>
-								<Input id="dueDate" name="dueDate" type="date" value={val('dueDate')} class="text-sm" />
-							</div>
-							<div>
 								<label for="notes" class="mb-1 block text-xs font-medium text-muted-foreground">Notes</label>
 								<Textarea id="notes" name="notes" value={val('notes')} rows={3} class="text-sm resize-none" />
 							</div>
@@ -281,6 +417,9 @@
 					{#if error}<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />{/if}
 					<input type="hidden" name="subTasks" value={subTasksJson} />
 					<input type="hidden" name="id" value={val('id')} />
+					<input type="hidden" name="dueDate" value={dueDateValue} />
+					<input type="hidden" name="attachments" value={val('attachments', '')} />
+					<input type="hidden" name="location" value={val('location', '')} />
 					<div class="flex justify-between gap-2">
 						{#if deleteAction}
 							<Button type="button" variant="destructive" onclick={async () => {
@@ -292,9 +431,9 @@
 								{#snippet children()}<Trash2 class="h-4 w-4" /> Delete{/snippet}
 							</Button>
 						{/if}
-						<div class="flex gap-2 ml-auto">
-							<Button type="submit">Save</Button>
-						</div>
+						{#if isSaving}
+							<span class="ml-auto text-sm text-muted-foreground">Saving...</span>
+						{/if}
 					</div>
 				</div>
 			</form>
