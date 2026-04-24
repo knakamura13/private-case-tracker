@@ -47,8 +47,13 @@
 		editableSubTasks = (initial.subTasks as SubTask[])?.map((st) => ({ ...st })) ?? [];
 	});
 
+	const ALLOWED_FIELDS = ['id', 'title', 'description', 'phase', 'status', 'priority', 'ownerId', 'dueDate', 'notes', 'subTasks', 'owner'] as const;
+
 	function val(name: string, fallback = '') {
-		const v = initial[name];
+		if (!ALLOWED_FIELDS.includes(name as (typeof ALLOWED_FIELDS)[number])) {
+			return fallback;
+		}
+		const v = initial[name as keyof typeof initial];
 		if (v == null) return fallback;
 		if (v instanceof Date) return v.toISOString().slice(0, 10);
 		return String(v);
@@ -94,16 +99,16 @@
 		role="dialog"
 		aria-modal="true"
 		tabindex="-1"
-		onclick={onClose}
+		onclick={(e) => {
+			if (e.target === e.currentTarget) onClose();
+		}}
 		onkeydown={(e) => {
 			if (e.key === 'Escape') onClose();
 		}}
 	>
-		<!-- eslint-disable-next-line svelte/a11y-no-noninteractive-element-interactions -->
 		<div
 			class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-card shadow-xl"
 			role="document"
-			onclick={(e) => e.stopPropagation()}
 		>
 			<form method="post" {action} use:enhance={onenhance} class="flex flex-col">
 				<!-- Header -->
@@ -184,9 +189,6 @@
 							<Card class="p-3">
 								<div class="mb-2 flex items-center justify-between">
 									<span class="text-sm font-medium">Checklist</span>
-									<Button type="button" variant="ghost" size="sm" class="h-6 text-xs text-destructive">
-										Delete
-									</Button>
 								</div>
 								<div class="mb-3 h-1.5 w-full rounded-full bg-muted">
 									<div class="h-1.5 rounded-full bg-primary transition-all" style="width: {checklistProgress()}%"></div>
@@ -201,6 +203,9 @@
 												class="mt-0.5 h-4 w-4 rounded border-border"
 											/>
 											<span class={st.done ? 'line-through text-muted-foreground' : 'text-sm'}>{st.text}</span>
+											<Button type="button" variant="ghost" size="sm" class="ml-auto h-6 w-6 p-0" onclick={() => _removeSubTask(st.id)}>
+												{#snippet children()}<Trash2 class="h-3 w-3" />{/snippet}
+											</Button>
 										</div>
 									{/each}
 								</div>
