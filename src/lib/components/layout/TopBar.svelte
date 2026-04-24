@@ -35,9 +35,9 @@
 </script>
 
 <header
-	class="sticky top-0 z-30 flex h-14 items-center justify-between gap-2 border-b border-border bg-card/80 px-4 backdrop-blur"
+	class="sticky top-0 z-30 flex h-14 items-center justify-between gap-1 border-b border-border bg-card/80 px-3 sm:gap-2 sm:px-4 backdrop-blur"
 >
-	<div class="flex min-w-0 flex-1 items-center gap-2">
+	<div class="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
 		<button
 			type="button"
 			class="flex h-9 w-9 items-center justify-center rounded-md hover:bg-muted md:hidden"
@@ -50,18 +50,18 @@
 			type="button"
 			onclick={onOpenSearch}
 			class={cn(
-				'flex h-9 w-full min-w-[220px] max-w-xl items-center gap-2 rounded-md border border-input bg-card px-3 text-sm text-muted-foreground hover:bg-muted'
+				'flex h-9 w-full min-w-[140px] sm:min-w-[220px] max-w-xl items-center gap-2 rounded-md border border-input bg-card px-2 sm:px-3 text-sm text-muted-foreground hover:bg-muted'
 			)}
 		>
 			<Search class="h-4 w-4" />
-			<span>Search tasks, forms, evidence…</span>
+			<span class="truncate">Search tasks, forms, evidence…</span>
 			<span class="ml-auto hidden text-xs sm:inline">⌘K</span>
 		</button>
 	</div>
 
-	<div class="flex items-center gap-2">
-		<Button variant="outline" size="sm" onclick={onOpenQuickAdd}>
-			{#snippet children()}<Plus class="h-4 w-4" />New{/snippet}
+	<div class="flex items-center gap-1 sm:gap-2">
+		<Button variant="outline" size="sm" onclick={onOpenQuickAdd} class="px-2 sm:px-3">
+			{#snippet children()}<Plus class="h-4 w-4" /><span class="hidden sm:inline ml-1">New</span>{/snippet}
 		</Button>
 		<div class="relative">
 			<button
