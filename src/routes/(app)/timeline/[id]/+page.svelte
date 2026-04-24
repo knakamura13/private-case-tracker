@@ -18,7 +18,9 @@
 <PageHeader title={data.milestone.title} description={PHASE_LABELS[data.milestone.phase as keyof typeof PHASE_LABELS]}>
 	{#snippet actions()}
 		<Badge>{titleCase(data.milestone.status)}</Badge>
-		<Badge variant="outline">{titleCase(data.milestone.priority)}</Badge>
+		{#if data.milestone.priority !== 'MEDIUM'}
+			<Badge variant="outline">{titleCase(data.milestone.priority)}</Badge>
+		{/if}
 		<Button variant="outline" onclick={() => (editing = !editing)}>{editing ? 'Cancel' : 'Edit'}</Button>
 		<form method="post" action="?/delete" use:enhance>
 			<Button type="submit" variant="destructive">

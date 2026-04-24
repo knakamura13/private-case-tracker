@@ -4,6 +4,7 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import Label from '$lib/components/ui/Label.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import Badge from '$lib/components/ui/Badge.svelte';
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
 	import { PHASE_LABELS, PHASE_ORDER } from '$lib/constants/phases';
 	import { enhance } from '$app/forms';
@@ -68,6 +69,10 @@
 	<div class="md:col-span-2">
 		<Label for="title">Title</Label>
 		<Input id="title" name="title" required value={val('title')} />
+	</div>
+	<div class="md:col-span-2 flex flex-wrap items-center gap-2">
+		<Badge>{val('status', 'PLANNED')}</Badge>
+		<Badge variant="outline">{val('priority', 'MEDIUM')}</Badge>
 	</div>
 	<div class="md:col-span-2">
 		<Label for="description">Description</Label>

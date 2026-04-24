@@ -14,7 +14,7 @@ export default defineConfig({
 				runtimeCaching: [
 					{
 						urlPattern: /\/_app\/immutable\/.*/,
-						handler: 'CacheFirst',
+						handler: 'NetworkFirst',
 						options: {
 							cacheName: 'sveltekit-immutable',
 							expiration: {

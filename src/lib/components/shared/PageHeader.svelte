@@ -23,11 +23,13 @@
 		{:else}
 			<h1 class="truncate text-h1 font-display font-semibold tracking-tight">{title}</h1>
 		{/if}
-		{#if description}
-			<p class="mt-2 text-sm text-muted-foreground">{description}</p>
-		{/if}
+		<div class="mt-2 flex flex-row flex-wrap items-center gap-2 sm:flex-row sm:items-end sm:justify-between">
+			{#if description}
+				<p class="text-sm text-muted-foreground">{description}</p>
+			{/if}
+			{#if actions}
+				<div class="flex flex-wrap items-center gap-2">{@render actions()}</div>
+			{/if}
+		</div>
 	</div>
-	{#if actions}
-		<div class="flex flex-wrap items-center justify-end gap-2 pb-1">{@render actions()}</div>
-	{/if}
 </header>

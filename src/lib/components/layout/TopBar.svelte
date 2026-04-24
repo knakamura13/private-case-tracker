@@ -75,7 +75,7 @@
 		<div class="relative">
 			<button
 				bind:this={menuButtonEl}
-				class="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-xs font-semibold"
+				class="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-xs font-semibold transition-colors duration-150 hover:bg-muted-foreground hover:text-foreground"
 				aria-label="Open user menu"
 				type="button"
 				aria-haspopup="true"

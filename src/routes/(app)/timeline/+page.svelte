@@ -70,11 +70,28 @@
 								<Card id={m.id} class="flex items-start gap-4 p-4 hover:border-primary/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5 dark:hover:shadow-primary/10 hover:bg-card/90">
 									<div class="mt-1 h-3 w-3 shrink-0 rounded-full border-2 {statusColor(m.status)}" title={titleCase(m.status)}></div>
 									<div class="min-w-0 flex-1">
-										<div class="flex items-center gap-2">
-											<p class="truncate font-medium">{m.title}</p>
-											<Badge variant="outline">{titleCase(m.priority)}</Badge>
+										<div class="flex items-start gap-2">
+											<p class="line-clamp-2 font-medium">{m.title}</p>
+											{#if m.priority !== 'MEDIUM'}
+												<Badge variant="outline" class="shrink-0">{titleCase(m.priority)}</Badge>
+											{/if}
 										</div>
 										{#if m.description}<MarkdownRenderer content={m.description} class="mt-1 text-sm text-muted-foreground prose prose-sm max-w-none" />{/if}
+										{#if m.subTasks && m.subTasks.length > 0}
+											<div class="mt-2">
+												<div class="mb-1 text-xs text-muted-foreground">
+													{m.subTasks.filter((st) => st.done).length}/{m.subTasks.length} subtasks
+												</div>
+												<ul class="space-y-1">
+													{#each m.subTasks as st (st.id)}
+														<li class="flex items-center gap-2 text-sm">
+															<input type="checkbox" checked={st.done} disabled class="h-3.5 w-3.5 rounded border-border" />
+															<span class={st.done ? 'line-through text-muted-foreground' : ''}>{st.text}</span>
+														</li>
+													{/each}
+												</ul>
+											</div>
+										{/if}
 										<div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
 											{#if m.dueDate}<span>Due {fmtDate(m.dueDate)}</span>{/if}
 											{#if m.owner}<span>· {m.owner.name ?? m.owner.email}</span>{/if}
