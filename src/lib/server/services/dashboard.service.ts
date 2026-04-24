@@ -9,7 +9,6 @@ import type {
 	QuestionStatus
 } from '$lib/types/enums';
 import { recentActivity } from '$lib/server/activity';
-import { listTasks } from './task.service';
 import { listAppointments } from './appointment.service';
 import { listForms } from './form.service';
 import { listEvidence } from './evidence.service';
@@ -24,8 +23,6 @@ export async function dashboardFor(workspaceId: string) {
 	const in30 = addDays(now, 30);
 
 	const [
-		upcomingTasks,
-		overdueTasks,
 		upcomingAppointments,
 		formsAll,
 		evidenceAll,
@@ -36,20 +33,6 @@ export async function dashboardFor(workspaceId: string) {
 		quickLinks,
 		quickLinkFolders
 	] = await Promise.all([
-		listTasks(workspaceId, {
-			overdueOnly: false
-		}).then((all) => {
-			const upcoming = all
-				.filter((t) => t.status !== 'DONE' && t.status !== 'ARCHIVED')
-				.filter((t) => {
-					const due = t.dueDate ? new Date(t.dueDate).getTime() : NaN;
-					return Number.isFinite(due) && due >= startOfDay(now).getTime() && due <= in30.getTime();
-				})
-				.sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())
-				.slice(0, 8);
-			return upcoming;
-		}),
-		listTasks(workspaceId, { overdueOnly: true }).then((all) => all.length),
 		listAppointments(workspaceId, { range: 'upcoming' }).then((a) =>
 			a
 				.filter((x) => x.status !== 'CANCELED' && x.status !== 'COMPLETED' && x.status !== 'MISSED')
@@ -128,8 +111,6 @@ export async function dashboardFor(workspaceId: string) {
 	const missingCritical: string[] = [];
 	if (gapsCount > 0)
 		missingCritical.push(`${gapsCount} evidence category gap${gapsCount === 1 ? '' : 's'}`);
-	if (overdueTasks > 0)
-		missingCritical.push(`${overdueTasks} overdue task${overdueTasks === 1 ? '' : 's'}`);
 	const openHigh = (openQuestionsCount.HIGH ?? 0) + (openQuestionsCount.CRITICAL ?? 0);
 	if (openHigh > 0)
 		missingCritical.push(`${openHigh} high-priority question${openHigh === 1 ? '' : 's'}`);
@@ -166,8 +147,6 @@ export async function dashboardFor(workspaceId: string) {
 		.slice(0, 5);
 
 	return {
-		upcomingTasks,
-		overdueTasks,
 		upcomingAppointments,
 		formsByStatus,
 		evidenceCoverage,

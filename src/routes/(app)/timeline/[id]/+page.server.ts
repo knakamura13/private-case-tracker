@@ -27,7 +27,10 @@ export const actions: Actions = {
 	update: async (event) => {
 		const { workspace, user } = requireWorkspace(event);
 		const raw = Object.fromEntries(await event.request.formData());
-		const parsed = milestoneUpdateSchema.safeParse(raw);
+		const parsed = milestoneUpdateSchema.safeParse({
+			...raw,
+			subTasks: raw.subTasks ? JSON.parse(raw.subTasks as string) : []
+		});
 		if (!parsed.success) {
 			const errorId = await logActionError(event, { message: parsed.error.message, status: 400 });
 			return fail(400, { error: parsed.error.message, errorId });

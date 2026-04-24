@@ -43,7 +43,6 @@
 		{#if data.doc.form}<div><dt class="text-xs uppercase text-muted-foreground">Linked form</dt><dd><a class="text-primary underline-offset-4 hover:underline" href={`/forms/${data.doc.form.id}`}>{data.doc.form.code} — {data.doc.form.name}</a></dd></div>{/if}
 		{#if data.doc.evidence}<div><dt class="text-xs uppercase text-muted-foreground">Linked evidence</dt><dd><a class="text-primary underline-offset-4 hover:underline" href={`/evidence/${data.doc.evidence.id}`}>{data.doc.evidence.title}</a></dd></div>{/if}
 		{#if data.doc.appointment}<div><dt class="text-xs uppercase text-muted-foreground">Linked appointment</dt><dd><a class="text-primary underline-offset-4 hover:underline" href={`/appointments/${data.doc.appointment.id}`}>{data.doc.appointment.title}</a></dd></div>{/if}
-		{#if data.doc.task}<div><dt class="text-xs uppercase text-muted-foreground">Linked task</dt><dd><a class="text-primary underline-offset-4 hover:underline" href={`/tasks/${data.doc.task.id}`}>{data.doc.task.title}</a></dd></div>{/if}
 		{#if data.doc.notes}<div class="md:col-span-2"><dt class="text-xs uppercase text-muted-foreground">Notes</dt><dd class="whitespace-pre-wrap">{data.doc.notes}</dd></div>{/if}
 	</dl>
 </Card>

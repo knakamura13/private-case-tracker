@@ -8,6 +8,8 @@
 	import { PHASE_LABELS, PHASE_ORDER } from '$lib/constants/phases';
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
+	import { Plus, X } from 'lucide-svelte';
+	import { randomUUID } from 'node:crypto';
 
 	let {
 		initial = {},
@@ -27,11 +29,36 @@
 		onenhance?: SubmitFunction;
 	} = $props();
 
+	interface SubTask {
+		id: string;
+		text: string;
+		done: boolean;
+	}
+
+	let editableSubTasks = $state<SubTask[]>(
+		(initial.subTasks as SubTask[])?.map((st) => ({ ...st })) ?? []
+	);
+	let newSubTaskText = $state('');
+
 	function val(name: string, fallback = '') {
 		const v = initial[name];
 		if (v == null) return fallback;
 		if (v instanceof Date) return v.toISOString().slice(0, 10);
 		return String(v);
+	}
+
+	function addSubTask() {
+		if (!newSubTaskText.trim()) return;
+		editableSubTasks = [...editableSubTasks, { id: randomUUID(), text: newSubTaskText.trim(), done: false }];
+		newSubTaskText = '';
+	}
+
+	function removeSubTask(id: string) {
+		editableSubTasks = editableSubTasks.filter((st) => st.id !== id);
+	}
+
+	function toggleSubTask(id: string) {
+		editableSubTasks = editableSubTasks.map((st) => (st.id === id ? { ...st, done: !st.done } : st));
 	}
 </script>
 
@@ -83,6 +110,50 @@
 	<div class="md:col-span-2">
 		<Label for="notes">Notes</Label>
 		<Textarea id="notes" name="notes" value={val('notes')} />
+	</div>
+	<div class="md:col-span-2">
+		<Label>Sub-tasks</Label>
+		<div class="mt-2 space-y-2">
+			{#each editableSubTasks as st (st.id)}
+				<div class="flex items-center gap-2">
+					<input
+						type="checkbox"
+						checked={st.done}
+						onchange={() => toggleSubTask(st.id)}
+						class="h-4 w-4 rounded border-border"
+					/>
+					<Input
+						value={st.text}
+						oninput={(e) => {
+							editableSubTasks = editableSubTasks.map((s) =>
+								s.id === st.id ? { ...s, text: e.currentTarget.value } : s
+							);
+						}}
+						class="flex-1"
+					/>
+					<Button type="button" variant="ghost" size="sm" onclick={() => removeSubTask(st.id)}>
+						{#snippet children()}<X class="h-4 w-4" />{/snippet}
+					</Button>
+				</div>
+			{/each}
+			<div class="flex items-center gap-2">
+				<Input
+					bind:value={newSubTaskText}
+					placeholder="Add a sub-task..."
+					onkeydown={(e) => {
+						if (e.key === 'Enter') {
+							e.preventDefault();
+							addSubTask();
+						}
+					}}
+					class="flex-1"
+				/>
+				<Button type="button" variant="outline" size="sm" onclick={addSubTask}>
+					{#snippet children()}<Plus class="h-4 w-4" /> Add{/snippet}
+				</Button>
+			</div>
+		</div>
+		<input type="hidden" name="subTasks" value={JSON.stringify(editableSubTasks)} />
 	</div>
 	{#if error}<div class="md:col-span-2"><ErrorDetails status={400} message={error} errorId={errorId ?? undefined} /></div>{/if}
 	<div class="md:col-span-2 flex gap-2">

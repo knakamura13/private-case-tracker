@@ -1,6 +1,5 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { listTasks } from '$lib/server/services/task.service';
 import { listForms } from '$lib/server/services/form.service';
 import { listEvidence } from '$lib/server/services/evidence.service';
 import { listDocuments } from '$lib/server/services/document.service';
@@ -15,7 +14,6 @@ export const GET: RequestHandler = async ({ locals }) => {
 	if (!locals.user || !locals.workspace) return json({ error: 'Unauthorized' }, { status: 401 });
 	const wsId = locals.workspace.id;
 	const [
-		tasks,
 		forms,
 		evidence,
 		documents,
@@ -26,7 +24,6 @@ export const GET: RequestHandler = async ({ locals }) => {
 		activity,
 		quickLinks
 	] = await Promise.all([
-		listTasks(wsId, { limit: 5000 }),
 		listForms(wsId, { limit: 5000 }),
 		listEvidence(wsId, { limit: 5000 }),
 		listDocuments(wsId, { limit: 5000 }),
@@ -42,7 +39,6 @@ export const GET: RequestHandler = async ({ locals }) => {
 			{
 				exportedAt: new Date().toISOString(),
 				workspace: { id: locals.workspace.id, name: locals.workspace.name },
-				tasks,
 				forms,
 				evidence,
 				documents: documents.map((d: any) => ({ ...d, storageKey: undefined })),

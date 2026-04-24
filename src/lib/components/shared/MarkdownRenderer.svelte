@@ -5,7 +5,7 @@
 </script>
 
 {#if content}
-	<div class={className} class:prose class:prose-sm class:max-w-none>
+	<div class="prose prose-sm max-w-none {className}">
 		{@html renderMarkdown(content)}
 	</div>
 {/if}
