@@ -145,9 +145,15 @@ export type AppointmentItem = DynamoBaseItem & {
 	type: string; // Stored as string, validated as AppointmentType at service layer
 	status: string; // Stored as string, validated as AppointmentStatus at service layer
 	scheduledAt: string;
-	duration: number | null;
+	durationMin: number | null;
 	location: string | null;
 	description: string | null;
+	confirmationDetails: string | null;
+	attendees: string[];
+	notes: string | null;
+	tasks: any[];
+	documents: any[];
+	linkedNotes: any[];
 };
 
 export type MilestoneItem = DynamoBaseItem & {

@@ -34,7 +34,7 @@ export async function listDocuments(
 		.map((d) => ({
 			...d,
 			uploadedBy: d.uploadedByUserId ? { id: d.uploadedByUserId, name: null, email: '' } : null,
-			versions: []
+			versions: [] as Array<{ id: string; title: string; createdAt: string }>
 		}));
 	filtered.sort((a, b) => String(b.createdAt ?? '').localeCompare(String(a.createdAt ?? '')));
 	return filtered;
@@ -56,7 +56,7 @@ export async function getDocument(workspaceId: string, id: string) {
 		...doc,
 		uploadedBy: doc.uploadedByUserId ? { id: doc.uploadedByUserId, name: null, email: '' } : null,
 		versionOf: null,
-		versions: [],
+		versions: [] as Array<{ id: string; title: string; createdAt: string }>,
 		form: form && !form.deletedAt ? { id: form.id, code: form.code, name: form.name } : null,
 		evidence: evidence && !evidence.deletedAt ? { id: evidence.id, title: evidence.title } : null,
 		appointment: appointment && !appointment.deletedAt ? { id: appointment.id, title: appointment.title } : null,
