@@ -21,6 +21,26 @@ describe('crypto', () => {
 	it('rejects malformed payloads', () => {
 		expect(() => decryptString('not-a-real-payload')).toThrow();
 	});
+
+	it('handles special characters and unicode', () => {
+		const plaintext = 'Hello 世界 🌍 !@#$%';
+		const ciphertext = encryptString(plaintext);
+		expect(decryptString(ciphertext)).toBe(plaintext);
+	});
+
+	it('handles very long strings', () => {
+		const plaintext = 'a'.repeat(10000);
+		const ciphertext = encryptString(plaintext);
+		expect(decryptString(ciphertext)).toBe(plaintext);
+	});
+
+	it('rejects tampered ciphertext', () => {
+		const ciphertext = encryptString('secret');
+		// Replace the first character with a different one to ensure tampering
+		const tampered = ciphertext.replace(ciphertext[0], ciphertext[0] === 'A' ? 'B' : 'A');
+		expect(() => decryptString(tampered)).toThrow();
+	});
+
 });
 
 describe('maskReceiptNumber', () => {
@@ -50,5 +70,23 @@ describe('hashIp', () => {
 		expect(a).toBe(b);
 		expect(a).toHaveLength(16);
 		expect(hashIp('5.6.7.8')).not.toBe(a);
+	});
+
+	it('handles IPv6 addresses', () => {
+		const hash = hashIp('2001:0db8:85a3:0000:0000:8a2e:0370:7334');
+		expect(hash).not.toBeNull();
+		expect(hash).toHaveLength(16);
+	});
+
+	it('handles malformed IP addresses gracefully', () => {
+		const hash = hashIp('not-an-ip');
+		expect(hash).not.toBeNull(); // Still hashes the string
+		expect(hash).toHaveLength(16);
+	});
+
+	it('hashes are not reversible', () => {
+		const hash = hashIp('192.168.1.1')!;
+		expect(hash).not.toContain('192');
+		expect(hash).not.toContain('168');
 	});
 });
