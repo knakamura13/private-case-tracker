@@ -3,7 +3,6 @@ import type { RequestHandler } from './$types';
 import { auth } from '$lib/server/auth';
 import { createWorkspace } from '$lib/server/services/workspace.service';
 import { acceptInvitation } from '$lib/server/services/invitation.service';
-import { getMembership } from '$lib/server/services/workspace.service';
 import { ddbQuery } from '$lib/server/dynamo/ops';
 
 // Called immediately after successful sign-up.
@@ -19,16 +18,6 @@ export const POST: RequestHandler = async ({ request }) => {
 	const workspaceName = ((form.get('workspaceName') as string) || 'Our case').trim();
 	const inviteToken = (form.get('inviteToken') as string) || null;
 
-	// We don't know the workspaceId yet; simplest is to rely on hooks membership load later.
-	// If the user is already attached, no-op.
-	const existing = await ddbQuery<any>({
-		IndexName: 'GSI1',
-		KeyConditionExpression: 'GSI1PK = :pk',
-		ExpressionAttributeValues: { ':pk': `USER#${session.user.id}` },
-		Limit: 1
-	});
-	if (existing) return json({ ok: true });
-
 	if (inviteToken) {
 		try {
 			await acceptInvitation(inviteToken, session.user.id);
@@ -37,6 +26,16 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ error: (err as Error).message }, { status: 400 });
 		}
 	}
+
+	// We don't know the workspaceId yet; simplest is to rely on hooks membership load later.
+	// If the user is already attached to any workspace, no-op.
+	const existing = await ddbQuery<any>({
+		IndexName: 'GSI1',
+		KeyConditionExpression: 'GSI1PK = :pk',
+		ExpressionAttributeValues: { ':pk': `USER#${session.user.id}` },
+		Limit: 1
+	});
+	if (existing) return json({ ok: true });
 
 	const totalWorkspaces = (
 		await ddbQuery({
