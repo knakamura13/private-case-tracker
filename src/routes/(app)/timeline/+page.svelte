@@ -5,6 +5,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import MarkdownRenderer from '$lib/components/shared/MarkdownRenderer.svelte';
 	import InlineMilestoneCreate from '$lib/components/timeline/InlineMilestoneCreate.svelte';
+	import MilestoneEditModal from '$lib/components/timeline/MilestoneEditModal.svelte';
 	import { Plus } from 'lucide-svelte';
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -12,9 +13,15 @@
 	import { PHASE_ORDER, PHASE_LABELS, PHASE_DESCRIPTIONS } from '$lib/constants/phases';
 	import { titleCase } from '$lib/utils/format';
 	import type { PageData } from './$types';
-	let { data }: { data: PageData } = $props();
+
+	interface TimelinePageData extends PageData {
+		members?: { id: string; name: string | null; email: string }[];
+	}
+
+	let { data, form }: { data: TimelinePageData; form: { error?: string; errorId?: string } } = $props();
 
 	let showCreateForPhase = $state<string | null>(null);
+	let editingMilestone = $state<{ id: string } | null>(null);
 
 	const grouped = $derived(
 		PHASE_ORDER.map((p) => ({
@@ -73,7 +80,11 @@
 				<ol class="space-y-2">
 					{#each g.items as m, i (m.id)}
 						<li in:fly={{ y: 30, duration: 500, delay: i * 50 + 100, easing: cubicOut }}>
-							<a href={`/timeline/${m.id}`}>
+							<button
+								type="button"
+								onclick={() => (editingMilestone = { id: m.id })}
+								class="w-full text-left"
+							>
 								<Card id={m.id} class="flex items-start gap-4 p-4 hover:border-primary/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5 dark:hover:shadow-primary/10 hover:bg-card/90">
 									<div class="mt-1 h-3 w-3 shrink-0 rounded-full border-2 {statusColor(m.status)}" title={titleCase(m.status)}></div>
 									<div class="min-w-0 flex-1">
@@ -105,7 +116,7 @@
 										</div>
 									</div>
 								</Card>
-							</a>
+							</button>
 						</li>
 					{/each}
 				</ol>
@@ -114,3 +125,34 @@
 	{/each}
 </div>
 
+{#if editingMilestone}
+	{@const milestone = data.milestones.find((m) => m.id === editingMilestone?.id)}
+	{#if milestone}
+		<MilestoneEditModal
+			open={true}
+			onClose={() => (editingMilestone = null)}
+			action="?/update"
+			onenhance={() => {
+				return async ({ update }: { update: () => Promise<void> }) => {
+					await update();
+					editingMilestone = null;
+				};
+			}}
+			members={data.members}
+			initial={{
+				id: milestone.id,
+				title: milestone.title,
+				description: milestone.description,
+				phase: milestone.phase,
+				status: milestone.status,
+				priority: milestone.priority,
+				owner: milestone.owner,
+				dueDate: milestone.dueDate,
+				notes: (milestone as { notes?: string }).notes,
+				subTasks: milestone.subTasks
+			}}
+			error={form?.error}
+			errorId={form?.errorId}
+		/>
+	{/if}
+{/if}
