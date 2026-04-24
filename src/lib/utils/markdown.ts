@@ -21,10 +21,11 @@ export function renderMarkdown(src: string): string {
 	// Simple bullet lists
 	html = html.replace(/(^|\n)- (.+)/g, '$1<li>$2</li>');
 	html = html.replace(/(<li>.*<\/li>)(?!\s*<li>)/gs, '<ul class="list-disc pl-6">$1</ul>');
-	// Convert single newlines to <br> (but not after block elements)
-	html = html.replace(/(?<!<\/(?:h[1-6]|li|ul|p)>)\n(?!\n)/g, '<br />');
 	// Collapse 3+ newlines into 2 newlines (preserve single blank lines)
 	html = html.replace(/\n{3,}/g, '\n\n');
+	// Convert double newlines to paragraph breaks
 	html = html.replace(/\n\n+/g, '</p><p class="mt-3">');
+	// Convert single newlines to <br> (but not after block elements)
+	html = html.replace(/(?<!<\/(?:h[1-6]|li|ul|p)>)\n(?!\n)/g, '<br />');
 	return `<p>${html}</p>`;
 }
