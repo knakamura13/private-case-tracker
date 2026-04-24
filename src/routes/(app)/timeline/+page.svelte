@@ -2,7 +2,6 @@
 	import PageHeader from '$lib/components/shared/PageHeader.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
-	import StatusBadge from '$lib/components/signature/StatusBadge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import MarkdownRenderer from '$lib/components/shared/MarkdownRenderer.svelte';
 	import { Plus } from 'lucide-svelte';
@@ -27,12 +26,12 @@
 		return Math.round((done / items.length) * 100);
 	}
 
-	function statusVariant(s: string) {
-		if (s === 'DONE') return 'success';
-		if (s === 'IN_PROGRESS') return 'warning';
-		if (s === 'BLOCKED') return 'destructive';
-		if (s === 'SKIPPED') return 'secondary';
-		return 'outline';
+	function statusColor(s: string) {
+		if (s === 'DONE') return 'bg-success border-success';
+		if (s === 'IN_PROGRESS') return 'bg-warning border-warning';
+		if (s === 'BLOCKED') return 'bg-destructive border-destructive';
+		if (s === 'SKIPPED') return 'bg-secondary border-secondary';
+		return 'border-border bg-card';
 	}
 </script>
 
@@ -69,11 +68,10 @@
 						<li in:fly={{ y: 30, duration: 500, delay: i * 50 + 100, easing: cubicOut }}>
 							<a href={`/timeline/${m.id}`}>
 								<Card id={m.id} class="flex items-start gap-4 p-4 hover:border-primary/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5 dark:hover:shadow-primary/10 hover:bg-card/90">
-									<div class="mt-1 h-3 w-3 shrink-0 rounded-full border-2 {m.status === 'DONE' ? 'bg-success border-success' : 'border-border bg-card'}"></div>
+									<div class="mt-1 h-3 w-3 shrink-0 rounded-full border-2 {statusColor(m.status)}" title={titleCase(m.status)}></div>
 									<div class="min-w-0 flex-1">
 										<div class="flex items-center gap-2">
 											<p class="truncate font-medium">{m.title}</p>
-											<StatusBadge variant={statusVariant(m.status)} status={titleCase(m.status)} />
 											<Badge variant="outline">{titleCase(m.priority)}</Badge>
 										</div>
 										{#if m.description}<MarkdownRenderer content={m.description} class="mt-1 text-sm text-muted-foreground prose prose-sm max-w-none" />{/if}
