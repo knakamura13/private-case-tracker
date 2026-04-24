@@ -6,6 +6,7 @@
 	import { Fingerprint, ShieldCheck } from 'lucide-svelte';
 
 	let passkeyMsg = $state<string | null>(null);
+	let passkeys = $state<Array<{ id: string; name?: string }>>([]);
 	let totpMsg = $state<string | null>(null);
 	let totpSecret = $state<{ totpURI?: string; backupCodes?: string[] } | null>(null);
 	let totpCode = $state('');
@@ -14,12 +15,37 @@
 		passkeyMsg = 'Launching passkey ceremony…';
 		try {
 			const res = await authClient.passkey.addPasskey();
-			if (res?.error) passkeyMsg = res.error.message ?? 'Failed';
-			else passkeyMsg = 'Passkey added.';
+			if (res?.error) {
+				passkeyMsg = res.error.message ?? 'Failed';
+			} else {
+				passkeyMsg = 'Passkey added.';
+				await loadPasskeys();
+			}
 		} catch (err) {
 			passkeyMsg = (err as Error).message;
 		}
 	}
+
+	async function loadPasskeys() {
+		const res = await authClient.passkey.listUserPasskeys();
+		if (res.data) {
+			passkeys = res.data;
+		}
+	}
+
+	async function deletePasskey(id: string) {
+		const res = await authClient.passkey.deletePasskey({ id });
+		if (res.error) {
+			passkeyMsg = res.error.message ?? 'Failed to delete passkey';
+		} else {
+			passkeyMsg = 'Passkey deleted.';
+			await loadPasskeys();
+		}
+	}
+
+	$effect(() => {
+		loadPasskeys();
+	});
 
 	async function enableTotp() {
 		totpMsg = null;
@@ -46,7 +72,25 @@
 				<p class="text-sm text-muted-foreground">Use Face ID, Touch ID, or a hardware key.</p>
 			</div>
 		</div>
-		<Button class="mt-3" onclick={addPasskey}>Add a passkey</Button>
+		{#if passkeys.length === 0}
+			<Button class="mt-3" onclick={addPasskey}>Add a passkey</Button>
+		{:else}
+			<div class="mt-3 space-y-2">
+				{#each passkeys as pk}
+					<div class="flex items-center justify-between rounded-md border border-border bg-muted/50 p-2">
+						<span class="text-sm">{pk.name || 'Unnamed passkey'}</span>
+						<button
+							onclick={() => deletePasskey(pk.id)}
+							class="text-xs text-destructive hover:underline"
+							type="button"
+						>
+							Delete
+						</button>
+					</div>
+				{/each}
+				<Button class="mt-2" variant="outline" onclick={addPasskey}>Add another passkey</Button>
+			</div>
+		{/if}
 		{#if passkeyMsg}<p class="mt-2 text-xs text-muted-foreground">{passkeyMsg}</p>{/if}
 	</Card>
 	<Card class="p-4">
