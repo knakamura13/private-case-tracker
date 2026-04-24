@@ -17,7 +17,8 @@
     "test:watch": "vitest",
     "test:components": "vitest run --config vitest.component.config.ts",
     "test:components:watch": "vitest --config vitest.component.config.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "db:purge-users": "tsx scripts/purge-old-users.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1035.0",

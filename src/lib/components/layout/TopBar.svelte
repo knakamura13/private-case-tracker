@@ -117,7 +117,7 @@
 						<Settings class="h-4 w-4" /> Settings
 					</a>
 					<div class="my-1 border-t border-border"></div>
-					<form method="post" action="/logout">
+					<form method="post" action="/auth/sign-out">
 						<button
 							class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-destructive hover:bg-destructive/10"
 							type="submit"

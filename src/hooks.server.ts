@@ -87,6 +87,12 @@ const sessionHandle: Handle = async ({ event, resolve }) => {
 					name: membership.workspaceName ?? 'Workspace',
 					role: membership.role
 				};
+			} else {
+				// User has no active membership - clear session to force re-auth
+				console.log('[hooks] user has no active membership, clearing session');
+				event.locals.user = null;
+				event.locals.session = null;
+				event.locals.workspace = null;
 			}
 		}
 	} catch (err) {

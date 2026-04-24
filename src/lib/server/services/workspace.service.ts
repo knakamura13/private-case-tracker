@@ -3,6 +3,7 @@ import type { MemberRole } from '$lib/types/enums';
 import { randomUUID } from 'node:crypto';
 import { ddbPut, ddbGet, ddbQuery, ddbUpdate, ddbDelete } from '$lib/server/dynamo/ops';
 import { baPk, entitySk, gsi1Sk, gsi1UserPk, wsPk } from '$lib/server/dynamo/keys';
+import { auth } from '$lib/server/auth';
 
 export async function createWorkspace(input: { name: string; ownerUserId: string }) {
 	const now = new Date().toISOString();
@@ -107,7 +108,26 @@ export async function changeRole(workspaceId: string, userId: string, role: Memb
 }
 
 export async function removeMember(workspaceId: string, userId: string) {
+	// Delete the membership
 	await ddbDelete({ PK: wsPk(workspaceId), SK: entitySk('Membership', userId) });
+
+	// Invalidate all sessions for the user to immediately revoke access
+	try {
+		const sessions = await ddbQuery<any>({
+			KeyConditionExpression: 'PK = :pk',
+			ExpressionAttributeValues: { ':pk': baPk('session') },
+			Limit: 500
+		});
+
+		for (const session of sessions) {
+			if (session.userId === userId) {
+				await ddbDelete({ PK: baPk('session'), SK: session.id });
+			}
+		}
+	} catch (err) {
+		console.error('[workspace] failed to invalidate sessions for user', userId, err);
+		// Continue anyway - membership is removed, sessions will expire naturally
+	}
 }
 
 export async function renameWorkspace(workspaceId: string, name: string, actorId: string) {
