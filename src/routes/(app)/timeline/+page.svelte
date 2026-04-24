@@ -4,6 +4,7 @@
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import MarkdownRenderer from '$lib/components/shared/MarkdownRenderer.svelte';
+	import InlineMilestoneCreate from '$lib/components/timeline/InlineMilestoneCreate.svelte';
 	import { Plus } from 'lucide-svelte';
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -12,6 +13,8 @@
 	import { titleCase } from '$lib/utils/format';
 	import type { PageData } from './$types';
 	let { data }: { data: PageData } = $props();
+
+	let showCreateForPhase = $state<string | null>(null);
 
 	const grouped = $derived(
 		PHASE_ORDER.map((p) => ({
@@ -55,7 +58,11 @@
 					{#if g.items.length > 0}
 						<span class="text-xs text-muted-foreground">{phaseProgress(g.items)}% complete</span>
 					{/if}
-					<Button variant="ghost" size="sm" href={`/timeline/new?phase=${g.phase}`}>{#snippet children()}<Plus class="h-4 w-4" /> Add{/snippet}</Button>
+					{#if showCreateForPhase === g.phase}
+						<InlineMilestoneCreate phase={g.phase} onCancel={() => (showCreateForPhase = null)} />
+					{:else}
+						<Button variant="ghost" size="sm" onclick={() => (showCreateForPhase = g.phase)}>{#snippet children()}<Plus class="h-4 w-4" /> Add{/snippet}</Button>
+					{/if}
 				</div>
 			</div>
 			{#if g.items.length === 0}
