@@ -7,8 +7,7 @@ import {
 	FolderLock,
 	CalendarDays,
 	HelpCircle,
-	NotebookPen,
-	Settings as SettingsIcon
+	NotebookPen
 } from 'lucide-svelte';
 
 export interface NavItem {
@@ -28,8 +27,7 @@ export const navigation: NavItem[] = [
 	{ href: '/documents', label: 'Documents', icon: FolderLock, description: 'Files and secure links' },
 	{ href: '/appointments', label: 'Appointments', icon: CalendarDays },
 	{ href: '/questions', label: 'Questions', icon: HelpCircle, description: 'Research tracker' },
-	{ href: '/notes', label: 'Notes', icon: NotebookPen },
-	{ href: '/settings', label: 'Settings', icon: SettingsIcon }
+	{ href: '/notes', label: 'Notes', icon: NotebookPen }
 ];
 
 export const privacyCopy = {

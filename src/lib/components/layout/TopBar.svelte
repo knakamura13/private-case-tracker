@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
-	import { Menu, Search, Plus, LogOut } from 'lucide-svelte';
+	import { Menu, Search, Plus, LogOut, Settings } from 'lucide-svelte';
 	import { initials } from '$lib/utils/format';
 	import { cn } from '$lib/utils/cn';
 
@@ -108,6 +108,13 @@
 						onclick={closeMenu}
 					>
 						Members
+					</a>
+					<a
+						class="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted"
+						href="/settings"
+						onclick={closeMenu}
+					>
+						<Settings class="h-4 w-4" /> Settings
 					</a>
 					<div class="my-1 border-t border-border"></div>
 					<form method="post" action="/logout">
