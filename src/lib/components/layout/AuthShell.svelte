@@ -10,7 +10,7 @@
 	} = $props();
 </script>
 
-<main id="main" class="relative min-h-screen bg-gradient-to-br from-background via-background to-accent/20">
+<main id="main" class="relative min-h-screen bg-linear-to-br from-background via-background to-accent/20">
 	<div class="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
 		<div class="mb-6 flex items-center gap-2 text-sm font-medium text-muted-foreground">
 			<img src="/pwa/icon-192.png" alt="" class="h-4 w-4 rounded-sm" aria-hidden="true" />
