@@ -2,14 +2,14 @@
 	import { tv, type VariantProps } from 'tailwind-variants';
 
 	export const buttonVariants = tv({
-		base: 'cursor-pointer touch-action-manipulation inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+		base: 'cursor-pointer touch-action-manipulation inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all duration-150 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:translate-y-[2px]',
 		variants: {
 			variant: {
-				default: 'bg-primary text-primary-foreground hover:bg-primary/90',
-				destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-				outline: 'border border-border bg-card hover:bg-muted',
-				secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-				ghost: 'hover:bg-muted',
+				default: 'bg-primary text-primary-foreground border border-transparent hover:border-primary-foreground/30',
+				destructive: 'bg-destructive text-destructive-foreground border border-transparent hover:border-destructive-foreground/30',
+				outline: 'border border-border bg-card hover:border-muted-foreground',
+				secondary: 'bg-secondary text-secondary-foreground border border-transparent hover:border-secondary-foreground/30',
+				ghost: 'border border-transparent hover:border-border',
 				link: 'text-primary underline-offset-4 hover:underline'
 			},
 			size: {

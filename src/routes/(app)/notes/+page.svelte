@@ -11,7 +11,7 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
-<PageHeader title="Notes" description="Meeting notes, call logs, and reminders.">
+<PageHeader title="Notes" description="Meeting notes, call logs, and reminders." number="8">
 	{#snippet actions()}
 		<Button href="/notes/new">
 			{#snippet children()}<Plus class="h-4 w-4" /> New note{/snippet}

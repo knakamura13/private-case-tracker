@@ -16,7 +16,7 @@
 <div class={cn('relative', klass)}>
 	<select
 		bind:value
-		class="flex h-11 w-full touch-action-manipulation appearance-none rounded-md border border-input bg-card py-2 pl-3 pr-8 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+		class="flex h-11 w-full touch-action-manipulation appearance-none rounded-md border border-input bg-card py-2 pl-3 pr-8 text-sm ring-offset-background transition-colors duration-150 hover:border-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
 		{...rest}
 	>
 		{#if children}{@render children()}{/if}

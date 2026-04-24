@@ -15,8 +15,8 @@
 </script>
 
 <Card class={cn('flex h-full flex-col p-4', className)}>
-	<div class="mb-3 flex items-center justify-between">
-		<h2 class="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{title}</h2>
+	<div class="mb-4 flex items-center justify-between border-b border-border pb-3">
+		<h2 class="text-lg font-display font-semibold text-foreground tracking-tight">{title}</h2>
 		{#if href}
 			<a href={href} class="text-xs text-primary underline-offset-4 hover:underline">Open</a>
 		{/if}

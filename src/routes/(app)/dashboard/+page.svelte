@@ -10,7 +10,7 @@
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 </script>
 
-<PageHeader title="Dashboard" />
+<PageHeader title="Dashboard" number="1" />
 
 <div class="mb-4">
 	<Widget title="Quick links">
@@ -88,7 +88,7 @@
 			{#each Object.entries(data.formsByStatus) as [s, n]}
 				<li class="flex items-center justify-between">
 					<span class="text-muted-foreground">{titleCase(s)}</span>
-					<span class="font-mono">{n}</span>
+					<span class="font-mono text-foreground">{n}</span>
 				</li>
 			{/each}
 		</ul>
@@ -118,7 +118,7 @@
 			{#each Object.entries(data.openQuestionsCount) as [p, n]}
 				<li class="flex items-center justify-between">
 					<span class="text-muted-foreground">{titleCase(p)}</span>
-					<span class="font-mono">{n}</span>
+					<span class="font-mono text-foreground">{n}</span>
 				</li>
 			{/each}
 		</ul>
@@ -132,7 +132,7 @@
 				{#each data.docsByCategory as d}
 					<li class="flex items-center justify-between">
 						<span class="text-muted-foreground">{d.category}</span>
-						<span class="font-mono">{d.count}</span>
+						<span class="font-mono text-foreground">{d.count}</span>
 					</li>
 				{/each}
 			</ul>

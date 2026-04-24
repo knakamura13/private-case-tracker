@@ -59,7 +59,7 @@
 			type="button"
 			onclick={onOpenSearch}
 			class={cn(
-				'flex h-9 w-full min-w-[120px] sm:min-w-[220px] max-w-xl items-center gap-2 rounded-md border border-input bg-card px-2 sm:px-3 text-sm text-muted-foreground hover:bg-muted'
+				'flex h-9 w-full min-w-[120px] sm:min-w-[220px] max-w-xl items-center gap-2 rounded-md border border-input bg-card px-2 sm:px-3 text-sm text-muted-foreground transition-colors duration-150 hover:border-muted-foreground'
 			)}
 		>
 			<Search class="h-4 w-4" />

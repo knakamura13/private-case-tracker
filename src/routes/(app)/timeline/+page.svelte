@@ -2,6 +2,7 @@
 	import PageHeader from '$lib/components/shared/PageHeader.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
+	import StatusBadge from '$lib/components/signature/StatusBadge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import MarkdownRenderer from '$lib/components/shared/MarkdownRenderer.svelte';
 	import { Plus } from 'lucide-svelte';
@@ -33,7 +34,7 @@
 	}
 </script>
 
-<PageHeader title="Timeline" description="Case phases from preparation through final outcome.">
+<PageHeader title="Timeline" description="Case phases from preparation through final outcome." number="2">
 	{#snippet actions()}
 		<Button href="/timeline/new">
 			{#snippet children()}<Plus class="h-4 w-4" /> New milestone{/snippet}
@@ -73,7 +74,7 @@
 									<div class="min-w-0 flex-1">
 										<div class="flex items-center gap-2">
 											<p class="truncate font-medium">{m.title}</p>
-											<Badge variant={statusVariant(m.status)}>{titleCase(m.status)}</Badge>
+											<StatusBadge variant={statusVariant(m.status)} status={titleCase(m.status)} />
 											<Badge variant="outline">{titleCase(m.priority)}</Badge>
 										</div>
 										{#if m.description}<MarkdownRenderer content={m.description} class="mt-1 text-sm text-muted-foreground prose prose-sm max-w-none" />{/if}

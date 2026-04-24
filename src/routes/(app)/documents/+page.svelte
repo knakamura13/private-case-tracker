@@ -68,7 +68,7 @@
 	</div>
 {/if}
 
-<PageHeader title="Documents" description="Files and secure external links. Prefer metadata + link when possible.">
+<PageHeader title="Documents" description="Files and secure external links. Prefer metadata + link when possible." number="5">
 	{#snippet actions()}
 		<Button href="/documents/new">
 			{#snippet children()}<Plus class="h-4 w-4" /> Add document{/snippet}

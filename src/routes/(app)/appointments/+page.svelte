@@ -5,6 +5,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
+	import StatusBadge from '$lib/components/signature/StatusBadge.svelte';
 	import { Plus, CalendarDays } from 'lucide-svelte';
 	import { fmtDateTime, daysUntil } from '$lib/utils/dates';
 	import { titleCase } from '$lib/utils/format';
@@ -20,7 +21,7 @@
 	}
 </script>
 
-<PageHeader title="Appointments" description="Upcoming and past appointments.">
+<PageHeader title="Appointments" description="Upcoming and past appointments." number="6">
 	{#snippet actions()}
 		<Button href="/appointments/new">
 			{#snippet children()}<Plus class="h-4 w-4" /> New appointment{/snippet}
@@ -89,7 +90,7 @@
 							<div class="flex items-center gap-2">
 								<p class="truncate font-medium">{a.title}</p>
 								<Badge>{titleCase(a.type)}</Badge>
-								<Badge variant="outline">{titleCase(a.status)}</Badge>
+								<StatusBadge variant="neutral" status={titleCase(a.status)} />
 							</div>
 							{#if a.location}<p class="mt-1 truncate text-sm text-muted-foreground">{a.location}</p>{/if}
 						</div>

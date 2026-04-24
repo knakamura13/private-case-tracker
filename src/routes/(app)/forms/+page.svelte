@@ -5,6 +5,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
+	import StatusBadge from '$lib/components/signature/StatusBadge.svelte';
 	import { Plus, FileText, ClipboardList } from 'lucide-svelte';
 	import { fmtDate } from '$lib/utils/dates';
 	import { titleCase } from '$lib/utils/format';
@@ -20,7 +21,7 @@
 	}
 </script>
 
-<PageHeader title="Forms" description="Track filing status, planned dates, and supporting items.">
+<PageHeader title="Forms" description="Track filing status, planned dates, and supporting items." number="3">
 	{#snippet actions()}
 		<Button variant="outline" href="/forms/packet">
 			{#snippet children()}<ClipboardList class="h-4 w-4" /> Packet view{/snippet}
@@ -65,7 +66,7 @@
 							<h3 class="font-semibold">{form.name}</h3>
 							{#if form.purpose}<p class="mt-1 text-sm text-muted-foreground">{form.purpose}</p>{/if}
 						</div>
-						<Badge variant={statusVariant(form.filingStatus)}>{titleCase(form.filingStatus)}</Badge>
+						<StatusBadge variant={statusVariant(form.filingStatus)} status={titleCase(form.filingStatus)} />
 					</div>
 					<div class="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
 						{#if form.plannedFilingDate}<span>Plan: {fmtDate(form.plannedFilingDate)}</span>{/if}

@@ -5,6 +5,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
+	import StatusBadge from '$lib/components/signature/StatusBadge.svelte';
 	import { enhance } from '$app/forms';
 	import { Plus, Layers, Pencil, Check, X } from 'lucide-svelte';
 	import { fmtDate } from '$lib/utils/dates';
@@ -39,7 +40,7 @@
 	}
 </script>
 
-<PageHeader title="Evidence" description="Metadata-first library of relationship and supporting evidence.">
+<PageHeader title="Evidence" description="Metadata-first library of relationship and supporting evidence." number="4">
 	{#snippet actions()}
 		<Button href="/evidence/new">
 			{#snippet children()}<Plus class="h-4 w-4" /> New evidence{/snippet}
@@ -139,7 +140,7 @@
 						<Card class="p-4 hover:border-primary/40">
 							<div class="flex items-start justify-between gap-2">
 								<h3 class="font-medium">{it.title}</h3>
-								<Badge variant={statusVariant(it.status)}>{titleCase(it.status)}</Badge>
+								<StatusBadge variant={statusVariant(it.status)} status={titleCase(it.status)} />
 							</div>
 							{#if it.description}<p class="mt-1 line-clamp-2 text-sm text-muted-foreground">{it.description}</p>{/if}
 							<div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">

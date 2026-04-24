@@ -5,6 +5,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
+	import StatusBadge from '$lib/components/signature/StatusBadge.svelte';
 	import { HelpCircle, Plus } from 'lucide-svelte';
 	import { titleCase } from '$lib/utils/format';
 	import type { PageData } from './$types';
@@ -23,7 +24,7 @@
 	]);
 </script>
 
-<PageHeader title="Questions" description="Track unresolved questions, their sources, and answers.">
+<PageHeader title="Questions" description="Track unresolved questions, their sources, and answers." number="7">
 	{#snippet actions()}
 		<Button href="/questions/new">
 			{#snippet children()}<Plus class="h-4 w-4" /> New question{/snippet}
@@ -79,7 +80,7 @@
 										<Badge variant={sectionVariant(q.sourceType)}>{titleCase(q.sourceType)}</Badge>
 									</div>
 									<div class="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
-										<Badge variant="outline">{titleCase(q.status)}</Badge>
+										<StatusBadge variant="neutral" status={titleCase(q.status)} />
 										<Badge variant="outline">{titleCase(q.priority)}</Badge>
 										{#if q.category}<span>{q.category}</span>{/if}
 									</div>
