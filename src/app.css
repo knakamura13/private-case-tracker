@@ -60,7 +60,9 @@ main::after {
 }
 
 button,
-select {
+select,
+a {
+	touch-action: manipulation;
 	cursor: pointer;
 }
 

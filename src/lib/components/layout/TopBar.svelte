@@ -40,7 +40,7 @@
 	<div class="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
 		<button
 			type="button"
-			class="flex h-9 w-9 items-center justify-center rounded-md hover:bg-muted md:hidden"
+			class="flex h-11 w-11 items-center justify-center rounded-md hover:bg-muted md:hidden"
 			aria-label="Open sidebar"
 			onclick={onToggleSidebar}
 		>
@@ -50,7 +50,7 @@
 			type="button"
 			onclick={onOpenSearch}
 			class={cn(
-				'flex h-9 w-full min-w-[140px] sm:min-w-[220px] max-w-xl items-center gap-2 rounded-md border border-input bg-card px-2 sm:px-3 text-sm text-muted-foreground hover:bg-muted'
+				'flex h-9 w-full min-w-[120px] sm:min-w-[220px] max-w-xl items-center gap-2 rounded-md border border-input bg-card px-2 sm:px-3 text-sm text-muted-foreground hover:bg-muted'
 			)}
 		>
 			<Search class="h-4 w-4" />
@@ -66,7 +66,7 @@
 		<div class="relative">
 			<button
 				bind:this={menuButtonEl}
-				class="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-xs font-semibold"
+				class="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-xs font-semibold"
 				aria-label="Open user menu"
 				type="button"
 				aria-haspopup="true"
@@ -78,7 +78,7 @@
 			</button>
 			{#if menuOpen}
 				<div
-					class="absolute right-0 mt-2 w-56 rounded-md border border-border bg-card p-2 text-sm shadow-lg"
+					class="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-56 rounded-md border border-border bg-card p-2 text-sm shadow-lg"
 					id="user-menu"
 					role="group"
 					aria-label="User menu"

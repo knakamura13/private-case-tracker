@@ -94,7 +94,7 @@
 			}}
 			onOpenQuickAdd={() => (quickAddOpen = true)}
 		/>
-		<main id="main" tabindex="-1" class="flex-1 overflow-y-auto p-4 pb-24 md:p-6 md:pb-32">
+		<main id="main" tabindex="-1" class="flex-1 overflow-y-auto overflow-x-hidden p-4 pb-24 md:p-6 md:pb-32">
 			{@render children()}
 		</main>
 	</div>

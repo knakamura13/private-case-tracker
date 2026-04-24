@@ -113,7 +113,7 @@
 				</ul>
 			{/if}
 			<div class="mt-3 flex items-center gap-2">
-				<input bind:value={totpCode} placeholder="Enter code" class="h-9 rounded-md border border-input bg-card px-3 text-sm" />
+				<input bind:value={totpCode} placeholder="Enter code" class="h-11 rounded-md border border-input bg-card px-3 text-sm" />
 				<Button onclick={verifyTotp}>Verify</Button>
 			</div>
 		{/if}
