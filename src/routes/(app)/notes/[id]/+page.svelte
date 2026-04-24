@@ -12,7 +12,7 @@
 
 <PageHeader
 	title={data.note.title}
-	description={`Last edited ${fmtDateTime(data.note.updatedAt)} by ${data.note.author.name ?? data.note.author.email}`}
+	description={`Last edited ${fmtDateTime(data.note.updatedAt)}${data.note.author ? ` by ${data.note.author.name ?? data.note.author.email}` : ''}`}
 >
 	{#snippet actions()}
 		<Button variant="outline" onclick={() => (editing = !editing)}>{editing ? 'Cancel' : 'Edit'}</Button>

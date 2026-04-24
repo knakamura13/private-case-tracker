@@ -3,7 +3,7 @@ import { logActivity } from '$lib/server/activity';
 import type { DocumentMetadata } from '$lib/schemas/document';
 import { ddbGet, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
-import type { DocumentFileItem } from '$lib/server/dynamo/types';
+import type { DocumentFileItem, FormItem, EvidenceItem, AppointmentItem, TaskItem } from '$lib/server/dynamo/types';
 
 export async function listDocuments(
 	workspaceId: string,
@@ -43,15 +43,24 @@ export async function listDocuments(
 export async function getDocument(workspaceId: string, id: string) {
 	const doc = await ddbGet<DocumentFileItem>({ PK: wsPk(workspaceId), SK: entitySk('DocumentFile', id) });
 	if (!doc || doc.deletedAt) return null;
+
+	// Fetch linked entities if IDs exist
+	const [form, evidence, appointment, task] = await Promise.all([
+		doc.linkedFormId ? ddbGet<FormItem>({ PK: wsPk(workspaceId), SK: entitySk('FormRecord', doc.linkedFormId) }) : null,
+		doc.linkedEvidenceId ? ddbGet<EvidenceItem>({ PK: wsPk(workspaceId), SK: entitySk('EvidenceItem', doc.linkedEvidenceId) }) : null,
+		doc.linkedAppointmentId ? ddbGet<AppointmentItem>({ PK: wsPk(workspaceId), SK: entitySk('Appointment', doc.linkedAppointmentId) }) : null,
+		doc.linkedTaskId ? ddbGet<TaskItem>({ PK: wsPk(workspaceId), SK: entitySk('Task', doc.linkedTaskId) }) : null
+	]);
+
 	return {
 		...doc,
 		uploadedBy: doc.uploadedByUserId ? { id: doc.uploadedByUserId, name: null, email: '' } : null,
 		versionOf: null,
 		versions: [],
-		form: doc.linkedFormId ? { id: doc.linkedFormId } : null,
-		evidence: doc.linkedEvidenceId ? { id: doc.linkedEvidenceId } : null,
-		appointment: doc.linkedAppointmentId ? { id: doc.linkedAppointmentId } : null,
-		task: doc.linkedTaskId ? { id: doc.linkedTaskId } : null
+		form: form && !form.deletedAt ? { id: form.id, code: form.code, name: form.name } : null,
+		evidence: evidence && !evidence.deletedAt ? { id: evidence.id, title: evidence.title } : null,
+		appointment: appointment && !appointment.deletedAt ? { id: appointment.id, title: appointment.title } : null,
+		task: task && !task.deletedAt ? { id: task.id, title: task.title } : null
 	};
 }
 

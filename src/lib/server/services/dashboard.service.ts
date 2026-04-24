@@ -57,8 +57,8 @@ export async function dashboardFor(workspaceId: string) {
 		),
 		listForms(workspaceId),
 		listEvidence(workspaceId),
-		listQuestions(workspaceId, { status: 'OPEN' as QuestionStatus }).then((rows) =>
-			rows.concat(listQuestions(workspaceId, { status: 'RESEARCHING' as QuestionStatus }))
+		listQuestions(workspaceId, { status: 'OPEN' as QuestionStatus }).then(async (rows) =>
+			rows.concat(await listQuestions(workspaceId, { status: 'RESEARCHING' as QuestionStatus }))
 		),
 		listMilestones(workspaceId),
 		recentActivity(workspaceId, 10),
@@ -102,7 +102,12 @@ export async function dashboardFor(workspaceId: string) {
 		openQuestionsCount[q.priority] = (openQuestionsCount[q.priority] ?? 0) + 1;
 	}
 
-	const phase: MilestonePhase = currentPhase(milestonesAll);
+	const phase: MilestonePhase = currentPhase(
+		milestonesAll.map((m) => ({
+			phase: m.phase as MilestonePhase,
+			status: m.status as MilestoneStatus
+		}))
+	);
 	const phaseProgress = PHASE_ORDER.map((p) => {
 		const items = milestonesAll.filter((m) => m.phase === p);
 		if (items.length === 0) return { phase: p, label: PHASE_LABELS[p], total: 0, done: 0 };
@@ -144,11 +149,11 @@ export async function dashboardFor(workspaceId: string) {
 			.filter(
 				(m) =>
 					m.dueDate &&
-					m.dueDate >= now &&
+					new Date(m.dueDate) >= now &&
 					m.status !== 'DONE' &&
 					m.status !== ('SKIPPED' as MilestoneStatus)
 			)
-			.sort((a, b) => a.dueDate!.getTime() - b.dueDate!.getTime())
+			.sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())
 			.slice(0, 3)
 			.map((m) => ({
 				label: m.title,
@@ -157,7 +162,7 @@ export async function dashboardFor(workspaceId: string) {
 				kind: 'milestone' as const
 			}))
 	]
-		.sort((a, b) => a.date.getTime() - b.date.getTime())
+		.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 		.slice(0, 5);
 
 	return {

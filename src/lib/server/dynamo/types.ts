@@ -68,9 +68,18 @@ export type EvidenceItem = DynamoBaseItem & {
 	status: string; // Stored as string, validated as EvidenceStatus at service layer
 	description: string | null;
 	significance: string | null;
+	dateStart: string | null;
+	dateEnd: string | null;
 	dateCollected: string | null;
 	source: string | null;
+	peopleInvolved: string[];
+	confidenceScore: number;
+	includedInPacket: boolean;
+	notes: string | null;
 	files?: Array<{ id: string; file: string | null; title: string }>;
+	tasks: any[];
+	supportingFor: any[];
+	linkedNotes: any[];
 };
 
 export type QuestionItem = DynamoBaseItem & {
@@ -82,8 +91,14 @@ export type QuestionItem = DynamoBaseItem & {
 	priority: string;
 	sourceType: string; // Stored as string, validated as QuestionSourceType at service layer
 	source: string | null;
+	category: string | null;
+	citationUrl: string | null;
+	answeredAt: string | null;
 	relatedFormId: string | null;
 	relatedEvidenceId: string | null;
+	relatedTaskId: string | null;
+	relatedForm: { id: string } | null;
+	relatedEvidence: { id: string } | null;
 };
 
 export type NoteItem = DynamoBaseItem & {
@@ -92,6 +107,7 @@ export type NoteItem = DynamoBaseItem & {
 	title: string;
 	bodyMd: string;
 	authorId: string | null;
+	author: { id: string; name: string | null; email: string } | null;
 	linkedTaskId: string | null;
 	linkedFormId: string | null;
 	linkedEvidenceId: string | null;
@@ -105,10 +121,21 @@ export type DocumentFileItem = DynamoBaseItem & {
 	category: string;
 	notes: string | null;
 	uploadedByUserId: string | null;
+	uploadedBy: { id: string; name: string | null; email: string } | null;
 	linkedFormId: string | null;
 	linkedEvidenceId: string | null;
 	linkedAppointmentId: string | null;
 	linkedTaskId: string | null;
+	form: { id: string; code: string; name: string } | null;
+	evidence: { id: string; title: string } | null;
+	appointment: { id: string; title: string } | null;
+	task: { id: string; title: string } | null;
+	file: string | null;
+	sizeBytes: number | null;
+	mimeType: string | null;
+	storageMode: string | null;
+	externalUrl: string | null;
+	versions: Array<{ id: string; title: string; createdAt: string }>;
 };
 
 export type AppointmentItem = DynamoBaseItem & {
@@ -127,11 +154,14 @@ export type MilestoneItem = DynamoBaseItem & {
 	id: string;
 	workspaceId: string;
 	title: string;
+	description: string | null;
 	phase: string; // Stored as string, validated as MilestonePhase at service layer
 	status: string; // Stored as string, validated as MilestoneStatus at service layer
+	priority: string;
 	dueDate: string;
 	order: number;
 	ownerId: string | null;
+	owner: { id: string; name: string | null; email: string } | null;
 };
 
 export type QuickLinkItem = DynamoBaseItem & {
