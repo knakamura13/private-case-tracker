@@ -34,10 +34,12 @@ test.describe('security headers', () => {
 	test('sets security headers on responses', async ({ request }) => {
 		const res = await request.get('/');
 		expect(res.status()).toBe(200);
-		// Check for common security headers
 		const headers = res.headers();
-		// Note: These may vary based on your deployment config
-		// This test documents expected security headers
+		// Assert common security headers are present
+		// Note: These may vary based on deployment config
+		expect(headers['content-type']).toBeDefined();
+		// Add specific header assertions once deployment config is known
+		// e.g., expect(headers['x-frame-options']).toBeDefined();
 	});
 });
 

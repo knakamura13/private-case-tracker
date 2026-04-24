@@ -36,7 +36,8 @@ describe('crypto', () => {
 
 	it('rejects tampered ciphertext', () => {
 		const ciphertext = encryptString('secret');
-		const tampered = ciphertext.replace(/./, 'x');
+		// Replace the first character with a different one to ensure tampering
+		const tampered = ciphertext.replace(ciphertext[0], ciphertext[0] === 'A' ? 'B' : 'A');
 		expect(() => decryptString(tampered)).toThrow();
 	});
 
