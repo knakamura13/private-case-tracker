@@ -8,7 +8,7 @@ import { listForms } from '$lib/server/services/form.service';
 import { listEvidence } from '$lib/server/services/evidence.service';
 import { listAppointments } from '$lib/server/services/appointment.service';
 import { listMilestones } from '$lib/server/services/milestone.service';
-import { listMembers } from '$lib/server/services/workspace.service';
+import { getMembers } from '$lib/server/cache/membersCache';
 
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);
@@ -19,7 +19,7 @@ export const load: PageServerLoad = async (event) => {
 		listMilestones(workspace.id).then((r) =>
 			r.map((m) => ({ id: m.id, title: m.title, phase: m.phase }))
 		),
-		listMembers(workspace.id)
+		getMembers(workspace.id)
 	]);
 	return {
 		forms,

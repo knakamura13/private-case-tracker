@@ -8,13 +8,13 @@ import {
 	softDeleteMilestone
 } from '$lib/server/services/milestone.service';
 import { milestoneUpdateSchema } from '$lib/schemas/milestone';
-import { listMembers } from '$lib/server/services/workspace.service';
+import { getMembers } from '$lib/server/cache/membersCache';
 
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);
 	const milestone = await getMilestone(workspace.id, event.params.id);
 	if (!milestone) throw error(404, { message: 'Milestone not found' });
-	const members = await listMembers(workspace.id);
+	const members = await getMembers(workspace.id);
 	return {
 		milestone: milestone as unknown as {
 			phase: import('$lib/types/enums').MilestonePhase;
