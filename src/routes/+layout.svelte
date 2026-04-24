@@ -10,7 +10,6 @@
 			const main = document.getElementById('main');
 			if (main) {
 				main.scrollTo(0, 0);
-				(main as HTMLElement).focus?.();
 			}
 		});
 	}
