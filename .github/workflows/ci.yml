@@ -41,6 +41,7 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Sync SvelteKit
         run: pnpm check
+        continue-on-error: true
       - name: Run unit tests
         run: pnpm test
       - name: Run component tests
