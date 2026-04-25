@@ -23,6 +23,7 @@
 				<li>
 					<a
 						href={item.href}
+						data-sveltekit-prefetch
 						onclick={() => onNavigate?.()}
 						aria-current={active ? 'page' : undefined}
 						class={cn(
