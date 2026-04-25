@@ -28,7 +28,6 @@ export type TaskItem = DynamoBaseItem & {
 	ownerId: string | null;
 	linkedFormId: string | null;
 	linkedEvidenceId: string | null;
-	linkedAppointmentId: string | null;
 	linkedMilestoneId: string | null;
 	order: number;
 	checklist?: Array<{ id: string; taskId: string; text: string; done: boolean; order: number }>;
@@ -111,7 +110,6 @@ export type NoteItem = DynamoBaseItem & {
 	linkedTaskId: string | null;
 	linkedFormId: string | null;
 	linkedEvidenceId: string | null;
-	linkedAppointmentId: string | null;
 };
 
 export type DocumentFileItem = DynamoBaseItem & {
@@ -124,11 +122,9 @@ export type DocumentFileItem = DynamoBaseItem & {
 	uploadedBy: { id: string; name: string | null; email: string } | null;
 	linkedFormId: string | null;
 	linkedEvidenceId: string | null;
-	linkedAppointmentId: string | null;
 	linkedTaskId: string | null;
 	form: { id: string; code: string; name: string } | null;
 	evidence: { id: string; title: string } | null;
-	appointment: { id: string; title: string } | null;
 	task: { id: string; title: string } | null;
 	file: string | null;
 	sizeBytes: number | null;
@@ -136,24 +132,6 @@ export type DocumentFileItem = DynamoBaseItem & {
 	storageMode: string | null;
 	externalUrl: string | null;
 	versions: Array<{ id: string; title: string; createdAt: string }>;
-};
-
-export type AppointmentItem = DynamoBaseItem & {
-	id: string;
-	workspaceId: string;
-	title: string;
-	type: string; // Stored as string, validated as AppointmentType at service layer
-	status: string; // Stored as string, validated as AppointmentStatus at service layer
-	scheduledAt: string;
-	durationMin: number | null;
-	location: string | null;
-	description: string | null;
-	confirmationDetails: string | null;
-	attendees: string[];
-	notes: string | null;
-	tasks: Array<{ id: string; title: string }>;
-	documents: Array<{ id: string; title: string }>;
-	linkedNotes: Array<{ id: string; title: string }>;
 };
 
 export type MilestoneItem = DynamoBaseItem & {
@@ -165,6 +143,7 @@ export type MilestoneItem = DynamoBaseItem & {
 	status: string; // Stored as string, validated as MilestoneStatus at service layer
 	priority: string;
 	dueDate: string;
+	scheduledAt: string | null;
 	order: number;
 	ownerId: string | null;
 	owner: { id: string; name: string | null; email: string } | null;

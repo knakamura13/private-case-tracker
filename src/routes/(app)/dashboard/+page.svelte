@@ -40,9 +40,9 @@
 		</ul>
 	</Widget>
 
-	<Widget title="Countdowns" href="/appointments">
+	<Widget title="Countdowns" href="/timeline">
 		{#if data.countdowns.length === 0}
-			<p class="text-sm text-muted-foreground">No upcoming appointments or due milestones.</p>
+			<p class="text-sm text-muted-foreground">No upcoming meetings or due milestones.</p>
 		{:else}
 			<ul class="space-y-2 text-sm">
 				{#each data.countdowns as c}
@@ -73,16 +73,16 @@
 		{/if}
 	</Widget>
 
-	<Widget title="Upcoming appointments" href="/appointments">
-		{#if data.upcomingAppointments.length === 0}
+	<Widget title="Upcoming meetings" href="/timeline">
+		{#if data.upcomingMeetings.length === 0}
 			<p class="text-sm text-muted-foreground">Nothing scheduled.</p>
 		{:else}
 			<ul class="space-y-2 text-sm">
-				{#each data.upcomingAppointments as a}
+				{#each data.upcomingMeetings as m}
 					<li>
-						<a class="block hover:underline" href={`/appointments/${a.id}`}>
-							<p class="truncate font-medium">{a.title}</p>
-							<p class="text-xs text-muted-foreground">{fmtDateTime(a.scheduledAt)} · {titleCase(a.type)}</p>
+						<a class="block hover:underline" href={`/timeline#${m.id}`}>
+							<p class="truncate font-medium">{m.title}</p>
+							<p class="text-xs text-muted-foreground">{fmtDateTime(m.scheduledAt)}</p>
 						</a>
 					</li>
 				{/each}

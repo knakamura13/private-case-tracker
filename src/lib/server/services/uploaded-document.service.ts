@@ -42,7 +42,6 @@ export async function createUploadedDocument(
 		linkedTaskId: null as string | null,
 		linkedFormId: null as string | null,
 		linkedEvidenceId: null as string | null,
-		linkedAppointmentId: null as string | null,
 		externalUrl: null as string | null,
 		notes: null as string | null,
 		deletedAt: null as string | null,

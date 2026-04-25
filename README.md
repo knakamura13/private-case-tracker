@@ -7,7 +7,7 @@ Not a legal source of truth. Not affiliated with USCIS or any government agency.
 
 ## What it is
 
-- A login-gated, two-user "control tower" for tracking tasks, forms, evidence, documents, appointments, questions, notes, and a phase-based timeline.
+- A login-gated, two-user "control tower" for tracking tasks, forms, evidence, documents, questions, notes, and a phase-based timeline.
 - A dashboard with live aggregated widgets derived from your own data.
 - A packet-assembly view to help final review before mailing.
 - An audit log of important changes.

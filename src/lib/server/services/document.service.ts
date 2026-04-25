@@ -3,7 +3,7 @@ import { logActivity } from '$lib/server/activity';
 import type { DocumentMetadata } from '$lib/schemas/document';
 import { ddbGet, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
-import type { DocumentFileItem, FormItem, EvidenceItem, AppointmentItem, TaskItem } from '$lib/server/dynamo/types';
+import type { DocumentFileItem, FormItem, EvidenceItem, TaskItem } from '$lib/server/dynamo/types';
 
 export async function listDocuments(
 	workspaceId: string,
@@ -45,10 +45,9 @@ export async function getDocument(workspaceId: string, id: string) {
 	if (!doc || doc.deletedAt) return null;
 
 	// Fetch linked entities if IDs exist
-	const [form, evidence, appointment, task] = await Promise.all([
+	const [form, evidence, task] = await Promise.all([
 		doc.linkedFormId ? ddbGet<FormItem>({ PK: wsPk(workspaceId), SK: entitySk('FormRecord', doc.linkedFormId) }) : null,
 		doc.linkedEvidenceId ? ddbGet<EvidenceItem>({ PK: wsPk(workspaceId), SK: entitySk('EvidenceItem', doc.linkedEvidenceId) }) : null,
-		doc.linkedAppointmentId ? ddbGet<AppointmentItem>({ PK: wsPk(workspaceId), SK: entitySk('Appointment', doc.linkedAppointmentId) }) : null,
 		doc.linkedTaskId ? ddbGet<TaskItem>({ PK: wsPk(workspaceId), SK: entitySk('Task', doc.linkedTaskId) }) : null
 	]);
 
@@ -59,7 +58,6 @@ export async function getDocument(workspaceId: string, id: string) {
 		versions: [] as Array<{ id: string; title: string; createdAt: string }>,
 		form: form && !form.deletedAt ? { id: form.id, code: form.code, name: form.name } : null,
 		evidence: evidence && !evidence.deletedAt ? { id: evidence.id, title: evidence.title } : null,
-		appointment: appointment && !appointment.deletedAt ? { id: appointment.id, title: appointment.title } : null,
 		task: task && !task.deletedAt ? { id: task.id, title: task.title } : null
 	};
 }
@@ -79,8 +77,6 @@ export async function updateDocumentMetadata(
 	if (input.linkedTaskId !== undefined) patch.linkedTaskId = input.linkedTaskId;
 	if (input.linkedFormId !== undefined) patch.linkedFormId = input.linkedFormId;
 	if (input.linkedEvidenceId !== undefined) patch.linkedEvidenceId = input.linkedEvidenceId;
-	if (input.linkedAppointmentId !== undefined)
-		patch.linkedAppointmentId = input.linkedAppointmentId;
 
 	const names: Record<string, string> = {};
 	const values: Record<string, unknown> = {};

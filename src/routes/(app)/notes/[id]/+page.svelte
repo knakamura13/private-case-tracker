@@ -37,8 +37,7 @@
 			bodyMd: data.note.bodyMd,
 			linkedTaskId: data.note.linkedTaskId,
 			linkedFormId: data.note.linkedFormId,
-			linkedEvidenceId: data.note.linkedEvidenceId,
-			linkedAppointmentId: data.note.linkedAppointmentId
+			linkedEvidenceId: data.note.linkedEvidenceId
 		}}
 		links={data.links}
 		submitLabel="Save changes"

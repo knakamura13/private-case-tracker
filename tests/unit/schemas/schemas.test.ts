@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { formCreateSchema } from '$lib/schemas/form';
 import { evidenceCreateSchema } from '$lib/schemas/evidence';
-import { appointmentCreateSchema } from '$lib/schemas/appointment';
 import { questionCreateSchema } from '$lib/schemas/question';
 import { noteCreateSchema } from '$lib/schemas/note';
 import { milestoneCreateSchema } from '$lib/schemas/milestone';
@@ -27,15 +26,6 @@ describe('zod schemas', () => {
 		expect(evidenceCreateSchema.safeParse({ title: 'x', type: 'y', confidenceScore: 0 }).success).toBe(false);
 		expect(evidenceCreateSchema.safeParse({ title: 'x', type: 'y', confidenceScore: 6 }).success).toBe(false);
 		expect(evidenceCreateSchema.safeParse({ title: 'x', type: 'y', confidenceScore: 3 }).success).toBe(true);
-	});
-
-	it('appointmentCreateSchema converts scheduledAt string to Date', () => {
-		const r = appointmentCreateSchema.parse({
-			title: 'Biometrics',
-			type: 'BIOMETRICS',
-			scheduledAt: '2026-09-01T10:00'
-		});
-		expect(r.scheduledAt).toBeInstanceOf(Date);
 	});
 
 	it('questionCreateSchema requires a question', () => {

@@ -27,6 +27,7 @@ export const milestoneCreateSchema = z.object({
 	description: stringOrEmpty(2000),
 	phase: milestonePhaseEnum,
 	dueDate: optionalDateLoose,
+	scheduledAt: optionalDateLoose,
 	status: milestoneStatusEnum.default('PLANNED'),
 	ownerId: optionalId,
 	priority: priorityEnum.default('MEDIUM'),

@@ -42,8 +42,7 @@ export async function getNote(workspaceId: string, id: string) {
 		author: note.authorId ? { id: note.authorId, name: null, email: '' } : null,
 		task: note.linkedTaskId ? { id: note.linkedTaskId } : null,
 		form: note.linkedFormId ? { id: note.linkedFormId } : null,
-		evidence: note.linkedEvidenceId ? { id: note.linkedEvidenceId } : null,
-		appointment: note.linkedAppointmentId ? { id: note.linkedAppointmentId } : null
+		evidence: note.linkedEvidenceId ? { id: note.linkedEvidenceId } : null
 	};
 }
 

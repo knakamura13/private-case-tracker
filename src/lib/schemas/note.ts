@@ -6,8 +6,7 @@ export const noteCreateSchema = z.object({
 	bodyMd: z.string().max(50_000).default(''),
 	linkedTaskId: optionalId,
 	linkedFormId: optionalId,
-	linkedEvidenceId: optionalId,
-	linkedAppointmentId: optionalId
+	linkedEvidenceId: optionalId
 });
 
 export const noteUpdateSchema = noteCreateSchema.partial();

@@ -4,7 +4,6 @@ import {
 	FileText,
 	Layers,
 	FolderLock,
-	CalendarDays,
 	HelpCircle,
 	NotebookPen
 } from 'lucide-svelte';
@@ -23,7 +22,6 @@ export const navigation: NavItem[] = [
 	{ href: '/forms', label: 'Forms', icon: FileText, description: 'Packet tracker' },
 	{ href: '/evidence', label: 'Evidence', icon: Layers, description: 'Evidence library' },
 	{ href: '/documents', label: 'Documents', icon: FolderLock, description: 'Files and secure links' },
-	{ href: '/appointments', label: 'Appointments', icon: CalendarDays },
 	{ href: '/questions', label: 'Questions', icon: HelpCircle, description: 'Research tracker' },
 	{ href: '/notes', label: 'Notes', icon: NotebookPen }
 ];

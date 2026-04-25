@@ -24,7 +24,6 @@ export async function createExternalLink(
 		linkedTaskId: input.linkedTaskId ?? null,
 		linkedFormId: input.linkedFormId ?? null,
 		linkedEvidenceId: input.linkedEvidenceId ?? null,
-		linkedAppointmentId: input.linkedAppointmentId ?? null,
 		deletedAt: null as string | null,
 		createdAt: now,
 		updatedAt: now
@@ -77,8 +76,6 @@ export async function updateExternalLinkMetadata(
 	if (input.linkedTaskId !== undefined) patch.linkedTaskId = input.linkedTaskId;
 	if (input.linkedFormId !== undefined) patch.linkedFormId = input.linkedFormId;
 	if (input.linkedEvidenceId !== undefined) patch.linkedEvidenceId = input.linkedEvidenceId;
-	if (input.linkedAppointmentId !== undefined)
-		patch.linkedAppointmentId = input.linkedAppointmentId;
 	if (input.externalUrl !== undefined) patch.externalUrl = input.externalUrl;
 
 	const names: Record<string, string> = {};

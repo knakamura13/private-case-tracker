@@ -7,18 +7,16 @@ import { DOCUMENT_CATEGORIES } from '$lib/constants/categories';
 import { storageConfigured } from '$lib/server/env';
 import { listForms } from '$lib/server/services/form.service';
 import { listEvidence } from '$lib/server/services/evidence.service';
-import { listAppointments } from '$lib/server/services/appointment.service';
 
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);
-	const [forms, evidence, appointments] = await Promise.all([
+	const [forms, evidence] = await Promise.all([
 		listForms(workspace.id).then((r) => r.map((f) => ({ id: f.id, code: f.code, name: f.name }))),
-		listEvidence(workspace.id).then((r) => r.map((e) => ({ id: e.id, title: e.title }))),
-		listAppointments(workspace.id).then((r) => r.map((a) => ({ id: a.id, title: a.title })))
+		listEvidence(workspace.id).then((r) => r.map((e) => ({ id: e.id, title: e.title })))
 	]);
 	return {
 		categories: DOCUMENT_CATEGORIES,
-		links: { tasks: [] as { id: string; title: string }[], forms, evidence, appointments },
+		links: { tasks: [] as { id: string; title: string }[], forms, evidence },
 		uploadEnabled: storageConfigured()
 	};
 };

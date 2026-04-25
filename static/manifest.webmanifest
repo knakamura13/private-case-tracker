@@ -1,7 +1,7 @@
 {
   "name": "Private Case Tracker",
   "short_name": "Case Tracker",
-  "description": "Track legal cases, tasks, evidence, and appointments",
+  "description": "Track legal cases, tasks, evidence, and milestones",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",

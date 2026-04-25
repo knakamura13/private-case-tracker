@@ -37,7 +37,6 @@ export const POST = async () => {
 		ownerId: null,
 		linkedFormId: null,
 		linkedEvidenceId: null,
-		linkedAppointmentId: null,
 		linkedMilestoneId: null,
 		order: 0,
 		createdAt: now,

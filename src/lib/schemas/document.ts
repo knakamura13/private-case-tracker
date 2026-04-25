@@ -25,10 +25,6 @@ export const documentMetadataSchema = z.object({
 	linkedEvidenceId: z
 		.string()
 		.optional()
-		.transform((v) => (v && v.length ? v : null)),
-	linkedAppointmentId: z
-		.string()
-		.optional()
 		.transform((v) => (v && v.length ? v : null))
 });
 
@@ -40,8 +36,7 @@ export const uploadUrlRequestSchema = z.object({
 	category: z.string().min(1).max(80),
 	linkedTaskId: z.string().nullish(),
 	linkedFormId: z.string().nullish(),
-	linkedEvidenceId: z.string().nullish(),
-	linkedAppointmentId: z.string().nullish()
+	linkedEvidenceId: z.string().nullish()
 });
 
 export type DocumentMetadata = z.infer<typeof documentMetadataSchema>;

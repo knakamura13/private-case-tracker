@@ -38,7 +38,7 @@ The stack enables:
 4. Validate:
    - `GET /health` returns `200` with `"store":"dynamodb"`.
    - Log in works.
-   - Each list view loads (tasks, notes, evidence, forms, appointments, milestones, questions, documents, quick links).
+   - Each list view loads (tasks, notes, evidence, forms, milestones, questions, documents, quick links).
    - Dashboard renders without errors.
 5. Record in a short log: restore time, any missing data, any surprises in indexes/throughput.
 

@@ -10,7 +10,7 @@ test.describe('search endpoint pagination', () => {
 		const body = await res.json();
 		expect(body).toHaveProperty('results');
 		// Verify each entity type has limited results
-		const entityTypes = ['tasks', 'forms', 'evidence', 'documents', 'appointments', 'questions', 'notes', 'milestones', 'quickLinks'];
+		const entityTypes = ['tasks', 'forms', 'evidence', 'documents', 'questions', 'notes', 'milestones', 'quickLinks'];
 		for (const type of entityTypes) {
 			if (body.results[type]) {
 				expect(body.results[type].length).toBeLessThanOrEqual(10); // LIMIT_PER_GROUP

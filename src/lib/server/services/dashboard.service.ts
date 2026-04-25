@@ -8,7 +8,6 @@ import type {
 	QuestionStatus
 } from '$lib/types/enums';
 import { recentActivity } from '$lib/server/activity';
-import { listAppointments } from './appointment.service';
 import { listForms } from './form.service';
 import { listEvidence } from './evidence.service';
 import { listQuestions } from './question.service';
@@ -21,7 +20,6 @@ export async function dashboardFor(workspaceId: string) {
 	const now = new Date();
 
 	const [
-		upcomingAppointments,
 		formsAll,
 		evidenceAll,
 		openQuestionsAll,
@@ -31,11 +29,6 @@ export async function dashboardFor(workspaceId: string) {
 		quickLinks,
 		quickLinkFolders
 	] = await Promise.all([
-		listAppointments(workspaceId, { range: 'upcoming' }).then((a) =>
-			a
-				.filter((x) => x.status !== 'CANCELED' && x.status !== 'COMPLETED' && x.status !== 'MISSED')
-				.slice(0, 5)
-		),
 		listForms(workspaceId),
 		listEvidence(workspaceId),
 		listQuestions(workspaceId, { status: 'OPEN' as QuestionStatus }).then(async (rows) =>
@@ -47,6 +40,11 @@ export async function dashboardFor(workspaceId: string) {
 		listQuickLinks(workspaceId),
 		listQuickLinkFolders(workspaceId)
 	]);
+
+	const upcomingMeetings = milestonesAll
+		.filter((m) => m.scheduledAt && new Date(m.scheduledAt) >= now)
+		.sort((a, b) => new Date(a.scheduledAt!).getTime() - new Date(b.scheduledAt!).getTime())
+		.slice(0, 5);
 
 	const formsByStatus: Record<FormFilingStatus, number> = {
 		NOT_STARTED: 0,
@@ -118,11 +116,11 @@ export async function dashboardFor(workspaceId: string) {
 		);
 
 	const countdowns = [
-		...upcomingAppointments.map((a) => ({
-			label: a.title,
-			date: a.scheduledAt,
-			href: `/appointments/${a.id}`,
-			kind: 'appointment' as const
+		...upcomingMeetings.map((m) => ({
+			label: m.title,
+			date: m.scheduledAt!,
+			href: `/timeline#${m.id}`,
+			kind: 'meeting' as const
 		})),
 		...milestonesAll
 			.filter(
@@ -145,7 +143,7 @@ export async function dashboardFor(workspaceId: string) {
 		.slice(0, 5);
 
 	return {
-		upcomingAppointments,
+		upcomingMeetings,
 		formsByStatus,
 		evidenceCoverage,
 		gapsCount,

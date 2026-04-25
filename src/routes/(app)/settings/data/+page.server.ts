@@ -5,18 +5,16 @@ import { deleteWorkspace } from '$lib/server/services/workspace.service';
 import { listForms } from '$lib/server/services/form.service';
 import { listEvidence } from '$lib/server/services/evidence.service';
 import { listDocuments } from '$lib/server/services/document.service';
-import { listAppointments } from '$lib/server/services/appointment.service';
 import { listQuestions } from '$lib/server/services/question.service';
 import { listNotes } from '$lib/server/services/note.service';
 import { listMilestones } from '$lib/server/services/milestone.service';
 
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);
-	const [forms, evidence, docs, appts, questions, notes, milestones] = await Promise.all([
+	const [forms, evidence, docs, questions, notes, milestones] = await Promise.all([
 		listForms(workspace.id),
 		listEvidence(workspace.id),
 		listDocuments(workspace.id),
-		listAppointments(workspace.id),
 		listQuestions(workspace.id),
 		listNotes(workspace.id),
 		listMilestones(workspace.id)
@@ -25,7 +23,6 @@ export const load: PageServerLoad = async (event) => {
 	const trashedForms = forms.filter((f) => f.deletedAt != null).length;
 	const trashedEvidence = evidence.filter((e) => e.deletedAt != null).length;
 	const trashedDocs = docs.filter((d) => d.deletedAt != null).length;
-	const trashedAppts = appts.filter((a) => a.deletedAt != null).length;
 	const trashedQuestions = questions.filter((q) => q.deletedAt != null).length;
 	const trashedNotes = notes.filter((n) => n.deletedAt != null).length;
 	const trashedMilestones = milestones.filter((m) => m.deletedAt != null).length;
@@ -34,7 +31,6 @@ export const load: PageServerLoad = async (event) => {
 			forms: trashedForms,
 			evidence: trashedEvidence,
 			documents: trashedDocs,
-			appointments: trashedAppts,
 			questions: trashedQuestions,
 			notes: trashedNotes,
 			milestones: trashedMilestones

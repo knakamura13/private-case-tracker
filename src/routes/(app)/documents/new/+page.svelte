@@ -51,8 +51,7 @@
 				category: String(fd.get('category') ?? 'Other'),
 				linkedTaskId: (fd.get('linkedTaskId') as string) || null,
 				linkedFormId: (fd.get('linkedFormId') as string) || null,
-				linkedEvidenceId: (fd.get('linkedEvidenceId') as string) || null,
-				linkedAppointmentId: (fd.get('linkedAppointmentId') as string) || null
+				linkedEvidenceId: (fd.get('linkedEvidenceId') as string) || null
 			};
 			const res = await fetch('/api/files/upload-url', {
 				method: 'POST',
@@ -128,13 +127,6 @@
 				{#each data.links.evidence as e (e.id)}<option value={e.id}>{e.title}</option>{/each}
 			</Select>
 		</div>
-		<div>
-			<Label for="linkedAppointmentId">Linked appointment</Label>
-			<Select id="linkedAppointmentId" name="linkedAppointmentId" value="">
-				<option value="">None</option>
-				{#each data.links.appointments as a (a.id)}<option value={a.id}>{a.title}</option>{/each}
-			</Select>
-		</div>
 		<div class="md:col-span-2">
 			<Label for="notes">Notes</Label>
 			<Textarea id="notes" name="notes" />
@@ -179,13 +171,6 @@
 			<Select id="linkedEvidenceIdU" name="linkedEvidenceId" value="">
 				<option value="">None</option>
 				{#each data.links.evidence as e (e.id)}<option value={e.id}>{e.title}</option>{/each}
-			</Select>
-		</div>
-		<div>
-			<Label for="linkedAppointmentIdU">Linked appointment</Label>
-			<Select id="linkedAppointmentIdU" name="linkedAppointmentId" value="">
-				<option value="">None</option>
-				{#each data.links.appointments as a (a.id)}<option value={a.id}>{a.title}</option>{/each}
 			</Select>
 		</div>
 		{#if uploadError}<p class="text-sm text-destructive md:col-span-2">{uploadError}</p>{/if}

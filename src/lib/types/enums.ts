@@ -43,24 +43,6 @@ export type FileStorageMode = 'UPLOADED' | 'EXTERNAL_LINK';
 
 export type FileStatus = 'PENDING' | 'READY' | 'FAILED';
 
-export type AppointmentType =
-	| 'CIVIL_MARRIAGE'
-	| 'BIOMETRICS'
-	| 'ATTORNEY_CONSULT'
-	| 'MEDICAL_EXAM'
-	| 'INTERVIEW'
-	| 'TRANSLATION_OR_NOTARY'
-	| 'DOCUMENT_PICKUP'
-	| 'OTHER';
-
-export type AppointmentStatus =
-	| 'SCHEDULED'
-	| 'CONFIRMED'
-	| 'COMPLETED'
-	| 'CANCELED'
-	| 'RESCHEDULED'
-	| 'MISSED';
-
 export type QuestionStatus = 'OPEN' | 'RESEARCHING' | 'ANSWERED' | 'WONT_FIX';
 
 export type QuestionSourceType =
@@ -90,9 +72,6 @@ export type ActivityAction =
 	| 'FILE_UPLOAD'
 	| 'FILE_DELETE'
 	| 'FILE_LINK_ADDED'
-	| 'APPOINTMENT_CREATED'
-	| 'APPOINTMENT_UPDATED'
-	| 'APPOINTMENT_DELETED'
 	| 'QUESTION_CREATED'
 	| 'QUESTION_UPDATED'
 	| 'QUESTION_DELETED'
@@ -135,7 +114,6 @@ export type DocumentFile = {
 	linkedTaskId?: string | null;
 	linkedFormId?: string | null;
 	linkedEvidenceId?: string | null;
-	linkedAppointmentId?: string | null;
 	notes?: string | null;
 	createdAt: string;
 	updatedAt: string;

@@ -24,12 +24,6 @@ import {
 	softDeleteForm
 } from '$lib/server/services/form.service';
 import {
-	createAppointment,
-	listAppointments,
-	softDeleteAppointment,
-	updateAppointment
-} from '$lib/server/services/appointment.service';
-import {
 	createMilestone,
 	listMilestones,
 	softDeleteMilestone,
@@ -67,8 +61,7 @@ describe('cross-domain DynamoDB smoke', () => {
 			bodyMd: 'Initial notes',
 			linkedTaskId: null,
 			linkedFormId: null,
-			linkedEvidenceId: null,
-			linkedAppointmentId: null
+			linkedEvidenceId: null
 		} as any);
 
 		expect((await listNotes(ws)).length).toBe(1);
@@ -119,26 +112,6 @@ describe('cross-domain DynamoDB smoke', () => {
 		expect((await getForm(ws, created.id))?.filingStatus).toBe('IN_PROGRESS');
 		await softDeleteForm(ws, actorId, created.id);
 		expect((await listForms(ws)).length).toBe(0);
-	});
-
-	it('appointments: create → list → update → softDelete', async () => {
-		const ws = workspaceId();
-		const created = await createAppointment(ws, actorId, {
-			title: 'Biometrics',
-			type: 'BIOMETRICS',
-			scheduledAt: new Date(Date.now() + 86_400_000),
-			durationMin: 30,
-			location: 'USCIS office',
-			confirmationDetails: '',
-			attendees: [],
-			status: 'SCHEDULED',
-			notes: ''
-		} as any);
-
-		expect((await listAppointments(ws)).some((a) => a.id === created.id)).toBe(true);
-		await updateAppointment(ws, actorId, created.id, { status: 'CONFIRMED' } as any);
-		await softDeleteAppointment(ws, actorId, created.id);
-		expect((await listAppointments(ws)).length).toBe(0);
 	});
 
 	it('milestones: create → list → update → softDelete', async () => {

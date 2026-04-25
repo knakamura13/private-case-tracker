@@ -9,7 +9,7 @@
 
 	let {
 		initial = {},
-		links = { tasks: [], forms: [], evidence: [], appointments: [] },
+		links = { tasks: [], forms: [], evidence: [] },
 		submitLabel = 'Save',
 		error,
 		action,
@@ -20,7 +20,6 @@
 			tasks: { id: string; title: string }[];
 			forms: { id: string; code: string; name: string }[];
 			evidence: { id: string; title: string }[];
-			appointments: { id: string; title: string }[];
 		};
 		submitLabel?: string;
 		error?: string | null;
@@ -66,13 +65,6 @@
 			<Select id="linkedEvidenceId" name="linkedEvidenceId" value={val('linkedEvidenceId')}>
 				<option value="">None</option>
 				{#each links.evidence as e (e.id)}<option value={e.id}>{e.title}</option>{/each}
-			</Select>
-		</div>
-		<div>
-			<Label for="linkedAppointmentId">Linked appointment</Label>
-			<Select id="linkedAppointmentId" name="linkedAppointmentId" value={val('linkedAppointmentId')}>
-				<option value="">None</option>
-				{#each links.appointments as a (a.id)}<option value={a.id}>{a.title}</option>{/each}
 			</Select>
 		</div>
 	</div>
