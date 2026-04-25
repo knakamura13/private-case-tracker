@@ -90,17 +90,6 @@
 		{/if}
 	</Widget>
 
-	<Widget title="Forms by status" href="/forms">
-		<ul class="space-y-1.5 text-xs">
-			{#each Object.entries(data.formsByStatus) as [s, n]}
-				<li class="flex items-center justify-between">
-					<span class="text-muted-foreground">{titleCase(s)}</span>
-					<span class="font-mono text-foreground">{n}</span>
-				</li>
-			{/each}
-		</ul>
-	</Widget>
-
 	<Widget title="Evidence coverage" href="/evidence">
 		<ul class="space-y-1.5 text-xs">
 			{#each data.evidenceCoverage.slice(0, 8) as c}
@@ -129,21 +118,6 @@
 				</li>
 			{/each}
 		</ul>
-	</Widget>
-
-	<Widget title="Documents by category" href="/documents">
-		{#if data.docsByCategory.length === 0}
-			<p class="text-sm text-muted-foreground">No documents yet.</p>
-		{:else}
-			<ul class="space-y-1 text-xs">
-				{#each data.docsByCategory as d}
-					<li class="flex items-center justify-between">
-						<span class="text-muted-foreground">{d.category}</span>
-						<span class="font-mono text-foreground">{d.count}</span>
-					</li>
-				{/each}
-			</ul>
-		{/if}
 	</Widget>
 
 	<Widget title="Recent activity" href="/settings/data/activity">

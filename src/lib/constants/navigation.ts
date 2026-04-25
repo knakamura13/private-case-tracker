@@ -1,11 +1,8 @@
 import {
 	LayoutDashboard,
 	List,
-	FileText,
 	Layers,
-	FolderLock,
-	HelpCircle,
-	NotebookPen
+	HelpCircle
 } from 'lucide-svelte';
 
 export interface NavItem {
@@ -19,11 +16,8 @@ export interface NavItem {
 export const navigation: NavItem[] = [
 	{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
 	{ href: '/timeline', label: 'Timeline', icon: List, description: 'Case phases and milestones' },
-	{ href: '/forms', label: 'Forms', icon: FileText, description: 'Packet tracker' },
 	{ href: '/evidence', label: 'Evidence', icon: Layers, description: 'Evidence library' },
-	{ href: '/documents', label: 'Documents', icon: FolderLock, description: 'Files and secure links' },
-	{ href: '/questions', label: 'Questions', icon: HelpCircle, description: 'Research tracker' },
-	{ href: '/notes', label: 'Notes', icon: NotebookPen }
+	{ href: '/questions', label: 'Questions', icon: HelpCircle, description: 'Research tracker' }
 ];
 
 export const privacyCopy = {

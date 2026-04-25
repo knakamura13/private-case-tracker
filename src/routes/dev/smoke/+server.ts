@@ -35,7 +35,6 @@ export const POST = async () => {
 		priority: 'MEDIUM',
 		status: 'TODO',
 		ownerId: null,
-		linkedFormId: null,
 		linkedEvidenceId: null,
 		linkedMilestoneId: null,
 		order: 0,
@@ -43,7 +42,6 @@ export const POST = async () => {
 		updatedAt: now,
 		deletedAt: null,
 		checklist: [],
-		attachments: [],
 		tags: []
 	};
 

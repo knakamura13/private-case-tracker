@@ -26,59 +26,19 @@ export type TaskItem = DynamoBaseItem & {
 	priority: string;
 	status: string; // Stored as string, validated as TaskStatus at service layer
 	ownerId: string | null;
-	linkedFormId: string | null;
 	linkedEvidenceId: string | null;
 	linkedMilestoneId: string | null;
 	order: number;
 	checklist?: Array<{ id: string; taskId: string; text: string; done: boolean; order: number }>;
-	attachments?: unknown[];
 	tags?: unknown[];
-};
-
-export type FormItem = DynamoBaseItem & {
-	id: string;
-	workspaceId: string;
-	name: string;
-	code: string;
-	purpose: string | null;
-	filingStatus: string; // Stored as string, validated as FormFilingStatus at service layer
-	plannedFilingDate: string | null;
-	actualFilingDate: string | null;
-	receiptNumberEncrypted: string | null;
-	notes: string | null;
-	lastUpdatedByUserId: string | null;
-	supportingItems: Array<{
-		id: string;
-		formId: string;
-		label: string;
-		required: boolean;
-		done: boolean;
-		satisfiedByEvidenceId: string | null;
-		satisfiedByFileId: string | null;
-		order: number;
-	}>;
 };
 
 export type EvidenceItem = DynamoBaseItem & {
 	id: string;
 	workspaceId: string;
-	title: string;
-	type: string;
-	status: string; // Stored as string, validated as EvidenceStatus at service layer
-	description: string | null;
-	significance: string | null;
-	dateStart: string | null;
-	dateEnd: string | null;
-	dateCollected: string | null;
-	source: string | null;
-	peopleInvolved: string[];
-	confidenceScore: number;
-	includedInPacket: boolean;
-	notes: string | null;
-	files?: Array<{ id: string; file: string | null; title: string }>;
-	tasks: Array<{ id: string; title: string }>;
-	supportingFor: Array<{ id: string; title: string }>;
-	linkedNotes: Array<{ id: string; title: string }>;
+	category: string;
+	targetCount: number;
+	currentCount: number;
 };
 
 export type QuestionItem = DynamoBaseItem & {
@@ -93,45 +53,9 @@ export type QuestionItem = DynamoBaseItem & {
 	category: string | null;
 	citationUrl: string | null;
 	answeredAt: string | null;
-	relatedFormId: string | null;
 	relatedEvidenceId: string | null;
 	relatedTaskId: string | null;
-	relatedForm: { id: string } | null;
 	relatedEvidence: { id: string } | null;
-};
-
-export type NoteItem = DynamoBaseItem & {
-	id: string;
-	workspaceId: string;
-	title: string;
-	bodyMd: string;
-	authorId: string | null;
-	author: { id: string; name: string | null; email: string } | null;
-	linkedTaskId: string | null;
-	linkedFormId: string | null;
-	linkedEvidenceId: string | null;
-};
-
-export type DocumentFileItem = DynamoBaseItem & {
-	id: string;
-	workspaceId: string;
-	title: string;
-	category: string;
-	notes: string | null;
-	uploadedByUserId: string | null;
-	uploadedBy: { id: string; name: string | null; email: string } | null;
-	linkedFormId: string | null;
-	linkedEvidenceId: string | null;
-	linkedTaskId: string | null;
-	form: { id: string; code: string; name: string } | null;
-	evidence: { id: string; title: string } | null;
-	task: { id: string; title: string } | null;
-	file: string | null;
-	sizeBytes: number | null;
-	mimeType: string | null;
-	storageMode: string | null;
-	externalUrl: string | null;
-	versions: Array<{ id: string; title: string; createdAt: string }>;
 };
 
 export type MilestoneItem = DynamoBaseItem & {
