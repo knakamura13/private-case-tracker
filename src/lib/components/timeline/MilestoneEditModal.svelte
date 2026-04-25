@@ -7,7 +7,7 @@
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
 	import { PHASE_LABELS, PHASE_ORDER } from '$lib/constants/phases';
 	import { showSuccessToast, showErrorToast } from '$lib/stores/toast';
-	import { X, Plus, Calendar, Paperclip, MapPin, CheckSquare, User, MoreHorizontal } from 'lucide-svelte';
+	import { X, Plus, Calendar, MapPin, CheckSquare, User, MoreHorizontal } from 'lucide-svelte';
 
 	let { open, onClose, action, deleteAction, onenhance, members, initial, error, errorId }: {
 		open: boolean;
@@ -32,7 +32,6 @@
 	let subTasksJson = $derived(JSON.stringify(editableSubTasks));
 
 	// Button visibility states
-	let showAttachmentInput = $state(false);
 	let showLocationInput = $state(false);
 	let showDueDatePicker = $state(false);
 	let showAppointmentDatePicker = $state(false);
@@ -76,7 +75,6 @@
 	}
 
 	// Input values
-	let attachmentUrl = $state('');
 	let locationAddress = $state('');
 	let dueDateValue = $state('');
 	let appointmentDateValue = $state('');
@@ -93,7 +91,7 @@
 	let priorityValue = $state('MEDIUM');
 	let ownerIdValue = $state('');
 
-	const ALLOWED_FIELDS = ['id', 'title', 'description', 'phase', 'status', 'priority', 'ownerId', 'dueDate', 'scheduledAt', 'subTasks', 'owner', 'attachments', 'location'] as const;
+	const ALLOWED_FIELDS = ['id', 'title', 'description', 'phase', 'status', 'priority', 'ownerId', 'dueDate', 'scheduledAt', 'subTasks', 'owner', 'location'] as const;
 
 	// Initialize reactive values from initial props when modal opens
 	$effect(() => {
@@ -159,20 +157,6 @@
 		window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
 	}
 
-	function handleAttachmentAdd() {
-		if (!attachmentUrl.trim()) return;
-		// Store attachment in a hidden form field
-		const existingAttachments = val('attachments', '');
-		const newAttachments = existingAttachments ? `${existingAttachments},${attachmentUrl.trim()}` : attachmentUrl.trim();
-		const hiddenInput = document.querySelector('input[name="attachments"]') as HTMLInputElement;
-		if (hiddenInput) {
-			hiddenInput.value = newAttachments;
-		}
-		attachmentUrl = '';
-		showAttachmentInput = false;
-		triggerAutoSave();
-	}
-
 	function handleLocationSave() {
 		if (!locationAddress.trim()) return;
 		// Store location in a hidden form field
@@ -227,7 +211,6 @@
 				formData.append('dueDate', dueDateValue);
 				formData.append('scheduledAt', appointmentDateValue);
 				formData.append('subTasks', subTasksJson);
-				formData.append('attachments', val('attachments', ''));
 				formData.append('location', val('location', ''));
 
 				const cancel = () => {
@@ -325,9 +308,6 @@
 					<div class="flex-1 space-y-4">
 						<!-- Actions Bar -->
 						<div class="flex flex-wrap gap-2">
-							<Button type="button" variant="outline" size="sm" onclick={() => showAttachmentInput = !showAttachmentInput}>
-								{#snippet children()}<Paperclip class="h-3.5 w-3.5" /> Attachment{/snippet}
-							</Button>
 							<Button type="button" variant="outline" size="sm" onclick={() => showLocationInput = !showLocationInput}>
 								{#snippet children()}<MapPin class="h-3.5 w-3.5" /> Location{/snippet}
 							</Button>
@@ -373,19 +353,6 @@
 								{#snippet children()}<Calendar class="h-3.5 w-3.5" /> Appointment date{/snippet}
 							</Button>
 						</div>
-
-						<!-- Attachment Input -->
-						{#if showAttachmentInput}
-							<div class="mt-2 flex gap-2">
-								<Input
-									bind:value={attachmentUrl}
-									placeholder="Enter attachment URL..."
-									class="flex-1 text-sm"
-								/>
-								<Button type="button" size="sm" onclick={handleAttachmentAdd}>Add</Button>
-								<Button type="button" variant="ghost" size="sm" onclick={() => showAttachmentInput = false}>Cancel</Button>
-							</div>
-						{/if}
 
 						<!-- Location Input -->
 						{#if showLocationInput}
@@ -607,7 +574,6 @@
 					<input type="hidden" name="ownerId" value={ownerIdValue} />
 					<input type="hidden" name="dueDate" value={dueDateValue} />
 					<input type="hidden" name="scheduledAt" value={appointmentDateValue} />
-					<input type="hidden" name="attachments" value={val('attachments', '')} />
 					<input type="hidden" name="location" value={val('location', '')} />
 					<div class="flex justify-between gap-2">
 						{#if isSaving}
