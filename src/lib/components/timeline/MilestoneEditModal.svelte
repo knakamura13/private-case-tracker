@@ -9,26 +9,16 @@
 	import { enhance } from '$app/forms';
 	import { X, Plus, Calendar, Paperclip, MapPin, Trash2, CheckSquare } from 'lucide-svelte';
 
-	let {
-		open = false,
-		onClose,
-		initial = {},
-		members = [],
-		error,
-		errorId,
-		action,
-		onenhance,
-		deleteAction
-	}: {
+	let { open, onClose, action, deleteAction, onenhance, members, initial, error, errorId }: {
 		open: boolean;
-		onClose: () => void;
-		initial?: Record<string, unknown>;
-		members?: { id: string; name: string | null; email: string }[];
-		error?: string | null;
-		errorId?: string | null;
-		action?: string;
-		onenhance?: (params: { formData: FormData; cancel: () => void }) => void;
+		onClose: () => void | Promise<void>;
+		action: string;
 		deleteAction?: string;
+		onenhance?: (params: { formData: FormData; cancel: () => void }) => void | (() => Promise<void>);
+		members: { id: string; name: string | null; email: string }[];
+		initial: Record<string, unknown>;
+		error?: string;
+		errorId?: string;
 	} = $props();
 
 	interface SubTask {
@@ -161,30 +151,39 @@
 		triggerAutoSave();
 	}
 
-	function triggerAutoSave(immediate = false) {
+	async function triggerAutoSave(immediate = false) {
 		if (saveTimeout) clearTimeout(saveTimeout);
 		// Only trigger if dialog is open and action is valid
 		if (!open || !action) return;
-		try {
-			new URL(action); // Validate action is a valid URL
-		} catch {
-			return;
-		}
 		const delay = immediate ? 0 : 1000;
-		saveTimeout = setTimeout(() => {
-			const form = document.querySelector('form[method="post"]') as HTMLFormElement;
-			if (form && onenhance) {
+		saveTimeout = setTimeout(async () => {
+			if (onenhance) {
 				isSaving = true;
-				const formData = new FormData(form);
-				onenhance({ formData, cancel: () => { isSaving = false; } });
-				// If cancel wasn't called, proceed with fetch
-				fetch(action, { method: 'POST', body: formData })
-					.then(() => {
-						isSaving = false;
-					})
-					.catch(() => {
-						isSaving = false;
-					});
+				// Manually construct FormData from reactive state to ensure values are current
+				const formData = new FormData();
+				formData.append('id', val('id'));
+				formData.append('title', titleValue);
+				formData.append('description', descriptionValue);
+				formData.append('phase', phaseValue);
+				formData.append('status', statusValue);
+				formData.append('priority', priorityValue);
+				formData.append('ownerId', ownerIdValue);
+				formData.append('dueDate', dueDateValue);
+				formData.append('subTasks', subTasksJson);
+				formData.append('attachments', val('attachments', ''));
+				formData.append('location', val('location', ''));
+
+				const cancel = () => {
+					isSaving = false;
+				};
+
+				// Call onenhance - it may return a function (timeline pattern) or be void
+				const result = onenhance({ formData, cancel });
+				if (result && typeof result === 'function') {
+					await result();
+				}
+
+				isSaving = false;
 			}
 		}, delay);
 	}
