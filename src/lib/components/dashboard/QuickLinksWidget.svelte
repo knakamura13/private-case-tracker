@@ -339,7 +339,7 @@
 			class:ring-primary={dropTargetId === folder.id && dropIntent === 'reorder'}
 			class:ring-emerald-500={dropTargetId === folder.id && dropIntent === 'move-into'}
 			class:ring-offset-2={dropTargetId === folder.id && (dropIntent === 'reorder' || dropIntent === 'move-into')}
-			class:opacity-0={draggingId === folder.id}
+			class:opacity-50={draggingId === folder.id}
 			class:translate-x-4={dropInsertIndex !== null && allItems.findIndex((i) => i.id === folder.id) === dropInsertIndex}
 			role="button"
 			tabindex="0"
@@ -574,7 +574,7 @@
 			class:ring-primary={dropTargetId === link.id && dropIntent === 'reorder'}
 			class:ring-amber-500={dropTargetId === link.id && dropIntent === 'merge'}
 			class:ring-offset-2={dropTargetId === link.id && (dropIntent === 'reorder' || dropIntent === 'merge')}
-			class:opacity-0={draggingId === link.id}
+			class:opacity-50={draggingId === link.id}
 			class:translate-x-4={dropInsertIndex !== null && allItems.findIndex((i) => i.id === link.id) === dropInsertIndex}
 			role="button"
 			tabindex="0"
