@@ -2,8 +2,9 @@
 	import PageHeader from '$lib/components/shared/PageHeader.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import DropdownMenu from '$lib/components/ui/DropdownMenu.svelte';
 	import { enhance } from '$app/forms';
-	import { Plus, Minus, Pencil, Check, X, Trash2 } from 'lucide-svelte';
+	import { Plus, Minus, Check, X, MoreHorizontal, Pencil, Trash2 } from 'lucide-svelte';
 	import type { PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: { error?: string } } = $props();
@@ -13,6 +14,7 @@
 	let showAddModal = $state(false);
 	let showRenameModal = $state(false);
 	let showDeleteModal = $state(false);
+	let dropdownOpen = $state<string | null>(null);
 	let newCategoryName = $state('');
 	let renameOldName = $state('');
 	let renameNewName = $state('');
@@ -21,6 +23,7 @@
 	function startEdit(category: string, currentTarget: number) {
 		editingCategory = category;
 		editTarget = currentTarget;
+		dropdownOpen = null;
 	}
 
 	function cancelEdit() {
@@ -36,11 +39,17 @@
 		renameOldName = category;
 		renameNewName = category;
 		showRenameModal = true;
+		dropdownOpen = null;
 	}
 
 	function openDeleteModal(category: string) {
 		deleteCategoryName = category;
 		showDeleteModal = true;
+		dropdownOpen = null;
+	}
+
+	function toggleDropdown(category: string) {
+		dropdownOpen = dropdownOpen === category ? null : category;
 	}
 </script>
 
@@ -60,76 +69,92 @@
 	</Card>
 {/if}
 
-<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+<div class="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
 	{#each data.categories as cat}
 		<Card class="p-4">
-			<div class="mb-3 flex items-center justify-between">
+			<div class="mb-3 flex flex-wrap items-center justify-between gap-2">
 				<div class="flex items-center gap-2">
 					<h3 class="font-semibold">{cat.category}</h3>
-					{#if data.isOwner}
+					{#if editingCategory === cat.category}
+						<form
+							method="post"
+							action="?/updateTarget"
+							class="flex items-center gap-1"
+							use:enhance={() => {
+								return async ({ result: _result, update }) => {
+									await update({ reset: false });
+									cancelEdit();
+								};
+							}}
+						>
+							<input type="hidden" name="category" value={cat.category} />
+							<span class="text-sm text-muted-foreground">{cat.currentCount} / </span>
+							<input
+								type="number"
+								name="target"
+								bind:value={editTarget}
+								min="0"
+								max="99"
+								class="w-14 rounded border border-border bg-background px-2 py-1 text-center text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+								onkeydown={(e) => { if (e.key === 'Escape') cancelEdit(); }}
+							/>
+							<button type="submit" class="text-success hover:text-success/80" aria-label="Save">
+								<Check class="h-4 w-4" />
+							</button>
+							<button type="button" class="text-muted-foreground hover:text-foreground" aria-label="Cancel" onclick={cancelEdit}>
+								<X class="h-4 w-4" />
+							</button>
+						</form>
+					{:else}
 						<button
 							type="button"
-							class="text-muted-foreground hover:text-foreground"
-							aria-label="Rename {cat.category}"
-							onclick={() => openRenameModal(cat.category)}
+							class="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+							aria-label="Edit target for {cat.category}"
+							onclick={() => startEdit(cat.category, cat.targetCount)}
 						>
+							<span>{cat.currentCount} / {cat.targetCount}</span>
 							<Pencil class="h-3 w-3" />
 						</button>
 					{/if}
 				</div>
-				{#if editingCategory === cat.category}
-					<form
-						method="post"
-						action="?/updateTarget"
-						class="flex items-center gap-1"
-						use:enhance={() => {
-							return async ({ result, update }) => {
-								await update({ reset: false });
-								if (result.type !== 'failure') cancelEdit();
-							};
-						}}
-					>
-						<input type="hidden" name="category" value={cat.category} />
-						<span class="text-sm text-muted-foreground">Target:</span>
-						<input
-							type="number"
-							name="target"
-							bind:value={editTarget}
-							min="0"
-							max="99"
-							class="w-12 rounded border border-border bg-background px-2 py-1 text-center text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-							onkeydown={(e) => { if (e.key === 'Escape') cancelEdit(); }}
-						/>
-						<button type="submit" class="text-success hover:text-success/80" aria-label="Save">
-							<Check class="h-4 w-4" />
-						</button>
-						<button type="button" class="text-muted-foreground hover:text-foreground" aria-label="Cancel" onclick={cancelEdit}>
-							<X class="h-4 w-4" />
-						</button>
-					</form>
-				{:else}
-					<button
-						type="button"
-						class="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-						aria-label="Edit target for {cat.category}"
-						onclick={() => startEdit(cat.category, cat.targetCount)}
-					>
-						<span>Target: {cat.targetCount}</span>
-						<Pencil class="h-3 w-3" />
-					</button>
+				{#if data.isOwner}
+					<DropdownMenu isOpen={dropdownOpen === cat.category} onClose={() => dropdownOpen = null}>
+						{#snippet trigger()}
+							<button
+								type="button"
+								class="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+								aria-label="Menu for {cat.category}"
+								onclick={() => toggleDropdown(cat.category)}
+							>
+								<MoreHorizontal class="h-4 w-4" />
+							</button>
+						{/snippet}
+						{#snippet children()}
+							<button
+								type="button"
+								class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-left hover:bg-muted"
+								onclick={() => openRenameModal(cat.category)}
+							>
+								<Pencil class="h-3 w-3" />
+								Rename
+							</button>
+							<button
+								type="button"
+								class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-left text-destructive hover:bg-destructive/10"
+								onclick={() => openDeleteModal(cat.category)}
+							>
+								<Trash2 class="h-3 w-3" />
+								Delete
+							</button>
+						{/snippet}
+					</DropdownMenu>
 				{/if}
 			</div>
-			<div class="mb-4">
-				<div class="mb-2 flex items-center justify-between text-sm">
-					<span class="text-muted-foreground">Collected</span>
-					<span class="font-mono text-lg font-semibold">{cat.currentCount}</span>
-				</div>
-				<div class="h-2 overflow-hidden rounded bg-muted">
-					<div
-						class="h-full bg-primary transition-all"
-						style:width={`${Math.min(100, cat.targetCount > 0 ? (cat.currentCount / cat.targetCount) * 100 : cat.currentCount > 0 ? 100 : 0)}%`}
-					></div>
-				</div>
+			<div class="mb-4 h-2 overflow-hidden rounded bg-muted">
+				<div
+					class="h-full bg-primary transition-all"
+					style:width={`${Math.min(100, cat.targetCount > 0 ? (cat.currentCount / cat.targetCount) * 100 : cat.currentCount > 0 ? 100 : 0)}%`}
+				></div>
 			</div>
 			<div class="flex items-center justify-between">
 				<form method="post" action="?/adjustCount" class="flex gap-2" use:enhance>
@@ -137,36 +162,24 @@
 					<input type="hidden" name="delta" value="-1" />
 					<button
 						type="submit"
-						class="rounded-md border border-border p-2 hover:bg-muted disabled:opacity-50"
+						class="rounded border border-border p-1.5 hover:bg-muted disabled:opacity-50"
 						disabled={cat.currentCount === 0}
 						aria-label="Decrease {cat.category} count"
 					>
-						<Minus class="h-4 w-4" />
+						<Minus class="h-3.5 w-3.5" />
 					</button>
 				</form>
-				<div class="flex gap-2">
-					<form method="post" action="?/adjustCount" class="flex gap-2" use:enhance>
-						<input type="hidden" name="category" value={cat.category} />
-						<input type="hidden" name="delta" value="1" />
-						<button
-							type="submit"
-							class="rounded-md border border-border p-2 hover:bg-muted"
-							aria-label="Increase {cat.category} count"
-						>
-							<Plus class="h-4 w-4" />
-						</button>
-					</form>
-					{#if data.isOwner}
-						<button
-							type="button"
-							class="rounded-md border border-border p-2 hover:bg-destructive/10 hover:text-destructive"
-							aria-label="Delete {cat.category}"
-							onclick={() => openDeleteModal(cat.category)}
-						>
-							<Trash2 class="h-4 w-4" />
-						</button>
-					{/if}
-				</div>
+				<form method="post" action="?/adjustCount" class="flex gap-2" use:enhance>
+					<input type="hidden" name="category" value={cat.category} />
+					<input type="hidden" name="delta" value="1" />
+					<button
+						type="submit"
+						class="rounded border border-border p-1.5 hover:bg-muted"
+						aria-label="Increase {cat.category} count"
+					>
+						<Plus class="h-3.5 w-3.5" />
+					</button>
+				</form>
 			</div>
 		</Card>
 	{/each}
