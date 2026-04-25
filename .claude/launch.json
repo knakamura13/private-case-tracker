@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Docker Services",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "open -a Docker && until docker info >/dev/null 2>&1; do sleep 1; done && docker compose up"],
+      "shell": true
+    },
+    {
+      "name": "Dev Server",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev"],
+      "port": 5173,
+      "autoPort": true
+    }
+  ]
+}
