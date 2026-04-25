@@ -35,6 +35,7 @@
 	let showAttachmentInput = $state(false);
 	let showLocationInput = $state(false);
 	let showDueDatePicker = $state(false);
+	let showAppointmentDatePicker = $state(false);
 	let showChecklistInput = $state(false);
 	let showOwnerDropdown = $state(false);
 	let showMenuDropdown = $state(false);
@@ -78,6 +79,7 @@
 	let attachmentUrl = $state('');
 	let locationAddress = $state('');
 	let dueDateValue = $state('');
+	let appointmentDateValue = $state('');
 
 	// Auto-save state
 	let isSaving = $state(false);
@@ -91,7 +93,7 @@
 	let priorityValue = $state('MEDIUM');
 	let ownerIdValue = $state('');
 
-	const ALLOWED_FIELDS = ['id', 'title', 'description', 'phase', 'status', 'priority', 'ownerId', 'dueDate', 'subTasks', 'owner', 'attachments', 'location'] as const;
+	const ALLOWED_FIELDS = ['id', 'title', 'description', 'phase', 'status', 'priority', 'ownerId', 'dueDate', 'scheduledAt', 'subTasks', 'owner', 'attachments', 'location'] as const;
 
 	// Initialize reactive values from initial props when modal opens
 	$effect(() => {
@@ -104,6 +106,7 @@
 			ownerIdValue = val('ownerId');
 			editableSubTasks = (initial.subTasks as SubTask[]) || [];
 			dueDateValue = val('dueDate');
+			appointmentDateValue = val('scheduledAt');
 		}
 	});
 
@@ -193,6 +196,16 @@
 		triggerAutoSave();
 	}
 
+	function handleAppointmentDateSave() {
+		// Store appointment date in a hidden form field
+		const hiddenInput = document.querySelector('input[name="scheduledAt"]') as HTMLInputElement;
+		if (hiddenInput) {
+			hiddenInput.value = appointmentDateValue;
+		}
+		showAppointmentDatePicker = false;
+		triggerAutoSave();
+	}
+
 	async function triggerAutoSave(immediate = false) {
 		if (isSaving) return;
 		if (saveTimeout) clearTimeout(saveTimeout);
@@ -212,6 +225,7 @@
 				formData.append('priority', priorityValue);
 				formData.append('ownerId', ownerIdValue);
 				formData.append('dueDate', dueDateValue);
+				formData.append('scheduledAt', appointmentDateValue);
 				formData.append('subTasks', subTasksJson);
 				formData.append('attachments', val('attachments', ''));
 				formData.append('location', val('location', ''));
@@ -317,9 +331,6 @@
 							<Button type="button" variant="outline" size="sm" onclick={() => showLocationInput = !showLocationInput}>
 								{#snippet children()}<MapPin class="h-3.5 w-3.5" /> Location{/snippet}
 							</Button>
-							<Button type="button" variant="outline" size="sm" onclick={() => showDueDatePicker = !showDueDatePicker}>
-								{#snippet children()}<Calendar class="h-3.5 w-3.5" /> Date{/snippet}
-							</Button>
 							<div class="relative">
 								<Button type="button" variant="outline" size="sm" onclick={() => showOwnerDropdown = !showOwnerDropdown}>
 									{#snippet children()}<User class="h-3.5 w-3.5" /> Owner{/snippet}
@@ -353,6 +364,14 @@
 									</div>
 								{/if}
 							</div>
+						</div>
+						<div class="flex flex-wrap gap-2">
+							<Button type="button" variant="outline" size="sm" onclick={() => showDueDatePicker = !showDueDatePicker}>
+								{#snippet children()}<Calendar class="h-3.5 w-3.5" /> Due date{/snippet}
+							</Button>
+							<Button type="button" variant="outline" size="sm" onclick={() => showAppointmentDatePicker = !showAppointmentDatePicker}>
+								{#snippet children()}<Calendar class="h-3.5 w-3.5" /> Appointment date{/snippet}
+							</Button>
 						</div>
 
 						<!-- Attachment Input -->
@@ -391,6 +410,19 @@
 								/>
 								<Button type="button" size="sm" onclick={handleDueDateSave}>Save</Button>
 								<Button type="button" variant="ghost" size="sm" onclick={() => showDueDatePicker = false}>Cancel</Button>
+							</div>
+						{/if}
+
+						<!-- Appointment Date Picker -->
+						{#if showAppointmentDatePicker}
+							<div class="mt-2 flex gap-2">
+								<Input
+									bind:value={appointmentDateValue}
+									type="date"
+									class="text-sm"
+								/>
+								<Button type="button" size="sm" onclick={handleAppointmentDateSave}>Save</Button>
+								<Button type="button" variant="ghost" size="sm" onclick={() => showAppointmentDatePicker = false}>Cancel</Button>
 							</div>
 						{/if}
 
@@ -568,12 +600,13 @@
 				</div>
 
 				<!-- Footer -->
-				<div class="border-t border-border p-4">
+				<div class="p-4">
 					{#if error}<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />{/if}
 					<input type="hidden" name="subTasks" value={subTasksJson} />
 					<input type="hidden" name="id" value={val('id')} />
 					<input type="hidden" name="ownerId" value={ownerIdValue} />
 					<input type="hidden" name="dueDate" value={dueDateValue} />
+					<input type="hidden" name="scheduledAt" value={appointmentDateValue} />
 					<input type="hidden" name="attachments" value={val('attachments', '')} />
 					<input type="hidden" name="location" value={val('location', '')} />
 					<div class="flex justify-between gap-2">
