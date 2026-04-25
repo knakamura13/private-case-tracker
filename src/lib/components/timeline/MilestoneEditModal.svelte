@@ -7,7 +7,7 @@
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
 	import { PHASE_LABELS, PHASE_ORDER } from '$lib/constants/phases';
 	import { enhance } from '$app/forms';
-	import { X, Plus, Calendar, Paperclip, MapPin, Trash2 } from 'lucide-svelte';
+	import { X, Plus, Calendar, Paperclip, MapPin, Trash2, CheckSquare } from 'lucide-svelte';
 
 	let {
 		open = false,
@@ -304,11 +304,14 @@
 						<!-- Checklist -->
 						<Card class="p-3">
 							<div class="mb-2 flex items-center gap-2">
-								<input type="checkbox" checked={false} disabled class="h-4 w-4 rounded border-border" />
+								<CheckSquare class="h-4 w-4 text-muted-foreground" />
 								<span class="text-sm font-medium">Sub-tasks</span>
 							</div>
-							<div class="mb-3 h-1.5 w-full rounded-full bg-muted">
-								<div class="h-1.5 rounded-full bg-primary transition-all" style="width: {checklistProgress()}%"></div>
+							<div class="mb-3 flex items-center gap-2">
+								<span class="text-sm text-muted-foreground">{checklistProgress()}%</span>
+								<div class="h-1.5 flex-1 rounded-full bg-muted">
+									<div class="h-1.5 rounded-full bg-primary transition-all" style="width: {checklistProgress()}%"></div>
+								</div>
 							</div>
 							{#if editableSubTasks.length > 0}
 								<div class="mb-3 space-y-2">
