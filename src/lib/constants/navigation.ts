@@ -1,6 +1,6 @@
 import {
 	LayoutDashboard,
-	GitBranchPlus,
+	List,
 	FileText,
 	Layers,
 	FolderLock,
@@ -18,7 +18,7 @@ export interface NavItem {
 
 export const navigation: NavItem[] = [
 	{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-	{ href: '/timeline', label: 'Timeline', icon: GitBranchPlus, description: 'Case phases and milestones' },
+	{ href: '/timeline', label: 'Timeline', icon: List, description: 'Case phases and milestones' },
 	{ href: '/forms', label: 'Forms', icon: FileText, description: 'Packet tracker' },
 	{ href: '/evidence', label: 'Evidence', icon: Layers, description: 'Evidence library' },
 	{ href: '/documents', label: 'Documents', icon: FolderLock, description: 'Files and secure links' },

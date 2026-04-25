@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { fly, fade } from 'svelte/transition';
-	import { cubicOut } from 'svelte/easing';
+	import { fade } from 'svelte/transition';
 	import { page } from '$app/stores';
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
 	import TopBar from '$lib/components/layout/TopBar.svelte';
@@ -75,8 +74,6 @@
 			<div
 				bind:this={sidebarDialogEl}
 				tabindex="-1"
-				in:fly={{ x: -264, duration: 280, opacity: 1 }}
-				out:fly={{ x: -264, duration: 200, opacity: 1 }}
 				class="relative z-10 h-full w-60"
 			>
 				<Sidebar workspaceName={data.workspace.name} onNavigate={() => (sidebarOpen = false)} />
@@ -95,9 +92,7 @@
 		/>
 		<main id="main" tabindex="-1" class="flex-1 overflow-y-auto overflow-x-hidden p-4 pb-24 md:p-12 md:pb-32">
 			{#key $page.url.pathname}
-				<div in:fly={{ y: 30, duration: 400, easing: cubicOut }}>
-					{@render children()}
-				</div>
+				{@render children()}
 			{/key}
 		</main>
 	</div>
