@@ -7,14 +7,9 @@
 	import { CalendarClock, AlertTriangle } from 'lucide-svelte';
 	import QuickLinksWidget from '$lib/components/dashboard/QuickLinksWidget.svelte';
 	import type { ActionData, PageData } from './$types';
-	import { onMount } from 'svelte';
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	let mounted = $state(false);
-	onMount(() => {
-		// Small delay ensures the transition registers after initial render
-		setTimeout(() => { mounted = true; }, 50);
-	});
+	let mounted = $state(true);
 </script>
 
 <PageHeader title="Dashboard" number="1" />
