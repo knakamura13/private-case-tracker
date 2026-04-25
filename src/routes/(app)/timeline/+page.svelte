@@ -14,6 +14,7 @@
 	import { titleCase } from '$lib/utils/format';
 	import { page } from '$app/stores';
 	import { invalidateAll } from '$app/navigation';
+	import { showSuccessToast } from '$lib/stores/toast';
 	import type { PageData } from './$types';
 
 	interface TimelinePageData extends PageData {
@@ -108,7 +109,7 @@
 								}}
 								class="w-full text-left"
 							>
-								<Card id={m.id} class="flex items-start gap-4 p-4 hover:border-primary/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5 dark:hover:shadow-primary/10 hover:bg-card/90">
+								<Card id={m.id} class="flex items-start gap-4 p-4 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-md hover:shadow-primary/10 dark:hover:shadow-primary/20 hover:bg-card/90">
 									<div class="mt-1 h-3 w-3 shrink-0 rounded-full border-2 {statusColor(m.status)}" title={titleCase(m.status)}></div>
 									<div class="min-w-0 flex-1">
 										<div class="flex items-start gap-2">
@@ -159,11 +160,14 @@
 			}}
 			action="?/update"
 			deleteAction="?/delete"
-			onenhance={({ formData }: { formData: FormData; cancel: () => void }) => {
+			onenhance={({ formData, cancel }: { formData: FormData; cancel: () => void }) => {
 				return async () => {
 					const response = await fetch('?/update', { method: 'POST', body: formData });
 					if (response.ok) {
 						await invalidateAll();
+						showSuccessToast('Milestone updated successfully');
+					} else {
+						cancel();
 					}
 				};
 			}}

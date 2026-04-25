@@ -6,8 +6,8 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
 	import { PHASE_LABELS, PHASE_ORDER } from '$lib/constants/phases';
-	import { enhance } from '$app/forms';
-	import { X, Plus, Calendar, Paperclip, MapPin, Trash2, CheckSquare } from 'lucide-svelte';
+	import { showSuccessToast, showErrorToast } from '$lib/stores/toast';
+	import { X, Plus, Calendar, Paperclip, MapPin, CheckSquare, User, MoreHorizontal } from 'lucide-svelte';
 
 	let { open, onClose, action, deleteAction, onenhance, members, initial, error, errorId }: {
 		open: boolean;
@@ -36,6 +36,43 @@
 	let showLocationInput = $state(false);
 	let showDueDatePicker = $state(false);
 	let showChecklistInput = $state(false);
+	let showOwnerDropdown = $state(false);
+	let showMenuDropdown = $state(false);
+	let openSubTaskMenuId = $state<string | null>(null);
+	let editingSubTaskId = $state<string | null>(null);
+	let editingSubTaskText = $state('');
+	let newSubTaskInputEl = $state<HTMLInputElement | null>(null);
+
+	// Focus new sub-task input when shown
+	$effect(() => {
+		if (showChecklistInput && newSubTaskInputEl) {
+			newSubTaskInputEl.focus();
+		}
+	});
+
+	// Focus input after adding a task
+	$effect(() => {
+		if (editableSubTasks.length > 0 && showChecklistInput && newSubTaskInputEl) {
+			newSubTaskInputEl.focus();
+		}
+	});
+
+	// Click outside handler for dropdowns
+	function clickOutside(node: HTMLElement, callback: () => void) {
+		const handleClick = (event: MouseEvent) => {
+			if (node && !node.contains(event.target as Node) && !event.defaultPrevented) {
+				callback();
+			}
+		};
+
+		document.addEventListener('click', handleClick, true);
+
+		return {
+			destroy() {
+				document.removeEventListener('click', handleClick, true);
+			}
+		};
+	}
 
 	// Input values
 	let attachmentUrl = $state('');
@@ -89,7 +126,12 @@
 
 	function _removeSubTask(id: string) {
 		editableSubTasks = editableSubTasks.filter((st) => st.id !== id);
-		triggerAutoSave();
+		triggerAutoSave(true);
+	}
+
+	function updateSubTaskText(id: string, newText: string) {
+		editableSubTasks = editableSubTasks.map((st) => (st.id === id ? { ...st, text: newText } : st));
+		triggerAutoSave(true);
 	}
 
 	function toggleSubTask(id: string) {
@@ -152,6 +194,7 @@
 	}
 
 	async function triggerAutoSave(immediate = false) {
+		if (isSaving) return;
 		if (saveTimeout) clearTimeout(saveTimeout);
 		// Only trigger if dialog is open and action is valid
 		if (!open || !action) return;
@@ -199,14 +242,21 @@
 			if (e.target === e.currentTarget) onClose();
 		}}
 		onkeydown={(e) => {
-			if (e.key === 'Escape') onClose();
+			if (e.key === 'Escape') {
+				if (showMenuDropdown) {
+					showMenuDropdown = false;
+					e.stopPropagation();
+				} else {
+					onClose();
+				}
+			}
 		}}
 	>
 		<div
-			class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-card shadow-xl"
+			class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-card shadow-xl"
 			role="document"
 		>
-			<form method="post" {action} use:enhance={onenhance} class="flex flex-col">
+			<form method="post" {action} class="flex flex-col">
 				<!-- Header -->
 				<div class="flex items-start justify-between border-b border-border p-4">
 					<div class="flex flex-1 items-start">
@@ -218,9 +268,41 @@
 							placeholder="Title"
 						/>
 					</div>
-					<Button type="button" variant="ghost" size="sm" onclick={onClose} class="shrink-0">
-						{#snippet children()}<X class="h-5 w-5" />{/snippet}
-					</Button>
+					<div class="flex items-center gap-1">
+						{#if deleteAction}
+							<div class="relative" use:clickOutside={() => showMenuDropdown = false}>
+								<Button type="button" variant="ghost" size="sm" onclick={() => showMenuDropdown = !showMenuDropdown} class="shrink-0">
+									{#snippet children()}<MoreHorizontal class="h-5 w-5" />{/snippet}
+								</Button>
+								{#if showMenuDropdown}
+									<div class="absolute right-0 top-full z-10 mt-1 w-32 rounded-md border border-border bg-card p-1 shadow-md">
+										<button
+											type="button"
+											class="w-full rounded-md px-2 py-1.5 text-left text-sm text-destructive hover:bg-destructive/10"
+											onclick={async () => {
+												if (confirm('Are you sure you want to delete this milestone? This action cannot be undone.')) {
+													const formData = new FormData();
+													formData.append('id', val('id'));
+													const response = await fetch(deleteAction, { method: 'POST', body: formData });
+													if (response.ok) {
+														showSuccessToast('Milestone deleted successfully');
+														window.location.href = '/timeline';
+													} else {
+														showErrorToast('Failed to delete milestone');
+													}
+												}
+											}}
+										>
+											Delete
+										</button>
+									</div>
+								{/if}
+							</div>
+						{/if}
+						<Button type="button" variant="ghost" size="sm" onclick={onClose} class="shrink-0">
+							{#snippet children()}<X class="h-5 w-5" />{/snippet}
+						</Button>
+					</div>
 				</div>
 
 				<!-- Main Content -->
@@ -230,14 +312,47 @@
 						<!-- Actions Bar -->
 						<div class="flex flex-wrap gap-2">
 							<Button type="button" variant="outline" size="sm" onclick={() => showAttachmentInput = !showAttachmentInput}>
-								{#snippet children()}<Paperclip class="h-4 w-4" /> Attachment{/snippet}
+								{#snippet children()}<Paperclip class="h-3.5 w-3.5" /> Attachment{/snippet}
 							</Button>
 							<Button type="button" variant="outline" size="sm" onclick={() => showLocationInput = !showLocationInput}>
-								{#snippet children()}<MapPin class="h-4 w-4" /> Location{/snippet}
+								{#snippet children()}<MapPin class="h-3.5 w-3.5" /> Location{/snippet}
 							</Button>
 							<Button type="button" variant="outline" size="sm" onclick={() => showDueDatePicker = !showDueDatePicker}>
-								{#snippet children()}<Calendar class="h-4 w-4" /> Due date{/snippet}
+								{#snippet children()}<Calendar class="h-3.5 w-3.5" /> Date{/snippet}
 							</Button>
+							<div class="relative">
+								<Button type="button" variant="outline" size="sm" onclick={() => showOwnerDropdown = !showOwnerDropdown}>
+									{#snippet children()}<User class="h-3.5 w-3.5" /> Owner{/snippet}
+								</Button>
+								{#if showOwnerDropdown}
+									<div class="absolute left-0 top-full z-10 mt-1 w-48 rounded-md border border-border bg-card p-1 shadow-md">
+										<button
+											type="button"
+											class="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
+											onclick={() => {
+												ownerIdValue = '';
+												showOwnerDropdown = false;
+												triggerAutoSave(true);
+											}}
+										>
+											Unassigned
+										</button>
+										{#each members as m (m.id)}
+											<button
+												type="button"
+												class="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
+												onclick={() => {
+													ownerIdValue = m.id;
+													showOwnerDropdown = false;
+													triggerAutoSave(true);
+												}}
+											>
+												{m.name ?? m.email}
+											</button>
+										{/each}
+									</div>
+								{/if}
+							</div>
 						</div>
 
 						<!-- Attachment Input -->
@@ -306,12 +421,14 @@
 								<CheckSquare class="h-4 w-4 text-muted-foreground" />
 								<span class="text-sm font-medium">Sub-tasks</span>
 							</div>
-							<div class="mb-3 flex items-center gap-2">
-								<span class="text-sm text-muted-foreground">{checklistProgress()}%</span>
-								<div class="h-1.5 flex-1 rounded-full bg-muted">
-									<div class="h-1.5 rounded-full bg-primary transition-all" style="width: {checklistProgress()}%"></div>
+							{#if editableSubTasks.length > 0}
+								<div class="mb-3 flex items-center gap-2">
+									<span class="text-sm text-muted-foreground">{checklistProgress()}%</span>
+									<div class="h-1.5 flex-1 rounded-full bg-muted">
+										<div class="h-1.5 rounded-full bg-primary transition-all" style="width: {checklistProgress()}%"></div>
+									</div>
 								</div>
-							</div>
+							{/if}
 							{#if editableSubTasks.length > 0}
 								<div class="mb-3 space-y-2">
 									{#each editableSubTasks as st (st.id)}
@@ -322,10 +439,65 @@
 												onchange={() => toggleSubTask(st.id)}
 												class="mt-0.5 h-4 w-4 rounded border-border"
 											/>
-											<span class={st.done ? 'line-through text-muted-foreground' : 'text-sm'}>{st.text}</span>
-											<Button type="button" variant="ghost" size="sm" class="ml-auto h-6 w-6 p-0" onclick={() => _removeSubTask(st.id)}>
-												{#snippet children()}<Trash2 class="h-3 w-3" />{/snippet}
-											</Button>
+											{#if editingSubTaskId === st.id}
+												<Input
+													bind:value={editingSubTaskText}
+													onkeydown={(e) => {
+														if (e.key === 'Enter') {
+															e.preventDefault();
+															updateSubTaskText(st.id, editingSubTaskText);
+															editingSubTaskId = null;
+														} else if (e.key === 'Escape') {
+															editingSubTaskId = null;
+														}
+													}}
+													onblur={() => {
+														if (editingSubTaskText !== st.text) {
+															updateSubTaskText(st.id, editingSubTaskText);
+														}
+														editingSubTaskId = null;
+													}}
+													class="flex-1 h-7 text-sm"
+												/>
+											{:else}
+												<span class={st.done ? 'line-through text-muted-foreground' : 'text-sm'}>{st.text}</span>
+											{/if}
+											<div class="relative ml-auto">
+												<Button
+													type="button"
+													variant="ghost"
+													size="sm"
+													class="h-6 w-6 p-0"
+													onclick={() => openSubTaskMenuId = openSubTaskMenuId === st.id ? null : st.id}
+												>
+													{#snippet children()}<MoreHorizontal class="h-4 w-4" />{/snippet}
+												</Button>
+												{#if openSubTaskMenuId === st.id}
+													<div class="absolute right-0 top-full z-10 mt-1 w-24 rounded-md border border-border bg-card p-1 shadow-md" use:clickOutside={() => openSubTaskMenuId = null}>
+														<button
+															type="button"
+															class="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
+															onclick={() => {
+																editingSubTaskId = st.id;
+																editingSubTaskText = st.text;
+																openSubTaskMenuId = null;
+															}}
+														>
+															Edit
+														</button>
+														<button
+															type="button"
+															class="w-full rounded-md px-2 py-1.5 text-left text-sm text-destructive hover:bg-destructive/10"
+															onclick={() => {
+																_removeSubTask(st.id);
+																openSubTaskMenuId = null;
+															}}
+														>
+															Delete
+														</button>
+													</div>
+												{/if}
+											</div>
 										</div>
 									{/each}
 								</div>
@@ -336,22 +508,22 @@
 								</Button>
 							{:else}
 								<div class="space-y-2">
-									<Input
+									<input
+										type="text"
 										bind:value={newSubTaskText}
+										bind:this={newSubTaskInputEl}
 										placeholder="Enter item..."
 										onkeydown={(e) => {
 											if (e.key === 'Enter') {
 												e.preventDefault();
 												addSubTask();
-												showChecklistInput = false;
 											}
 										}}
-										class="w-full text-sm"
+										class="w-full rounded-md border border-input bg-card px-3 py-2 text-sm"
 									/>
 									<div class="flex justify-start gap-2">
 										<Button type="button" size="sm" onclick={() => {
 											addSubTask();
-											showChecklistInput = false;
 										}}>Add</Button>
 										<Button type="button" variant="ghost" size="sm" onclick={() => {
 											newSubTaskText = '';
@@ -391,13 +563,6 @@
 									<option value="CRITICAL">Critical</option>
 								</Select>
 							</div>
-							<div>
-								<label for="ownerId" class="mb-1 block text-xs font-medium text-muted-foreground">Owner</label>
-								<Select id="ownerId" name="ownerId" bind:value={ownerIdValue} onchange={() => triggerAutoSave()} class="text-sm">
-									<option value="">Unassigned</option>
-									{#each members as m (m.id)}<option value={m.id}>{m.name ?? m.email}</option>{/each}
-								</Select>
-							</div>
 						</Card>
 					</div>
 				</div>
@@ -407,20 +572,11 @@
 					{#if error}<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />{/if}
 					<input type="hidden" name="subTasks" value={subTasksJson} />
 					<input type="hidden" name="id" value={val('id')} />
+					<input type="hidden" name="ownerId" value={ownerIdValue} />
 					<input type="hidden" name="dueDate" value={dueDateValue} />
 					<input type="hidden" name="attachments" value={val('attachments', '')} />
 					<input type="hidden" name="location" value={val('location', '')} />
 					<div class="flex justify-between gap-2">
-						{#if deleteAction}
-							<Button type="button" variant="destructive" onclick={async () => {
-								const formData = new FormData();
-								formData.append('id', val('id'));
-								await fetch(deleteAction, { method: 'POST', body: formData });
-								window.location.href = '/timeline';
-							}}>
-								{#snippet children()}<Trash2 class="h-4 w-4" /> Delete{/snippet}
-							</Button>
-						{/if}
 						{#if isSaving}
 							<span class="ml-auto text-sm text-muted-foreground">Saving...</span>
 						{/if}
