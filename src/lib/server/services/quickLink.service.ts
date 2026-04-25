@@ -28,7 +28,7 @@ export async function createQuickLink(
 	actorId: string,
 	input: QuickLinkCreate
 ) {
-	const existing = await listQuickLinks(workspaceId);
+	const existing = await listQuickLinks(workspaceId, undefined, input.folderId ?? undefined);
 	const order = (existing.at(-1)?.order ?? -1) + 1;
 	const now = new Date().toISOString();
 	const link = {
@@ -38,6 +38,7 @@ export async function createQuickLink(
 		title: input.title ?? null,
 		description: input.description ?? null,
 		notes: input.notes ?? null,
+		folderId: input.folderId ?? null,
 		order,
 		deletedAt: null as string | null,
 		createdAt: now,

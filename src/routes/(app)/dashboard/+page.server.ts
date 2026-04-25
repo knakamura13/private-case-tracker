@@ -97,13 +97,13 @@ export const actions: Actions = {
 			return fail(400, { error: parsed.error.message, errorId });
 		}
 		try {
-			const folder = await createQuickLinkFolder(workspace.id, user.id, parsed.data.name);
-			return { success: true, folder };
+			await createQuickLinkFolder(workspace.id, user.id, parsed.data.name);
 		} catch (e) {
 			const message = e instanceof Error ? e.message : 'Failed to create folder';
 			const errorId = await logActionError(event, { message, status: 500 });
 			return fail(500, { error: message, errorId });
 		}
+		throw redirect(303, '/dashboard');
 	},
 	updateFolder: async (event) => {
 		const { workspace, user } = requireWorkspace(event);

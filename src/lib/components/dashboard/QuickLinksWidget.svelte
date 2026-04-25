@@ -18,6 +18,7 @@
 	let modalMode = $state<'link' | 'folder'>('link');
 	let editing = $state<QuickLink | null>(null);
 	let editingFolder = $state<QuickLinkFolder | null>(null);
+	let addingToFolder = $state<QuickLinkFolder | null>(null);
 	let draftUrl = $state('');
 	let draftTitle = $state('');
 	let draftDescription = $state('');
@@ -65,10 +66,11 @@
 		return link.title?.trim() ? link.title : prettyHostname(link.url);
 	}
 
-	function openAdd() {
+	function openAdd(folder?: QuickLinkFolder) {
 		modalMode = 'link';
 		editing = null;
 		editingFolder = null;
+		addingToFolder = folder ?? null;
 		draftUrl = '';
 		draftTitle = '';
 		draftDescription = '';
@@ -201,7 +203,7 @@
 		}
 	}
 
-	function handleDragOver(event: DragEvent, id: string) {
+	function handleDragOver(event: DragEvent, _id: string) {
 		event.preventDefault();
 		if (event.dataTransfer) {
 			event.dataTransfer.dropEffect = 'move';
@@ -428,6 +430,19 @@
 							<span aria-hidden="true" class="text-lg leading-none">×</span>
 						</button>
 					</div>
+					{#if folderLinks.length === 0}
+						<div class="flex flex-col items-center gap-3 py-8 text-center text-muted-foreground">
+							<p class="text-sm">This folder is empty</p>
+							<button
+								type="button"
+								class="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+								onclick={() => openAdd(folder)}
+							>
+								<Plus class="h-4 w-4" aria-hidden="true" />
+								Add link
+							</button>
+						</div>
+					{/if}
 					<div class="flex flex-wrap items-start gap-1 sm:gap-2">
 						{#each folderLinks as link (link.id)}
 							<div
@@ -632,7 +647,7 @@
 	<button
 		type="button"
 		class="flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-		onclick={openAdd}
+		onclick={() => openAdd()}
 	>
 		<span class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60">
 			<Plus class="h-6 w-6" aria-hidden="true" />
@@ -786,6 +801,9 @@
 								};
 							}}
 						>
+							{#if addingToFolder}
+								<input type="hidden" name="folderId" value={addingToFolder.id} />
+							{/if}
 							<div>
 								<Label for="ql-url-new">URL</Label>
 								<Input id="ql-url-new" name="url" required bind:value={draftUrl} />
