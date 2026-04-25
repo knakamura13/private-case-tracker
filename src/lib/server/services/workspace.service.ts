@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { ddbPut, ddbGet, ddbQuery, ddbUpdate, ddbDelete } from '$lib/server/dynamo/ops';
 import { baPk, entitySk, gsi1Sk, gsi1UserPk, wsPk } from '$lib/server/dynamo/keys';
 import { invalidateMembers } from '$lib/server/cache/membersCache';
+import { invalidateWorkspace } from '$lib/server/cache/workspaceCache';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -55,6 +56,7 @@ export async function createWorkspace(input: { name: string; ownerUserId: string
 		entityId: ws.id,
 		summary: `Workspace "${ws.name}" created`
 	});
+	invalidateWorkspace(input.ownerUserId);
 	return ws;
 }
 
@@ -121,6 +123,7 @@ export async function removeMember(workspaceId: string, userId: string) {
 	// Delete the membership
 	await ddbDelete({ PK: wsPk(workspaceId), SK: entitySk('Membership', userId) });
 	invalidateMembers(workspaceId);
+	invalidateWorkspace(userId);
 
 	// Invalidate all sessions for the user to immediately revoke access
 	try {

@@ -6,9 +6,8 @@ import { auth } from '$lib/server/auth';
 import { logError } from '$lib/server/services/errorLog.service';
 import { redactSearchParams } from '$lib/server/utils/redact';
 import { DEV_USER, DEV_WORKSPACE, DEV_SESSION, ensureDevUserSeeded } from '$lib/server/dev-user';
-import { ddbQuery } from '$lib/server/dynamo/ops';
-import { gsi1UserPk } from '$lib/server/dynamo/keys';
 import { ENV } from '$lib/server/env';
+import { getWorkspace } from '$lib/server/cache/workspaceCache';
 
 function makeRequestId() {
 	// Short-ish id that's useful in logs and UI.
@@ -67,26 +66,10 @@ const sessionHandle: Handle = async ({ event, resolve }) => {
 				expiresAt: new Date(session.session.expiresAt)
 			};
 
-			// Workspace lookup is now DynamoDB-backed (membership items are indexed by GSI1PK=USER#<userId>).
-			const memberships = await ddbQuery<{
-				workspaceId: string;
-				role: 'OWNER' | 'COLLABORATOR';
-				acceptedAt: string | null;
-				workspaceName?: string;
-			}>({
-				IndexName: 'GSI1',
-				KeyConditionExpression: 'GSI1PK = :pk',
-				ExpressionAttributeValues: { ':pk': gsi1UserPk(session.user.id) },
-				Limit: 10
-			});
-
-			const membership = memberships.find((m) => m.acceptedAt != null);
-			if (membership?.workspaceId) {
-				event.locals.workspace = {
-					id: membership.workspaceId,
-					name: membership.workspaceName ?? 'Workspace',
-					role: membership.role
-				};
+			// Workspace lookup with 60-second cache to eliminate DynamoDB query on every request
+			const workspace = await getWorkspace(session.user.id);
+			if (workspace) {
+				event.locals.workspace = workspace;
 			} else {
 				// User has no active membership - clear session to force re-auth
 				console.log('[hooks] user has no active membership, clearing session');

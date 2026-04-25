@@ -7,6 +7,7 @@ import { randomUUID } from 'node:crypto';
 import { ddbGet, ddbPut, ddbQuery, ddbUpdate, ddbDelete } from '$lib/server/dynamo/ops';
 import { baPk, entitySk, gsi1Sk, gsi1UserPk, wsPk } from '$lib/server/dynamo/keys';
 import { invalidateMembers } from '$lib/server/cache/membersCache';
+import { invalidateWorkspace } from '$lib/server/cache/workspaceCache';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -94,6 +95,7 @@ export async function acceptInvitation(token: string, userId: string) {
 	};
 	await ddbPut({ ...membershipKey, ...membership });
 	invalidateMembers(invitation.workspaceId);
+	invalidateWorkspace(userId);
 
 	await ddbUpdate(
 		{ PK: wsPk(invitation.workspaceId), SK: entitySk('Invitation', invitation.id) },
