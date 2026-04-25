@@ -101,8 +101,8 @@
 						<li in:fly={{ y: 30, duration: 500, delay: i * 50 + 100, easing: cubicOut }}>
 							<button
 								type="button"
-								onclick={() => {
-									console.log('Clicked milestone:', m.id);
+								onclick={(e) => {
+									e.currentTarget.blur();
 									editingMilestone = { id: m.id };
 									updateUrl(m.id);
 								}}
