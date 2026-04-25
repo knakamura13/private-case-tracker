@@ -57,7 +57,7 @@
 	function faviconForUrl(url: string): string {
 		try {
 			const h = new URL(url).hostname;
-			return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(h)}&sz=128`;
+			return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(h)}&sz=256`;
 		} catch {
 			return '';
 		}
@@ -407,6 +407,7 @@
 									referrerpolicy="no-referrer"
 									class:opacity-50={previewLinks.length > 1}
 									draggable={false}
+									style="image-rendering: crisp-edges"
 								/>
 							{/each}
 						</div>
@@ -545,6 +546,7 @@
 												referrerpolicy="no-referrer"
 												loading="lazy"
 												onerror={() => markFaviconBroken(link.id)}
+												style="image-rendering: crisp-edges"
 											/>
 										{/if}
 									</div>
@@ -655,6 +657,7 @@
 							loading="lazy"
 							onerror={() => markFaviconBroken(link.id)}
 							draggable={false}
+							style="image-rendering: crisp-edges"
 						/>
 					{/if}
 				</div>
