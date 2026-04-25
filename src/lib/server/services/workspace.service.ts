@@ -117,6 +117,7 @@ export async function changeRole(workspaceId: string, userId: string, role: Memb
 		{ '#role': 'role' }
 	);
 	invalidateMembers(workspaceId);
+	invalidateWorkspace(userId);
 }
 
 export async function removeMember(workspaceId: string, userId: string) {
@@ -152,6 +153,13 @@ export async function renameWorkspace(workspaceId: string, name: string, actorId
 			{ ':n': name, ':u': new Date().toISOString() },
 			{ '#name': 'name', '#updatedAt': 'updatedAt' }
 		)) ?? null;
+	
+	// Invalidate workspace cache for all members since name changed
+	const members = await listMembers(workspaceId);
+	for (const member of members) {
+		invalidateWorkspace(member.userId);
+	}
+	
 	await logActivity({
 		workspaceId,
 		userId: actorId,
