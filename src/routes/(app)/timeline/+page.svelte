@@ -152,7 +152,13 @@
 	{#if milestone}
 		<MilestoneEditModal
 			open={true}
-			onClose={() => {
+			onClose={async () => {
+				// Trigger a final save before closing
+				const form = document.querySelector('form[method="post"]') as HTMLFormElement;
+				if (form) {
+					const formData = new FormData(form);
+					await fetch('?/update', { method: 'POST', body: formData });
+				}
 				editingMilestone = null;
 				updateUrl(null);
 			}}
@@ -163,8 +169,7 @@
 					cancel();
 					const response = await fetch('?/update', { method: 'POST', body: formData });
 					if (response.ok) {
-						editingMilestone = null;
-						updateUrl(null);
+						// Don't close on auto-save, only on manual close
 					}
 				};
 			}}

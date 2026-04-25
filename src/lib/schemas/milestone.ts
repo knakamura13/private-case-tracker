@@ -30,7 +30,6 @@ export const milestoneCreateSchema = z.object({
 	status: milestoneStatusEnum.default('PLANNED'),
 	ownerId: optionalId,
 	priority: priorityEnum.default('MEDIUM'),
-	notes: stringOrEmpty(5000),
 	subTasks: z.array(subTaskSchema).default([])
 });
 

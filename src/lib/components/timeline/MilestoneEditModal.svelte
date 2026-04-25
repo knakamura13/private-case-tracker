@@ -3,13 +3,11 @@
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
 	import { PHASE_LABELS, PHASE_ORDER } from '$lib/constants/phases';
 	import { enhance } from '$app/forms';
 	import { X, Plus, Calendar, Paperclip, MapPin, Trash2 } from 'lucide-svelte';
-	import { fmtDate } from '$lib/utils/dates';
 
 	let {
 		open = false,
@@ -58,7 +56,29 @@
 	let isSaving = $state(false);
 	let saveTimeout: ReturnType<typeof setTimeout> | null = null;
 
-	const ALLOWED_FIELDS = ['id', 'title', 'description', 'phase', 'status', 'priority', 'ownerId', 'dueDate', 'notes', 'subTasks', 'owner', 'attachments', 'location'] as const;
+	// Reactive form values
+	let titleValue = $state('');
+	let descriptionValue = $state('');
+	let phaseValue = $state('PREPARATION');
+	let statusValue = $state('PLANNED');
+	let priorityValue = $state('MEDIUM');
+	let ownerIdValue = $state('');
+
+	const ALLOWED_FIELDS = ['id', 'title', 'description', 'phase', 'status', 'priority', 'ownerId', 'dueDate', 'subTasks', 'owner', 'attachments', 'location'] as const;
+
+	// Initialize reactive values from initial props when modal opens
+	$effect(() => {
+		if (open) {
+			titleValue = val('title');
+			descriptionValue = val('description');
+			phaseValue = val('phase', 'PREPARATION');
+			statusValue = val('status', 'PLANNED');
+			priorityValue = val('priority', 'MEDIUM');
+			ownerIdValue = val('ownerId');
+			editableSubTasks = (initial.subTasks as SubTask[]) || [];
+			dueDateValue = val('dueDate');
+		}
+	});
 
 	function val(name: string, fallback = '') {
 		if (!ALLOWED_FIELDS.includes(name as (typeof ALLOWED_FIELDS)[number])) {
@@ -91,14 +111,6 @@
 		if (editableSubTasks.length === 0) return 0;
 		const done = editableSubTasks.filter((st) => st.done).length;
 		return Math.round((done / editableSubTasks.length) * 100);
-	}
-
-	function isDueSoon(dueDate: string | null) {
-		if (!dueDate) return false;
-		const due = new Date(dueDate);
-		const now = new Date();
-		const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-		return diffDays >= 0 && diffDays <= 3;
 	}
 
 	function ownerInitial(owner: unknown) {
@@ -149,7 +161,7 @@
 		triggerAutoSave();
 	}
 
-	function triggerAutoSave() {
+	function triggerAutoSave(immediate = false) {
 		if (saveTimeout) clearTimeout(saveTimeout);
 		// Only trigger if dialog is open and action is valid
 		if (!open || !action) return;
@@ -158,6 +170,7 @@
 		} catch {
 			return;
 		}
+		const delay = immediate ? 0 : 1000;
 		saveTimeout = setTimeout(() => {
 			const form = document.querySelector('form[method="post"]') as HTMLFormElement;
 			if (form && onenhance) {
@@ -173,7 +186,7 @@
 						isSaving = false;
 					});
 			}
-		}, 1000);
+		}, delay);
 	}
 </script>
 
@@ -200,7 +213,8 @@
 					<div class="flex flex-1 items-start">
 						<Input
 							name="title"
-							value={val('title')}
+							bind:value={titleValue}
+							oninput={() => triggerAutoSave()}
 							class="flex-1 border-none bg-transparent p-0 text-lg font-semibold focus-visible:ring-0 focus-visible:ring-offset-0"
 							placeholder="Title"
 						/>
@@ -279,72 +293,72 @@
 						<div>
 							<Textarea
 								name="description"
+								bind:value={descriptionValue}
+								oninput={() => triggerAutoSave()}
 								placeholder="Add a more detailed description..."
-								value={val('description')}
 								rows={3}
 								class="resize-none"
 							/>
 						</div>
 
 						<!-- Checklist -->
-						{#if editableSubTasks.length > 0 || showChecklistInput}
-							<Card class="p-3">
-								{#if editableSubTasks.length > 0}
-									<div class="mb-2 flex items-center justify-between">
-										<span class="text-sm font-medium">Checklist</span>
-									</div>
-									<div class="mb-3 h-1.5 w-full rounded-full bg-muted">
-										<div class="h-1.5 rounded-full bg-primary transition-all" style="width: {checklistProgress()}%"></div>
-									</div>
-									<div class="space-y-2">
-										{#each editableSubTasks as st (st.id)}
-											<div class="flex items-start gap-2">
-												<input
-													type="checkbox"
-													checked={st.done}
-													onchange={() => toggleSubTask(st.id)}
-													class="mt-0.5 h-4 w-4 rounded border-border"
-												/>
-												<span class={st.done ? 'line-through text-muted-foreground' : 'text-sm'}>{st.text}</span>
-												<Button type="button" variant="ghost" size="sm" class="ml-auto h-6 w-6 p-0" onclick={() => _removeSubTask(st.id)}>
-													{#snippet children()}<Trash2 class="h-3 w-3" />{/snippet}
-												</Button>
-											</div>
-										{/each}
-									</div>
-								{/if}
-								{#if !showChecklistInput}
-									<Button type="button" variant="ghost" size="sm" onclick={() => showChecklistInput = true} class="w-full justify-start text-muted-foreground">
-										{#snippet children()}Add an item{/snippet}
-									</Button>
-								{:else}
-									<div class="space-y-2">
-										<Input
-											bind:value={newSubTaskText}
-											placeholder="Enter item..."
-											onkeydown={(e) => {
-												if (e.key === 'Enter') {
-													e.preventDefault();
-													addSubTask();
-													showChecklistInput = false;
-												}
-											}}
-											class="w-full text-sm"
-										/>
-										<div class="flex justify-start gap-2">
-											<Button type="button" size="sm" onclick={() => {
+						<Card class="p-3">
+							<div class="mb-2 flex items-center gap-2">
+								<input type="checkbox" checked={false} disabled class="h-4 w-4 rounded border-border" />
+								<span class="text-sm font-medium">Sub-tasks</span>
+							</div>
+							<div class="mb-3 h-1.5 w-full rounded-full bg-muted">
+								<div class="h-1.5 rounded-full bg-primary transition-all" style="width: {checklistProgress()}%"></div>
+							</div>
+							{#if editableSubTasks.length > 0}
+								<div class="mb-3 space-y-2">
+									{#each editableSubTasks as st (st.id)}
+										<div class="flex items-start gap-2">
+											<input
+												type="checkbox"
+												checked={st.done}
+												onchange={() => toggleSubTask(st.id)}
+												class="mt-0.5 h-4 w-4 rounded border-border"
+											/>
+											<span class={st.done ? 'line-through text-muted-foreground' : 'text-sm'}>{st.text}</span>
+											<Button type="button" variant="ghost" size="sm" class="ml-auto h-6 w-6 p-0" onclick={() => _removeSubTask(st.id)}>
+												{#snippet children()}<Trash2 class="h-3 w-3" />{/snippet}
+											</Button>
+										</div>
+									{/each}
+								</div>
+							{/if}
+							{#if !showChecklistInput}
+								<Button type="button" variant="ghost" size="sm" onclick={() => showChecklistInput = true} class="w-full justify-start text-muted-foreground">
+									{#snippet children()}<Plus class="h-4 w-4 mr-2" /> Add an item{/snippet}
+								</Button>
+							{:else}
+								<div class="space-y-2">
+									<Input
+										bind:value={newSubTaskText}
+										placeholder="Enter item..."
+										onkeydown={(e) => {
+											if (e.key === 'Enter') {
+												e.preventDefault();
 												addSubTask();
 												showChecklistInput = false;
-											}}>Add</Button>
-											<Button type="button" variant="ghost" size="sm" onclick={() => {
-												newSubTaskText = '';
-												showChecklistInput = false;
-											}}>Cancel</Button>
-										</div>
+											}
+										}}
+										class="w-full text-sm"
+									/>
+									<div class="flex justify-start gap-2">
+										<Button type="button" size="sm" onclick={() => {
+											addSubTask();
+											showChecklistInput = false;
+										}}>Add</Button>
+										<Button type="button" variant="ghost" size="sm" onclick={() => {
+											newSubTaskText = '';
+											showChecklistInput = false;
+										}}>Cancel</Button>
 									</div>
-								{/if}
-							</Card>
-						{/if}
+								</div>
+							{/if}
+						</Card>
 					</div>
 
 					<!-- Right Column - Settings -->
@@ -352,13 +366,13 @@
 						<Card class="p-3 space-y-3">
 							<div>
 								<label for="phase" class="mb-1 block text-xs font-medium text-muted-foreground">Phase</label>
-								<Select id="phase" name="phase" value={val('phase', 'PREPARATION')} class="text-sm">
+								<Select id="phase" name="phase" bind:value={phaseValue} onchange={() => triggerAutoSave()} class="text-sm">
 									{#each PHASE_ORDER as p}<option value={p}>{PHASE_LABELS[p]}</option>{/each}
 								</Select>
 							</div>
 							<div>
 								<label for="status" class="mb-1 block text-xs font-medium text-muted-foreground">Status</label>
-								<Select id="status" name="status" value={val('status', 'PLANNED')} class="text-sm">
+								<Select id="status" name="status" bind:value={statusValue} onchange={() => triggerAutoSave()} class="text-sm">
 									<option value="PLANNED">Planned</option>
 									<option value="IN_PROGRESS">In progress</option>
 									<option value="DONE">Done</option>
@@ -368,7 +382,7 @@
 							</div>
 							<div>
 								<label for="priority" class="mb-1 block text-xs font-medium text-muted-foreground">Priority</label>
-								<Select id="priority" name="priority" value={val('priority', 'MEDIUM')} class="text-sm">
+								<Select id="priority" name="priority" bind:value={priorityValue} onchange={() => triggerAutoSave()} class="text-sm">
 									<option value="LOW">Low</option>
 									<option value="MEDIUM">Medium</option>
 									<option value="HIGH">High</option>
@@ -377,14 +391,10 @@
 							</div>
 							<div>
 								<label for="ownerId" class="mb-1 block text-xs font-medium text-muted-foreground">Owner</label>
-								<Select id="ownerId" name="ownerId" value={val('ownerId')} class="text-sm">
+								<Select id="ownerId" name="ownerId" bind:value={ownerIdValue} onchange={() => triggerAutoSave()} class="text-sm">
 									<option value="">Unassigned</option>
 									{#each members as m (m.id)}<option value={m.id}>{m.name ?? m.email}</option>{/each}
 								</Select>
-							</div>
-							<div>
-								<label for="notes" class="mb-1 block text-xs font-medium text-muted-foreground">Notes</label>
-								<Textarea id="notes" name="notes" value={val('notes')} rows={3} class="text-sm resize-none" />
 							</div>
 						</Card>
 					</div>
