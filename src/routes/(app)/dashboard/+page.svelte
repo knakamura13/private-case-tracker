@@ -12,7 +12,7 @@
 	let mounted = $state(true);
 </script>
 
-<PageHeader title="Dashboard" number="1" />
+<PageHeader title="Dashboard" number="01" />
 
 <div class="mb-4">
 	<Widget title="Quick links">

@@ -26,7 +26,7 @@
 	]);
 </script>
 
-<PageHeader title="Questions" description="Track unresolved questions, their sources, and answers." number="7">
+<PageHeader title="Questions" description="Track unresolved questions, their sources, and answers." number="04">
 	{#snippet actions()}
 		<Button href="/questions/new">
 			{#snippet children()}<Plus class="h-4 w-4" /> New question{/snippet}

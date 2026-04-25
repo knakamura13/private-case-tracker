@@ -65,7 +65,7 @@
 	}
 </script>
 
-<PageHeader title="Timeline" description="Case phases from preparation through final outcome." number="2">
+<PageHeader title="Timeline" description="Case phases from preparation through final outcome." number="02">
 	{#snippet actions()}
 		<Button href="/timeline/new">
 			{#snippet children()}<Plus class="h-4 w-4" /> New milestone{/snippet}
