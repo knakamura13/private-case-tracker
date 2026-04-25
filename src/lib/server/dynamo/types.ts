@@ -35,49 +35,12 @@ export type TaskItem = DynamoBaseItem & {
 	tags?: unknown[];
 };
 
-export type FormItem = DynamoBaseItem & {
-	id: string;
-	workspaceId: string;
-	name: string;
-	code: string;
-	purpose: string | null;
-	filingStatus: string; // Stored as string, validated as FormFilingStatus at service layer
-	plannedFilingDate: string | null;
-	actualFilingDate: string | null;
-	receiptNumberEncrypted: string | null;
-	notes: string | null;
-	lastUpdatedByUserId: string | null;
-	supportingItems: Array<{
-		id: string;
-		formId: string;
-		label: string;
-		required: boolean;
-		done: boolean;
-		satisfiedByEvidenceId: string | null;
-		satisfiedByFileId: string | null;
-		order: number;
-	}>;
-};
-
 export type EvidenceItem = DynamoBaseItem & {
 	id: string;
 	workspaceId: string;
-	title: string;
-	type: string;
-	status: string; // Stored as string, validated as EvidenceStatus at service layer
-	description: string | null;
-	significance: string | null;
-	dateStart: string | null;
-	dateEnd: string | null;
-	dateCollected: string | null;
-	source: string | null;
-	peopleInvolved: string[];
-	confidenceScore: number;
-	includedInPacket: boolean;
-	notes: string | null;
-	files?: Array<{ id: string; file: string | null; title: string }>;
-	tasks: Array<{ id: string; title: string }>;
-	supportingFor: Array<{ id: string; title: string }>;
+	category: string;
+	targetCount: number;
+	currentCount: number;
 };
 
 export type QuestionItem = DynamoBaseItem & {
@@ -92,10 +55,8 @@ export type QuestionItem = DynamoBaseItem & {
 	category: string | null;
 	citationUrl: string | null;
 	answeredAt: string | null;
-	relatedFormId: string | null;
 	relatedEvidenceId: string | null;
 	relatedTaskId: string | null;
-	relatedForm: { id: string } | null;
 	relatedEvidence: { id: string } | null;
 };
 

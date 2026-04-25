@@ -7,7 +7,7 @@ Not a legal source of truth. Not affiliated with USCIS or any government agency.
 
 ## What it is
 
-- A login-gated, two-user "control tower" for tracking tasks, forms, evidence, documents, questions, and a phase-based timeline.
+- A login-gated, two-user "control tower" for tracking tasks, evidence, documents, questions, and a phase-based timeline.
 - A dashboard with live aggregated widgets derived from your own data.
 - A packet-assembly view to help final review before mailing.
 - An audit log of important changes.
@@ -92,7 +92,7 @@ src/
 
 The app uses **session cookies issued and validated by Better Auth**. Every server route under `(app)/` calls `requireWorkspace`, which redirects unauthenticated users to `/login` and unattached users to `/onboarding`. Every domain write goes through a service that calls `logActivity()`, producing an internal audit feed visible at `Settings → Data → Activity`.
 
-Receipt numbers (the only "sensitive" field in the schema) are encrypted at rest and rendered masked. Click "Reveal" on a form's detail page to view the cleartext.
+Receipt numbers (the only "sensitive" field in the schema) are encrypted at rest and rendered masked.
 
 Files are never stored on the application's local disk. Uploads use **server-issued presigned PUT URLs**; downloads use **server-mediated short-lived signed GET URLs**. The bucket itself is private.
 

@@ -2,13 +2,11 @@ import { PHASE_ORDER, PHASE_LABELS } from '$lib/constants/phases';
 import { currentPhase } from './milestone.service';
 import { EVIDENCE_CATEGORIES, EVIDENCE_TARGETS } from '$lib/constants/categories';
 import type {
-	FormFilingStatus,
 	MilestonePhase,
 	MilestoneStatus,
 	QuestionStatus
 } from '$lib/types/enums';
 import { recentActivity } from '$lib/server/activity';
-import { listForms } from './form.service';
 import { listEvidence } from './evidence.service';
 import { listQuestions } from './question.service';
 import { listMilestones } from './milestone.service';
@@ -20,7 +18,6 @@ export async function dashboardFor(workspaceId: string) {
 	const now = new Date();
 
 	const [
-		formsAll,
 		evidenceAll,
 		openQuestionsAll,
 		milestonesAll,
@@ -29,7 +26,6 @@ export async function dashboardFor(workspaceId: string) {
 		quickLinks,
 		quickLinkFolders
 	] = await Promise.all([
-		listForms(workspaceId),
 		listEvidence(workspaceId),
 		listQuestions(workspaceId, { status: 'OPEN' as QuestionStatus }).then(async (rows) =>
 			rows.concat(await listQuestions(workspaceId, { status: 'RESEARCHING' as QuestionStatus }))
@@ -46,31 +42,18 @@ export async function dashboardFor(workspaceId: string) {
 		.sort((a, b) => new Date(a.scheduledAt!).getTime() - new Date(b.scheduledAt!).getTime())
 		.slice(0, 5);
 
-	const formsByStatus: Record<FormFilingStatus, number> = {
-		NOT_STARTED: 0,
-		IN_PROGRESS: 0,
-		READY_FOR_REVIEW: 0,
-		FILED: 0,
-		RECEIVED: 0,
-		REPLACED: 0,
-		NOT_NEEDED: 0
-	};
-	for (const f of formsAll)
-		formsByStatus[f.filingStatus] = (formsByStatus[f.filingStatus] ?? 0) + 1;
-
-	const evidenceByType = new Map<string, { total: number; ready: number }>();
+	const evidenceByCategory = new Map<string, { total: number }>();
 	for (const it of evidenceAll) {
-		const b = evidenceByType.get(it.type) ?? { total: 0, ready: 0 };
-		b.total += 1;
-		if (it.status === 'READY') b.ready += 1;
-		evidenceByType.set(it.type, b);
+		const b = evidenceByCategory.get(it.category) ?? { total: 0 };
+		b.total += it.currentCount;
+		evidenceByCategory.set(it.category, b);
 	}
 	const evidenceCoverage = EVIDENCE_CATEGORIES.map((cat) => {
-		const b = evidenceByType.get(cat) ?? { total: 0, ready: 0 };
+		const b = evidenceByCategory.get(cat) ?? { total: 0 };
 		return {
 			category: cat,
 			total: b.total,
-			ready: b.ready,
+			ready: b.total,
 			target: EVIDENCE_TARGETS[cat] ?? 0
 		};
 	});
@@ -110,10 +93,6 @@ export async function dashboardFor(workspaceId: string) {
 	const openHigh = (openQuestionsCount.HIGH ?? 0) + (openQuestionsCount.CRITICAL ?? 0);
 	if (openHigh > 0)
 		missingCritical.push(`${openHigh} high-priority question${openHigh === 1 ? '' : 's'}`);
-	if (formsByStatus.NOT_STARTED > 0)
-		missingCritical.push(
-			`${formsByStatus.NOT_STARTED} form${formsByStatus.NOT_STARTED === 1 ? '' : 's'} not started`
-		);
 
 	const countdowns = [
 		...upcomingMeetings.map((m) => ({
@@ -144,7 +123,6 @@ export async function dashboardFor(workspaceId: string) {
 
 	return {
 		upcomingMeetings,
-		formsByStatus,
 		evidenceCoverage,
 		gapsCount,
 		openQuestionsCount,

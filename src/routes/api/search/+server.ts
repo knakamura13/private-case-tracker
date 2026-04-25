@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { truncate } from '$lib/utils/format';
-import { listForms } from '$lib/server/services/form.service';
 import { listEvidence } from '$lib/server/services/evidence.service';
 import { listQuestions } from '$lib/server/services/question.service';
 import { listDocuments } from '$lib/server/services/document.service';
@@ -17,9 +16,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 	const workspaceId = locals.workspace.id;
 
-	const [milestones, forms, evidence, questions, files, quickLinks] = await Promise.all([
+	const [milestones, evidence, questions, files, quickLinks] = await Promise.all([
 		listMilestones(workspaceId, { limit: LIMIT_PER_GROUP }),
-		listForms(workspaceId, { q, limit: LIMIT_PER_GROUP }),
 		listEvidence(workspaceId, { q, limit: LIMIT_PER_GROUP }),
 		listQuestions(workspaceId, { q, limit: LIMIT_PER_GROUP }),
 		listDocuments(workspaceId, { q, limit: LIMIT_PER_GROUP }),
@@ -48,18 +46,11 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			description: m.description ? truncate(m.description, 80) : undefined,
 			href: `/timeline/${m.id}`
 		})),
-		Forms: forms.map((f) => ({
-			type: 'form',
-			id: f.id,
-			title: `${f.code} — ${f.name}`,
-			description: f.purpose ? truncate(f.purpose, 80) : undefined,
-			href: `/forms/${f.id}`
-		})),
 		Evidence: evidence.map((e) => ({
 			type: 'evidence',
 			id: e.id,
-			title: e.title,
-			description: e.type,
+			title: e.category,
+			description: `${e.currentCount}/${e.targetCount}`,
 			href: `/evidence/${e.id}`
 		})),
 		Questions: questions.map((qItem) => ({

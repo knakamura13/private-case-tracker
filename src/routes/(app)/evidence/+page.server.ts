@@ -1,57 +1,34 @@
 import type { PageServerLoad, Actions } from './$types';
 import { requireWorkspace } from '$lib/server/guards';
-import { listEvidence } from '$lib/server/services/evidence.service';
-import type { EvidenceStatus } from '$lib/types/enums';
+import { listEvidence, incrementEvidenceCount } from '$lib/server/services/evidence.service';
 import { EVIDENCE_CATEGORIES, EVIDENCE_TARGETS } from '$lib/constants/categories';
 import { fail } from '@sveltejs/kit';
-import { ddbGet, ddbPut } from '$lib/server/dynamo/ops';
+import { ddbGet, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
-
-const STATUSES: EvidenceStatus[] = [
-	'COLLECTED',
-	'NEEDS_SCAN',
-	'NEEDS_TRANSLATION',
-	'NEEDS_BETTER_COPY',
-	'READY'
-];
 
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);
-	const statusParam = event.url.searchParams.get('status');
-	const typeParam = event.url.searchParams.get('type') ?? undefined;
-	const q = event.url.searchParams.get('q') ?? undefined;
-	const items = await listEvidence(workspace.id, {
-		status:
-			statusParam && STATUSES.includes(statusParam as EvidenceStatus)
-				? (statusParam as EvidenceStatus)
-				: undefined,
-		type: typeParam,
-		q
-	});
+	const items = await listEvidence(workspace.id);
 
 	// Fetch workspace to get stored evidence target overrides
 	const ws = await ddbGet<Record<string, unknown>>({ PK: wsPk(workspace.id), SK: entitySk('Workspace', workspace.id) });
 	const storedTargets = (ws?.evidenceTargets as Record<string, number> | null) ?? {};
 	const effectiveTargets: Record<string, number> = { ...EVIDENCE_TARGETS, ...storedTargets };
 
-	// compute gap summary from the full set (unfiltered)
-	const all = await listEvidence(workspace.id);
-	const counts = new Map<string, { total: number; ready: number }>();
-	for (const it of all) {
-		const c = counts.get(it.type) ?? { total: 0, ready: 0 };
-		c.total += 1;
-		if (it.status === 'READY') c.ready += 1;
-		counts.set(it.type, c);
+	// Build category counts from evidence items
+	const counts = new Map<string, number>();
+	for (const it of items) {
+		counts.set(it.category, (counts.get(it.category) ?? 0) + it.currentCount);
 	}
-	const gaps = EVIDENCE_CATEGORIES.filter(
-		(cat) => (counts.get(cat)?.total ?? 0) < (effectiveTargets[cat] ?? 0)
-	).map((cat) => ({
+
+	// Ensure all categories have an entry
+	const categories = EVIDENCE_CATEGORIES.map((cat) => ({
 		category: cat,
-		have: counts.get(cat)?.total ?? 0,
-		target: effectiveTargets[cat] ?? 0
+		currentCount: counts.get(cat) ?? 0,
+		targetCount: effectiveTargets[cat] ?? 0
 	}));
 
-	return { items, gaps, categories: EVIDENCE_CATEGORIES, effectiveTargets };
+	return { categories, effectiveTargets };
 };
 
 export const actions: Actions = {
@@ -66,21 +43,42 @@ export const actions: Actions = {
 			return fail(400, { error: 'Invalid input' });
 		}
 
-		const ws = await ddbGet<Record<string, unknown>>({
-			PK: wsPk(workspace.id),
-			SK: entitySk('Workspace', workspace.id)
-		});
-		const current = (ws?.evidenceTargets as Record<string, number> | null) ?? {};
-		const updated = { ...current, [category]: target };
+		// Validate category
+		if (!EVIDENCE_CATEGORIES.includes(category as any)) {
+			return fail(400, { error: 'Invalid category' });
+		}
 
-		// naive overwrite of workspace item (only mutates evidenceTargets)
-		await ddbPut({
-			...(ws ?? { id: workspace.id, name: workspace.name, ownerId: null }),
-			PK: wsPk(workspace.id),
-			SK: entitySk('Workspace', workspace.id),
-			evidenceTargets: updated,
-			updatedAt: new Date().toISOString()
-		});
+		// Use ddbUpdate to only modify evidenceTargets and updatedAt
+		await ddbUpdate(
+			{ PK: wsPk(workspace.id), SK: entitySk('Workspace', workspace.id) },
+			'SET #evidenceTargets.#category = :t, #updatedAt = :u',
+			{ ':t': target, ':u': new Date().toISOString() },
+			{ '#evidenceTargets': 'evidenceTargets', '#category': category, '#updatedAt': 'updatedAt' }
+		);
+
+		return {};
+	},
+	adjustCount: async (event) => {
+		const { workspace, user } = requireWorkspace(event);
+		const formData = await event.request.formData();
+		const category = formData.get('category') as string;
+		const delta = parseInt(formData.get('delta') as string);
+
+		if (!category || isNaN(delta) || delta === 0) {
+			return fail(400, { error: 'Invalid input' });
+		}
+
+		// Validate category is a known evidence category
+		if (!EVIDENCE_CATEGORIES.includes(category as any)) {
+			return fail(400, { error: 'Invalid category' });
+		}
+
+		// Limit delta to prevent abuse
+		if (Math.abs(delta) > 100) {
+			return fail(400, { error: 'Delta too large' });
+		}
+
+		await incrementEvidenceCount(workspace.id, user.id, category, delta);
 
 		return {};
 	}

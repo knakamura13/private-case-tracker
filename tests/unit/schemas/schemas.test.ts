@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { formCreateSchema } from '$lib/schemas/form';
 import { evidenceCreateSchema } from '$lib/schemas/evidence';
 import { questionCreateSchema } from '$lib/schemas/question';
 import { milestoneCreateSchema } from '$lib/schemas/milestone';
@@ -7,24 +6,9 @@ import { uploadUrlRequestSchema } from '$lib/schemas/document';
 import { loginSchema, signupSchema } from '$lib/schemas/auth';
 
 describe('zod schemas', () => {
-	it('formCreateSchema requires code and name', () => {
-		expect(formCreateSchema.safeParse({ name: 'X' }).success).toBe(false);
-		expect(formCreateSchema.safeParse({ name: 'Petition', code: 'I-130' }).success).toBe(true);
-	});
-
-	it('evidenceCreateSchema parses peopleInvolved CSV string', () => {
-		const r = evidenceCreateSchema.parse({
-			title: 'Photos',
-			type: 'Photos',
-			peopleInvolved: 'Alice, Bob, '
-		});
-		expect(r.peopleInvolved).toEqual(['Alice', 'Bob']);
-	});
-
-	it('evidenceCreateSchema clamps confidence to [1,5]', () => {
-		expect(evidenceCreateSchema.safeParse({ title: 'x', type: 'y', confidenceScore: 0 }).success).toBe(false);
-		expect(evidenceCreateSchema.safeParse({ title: 'x', type: 'y', confidenceScore: 6 }).success).toBe(false);
-		expect(evidenceCreateSchema.safeParse({ title: 'x', type: 'y', confidenceScore: 3 }).success).toBe(true);
+	it('evidenceCreateSchema requires category', () => {
+		expect(evidenceCreateSchema.safeParse({}).success).toBe(false);
+		expect(evidenceCreateSchema.safeParse({ category: 'Photos' }).success).toBe(true);
 	});
 
 	it('questionCreateSchema requires a question', () => {

@@ -10,13 +10,6 @@ import {
 	softDeleteEvidence
 } from '$lib/server/services/evidence.service';
 import {
-	createForm,
-	getForm,
-	listForms,
-	updateForm,
-	softDeleteForm
-} from '$lib/server/services/form.service';
-import {
 	createMilestone,
 	listMilestones,
 	softDeleteMilestone,
@@ -50,44 +43,16 @@ describe('cross-domain DynamoDB smoke', () => {
 	it('evidence: create → list → update → softDelete', async () => {
 		const ws = workspaceId();
 		const created = await createEvidence(ws, actorId, {
-			title: 'Joint lease',
-			type: 'FINANCIAL_COMINGLING',
-			dateStart: null,
-			dateEnd: null,
-			peopleInvolved: [],
-			description: '',
-			significance: '',
-			status: 'COLLECTED',
-			confidenceScore: 3,
-			includedInPacket: false,
-			notes: ''
+			category: 'Photos',
+			targetCount: 10,
+			currentCount: 3
 		} as any);
 
 		expect((await listEvidence(ws)).length).toBe(1);
-		await updateEvidence(ws, actorId, created.id, { status: 'READY' } as any);
-		expect((await getEvidence(ws, created.id))?.status).toBe('READY');
+		await updateEvidence(ws, actorId, created.id, { currentCount: 5 } as any);
+		expect((await getEvidence(ws, created.id))?.currentCount).toBe(5);
 		await softDeleteEvidence(ws, actorId, created.id);
 		expect((await listEvidence(ws)).length).toBe(0);
-	});
-
-	it('forms: create → list → update → softDelete', async () => {
-		const ws = workspaceId();
-		const created = await createForm(ws, actorId, {
-			name: 'I-130',
-			code: 'I-130',
-			purpose: 'Petition',
-			filingStatus: 'NOT_STARTED',
-			plannedFilingDate: null,
-			actualFilingDate: null,
-			receiptNumber: null,
-			notes: ''
-		} as any);
-
-		expect((await listForms(ws)).some((f) => f.id === created.id)).toBe(true);
-		await updateForm(ws, actorId, created.id, { filingStatus: 'IN_PROGRESS' } as any);
-		expect((await getForm(ws, created.id))?.filingStatus).toBe('IN_PROGRESS');
-		await softDeleteForm(ws, actorId, created.id);
-		expect((await listForms(ws)).length).toBe(0);
 	});
 
 	it('milestones: create → list → update → softDelete', async () => {
