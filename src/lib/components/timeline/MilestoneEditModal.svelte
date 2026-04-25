@@ -52,27 +52,11 @@
 	// Input values
 	let attachmentUrl = $state('');
 	let locationAddress = $state('');
-	let dueDateValue = $state(val('dueDate'));
+	let dueDateValue = $state('');
 
 	// Auto-save state
 	let isSaving = $state(false);
 	let saveTimeout: ReturnType<typeof setTimeout> | null = null;
-
-	// Cleanup timeout on unmount
-	$effect(() => {
-		return () => {
-			if (saveTimeout) clearTimeout(saveTimeout);
-		};
-	});
-
-	// Make dueDateValue reactive to initial.dueDate changes
-	$effect(() => {
-		dueDateValue = val('dueDate');
-	});
-
-	$effect(() => {
-		editableSubTasks = (initial.subTasks as SubTask[])?.map((st) => ({ ...st })) ?? [];
-	});
 
 	const ALLOWED_FIELDS = ['id', 'title', 'description', 'phase', 'status', 'priority', 'ownerId', 'dueDate', 'notes', 'subTasks', 'owner', 'attachments', 'location'] as const;
 
@@ -90,14 +74,17 @@
 		if (!newSubTaskText.trim()) return;
 		editableSubTasks = [...editableSubTasks, { id: crypto.randomUUID(), text: newSubTaskText.trim(), done: false }];
 		newSubTaskText = '';
+		triggerAutoSave();
 	}
 
 	function _removeSubTask(id: string) {
 		editableSubTasks = editableSubTasks.filter((st) => st.id !== id);
+		triggerAutoSave();
 	}
 
 	function toggleSubTask(id: string) {
 		editableSubTasks = editableSubTasks.map((st) => (st.id === id ? { ...st, done: !st.done } : st));
+		triggerAutoSave();
 	}
 
 	function checklistProgress() {
@@ -188,15 +175,6 @@
 			}
 		}, 1000);
 	}
-
-	// Watch for changes and trigger auto-save
-	$effect(() => {
-		// Only trigger if dialog is open
-		if (!open) return;
-		// Trigger auto-save when subTasks change
-		subTasksJson;
-		triggerAutoSave();
-	});
 </script>
 
 {#if open}

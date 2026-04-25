@@ -101,6 +101,7 @@
 							<button
 								type="button"
 								onclick={() => {
+									console.log('Clicked milestone:', m.id);
 									editingMilestone = { id: m.id };
 									updateUrl(m.id);
 								}}
