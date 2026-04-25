@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { formCreateSchema } from '$lib/schemas/form';
 import { evidenceCreateSchema } from '$lib/schemas/evidence';
 import { questionCreateSchema } from '$lib/schemas/question';
-import { noteCreateSchema } from '$lib/schemas/note';
 import { milestoneCreateSchema } from '$lib/schemas/milestone';
 import { uploadUrlRequestSchema } from '$lib/schemas/document';
 import { loginSchema, signupSchema } from '$lib/schemas/auth';
@@ -30,11 +29,6 @@ describe('zod schemas', () => {
 
 	it('questionCreateSchema requires a question', () => {
 		expect(questionCreateSchema.safeParse({}).success).toBe(false);
-	});
-
-	it('noteCreateSchema accepts blank body', () => {
-		const r = noteCreateSchema.parse({ title: 'x' });
-		expect(r.bodyMd).toBe('');
 	});
 
 	it('milestoneCreateSchema requires phase enum value', () => {

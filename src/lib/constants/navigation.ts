@@ -4,8 +4,7 @@ import {
 	FileText,
 	Layers,
 	FolderLock,
-	HelpCircle,
-	NotebookPen
+	HelpCircle
 } from 'lucide-svelte';
 
 export interface NavItem {
@@ -22,8 +21,7 @@ export const navigation: NavItem[] = [
 	{ href: '/forms', label: 'Forms', icon: FileText, description: 'Packet tracker' },
 	{ href: '/evidence', label: 'Evidence', icon: Layers, description: 'Evidence library' },
 	{ href: '/documents', label: 'Documents', icon: FolderLock, description: 'Files and secure links' },
-	{ href: '/questions', label: 'Questions', icon: HelpCircle, description: 'Research tracker' },
-	{ href: '/notes', label: 'Notes', icon: NotebookPen }
+	{ href: '/questions', label: 'Questions', icon: HelpCircle, description: 'Research tracker' }
 ];
 
 export const privacyCopy = {

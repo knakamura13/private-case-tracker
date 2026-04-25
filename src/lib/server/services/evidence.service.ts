@@ -55,8 +55,7 @@ export async function getEvidence(workspaceId: string, id: string) {
 		...evidence,
 		files: (evidence.files ?? []).map((f: any) => ({ ...f, file: f.file ?? null })),
 		tasks: [],
-		supportingFor: [],
-		linkedNotes: []
+		supportingFor: []
 	};
 }
 

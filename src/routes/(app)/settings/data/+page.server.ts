@@ -6,17 +6,15 @@ import { listForms } from '$lib/server/services/form.service';
 import { listEvidence } from '$lib/server/services/evidence.service';
 import { listDocuments } from '$lib/server/services/document.service';
 import { listQuestions } from '$lib/server/services/question.service';
-import { listNotes } from '$lib/server/services/note.service';
 import { listMilestones } from '$lib/server/services/milestone.service';
 
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);
-	const [forms, evidence, docs, questions, notes, milestones] = await Promise.all([
+	const [forms, evidence, docs, questions, milestones] = await Promise.all([
 		listForms(workspace.id),
 		listEvidence(workspace.id),
 		listDocuments(workspace.id),
 		listQuestions(workspace.id),
-		listNotes(workspace.id),
 		listMilestones(workspace.id)
 	]);
 
@@ -24,7 +22,6 @@ export const load: PageServerLoad = async (event) => {
 	const trashedEvidence = evidence.filter((e) => e.deletedAt != null).length;
 	const trashedDocs = docs.filter((d) => d.deletedAt != null).length;
 	const trashedQuestions = questions.filter((q) => q.deletedAt != null).length;
-	const trashedNotes = notes.filter((n) => n.deletedAt != null).length;
 	const trashedMilestones = milestones.filter((m) => m.deletedAt != null).length;
 	return {
 		trashedCounts: {
@@ -32,7 +29,6 @@ export const load: PageServerLoad = async (event) => {
 			evidence: trashedEvidence,
 			documents: trashedDocs,
 			questions: trashedQuestions,
-			notes: trashedNotes,
 			milestones: trashedMilestones
 		},
 		hasDemo: false

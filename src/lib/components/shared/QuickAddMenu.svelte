@@ -9,7 +9,6 @@
 		{ label: 'New evidence item', href: '/evidence/new' },
 		{ label: 'New document', href: '/documents/new' },
 		{ label: 'New question', href: '/questions/new' },
-		{ label: 'New note', href: '/notes/new' },
 		{ label: 'New milestone', href: '/timeline/new' }
 	];
 

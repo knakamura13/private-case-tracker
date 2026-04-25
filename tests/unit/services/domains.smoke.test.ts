@@ -3,13 +3,6 @@ import { describe, it, expect, beforeEach } from 'vitest';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {
-	createNote,
-	getNote,
-	listNotes,
-	updateNote,
-	softDeleteNote
-} from '$lib/server/services/note.service';
-import {
 	createEvidence,
 	getEvidence,
 	listEvidence,
@@ -52,23 +45,6 @@ function workspaceId() {
 describe('cross-domain DynamoDB smoke', () => {
 	beforeEach(() => {
 		(globalThis as unknown as { __ddbMem?: Map<string, unknown> }).__ddbMem = new Map();
-	});
-
-	it('notes: create → list → update → softDelete', async () => {
-		const ws = workspaceId();
-		const created = await createNote(ws, actorId, {
-			title: 'Research notes',
-			bodyMd: 'Initial notes',
-			linkedTaskId: null,
-			linkedFormId: null,
-			linkedEvidenceId: null
-		} as any);
-
-		expect((await listNotes(ws)).length).toBe(1);
-		await updateNote(ws, actorId, created.id, { bodyMd: 'Updated body' } as any);
-		expect((await getNote(ws, created.id))?.bodyMd).toBe('Updated body');
-		await softDeleteNote(ws, actorId, created.id);
-		expect((await listNotes(ws)).length).toBe(0);
 	});
 
 	it('evidence: create → list → update → softDelete', async () => {

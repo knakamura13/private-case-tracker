@@ -78,7 +78,6 @@ export type EvidenceItem = DynamoBaseItem & {
 	files?: Array<{ id: string; file: string | null; title: string }>;
 	tasks: Array<{ id: string; title: string }>;
 	supportingFor: Array<{ id: string; title: string }>;
-	linkedNotes: Array<{ id: string; title: string }>;
 };
 
 export type QuestionItem = DynamoBaseItem & {
@@ -98,18 +97,6 @@ export type QuestionItem = DynamoBaseItem & {
 	relatedTaskId: string | null;
 	relatedForm: { id: string } | null;
 	relatedEvidence: { id: string } | null;
-};
-
-export type NoteItem = DynamoBaseItem & {
-	id: string;
-	workspaceId: string;
-	title: string;
-	bodyMd: string;
-	authorId: string | null;
-	author: { id: string; name: string | null; email: string } | null;
-	linkedTaskId: string | null;
-	linkedFormId: string | null;
-	linkedEvidenceId: string | null;
 };
 
 export type DocumentFileItem = DynamoBaseItem & {

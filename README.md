@@ -7,7 +7,7 @@ Not a legal source of truth. Not affiliated with USCIS or any government agency.
 
 ## What it is
 
-- A login-gated, two-user "control tower" for tracking tasks, forms, evidence, documents, questions, notes, and a phase-based timeline.
+- A login-gated, two-user "control tower" for tracking tasks, forms, evidence, documents, questions, and a phase-based timeline.
 - A dashboard with live aggregated widgets derived from your own data.
 - A packet-assembly view to help final review before mailing.
 - An audit log of important changes.
@@ -151,7 +151,7 @@ Because Railway runs a long-lived Node container and our auth path expects nativ
 - **Authorization.** A single workspace per database. Two roles, `OWNER` and `COLLABORATOR`. Owners manage members and can delete the workspace. All domain reads/writes are scoped by `workspaceId`; cross-workspace access is impossible from the API surface.
 - **Encryption at rest.** Receipt numbers are AES-256-GCM-encrypted with `FIELD_ENCRYPTION_KEY`. Lose this key and you lose the cleartext for those fields.
 - **Files.** Never on local disk. Bucket policies should be private. The app issues short-lived presigned URLs for both upload and download.
-- **Audit log.** All important actions (login, logout, file upload/delete, note edit, status change, invitation accepted, plus all domain CRUD) are recorded in `ActivityLog`, scoped to the workspace.
+- **Audit log.** All important actions (login, logout, file upload/delete, status change, invitation accepted, plus all domain CRUD) are recorded in `ActivityLog`, scoped to the workspace.
 - **No automated submissions.** This app does not call any government endpoint. It does not screen-scrape, polled-fetch, or impersonate.
 
 ## Non-goals (explicit)

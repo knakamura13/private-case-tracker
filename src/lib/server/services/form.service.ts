@@ -39,7 +39,6 @@ export type FormRow = {
 	documents?: any[];
 	tasks?: any[];
 	questions?: any[];
-	linkedNotes?: any[];
 	/* eslint-enable @typescript-eslint/no-explicit-any */
 	_count: { tasks: number; documents: number };
 };
@@ -125,7 +124,6 @@ export async function getForm(workspaceId: string, id: string) {
 		documents: [],
 		tasks: [],
 		questions: [],
-		linkedNotes: [],
 		_count: { tasks: 0, documents: 0 }
 	};
 }
