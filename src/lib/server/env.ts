@@ -41,7 +41,8 @@ const schema = z.object({
 		.string()
 		.optional()
 		.transform((v) => v === 'true' || v === '1'),
-	NODE_ENV: z.enum(['development', 'production', 'test']).default('development')
+	NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+	DEV_MODE: z.string().optional()
 });
 
 type Env = z.infer<typeof schema>;
@@ -66,7 +67,8 @@ const BUILD_PLACEHOLDER: Env = {
 	S3_ACCESS_KEY_ID: undefined,
 	S3_SECRET_ACCESS_KEY: undefined,
 	S3_FORCE_PATH_STYLE: false,
-	NODE_ENV: 'production'
+	NODE_ENV: 'production',
+	DEV_MODE: undefined
 };
 
 function load(): Env {
@@ -87,7 +89,8 @@ function load(): Env {
 		S3_ACCESS_KEY_ID: env.S3_ACCESS_KEY_ID,
 		S3_SECRET_ACCESS_KEY: env.S3_SECRET_ACCESS_KEY,
 		S3_FORCE_PATH_STYLE: env.S3_FORCE_PATH_STYLE,
-		NODE_ENV: env.NODE_ENV ?? process.env.NODE_ENV
+		NODE_ENV: env.NODE_ENV ?? process.env.NODE_ENV,
+		DEV_MODE: env.DEV_MODE ?? process.env.DEV_MODE
 	});
 	if (!parsed.success) {
 		console.error('[env] invalid environment', parsed.error.flatten().fieldErrors);

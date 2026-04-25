@@ -18,7 +18,8 @@
     "test:components": "vitest run --config vitest.component.config.ts",
     "test:components:watch": "vitest --config vitest.component.config.ts",
     "test:e2e": "playwright test",
-    "db:purge-users": "tsx scripts/purge-old-users.ts"
+    "db:purge-users": "tsx scripts/purge-old-users.ts",
+    "db:create-table": "tsx scripts/create-table.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1035.0",

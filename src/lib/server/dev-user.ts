@@ -26,7 +26,7 @@ export async function ensureDevUserSeeded(): Promise<void> {
 	if (ENV.NODE_ENV === 'production') {
 		throw new Error('Dev user seeding is not allowed in production');
 	}
-	if (process.env.DEV_MODE !== 'unsafe') {
+	if (ENV.DEV_MODE !== 'unsafe') {
 		throw new Error(
 			'Dev user seeding requires DEV_MODE=unsafe. This bypasses authentication and should only be used in local development.'
 		);
