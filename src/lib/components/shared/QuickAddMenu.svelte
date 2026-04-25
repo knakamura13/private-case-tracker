@@ -5,8 +5,6 @@
 	let { open = $bindable(false) }: { open?: boolean } = $props();
 
 	const actions = [
-		{ label: 'New evidence item', href: '/evidence/new' },
-		{ label: 'New document', href: '/documents/new' },
 		{ label: 'New question', href: '/questions/new' },
 		{ label: 'New milestone', href: '/timeline/new' }
 	];

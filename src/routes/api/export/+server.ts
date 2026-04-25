@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { listEvidence } from '$lib/server/services/evidence.service';
-import { listDocuments } from '$lib/server/services/document.service';
 import { listQuestions } from '$lib/server/services/question.service';
 import { listMilestones } from '$lib/server/services/milestone.service';
 import { recentActivity } from '$lib/server/activity';
@@ -12,14 +11,12 @@ export const GET: RequestHandler = async ({ locals }) => {
 	const wsId = locals.workspace.id;
 	const [
 		evidence,
-		documents,
 		questions,
 		milestones,
 		activity,
 		quickLinks
 	] = await Promise.all([
 		listEvidence(wsId, { limit: 5000 }),
-		listDocuments(wsId, { limit: 5000 }),
 		listQuestions(wsId, { limit: 5000 }),
 		listMilestones(wsId, { limit: 5000 }),
 		recentActivity(wsId, 500),
@@ -31,7 +28,6 @@ export const GET: RequestHandler = async ({ locals }) => {
 				exportedAt: new Date().toISOString(),
 				workspace: { id: locals.workspace.id, name: locals.workspace.name },
 				evidence,
-				documents: documents.map((d) => ({ ...d, storageKey: undefined })),
 				questions,
 				milestones,
 				quickLinks,

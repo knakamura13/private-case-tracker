@@ -3,7 +3,6 @@ import type { RequestHandler } from './$types';
 import { truncate } from '$lib/utils/format';
 import { listEvidence } from '$lib/server/services/evidence.service';
 import { listQuestions } from '$lib/server/services/question.service';
-import { listDocuments } from '$lib/server/services/document.service';
 import { listQuickLinks } from '$lib/server/services/quickLink.service';
 import { listMilestones } from '$lib/server/services/milestone.service';
 
@@ -16,11 +15,10 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 	const workspaceId = locals.workspace.id;
 
-	const [milestones, evidence, questions, files, quickLinks] = await Promise.all([
+	const [milestones, evidence, questions, quickLinks] = await Promise.all([
 		listMilestones(workspaceId, { limit: LIMIT_PER_GROUP }),
 		listEvidence(workspaceId, { q, limit: LIMIT_PER_GROUP }),
 		listQuestions(workspaceId, { q, limit: LIMIT_PER_GROUP }),
-		listDocuments(workspaceId, { q, limit: LIMIT_PER_GROUP }),
 		listQuickLinks(workspaceId).then((r) =>
 			r
 				.filter((l) =>
@@ -59,13 +57,6 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			title: qItem.question,
 			description: qItem.status,
 			href: `/questions/${qItem.id}`
-		})),
-		Files: files.map((f) => ({
-			type: 'file',
-			id: f.id,
-			title: f.title,
-			description: f.category,
-			href: `/documents/${f.id}`
 		})),
 		'Quick links': quickLinks.map((l) => ({
 			type: 'quicklink',

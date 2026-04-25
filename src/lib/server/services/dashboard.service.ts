@@ -10,7 +10,6 @@ import { recentActivity } from '$lib/server/activity';
 import { listEvidence } from './evidence.service';
 import { listQuestions } from './question.service';
 import { listMilestones } from './milestone.service';
-import { listDocuments } from './document.service';
 import { listQuickLinks } from './quickLink.service';
 import { listQuickLinkFolders } from './quickLinkFolder.service';
 
@@ -22,7 +21,6 @@ export async function dashboardFor(workspaceId: string) {
 		openQuestionsAll,
 		milestonesAll,
 		activity,
-		docsAll,
 		quickLinks,
 		quickLinkFolders
 	] = await Promise.all([
@@ -32,7 +30,6 @@ export async function dashboardFor(workspaceId: string) {
 		),
 		listMilestones(workspaceId),
 		recentActivity(workspaceId, 10),
-		listDocuments(workspaceId),
 		listQuickLinks(workspaceId),
 		listQuickLinkFolders(workspaceId)
 	]);
@@ -79,13 +76,6 @@ export async function dashboardFor(workspaceId: string) {
 		return { phase: p, label: PHASE_LABELS[p], total: items.length, done };
 	});
 
-	const docsByCategory = Object.entries(
-		docsAll.reduce((acc: Record<string, number>, d: { category: string }) => {
-			acc[d.category] = (acc[d.category] ?? 0) + 1;
-			return acc;
-		}, {})
-	).map(([category, count]) => ({ category, count }));
-
 	// Missing critical items heuristic:
 	const missingCritical: string[] = [];
 	if (gapsCount > 0)
@@ -130,7 +120,6 @@ export async function dashboardFor(workspaceId: string) {
 		phaseLabel: PHASE_LABELS[phase],
 		phaseProgress,
 		activity,
-		docsByCategory,
 		missingCritical,
 		countdowns,
 		quickLinks: quickLinks,

@@ -2,7 +2,6 @@ import {
 	LayoutDashboard,
 	List,
 	Layers,
-	FolderLock,
 	HelpCircle
 } from 'lucide-svelte';
 
@@ -18,7 +17,6 @@ export const navigation: NavItem[] = [
 	{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
 	{ href: '/timeline', label: 'Timeline', icon: List, description: 'Case phases and milestones' },
 	{ href: '/evidence', label: 'Evidence', icon: Layers, description: 'Evidence library' },
-	{ href: '/documents', label: 'Documents', icon: FolderLock, description: 'Files and secure links' },
 	{ href: '/questions', label: 'Questions', icon: HelpCircle, description: 'Research tracker' }
 ];
 

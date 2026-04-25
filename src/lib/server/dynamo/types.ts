@@ -26,12 +26,10 @@ export type TaskItem = DynamoBaseItem & {
 	priority: string;
 	status: string; // Stored as string, validated as TaskStatus at service layer
 	ownerId: string | null;
-	linkedFormId: string | null;
 	linkedEvidenceId: string | null;
 	linkedMilestoneId: string | null;
 	order: number;
 	checklist?: Array<{ id: string; taskId: string; text: string; done: boolean; order: number }>;
-	attachments?: unknown[];
 	tags?: unknown[];
 };
 
@@ -58,28 +56,6 @@ export type QuestionItem = DynamoBaseItem & {
 	relatedEvidenceId: string | null;
 	relatedTaskId: string | null;
 	relatedEvidence: { id: string } | null;
-};
-
-export type DocumentFileItem = DynamoBaseItem & {
-	id: string;
-	workspaceId: string;
-	title: string;
-	category: string;
-	notes: string | null;
-	uploadedByUserId: string | null;
-	uploadedBy: { id: string; name: string | null; email: string } | null;
-	linkedFormId: string | null;
-	linkedEvidenceId: string | null;
-	linkedTaskId: string | null;
-	form: { id: string; code: string; name: string } | null;
-	evidence: { id: string; title: string } | null;
-	task: { id: string; title: string } | null;
-	file: string | null;
-	sizeBytes: number | null;
-	mimeType: string | null;
-	storageMode: string | null;
-	externalUrl: string | null;
-	versions: Array<{ id: string; title: string; createdAt: string }>;
 };
 
 export type MilestoneItem = DynamoBaseItem & {

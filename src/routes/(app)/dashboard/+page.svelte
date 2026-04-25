@@ -120,21 +120,6 @@
 		</ul>
 	</Widget>
 
-	<Widget title="Documents by category" href="/documents">
-		{#if data.docsByCategory.length === 0}
-			<p class="text-sm text-muted-foreground">No documents yet.</p>
-		{:else}
-			<ul class="space-y-1 text-xs">
-				{#each data.docsByCategory as d}
-					<li class="flex items-center justify-between">
-						<span class="text-muted-foreground">{d.category}</span>
-						<span class="font-mono text-foreground">{d.count}</span>
-					</li>
-				{/each}
-			</ul>
-		{/if}
-	</Widget>
-
 	<Widget title="Recent activity" href="/settings/data/activity">
 		{#if data.activity.length === 0}
 			<p class="text-sm text-muted-foreground">No activity yet.</p>
