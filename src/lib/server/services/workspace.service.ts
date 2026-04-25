@@ -1,5 +1,6 @@
 import { logActivity } from '$lib/server/activity';
 import type { MemberRole } from '$lib/types/enums';
+import { EVIDENCE_CATEGORIES, EVIDENCE_TARGETS } from '$lib/constants/categories';
 import { randomUUID } from 'node:crypto';
 import { ddbPut, ddbGet, ddbQuery, ddbUpdate, ddbDelete } from '$lib/server/dynamo/ops';
 import { baPk, entitySk, gsi1Sk, gsi1UserPk, wsPk } from '$lib/server/dynamo/keys';
@@ -10,11 +11,17 @@ import { invalidateMembers } from '$lib/server/cache/membersCache';
 export async function createWorkspace(input: { name: string; ownerUserId: string }) {
 	const now = new Date().toISOString();
 	const workspaceId = randomUUID();
+	const evidenceCounts = {} as Record<string, number>;
+	for (const cat of EVIDENCE_CATEGORIES) {
+		evidenceCounts[cat] = 0;
+	}
 	const ws = {
 		id: workspaceId,
 		name: input.name,
 		ownerId: input.ownerUserId,
-		evidenceTargets: null as any,
+		evidenceCategories: [...EVIDENCE_CATEGORIES] as string[],
+		evidenceTargets: { ...EVIDENCE_TARGETS } as Record<string, number>,
+		evidenceCounts,
 		createdAt: now,
 		updatedAt: now
 	};

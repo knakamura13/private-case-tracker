@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { evidenceCreateSchema } from '$lib/schemas/evidence';
+import { evidenceCategoryAddSchema } from '$lib/schemas/evidence';
 import { questionCreateSchema } from '$lib/schemas/question';
 import { milestoneCreateSchema } from '$lib/schemas/milestone';
 import { loginSchema, signupSchema } from '$lib/schemas/auth';
 
 describe('zod schemas', () => {
-	it('evidenceCreateSchema requires category', () => {
-		expect(evidenceCreateSchema.safeParse({}).success).toBe(false);
-		expect(evidenceCreateSchema.safeParse({ category: 'Photos' }).success).toBe(true);
+	it('evidenceCategoryAddSchema requires category', () => {
+		expect(evidenceCategoryAddSchema.safeParse({}).success).toBe(false);
+		expect(evidenceCategoryAddSchema.safeParse({ category: 'Photos' }).success).toBe(true);
 	});
 
 	it('questionCreateSchema requires a question', () => {

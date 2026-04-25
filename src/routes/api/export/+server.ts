@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { listEvidence } from '$lib/server/services/evidence.service';
+import { getEvidenceCategories } from '$lib/server/services/evidence.service';
 import { listQuestions } from '$lib/server/services/question.service';
 import { listMilestones } from '$lib/server/services/milestone.service';
 import { recentActivity } from '$lib/server/activity';
@@ -16,7 +16,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		activity,
 		quickLinks
 	] = await Promise.all([
-		listEvidence(wsId, { limit: 5000 }),
+		getEvidenceCategories(wsId),
 		listQuestions(wsId, { limit: 5000 }),
 		listMilestones(wsId, { limit: 5000 }),
 		recentActivity(wsId, 500),

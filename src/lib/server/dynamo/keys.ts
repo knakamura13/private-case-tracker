@@ -4,7 +4,6 @@ export type EntityType =
 	| 'Invitation'
 	| 'Task'
 	| 'TaskChecklistItem'
-	| 'EvidenceItem'
 	| 'EvidenceFile'
 	| 'TimelineMilestone'
 	| 'FormRecord'

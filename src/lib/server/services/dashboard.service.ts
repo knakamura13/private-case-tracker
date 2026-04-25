@@ -1,13 +1,12 @@
 import { PHASE_ORDER, PHASE_LABELS } from '$lib/constants/phases';
 import { currentPhase } from './milestone.service';
-import { EVIDENCE_CATEGORIES, EVIDENCE_TARGETS } from '$lib/constants/categories';
 import type {
 	MilestonePhase,
 	MilestoneStatus,
 	QuestionStatus
 } from '$lib/types/enums';
 import { recentActivity } from '$lib/server/activity';
-import { listEvidence } from './evidence.service';
+import { getEvidenceCategories } from './evidence.service';
 import { listQuestions } from './question.service';
 import { listMilestones } from './milestone.service';
 import { listQuickLinks } from './quickLink.service';
@@ -17,14 +16,14 @@ export async function dashboardFor(workspaceId: string) {
 	const now = new Date();
 
 	const [
-		evidenceAll,
+		evidenceCategories,
 		openQuestionsAll,
 		milestonesAll,
 		activity,
 		quickLinks,
 		quickLinkFolders
 	] = await Promise.all([
-		listEvidence(workspaceId),
+		getEvidenceCategories(workspaceId),
 		listQuestions(workspaceId, { status: 'OPEN' as QuestionStatus }).then(async (rows) =>
 			rows.concat(await listQuestions(workspaceId, { status: 'RESEARCHING' as QuestionStatus }))
 		),
@@ -39,21 +38,12 @@ export async function dashboardFor(workspaceId: string) {
 		.sort((a, b) => new Date(a.scheduledAt!).getTime() - new Date(b.scheduledAt!).getTime())
 		.slice(0, 5);
 
-	const evidenceByCategory = new Map<string, { total: number }>();
-	for (const it of evidenceAll) {
-		const b = evidenceByCategory.get(it.category) ?? { total: 0 };
-		b.total += it.currentCount;
-		evidenceByCategory.set(it.category, b);
-	}
-	const evidenceCoverage = EVIDENCE_CATEGORIES.map((cat) => {
-		const b = evidenceByCategory.get(cat) ?? { total: 0 };
-		return {
-			category: cat,
-			total: b.total,
-			ready: b.total,
-			target: EVIDENCE_TARGETS[cat] ?? 0
-		};
-	});
+	const evidenceCoverage = evidenceCategories.map((cat) => ({
+		category: cat.category,
+		total: cat.currentCount,
+		ready: cat.currentCount,
+		target: cat.targetCount
+	}));
 	const gapsCount = evidenceCoverage.filter((c) => c.total < c.target).length;
 
 	const openQuestionsCount: Record<string, number> = { LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0 };

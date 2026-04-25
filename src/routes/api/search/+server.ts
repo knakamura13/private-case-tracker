@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { truncate } from '$lib/utils/format';
-import { listEvidence } from '$lib/server/services/evidence.service';
+import { getEvidenceCategories } from '$lib/server/services/evidence.service';
 import { listQuestions } from '$lib/server/services/question.service';
 import { listQuickLinks } from '$lib/server/services/quickLink.service';
 import { listMilestones } from '$lib/server/services/milestone.service';
@@ -15,9 +15,9 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 	const workspaceId = locals.workspace.id;
 
-	const [milestones, evidence, questions, quickLinks] = await Promise.all([
+	const [milestones, evidenceCategories, questions, quickLinks] = await Promise.all([
 		listMilestones(workspaceId, { limit: LIMIT_PER_GROUP }),
-		listEvidence(workspaceId, { q, limit: LIMIT_PER_GROUP }),
+		getEvidenceCategories(workspaceId),
 		listQuestions(workspaceId, { q, limit: LIMIT_PER_GROUP }),
 		listQuickLinks(workspaceId).then((r) =>
 			r
@@ -36,6 +36,10 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		[m.title, m.description].some((x) => String(x ?? '').toLowerCase().includes(q.toLowerCase()))
 	);
 
+	const filteredEvidence = evidenceCategories.filter((e) =>
+		e.category.toLowerCase().includes(q.toLowerCase())
+	);
+
 	return json({
 		Milestones: filteredMilestones.slice(0, LIMIT_PER_GROUP).map((m) => ({
 			type: 'milestone',
@@ -44,12 +48,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			description: m.description ? truncate(m.description, 80) : undefined,
 			href: `/timeline/${m.id}`
 		})),
-		Evidence: evidence.map((e) => ({
+		Evidence: filteredEvidence.slice(0, LIMIT_PER_GROUP).map((e) => ({
 			type: 'evidence',
-			id: e.id,
+			id: e.category,
 			title: e.category,
 			description: `${e.currentCount}/${e.targetCount}`,
-			href: `/evidence/${e.id}`
+			href: `/evidence`
 		})),
 		Questions: questions.map((qItem) => ({
 			type: 'question',

@@ -33,14 +33,6 @@ export type TaskItem = DynamoBaseItem & {
 	tags?: unknown[];
 };
 
-export type EvidenceItem = DynamoBaseItem & {
-	id: string;
-	workspaceId: string;
-	category: string;
-	targetCount: number;
-	currentCount: number;
-};
-
 export type QuestionItem = DynamoBaseItem & {
 	id: string;
 	workspaceId: string;

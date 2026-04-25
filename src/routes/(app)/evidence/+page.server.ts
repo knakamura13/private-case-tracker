@@ -1,39 +1,26 @@
 import type { PageServerLoad, Actions } from './$types';
-import { requireWorkspace } from '$lib/server/guards';
-import { listEvidence, incrementEvidenceCount } from '$lib/server/services/evidence.service';
-import { EVIDENCE_CATEGORIES, EVIDENCE_TARGETS } from '$lib/constants/categories';
+import { requireWorkspace, requireOwner } from '$lib/server/guards';
+import {
+	getEvidenceCategories,
+	incrementEvidenceCount,
+	updateEvidenceTarget,
+	addEvidenceCategory,
+	renameEvidenceCategory,
+	deleteEvidenceCategory
+} from '$lib/server/services/evidence.service';
 import { fail } from '@sveltejs/kit';
-import { ddbGet, ddbUpdate } from '$lib/server/dynamo/ops';
-import { entitySk, wsPk } from '$lib/server/dynamo/keys';
 
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);
-	const items = await listEvidence(workspace.id);
+	const categories = await getEvidenceCategories(workspace.id);
+	const isOwner = workspace.role === 'OWNER';
 
-	// Fetch workspace to get stored evidence target overrides
-	const ws = await ddbGet<Record<string, unknown>>({ PK: wsPk(workspace.id), SK: entitySk('Workspace', workspace.id) });
-	const storedTargets = (ws?.evidenceTargets as Record<string, number> | null) ?? {};
-	const effectiveTargets: Record<string, number> = { ...EVIDENCE_TARGETS, ...storedTargets };
-
-	// Build category counts from evidence items
-	const counts = new Map<string, number>();
-	for (const it of items) {
-		counts.set(it.category, (counts.get(it.category) ?? 0) + it.currentCount);
-	}
-
-	// Ensure all categories have an entry
-	const categories = EVIDENCE_CATEGORIES.map((cat) => ({
-		category: cat,
-		currentCount: counts.get(cat) ?? 0,
-		targetCount: effectiveTargets[cat] ?? 0
-	}));
-
-	return { categories, effectiveTargets };
+	return { categories, isOwner };
 };
 
 export const actions: Actions = {
 	updateTarget: async (event) => {
-		const { workspace } = requireWorkspace(event);
+		const { workspace, user } = requireWorkspace(event);
 		const formData = await event.request.formData();
 		const category = formData.get('category') as string;
 		const raw = formData.get('target') as string;
@@ -43,21 +30,12 @@ export const actions: Actions = {
 			return fail(400, { error: 'Invalid input' });
 		}
 
-		// Validate category
-		if (!EVIDENCE_CATEGORIES.includes(category as any)) {
-			return fail(400, { error: 'Invalid category' });
+		try {
+			await updateEvidenceTarget(workspace.id, user.id, category, target);
+			return {};
+		} catch (e) {
+			return fail(400, { error: e instanceof Error ? e.message : 'Failed to update target' });
 		}
-
-		// Use ddbUpdate to only modify evidenceTargets and updatedAt
-		// Initialize evidenceTargets map if it doesn't exist
-		await ddbUpdate(
-			{ PK: wsPk(workspace.id), SK: entitySk('Workspace', workspace.id) },
-			'SET #evidenceTargets = if_not_exists(#evidenceTargets, :empty), #evidenceTargets.#category = :t, #updatedAt = :u',
-			{ ':empty': {}, ':t': target, ':u': new Date().toISOString() },
-			{ '#evidenceTargets': 'evidenceTargets', '#category': category, '#updatedAt': 'updatedAt' }
-		);
-
-		return {};
 	},
 	adjustCount: async (event) => {
 		const { workspace, user } = requireWorkspace(event);
@@ -75,18 +53,64 @@ export const actions: Actions = {
 			return fail(400, { error: 'Invalid input' });
 		}
 
-		// Validate category is a known evidence category
-		if (!EVIDENCE_CATEGORIES.includes(category as any)) {
-			return fail(400, { error: 'Invalid category' });
-		}
-
-		// Limit delta to prevent abuse
 		if (Math.abs(delta) > 100) {
-			return fail(400, { error: 'Delta too large' });
+			return fail(400, { error: 'Delta too large (max 100)' });
 		}
 
-		await incrementEvidenceCount(workspace.id, user.id, category, delta);
+		try {
+			await incrementEvidenceCount(workspace.id, user.id, category, delta);
+			return {};
+		} catch (e) {
+			return fail(400, { error: e instanceof Error ? e.message : 'Failed to adjust count' });
+		}
+	},
+	addCategory: async (event) => {
+		const { workspace, user } = requireOwner(event);
+		const formData = await event.request.formData();
+		const category = formData.get('category') as string;
 
-		return {};
+		if (!category) {
+			return fail(400, { error: 'Category name is required' });
+		}
+
+		try {
+			await addEvidenceCategory(workspace.id, user.id, category);
+			return {};
+		} catch (e) {
+			return fail(400, { error: e instanceof Error ? e.message : 'Failed to add category' });
+		}
+	},
+	renameCategory: async (event) => {
+		const { workspace, user } = requireOwner(event);
+		const formData = await event.request.formData();
+		const oldName = formData.get('oldName') as string;
+		const newName = formData.get('newName') as string;
+
+		if (!oldName || !newName) {
+			return fail(400, { error: 'Both old and new names are required' });
+		}
+
+		try {
+			await renameEvidenceCategory(workspace.id, user.id, oldName, newName);
+			return {};
+		} catch (e) {
+			return fail(400, { error: e instanceof Error ? e.message : 'Failed to rename category' });
+		}
+	},
+	deleteCategory: async (event) => {
+		const { workspace, user } = requireOwner(event);
+		const formData = await event.request.formData();
+		const category = formData.get('category') as string;
+
+		if (!category) {
+			return fail(400, { error: 'Category name is required' });
+		}
+
+		try {
+			await deleteEvidenceCategory(workspace.id, user.id, category);
+			return {};
+		} catch (e) {
+			return fail(400, { error: e instanceof Error ? e.message : 'Failed to delete category' });
+		}
 	}
 };
