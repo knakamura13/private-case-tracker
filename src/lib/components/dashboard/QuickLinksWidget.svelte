@@ -643,7 +643,7 @@
 		</div>
 	{/each}
 
-	<!-- Add shortcut tile — same structure: circle on top, label below -->
+	<!-- Add link tile — same structure: circle on top, label below -->
 	<button
 		type="button"
 		class="flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
@@ -652,7 +652,7 @@
 		<span class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60">
 			<Plus class="h-6 w-6" aria-hidden="true" />
 		</span>
-		<span class="line-clamp-2 w-full text-center text-[11px] leading-tight">Add shortcut</span>
+		<span class="line-clamp-2 w-full text-center text-[11px] leading-tight">Add link</span>
 	</button>
 
 	<!-- Add folder tile -->
@@ -691,8 +691,8 @@
 							? 'Rename folder'
 							: 'Add folder'
 						: editing
-							? 'Edit shortcut'
-							: 'Add shortcut'}
+							? 'Edit link'
+							: 'Add link'}
 				</p>
 				<button type="button" class="rounded-md p-1 hover:bg-muted" aria-label="Close" onclick={closeModal}>
 					<span class="sr-only">Close</span>
