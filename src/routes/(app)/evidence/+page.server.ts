@@ -49,10 +49,11 @@ export const actions: Actions = {
 		}
 
 		// Use ddbUpdate to only modify evidenceTargets and updatedAt
+		// Initialize evidenceTargets map if it doesn't exist
 		await ddbUpdate(
 			{ PK: wsPk(workspace.id), SK: entitySk('Workspace', workspace.id) },
-			'SET #evidenceTargets.#category = :t, #updatedAt = :u',
-			{ ':t': target, ':u': new Date().toISOString() },
+			'SET #evidenceTargets = if_not_exists(#evidenceTargets, :empty), #evidenceTargets.#category = :t, #updatedAt = :u',
+			{ ':empty': {}, ':t': target, ':u': new Date().toISOString() },
 			{ '#evidenceTargets': 'evidenceTargets', '#category': category, '#updatedAt': 'updatedAt' }
 		);
 
@@ -62,9 +63,15 @@ export const actions: Actions = {
 		const { workspace, user } = requireWorkspace(event);
 		const formData = await event.request.formData();
 		const category = formData.get('category') as string;
-		const delta = parseInt(formData.get('delta') as string);
+		const deltaStr = formData.get('delta') as string;
 
-		if (!category || isNaN(delta) || delta === 0) {
+		if (!category || !deltaStr) {
+			return fail(400, { error: 'Invalid input' });
+		}
+
+		const delta = parseInt(deltaStr, 10);
+
+		if (isNaN(delta) || delta === 0) {
 			return fail(400, { error: 'Invalid input' });
 		}
 

@@ -74,21 +74,90 @@ export async function incrementEvidenceCount(workspaceId: string, actorId: strin
 		const target = EVIDENCE_CATEGORIES.includes(category as any)
 			? (EVIDENCE_TARGETS as Record<string, number>)[category]
 			: 0;
-		return await createEvidence(workspaceId, actorId, {
-			category,
-			targetCount: target ?? 0,
-			currentCount: Math.max(0, delta)
-		});
+		try {
+			return await createEvidence(workspaceId, actorId, {
+				category,
+				targetCount: target ?? 0,
+				currentCount: Math.max(0, delta)
+			});
+		} catch (e) {
+			// If creation failed due to category already existing (race condition),
+			// retry by fetching the item again and updating it
+			if (e instanceof Error && e.message === 'Evidence category already exists') {
+				const retryItems = await listEvidence(workspaceId);
+				const retryItem = retryItems.find((i) => i.category === category);
+				if (retryItem) {
+					// Atomic increment/decrement using DynamoDB ADD operation
+					const evidence = await ddbUpdate<any>(
+						{ PK: wsPk(workspaceId), SK: entitySk('EvidenceItem', retryItem.id) },
+						'SET #currentCount = #currentCount + :delta, #updatedAt = :u',
+						{ ':delta': delta, ':u': new Date().toISOString() },
+						{ '#currentCount': 'currentCount', '#updatedAt': 'updatedAt' }
+					);
+
+					// Fix negative count if needed
+					if (evidence && evidence.currentCount < 0) {
+						const fixed = await ddbUpdate<any>(
+							{ PK: wsPk(workspaceId), SK: entitySk('EvidenceItem', retryItem.id) },
+							'SET #currentCount = :zero, #updatedAt = :u',
+							{ ':zero': 0, ':u': new Date().toISOString() },
+							{ '#currentCount': 'currentCount', '#updatedAt': 'updatedAt' }
+						);
+						await logActivity({
+							workspaceId,
+							userId: actorId,
+							action: 'EVIDENCE_UPDATED',
+							entityType: 'EvidenceItem',
+							entityId: retryItem.id,
+							summary: `Evidence category "${category}" count adjusted to 0 (corrected from negative)`
+						});
+						return fixed;
+					}
+
+					await logActivity({
+						workspaceId,
+						userId: actorId,
+						action: 'EVIDENCE_UPDATED',
+						entityType: 'EvidenceItem',
+						entityId: retryItem.id,
+						summary: `Evidence category "${category}" count adjusted to ${evidence?.currentCount ?? 0}`
+					});
+					return evidence;
+				}
+			}
+			throw e;
+		}
 	}
 
-	// Atomic increment/decrement using DynamoDB UpdateExpression
+	// Atomic increment/decrement using DynamoDB ADD operation
+	// Use conditional update to prevent going below zero
 	const newCount = Math.max(0, item.currentCount + delta);
 	const evidence = await ddbUpdate<any>(
 		{ PK: wsPk(workspaceId), SK: entitySk('EvidenceItem', item.id) },
-		'SET #currentCount = :c, #updatedAt = :u',
-		{ ':c': newCount, ':u': new Date().toISOString() },
+		'SET #currentCount = #currentCount + :delta, #updatedAt = :u',
+		{ ':delta': delta, ':u': new Date().toISOString() },
 		{ '#currentCount': 'currentCount', '#updatedAt': 'updatedAt' }
 	);
+
+	// If the update resulted in a negative count, fix it
+	// This can happen if concurrent decrements pushed it below zero
+	if (evidence && evidence.currentCount < 0) {
+		const fixed = await ddbUpdate<any>(
+			{ PK: wsPk(workspaceId), SK: entitySk('EvidenceItem', item.id) },
+			'SET #currentCount = :zero, #updatedAt = :u',
+			{ ':zero': 0, ':u': new Date().toISOString() },
+			{ '#currentCount': 'currentCount', '#updatedAt': 'updatedAt' }
+		);
+		await logActivity({
+			workspaceId,
+			userId: actorId,
+			action: 'EVIDENCE_UPDATED',
+			entityType: 'EvidenceItem',
+			entityId: item.id,
+			summary: `Evidence category "${category}" count adjusted to 0 (corrected from negative)`
+		});
+		return fixed;
+	}
 
 	await logActivity({
 		workspaceId,
@@ -96,7 +165,7 @@ export async function incrementEvidenceCount(workspaceId: string, actorId: strin
 		action: 'EVIDENCE_UPDATED',
 		entityType: 'EvidenceItem',
 		entityId: item.id,
-		summary: `Evidence category "${category}" count adjusted to ${newCount}`
+		summary: `Evidence category "${category}" count adjusted to ${evidence?.currentCount ?? newCount}`
 	});
 
 	return evidence;
