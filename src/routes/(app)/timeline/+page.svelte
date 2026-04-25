@@ -160,12 +160,14 @@
 			}}
 			action="?/update"
 			deleteAction="?/delete"
-			onenhance={({ formData }: { formData: FormData; cancel: () => void }) => {
+			onenhance={({ formData, cancel }: { formData: FormData; cancel: () => void }) => {
 				return async () => {
 					const response = await fetch('?/update', { method: 'POST', body: formData });
 					if (response.ok) {
 						await invalidateAll();
 						showSuccessToast('Milestone updated successfully');
+					} else {
+						cancel();
 					}
 				};
 			}}

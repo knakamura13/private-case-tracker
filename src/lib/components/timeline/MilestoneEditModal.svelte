@@ -6,8 +6,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
 	import { PHASE_LABELS, PHASE_ORDER } from '$lib/constants/phases';
-	import { enhance } from '$app/forms';
-	import { showSuccessToast } from '$lib/stores/toast';
+	import { showSuccessToast, showErrorToast } from '$lib/stores/toast';
 	import { X, Plus, Calendar, Paperclip, MapPin, CheckSquare, User, MoreHorizontal } from 'lucide-svelte';
 
 	let { open, onClose, action, deleteAction, onenhance, members, initial, error, errorId }: {
@@ -42,7 +41,7 @@
 	let openSubTaskMenuId = $state<string | null>(null);
 	let editingSubTaskId = $state<string | null>(null);
 	let editingSubTaskText = $state('');
-	let newSubTaskInputEl: HTMLInputElement;
+	let newSubTaskInputEl = $state<HTMLInputElement | null>(null);
 
 	// Focus new sub-task input when shown
 	$effect(() => {
@@ -195,6 +194,7 @@
 	}
 
 	async function triggerAutoSave(immediate = false) {
+		if (isSaving) return;
 		if (saveTimeout) clearTimeout(saveTimeout);
 		// Only trigger if dialog is open and action is valid
 		if (!open || !action) return;
@@ -256,7 +256,7 @@
 			class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-card shadow-xl"
 			role="document"
 		>
-			<form method="post" {action} use:enhance={onenhance} class="flex flex-col">
+			<form method="post" {action} class="flex flex-col">
 				<!-- Header -->
 				<div class="flex items-start justify-between border-b border-border p-4">
 					<div class="flex flex-1 items-start">
@@ -283,9 +283,13 @@
 												if (confirm('Are you sure you want to delete this milestone? This action cannot be undone.')) {
 													const formData = new FormData();
 													formData.append('id', val('id'));
-													await fetch(deleteAction, { method: 'POST', body: formData });
-													showSuccessToast('Milestone deleted successfully');
-													window.location.href = '/timeline';
+													const response = await fetch(deleteAction, { method: 'POST', body: formData });
+													if (response.ok) {
+														showSuccessToast('Milestone deleted successfully');
+														window.location.href = '/timeline';
+													} else {
+														showErrorToast('Failed to delete milestone');
+													}
 												}
 											}}
 										>

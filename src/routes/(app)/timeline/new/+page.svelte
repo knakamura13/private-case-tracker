@@ -14,7 +14,7 @@
 	error={form?.error}
 	errorId={form?.errorId}
 	onenhance={() => {
-		return async ({ result }) => {
+		return async ({ result }: { result: { type: string } }) => {
 			if (result.type === 'success') {
 				showSuccessToast('Milestone created successfully');
 			}
