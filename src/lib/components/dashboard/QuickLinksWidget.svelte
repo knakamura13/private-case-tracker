@@ -31,6 +31,7 @@
 	let dropTargetId = $state<string | null>(null);
 	let dropIntent = $state<DropIntent | null>(null);
 	let dragEnterCount = $state(0);
+	let dropInsertIndex = $state<number | null>(null);
 
 	// Separate root links and folder links
 	let rootLinks = $derived(links.filter((l) => !l.folderId));
@@ -64,6 +65,17 @@
 
 	function labelFor(link: QuickLink) {
 		return link.title?.trim() ? link.title : prettyHostname(link.url);
+	}
+
+	function openLink(url: string) {
+		window.open(url, '_blank', 'noopener,noreferrer');
+	}
+
+	function handleLinkKeydown(event: KeyboardEvent, url: string) {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			openLink(url);
+		}
 	}
 
 	function openAdd(folder?: QuickLinkFolder) {
@@ -172,6 +184,7 @@
 		dropTargetId = null;
 		dropIntent = null;
 		dragEnterCount = 0;
+		dropInsertIndex = null;
 	}
 
 	function handleDragEnter(event: DragEvent, id: string) {
@@ -190,6 +203,10 @@
 				dropIntent = 'move-into';
 			} else {
 				dropIntent = 'reorder';
+				// Calculate insert index for visual feedback
+				const oldIndex = itemIds.indexOf(draggingId);
+				const newIndex = itemIds.indexOf(id);
+				dropInsertIndex = newIndex > oldIndex ? newIndex + 1 : newIndex;
 			}
 		}
 	}
@@ -200,6 +217,7 @@
 			dragEnterCount = 0;
 			dropTargetId = null;
 			dropIntent = null;
+			dropInsertIndex = null;
 		}
 	}
 
@@ -218,6 +236,7 @@
 		dropTargetId = null;
 		dropIntent = null;
 		dragEnterCount = 0;
+		dropInsertIndex = null;
 		if (!activeId || activeId === targetId) return;
 
 		const activeLink = links.find((l) => l.id === activeId);
@@ -308,7 +327,7 @@
 		{@const folderLinks = folderLinksMap[folder.id] ?? []}
 		{@const previewLinks = folderLinks.slice(0, 4)}
 		<div
-			class="group flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 transition-shadow hover:bg-muted/40 focus-within:bg-muted/40"
+			class="group flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 transition-shadow hover:bg-muted/40 focus-within:bg-muted/40 cursor-pointer"
 			draggable={true}
 			ondragstart={(e) => handleDragStart(e, folder.id)}
 			ondragenter={(e) => handleDragEnter(e, folder.id)}
@@ -321,6 +340,7 @@
 			class:ring-emerald-500={dropTargetId === folder.id && dropIntent === 'move-into'}
 			class:ring-offset-2={dropTargetId === folder.id && (dropIntent === 'reorder' || dropIntent === 'move-into')}
 			class:opacity-50={draggingId === folder.id}
+			class:translate-x-4={dropInsertIndex !== null && allItems.findIndex((i) => i.id === folder.id) === dropInsertIndex}
 			role="button"
 			tabindex="0"
 			aria-label={folder.name ?? 'Folder'}
@@ -383,6 +403,7 @@
 									class="h-3 w-3 rounded-sm object-contain"
 									referrerpolicy="no-referrer"
 									class:opacity-50={previewLinks.length > 1}
+									draggable={false}
 								/>
 							{/each}
 						</div>
@@ -446,7 +467,7 @@
 					<div class="flex flex-wrap items-start gap-1 sm:gap-2">
 						{#each folderLinks as link (link.id)}
 							<div
-								class="group flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 hover:bg-muted/40"
+								class="group flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 hover:bg-muted/40 cursor-pointer"
 							>
 								<div class="relative">
 									<button
@@ -503,12 +524,13 @@
 										</div>
 									{/if}
 
-									<a
-										href={link.url}
-										target="_blank"
-										rel="noopener noreferrer"
+									<div
+										onclick={() => openLink(link.url)}
+										onkeydown={(e) => handleLinkKeydown(e, link.url)}
 										aria-label={labelFor(link)}
-										class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+										role="button"
+										tabindex="0"
+										class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60 outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
 									>
 										{#if brokenFavicons.has(link.id)}
 											<Link2 class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
@@ -522,7 +544,7 @@
 												onerror={() => markFaviconBroken(link.id)}
 											/>
 										{/if}
-									</a>
+									</div>
 								</div>
 								<span
 									class="line-clamp-2 w-full text-center text-[11px] leading-tight text-foreground"
@@ -540,7 +562,7 @@
 
 	{#each rootLinks as link (link.id)}
 		<div
-			class="group flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 transition-shadow hover:bg-muted/40 focus-within:bg-muted/40"
+			class="group flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 transition-shadow hover:bg-muted/40 focus-within:bg-muted/40 cursor-pointer"
 			draggable={true}
 			ondragstart={(e) => handleDragStart(e, link.id)}
 			ondragenter={(e) => handleDragEnter(e, link.id)}
@@ -553,6 +575,7 @@
 			class:ring-amber-500={dropTargetId === link.id && dropIntent === 'merge'}
 			class:ring-offset-2={dropTargetId === link.id && (dropIntent === 'reorder' || dropIntent === 'merge')}
 			class:opacity-50={draggingId === link.id}
+			class:translate-x-4={dropInsertIndex !== null && allItems.findIndex((i) => i.id === link.id) === dropInsertIndex}
 			role="button"
 			tabindex="0"
 			aria-label={labelFor(link)}
@@ -609,14 +632,14 @@
 					</div>
 				{/if}
 
-				<!-- Favicon circle is a plain anchor (no extra padding) -->
-				<a
-					href={link.url}
-					target="_blank"
-					rel="noopener noreferrer"
+				<!-- Favicon circle is a plain div (no extra padding) -->
+				<div
+					onclick={() => openLink(link.url)}
+					onkeydown={(e) => handleLinkKeydown(e, link.url)}
 					aria-label={labelFor(link)}
-					class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+					role="button"
 					tabindex="0"
+					class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60 outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
 				>
 					{#if brokenFavicons.has(link.id)}
 						<Link2 class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
@@ -628,9 +651,10 @@
 							referrerpolicy="no-referrer"
 							loading="lazy"
 							onerror={() => markFaviconBroken(link.id)}
+							draggable={false}
 						/>
 					{/if}
-				</a>
+				</div>
 			</div>
 
 			<!-- Label: up to 2 lines, then ellipsis -->
