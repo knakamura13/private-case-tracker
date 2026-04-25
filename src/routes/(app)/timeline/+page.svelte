@@ -13,6 +13,7 @@
 	import { PHASE_ORDER, PHASE_LABELS, PHASE_DESCRIPTIONS } from '$lib/constants/phases';
 	import { titleCase } from '$lib/utils/format';
 	import { page } from '$app/stores';
+	import { invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
 
 	interface TimelinePageData extends PageData {
@@ -153,23 +154,16 @@
 		<MilestoneEditModal
 			open={true}
 			onClose={async () => {
-				// Trigger a final save before closing
-				const form = document.querySelector('form[method="post"]') as HTMLFormElement;
-				if (form) {
-					const formData = new FormData(form);
-					await fetch('?/update', { method: 'POST', body: formData });
-				}
 				editingMilestone = null;
 				updateUrl(null);
 			}}
 			action="?/update"
 			deleteAction="?/delete"
-			onenhance={() => {
-				return async ({ formData, cancel }: { formData: FormData; cancel: () => void }) => {
-					cancel();
+			onenhance={({ formData }: { formData: FormData; cancel: () => void }) => {
+				return async () => {
 					const response = await fetch('?/update', { method: 'POST', body: formData });
 					if (response.ok) {
-						// Don't close on auto-save, only on manual close
+						await invalidateAll();
 					}
 				};
 			}}
