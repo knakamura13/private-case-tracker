@@ -3,7 +3,7 @@
 
 export type MemberRole = 'OWNER' | 'COLLABORATOR';
 
-export type TagScope = 'TASK' | 'EVIDENCE' | 'NOTE' | 'DOCUMENT' | 'QUESTION';
+export type TagScope = 'TASK' | 'EVIDENCE' | 'NOTE' | 'QUESTION';
 
 export type MilestonePhase =
 	| 'PREPARATION'
@@ -39,10 +39,6 @@ export type EvidenceStatus =
 	| 'NEEDS_BETTER_COPY'
 	| 'READY';
 
-export type FileStorageMode = 'UPLOADED' | 'EXTERNAL_LINK';
-
-export type FileStatus = 'PENDING' | 'READY' | 'FAILED';
-
 export type QuestionStatus = 'OPEN' | 'RESEARCHING' | 'ANSWERED' | 'WONT_FIX';
 
 export type QuestionSourceType =
@@ -69,9 +65,6 @@ export type ActivityAction =
 	| 'EVIDENCE_CREATED'
 	| 'EVIDENCE_UPDATED'
 	| 'EVIDENCE_DELETED'
-	| 'FILE_UPLOAD'
-	| 'FILE_DELETE'
-	| 'FILE_LINK_ADDED'
 	| 'QUESTION_CREATED'
 	| 'QUESTION_UPDATED'
 	| 'QUESTION_DELETED'
@@ -98,28 +91,6 @@ export type ErrorSource = 'SERVER' | 'CLIENT' | 'ACTION' | 'API';
 export type InputJsonValue = string | number | boolean | null | { [key: string]: InputJsonValue | undefined } | InputJsonValue[];
 
 // Model type definitions (minimal, for type compatibility)
-export type DocumentFile = {
-	id: string;
-	workspaceId: string;
-	title: string;
-	category: string;
-	storageMode: 'UPLOADED' | 'EXTERNAL_LINK';
-	status: FileStatus;
-	mimeType?: string | null;
-	sizeBytes?: number | null;
-	storageKey?: string | null;
-	externalUrl?: string | null;
-	uploadedByUserId?: string | null;
-	versionOfId?: string | null;
-	linkedTaskId?: string | null;
-	linkedFormId?: string | null;
-	linkedEvidenceId?: string | null;
-	notes?: string | null;
-	createdAt: string;
-	updatedAt: string;
-	deletedAt?: string | null;
-};
-
 export type QuickLink = {
 	id: string;
 	workspaceId: string;

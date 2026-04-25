@@ -32,15 +32,6 @@ const schema = z.object({
 	// Required in production; defaulted in dev/test to keep local tooling and unit tests simple.
 	DYNAMO_TABLE: z.string().min(1).default('case-tracker-dev'),
 	DYNAMO_ENDPOINT: z.string().url().optional(),
-	S3_ENDPOINT: z.string().url().optional(),
-	S3_REGION: z.string().default('auto'),
-	S3_BUCKET: z.string().optional(),
-	S3_ACCESS_KEY_ID: z.string().optional(),
-	S3_SECRET_ACCESS_KEY: z.string().optional(),
-	S3_FORCE_PATH_STYLE: z
-		.string()
-		.optional()
-		.transform((v) => v === 'true' || v === '1'),
 	NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 	DEV_MODE: z.string().optional()
 });
@@ -61,12 +52,6 @@ const BUILD_PLACEHOLDER: Env = {
 	AWS_REGION: 'us-east-1',
 	DYNAMO_TABLE: 'build-placeholder-table',
 	DYNAMO_ENDPOINT: undefined,
-	S3_ENDPOINT: undefined,
-	S3_REGION: 'auto',
-	S3_BUCKET: undefined,
-	S3_ACCESS_KEY_ID: undefined,
-	S3_SECRET_ACCESS_KEY: undefined,
-	S3_FORCE_PATH_STYLE: false,
 	NODE_ENV: 'production',
 	DEV_MODE: undefined
 };
@@ -83,12 +68,6 @@ function load(): Env {
 		AWS_REGION: env.AWS_REGION,
 		DYNAMO_TABLE: env.DYNAMO_TABLE,
 		DYNAMO_ENDPOINT: env.DYNAMO_ENDPOINT,
-		S3_ENDPOINT: env.S3_ENDPOINT,
-		S3_REGION: env.S3_REGION,
-		S3_BUCKET: env.S3_BUCKET,
-		S3_ACCESS_KEY_ID: env.S3_ACCESS_KEY_ID,
-		S3_SECRET_ACCESS_KEY: env.S3_SECRET_ACCESS_KEY,
-		S3_FORCE_PATH_STYLE: env.S3_FORCE_PATH_STYLE,
 		NODE_ENV: env.NODE_ENV ?? process.env.NODE_ENV,
 		DEV_MODE: env.DEV_MODE ?? process.env.DEV_MODE
 	});
@@ -107,15 +86,9 @@ function load(): Env {
 }
 
 // Lazily validate on first access so the build/prerender step doesn't choke
-// on missing runtime env vars.
 export const ENV: Env = new Proxy({} as Env, {
 	get(_t, prop: keyof Env) {
 		if (!cached) cached = load();
 		return cached[prop];
 	}
 });
-
-export function storageConfigured(): boolean {
-	const e = ENV;
-	return Boolean(e.S3_ENDPOINT && e.S3_BUCKET && e.S3_ACCESS_KEY_ID && e.S3_SECRET_ACCESS_KEY);
-}
