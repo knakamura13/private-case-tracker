@@ -6,8 +6,10 @@
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
 	import { PHASE_LABELS, PHASE_ORDER } from '$lib/constants/phases';
 	import { X, Plus, Calendar, MapPin, User } from 'lucide-svelte';
+	import { enhance } from '$app/forms';
+	import type { SubmitFunction } from '@sveltejs/kit';
 
-	let { open, onClose, action, members, defaultPhase, error, errorId }: {
+	let { open, onClose, action, members, defaultPhase, error, errorId, onenhance }: {
 		open: boolean;
 		onClose: () => void | Promise<void>;
 		action: string;
@@ -15,6 +17,7 @@
 		defaultPhase?: string;
 		error?: string;
 		errorId?: string;
+		onenhance?: SubmitFunction;
 	} = $props();
 
 	interface SubTask {
@@ -123,7 +126,7 @@
 			class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-card shadow-xl"
 			role="document"
 		>
-			<form method="post" {action} class="flex flex-col">
+			<form method="post" {action} use:enhance={onenhance} class="flex flex-col">
 				<input type="hidden" name="subTasks" value={subTasksJson} />
 				<input type="hidden" name="location" value={currentLocation} />
 				<!-- Header -->
