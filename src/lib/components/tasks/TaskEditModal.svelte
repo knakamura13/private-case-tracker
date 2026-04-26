@@ -183,7 +183,7 @@
 		if (isSaving) return;
 		if (saveTimeout) clearTimeout(saveTimeout);
 		if (!open || !action) return;
-		const delay = immediate ? 0 : 1000;
+		const delay = immediate ? 0 : 2000;
 		saveTimeout = setTimeout(async () => {
 			if (onenhance) {
 				isSaving = true;

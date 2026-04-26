@@ -6,7 +6,6 @@ import { logActivity } from '$lib/server/activity';
 import type { TaskItem } from '$lib/server/dynamo/types';
 import type { TaskCreate, TaskUpdate, TaskStatus } from '$lib/schemas/task';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export async function listTasks(workspaceId: string): Promise<TaskItem[]> {
 	const rows = await ddbQuery<TaskItem>({
@@ -17,7 +16,7 @@ export async function listTasks(workspaceId: string): Promise<TaskItem[]> {
 }
 
 export async function getTask(workspaceId: string, id: string) {
-	const task = await ddbGet<any>({
+	const task = await ddbGet<TaskItem>({
 		PK: wsPk(workspaceId),
 		SK: entitySk('Task', id)
 	});
@@ -53,7 +52,7 @@ export async function createTask(
 	
 	// Extract checklist from input to handle separately
 	const checklist = input.checklist;
-	delete (task as any).checklist;
+	delete (task as unknown as TaskItem).checklist;
 	
 	await ddbPut({
 		PK: wsPk(workspaceId),
@@ -83,7 +82,7 @@ export async function updateTask(
 	id: string,
 	input: TaskUpdate
 ) {
-	const existing = await ddbGet<any>({
+	const existing = await ddbGet<TaskItem>({
 		PK: wsPk(workspaceId),
 		SK: entitySk('Task', id)
 	});
@@ -110,7 +109,7 @@ export async function updateTask(
 	
 	let task;
 	if (sets.length > 0) {
-		task = (await ddbUpdate<any>(
+		task = (await ddbUpdate<TaskItem>(
 			{ PK: wsPk(workspaceId), SK: entitySk('Task', id) },
 			`SET ${sets.join(', ')}`,
 			values,
@@ -135,7 +134,7 @@ export async function updateTask(
 }
 
 export async function softDeleteTask(workspaceId: string, actorId: string, id: string) {
-	const existing = await ddbGet<any>({
+	const existing = await ddbGet<TaskItem>({
 		PK: wsPk(workspaceId),
 		SK: entitySk('Task', id)
 	});
@@ -158,7 +157,7 @@ export async function softDeleteTask(workspaceId: string, actorId: string, id: s
 }
 
 export async function restoreTask(workspaceId: string, actorId: string, id: string) {
-	const existing = await ddbGet<any>({
+	const existing = await ddbGet<TaskItem>({
 		PK: wsPk(workspaceId),
 		SK: entitySk('Task', id)
 	});
@@ -186,7 +185,7 @@ export async function setChecklist(
 	taskId: string,
 	items: { id?: string; text: string; done: boolean }[]
 ) {
-	const task = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('Task', taskId) });
+	const task = await ddbGet<TaskItem>({ PK: wsPk(workspaceId), SK: entitySk('Task', taskId) });
 	if (!task) throw new Error('Task not found');
 	if (task.deletedAt) throw new Error('Task not found');
 	const checklist = items.map((item, idx) => ({
@@ -218,13 +217,13 @@ export async function reorderOnBoard(
 	updates: { id: string; status: TaskStatus; order: number }[]
 ) {
 	for (const u of updates) {
-		const existing = await ddbGet<any>({
+		const existing = await ddbGet<TaskItem>({
 			PK: wsPk(workspaceId),
 			SK: entitySk('Task', u.id)
 		});
 		if (!existing) throw new Error('Task not found');
 		if (existing.deletedAt) throw new Error('Task not found');
-		await ddbUpdate<any>(
+		await ddbUpdate<TaskItem>(
 			{ PK: wsPk(workspaceId), SK: entitySk('Task', u.id) },
 			'SET #status = :s, #order = :o, #updatedAt = :u',
 			{ ':s': u.status, ':o': u.order, ':u': new Date().toISOString() },
@@ -241,4 +240,3 @@ export async function reorderOnBoard(
 	});
 }
 
-/* eslint-enable @typescript-eslint/no-explicit-any */
