@@ -586,11 +586,6 @@
 					<input type="hidden" name="dueDate" value={dueDateValue} bind:this={dueDateInputEl} />
 					<input type="hidden" name="scheduledAt" value={appointmentDateValue} bind:this={scheduledAtInputEl} />
 					<input type="hidden" name="location" value={val('location', '')} />
-					<div class="flex justify-between gap-2">
-						{#if isSaving}
-							<span class="ml-auto text-sm text-muted-foreground">Saving...</span>
-						{/if}
-					</div>
 				</div>
 			</form>
 </Dialog>

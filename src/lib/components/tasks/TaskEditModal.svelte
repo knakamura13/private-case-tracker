@@ -510,11 +510,6 @@
 			<input type="hidden" name="id" value={val('id')} />
 			<input type="hidden" name="ownerId" value={ownerIdValue} />
 			<input type="hidden" name="dueDate" value={dueDateValue} bind:this={dueDateInputEl} />
-			<div class="flex justify-between gap-2">
-				{#if isSaving}
-					<span class="ml-auto text-sm text-muted-foreground">Saving...</span>
-				{/if}
-			</div>
 		</div>
 	</form>
 </Dialog>
