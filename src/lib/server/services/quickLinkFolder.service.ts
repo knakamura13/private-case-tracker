@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { ddbGet, ddbPut, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
 import type { QuickLinkFolderItem, QuickLinkItem } from '$lib/server/dynamo/types';
+import { extractHostname } from '$lib/server/utils/url';
 
 /* eslint-disable security/detect-object-injection */
 
@@ -166,7 +167,7 @@ export async function moveLinkToFolder(
 		{ '#folderId': 'folderId', '#updatedAt': 'updatedAt' }
 	);
 
-	const label = existing.title ?? safeHostname(existing.url);
+	const label = existing.title ?? extractHostname(existing.url);
 	const action = folderId ? 'moved to folder' : 'moved to root';
 	await logActivity({
 		workspaceId,
@@ -226,14 +227,6 @@ export async function reorderQuickLinkFolders(
 		entityId: workspaceId,
 		summary: 'Quick link folders reordered'
 	});
-}
-
-function safeHostname(url: string): string {
-	try {
-		return new URL(url).hostname;
-	} catch {
-		return url.slice(0, 80);
-	}
 }
 
 /* eslint-enable security/detect-object-injection */

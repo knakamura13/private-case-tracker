@@ -6,6 +6,7 @@ import { getMembers } from '$lib/server/cache/membersCache';
 import { logActionError } from '$lib/server/services/actionError.service';
 import { taskCreateSchema, taskUpdateSchema } from '$lib/schemas/task';
 import type { Actions, PageServerLoad } from './$types';
+import { parseJsonField } from '$lib/server/utils/parse';
 
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);
@@ -44,15 +45,7 @@ export const actions: Actions = {
 	create: async (event) => {
 		const { workspace, user } = requireWorkspace(event);
 		const raw = Object.fromEntries(await event.request.formData());
-		let checklist = undefined;
-		if (raw.checklist) {
-			try {
-				checklist = JSON.parse(raw.checklist as string);
-			} catch {
-				const errorId = await logActionError(event, { message: 'Invalid checklist format', status: 400 });
-				return fail(400, { error: 'Invalid checklist format', errorId });
-			}
-		}
+		const checklist = raw.checklist ? await parseJsonField(raw, 'checklist', event) : undefined;
 		const parsed = taskCreateSchema.safeParse({
 			...raw,
 			checklist
@@ -70,15 +63,7 @@ export const actions: Actions = {
 		const taskId = raw.id as string;
 		if (!taskId) return fail(400, { error: 'Missing task id' });
 
-		let checklist = undefined;
-		if (raw.checklist) {
-			try {
-				checklist = JSON.parse(raw.checklist as string);
-			} catch {
-				const errorId = await logActionError(event, { message: 'Invalid checklist format', status: 400 });
-				return fail(400, { error: 'Invalid checklist format', errorId });
-			}
-		}
+		const checklist = raw.checklist ? await parseJsonField(raw, 'checklist', event) : undefined;
 		const parsed = taskUpdateSchema.safeParse({
 			...raw,
 			checklist

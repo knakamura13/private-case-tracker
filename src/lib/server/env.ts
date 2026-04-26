@@ -76,12 +76,28 @@ function load(): Env {
 		console.error('[env] invalid environment', parsed.error.flatten().fieldErrors);
 		throw new Error('Invalid environment configuration');
 	}
-	if (
-		parsed.data.NODE_ENV === 'production' &&
-		(!env.DYNAMO_TABLE || env.DYNAMO_TABLE.trim() === '')
-	) {
-		console.error('[env] invalid environment', { DYNAMO_TABLE: ['Required in production'] });
-		throw new Error('Invalid environment configuration');
+	// In production, validate that required fields are not using build placeholder values
+	if (parsed.data.NODE_ENV === 'production') {
+		const errors: Record<string, string[]> = {};
+		if (!env.DYNAMO_TABLE || env.DYNAMO_TABLE.trim() === '') {
+			errors.DYNAMO_TABLE = ['Required in production'];
+		}
+		if (env.APP_URL === BUILD_PLACEHOLDER.APP_URL) {
+			errors.APP_URL = ['Must be set in production'];
+		}
+		if (env.BETTER_AUTH_SECRET === BUILD_PLACEHOLDER.BETTER_AUTH_SECRET) {
+			errors.BETTER_AUTH_SECRET = ['Must be set in production'];
+		}
+		if (env.BETTER_AUTH_URL === BUILD_PLACEHOLDER.BETTER_AUTH_URL) {
+			errors.BETTER_AUTH_URL = ['Must be set in production'];
+		}
+		if (env.FIELD_ENCRYPTION_KEY === BUILD_PLACEHOLDER.FIELD_ENCRYPTION_KEY) {
+			errors.FIELD_ENCRYPTION_KEY = ['Must be set in production'];
+		}
+		if (Object.keys(errors).length > 0) {
+			console.error('[env] invalid environment', errors);
+			throw new Error('Invalid environment configuration');
+		}
 	}
 	return parsed.data;
 }

@@ -6,6 +6,7 @@ import { listMilestones, currentPhase, updateMilestone, softDeleteMilestone, cre
 import { milestoneUpdateSchema, milestoneCreateSchema } from '$lib/schemas/milestone';
 import { getMembers } from '$lib/server/cache/membersCache';
 import type { MilestonePhase, MilestoneStatus } from '$lib/types/enums';
+import { parseJsonField } from '$lib/server/utils/parse';
 
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);
@@ -24,15 +25,7 @@ export const actions: Actions = {
 	create: async (event) => {
 		const { workspace, user } = requireWorkspace(event);
 		const raw = Object.fromEntries(await event.request.formData());
-		let subTasks = [];
-		if (raw.subTasks) {
-			try {
-				subTasks = JSON.parse(raw.subTasks as string);
-			} catch {
-				const errorId = await logActionError(event, { message: 'Invalid subTasks format', status: 400 });
-				return fail(400, { error: 'Invalid subTasks format', errorId });
-			}
-		}
+		const subTasks = raw.subTasks ? await parseJsonField(raw, 'subTasks', event) : [];
 		const parsed = milestoneCreateSchema.safeParse({
 			...raw,
 			subTasks
@@ -48,15 +41,7 @@ export const actions: Actions = {
 		const { workspace, user } = requireWorkspace(event);
 		const raw = Object.fromEntries(await event.request.formData());
 		const id = raw.id as string;
-		let subTasks = [];
-		if (raw.subTasks) {
-			try {
-				subTasks = JSON.parse(raw.subTasks as string);
-			} catch {
-				const errorId = await logActionError(event, { message: 'Invalid subTasks format', status: 400 });
-				return fail(400, { error: 'Invalid subTasks format', errorId });
-			}
-		}
+		const subTasks = raw.subTasks ? await parseJsonField(raw, 'subTasks', event) : [];
 		const parsed = milestoneUpdateSchema.safeParse({
 			...raw,
 			subTasks

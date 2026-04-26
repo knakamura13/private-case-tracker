@@ -5,6 +5,7 @@ import { ddbGet, ddbPut, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
 import type { QuickLinkItem } from '$lib/server/dynamo/types';
 import { fetchFaviconUrl } from '$lib/server/utils/favicon';
+import { extractHostname } from '$lib/server/utils/url';
 
 /* eslint-disable security/detect-object-injection */
 
@@ -102,7 +103,7 @@ export async function updateQuickLink(
 					names
 				)) ?? existing);
 	const link = updated;
-	const label = link.title ?? safeHostname(link.url);
+	const label = link.title ?? extractHostname(link.url);
 	await logActivity({
 		workspaceId,
 		userId: actorId,
@@ -127,7 +128,7 @@ export async function softDeleteQuickLink(workspaceId: string, actorId: string, 
 		{ ':d': new Date().toISOString(), ':u': new Date().toISOString() },
 		{ '#deletedAt': 'deletedAt', '#updatedAt': 'updatedAt' }
 	);
-	const label = existing.title ?? safeHostname(existing.url);
+	const label = existing.title ?? extractHostname(existing.url);
 	await logActivity({
 		workspaceId,
 		userId: actorId,
@@ -136,14 +137,6 @@ export async function softDeleteQuickLink(workspaceId: string, actorId: string, 
 		entityId: id,
 		summary: `Quick link "${label}" removed`
 	});
-}
-
-function safeHostname(url: string): string {
-	try {
-		return new URL(url).hostname;
-	} catch {
-		return url.slice(0, 80);
-	}
 }
 
 /* eslint-enable security/detect-object-injection */

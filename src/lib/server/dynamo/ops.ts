@@ -9,6 +9,7 @@ import {
 	type QueryCommandInput,
 	type ScanCommandInput
 } from '@aws-sdk/lib-dynamodb';
+import { ENV } from '$lib/server/env';
 
 const isTest = Boolean(process.env.VITEST) || process.env.NODE_ENV === 'test';
 const useMem = isTest;
@@ -47,7 +48,7 @@ function normalize<T>(value: T): T {
 
 async function getLive() {
 	const mod = await import('./client');
-	return { ddb: mod.ddb, tableName: mod.tableName() };
+	return { ddb: mod.ddb, tableName: ENV.DYNAMO_TABLE };
 }
 
 export async function ddbPut(item: Record<string, unknown>) {
@@ -126,10 +127,17 @@ export async function ddbDelete(key: { PK: string; SK: string }) {
 export async function ddbQuery<T>(input: Omit<QueryCommandInput, 'TableName'>) {
 	if (useMem) {
 		const items = Array.from(memStore().values());
-		// Very small subset used in our app:
-		// - PK equality
-		// - SK begins_with prefix
-		// - optional GSI1PK equality when IndexName === 'GSI1'
+		// SUPPORTED QUERY PATTERNS (in-memory test mode):
+		// - PK equality (via :pk)
+		// - SK begins_with prefix (via :prefix)
+		// - SK equality (via :sk)
+		// - GSI1PK equality when IndexName === 'GSI1' (via :pk)
+		// - ScanIndexForward for descending sort
+		// - Limit for result truncation
+		//
+		// NOTE: If you add a new query pattern to production code, you MUST
+		// update this in-memory implementation to match. Otherwise tests may
+		// pass but production will fail.
 		const vals = (input.ExpressionAttributeValues ?? {}) as Record<string, unknown>;
 		if (input.IndexName === 'GSI1') {
 			const pk = vals[':pk'];

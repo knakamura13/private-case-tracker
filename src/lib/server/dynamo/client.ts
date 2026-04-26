@@ -27,7 +27,3 @@ function createDocClient() {
 
 export const ddb = globalForDdb.ddbDoc ?? createDocClient();
 if (ENV.NODE_ENV === 'development') globalForDdb.ddbDoc = ddb;
-
-export function tableName() {
-	return ENV.DYNAMO_TABLE;
-}
