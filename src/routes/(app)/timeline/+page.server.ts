@@ -1,4 +1,4 @@
-import { fail, redirect } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { requireWorkspace } from '$lib/server/guards';
 import { logActionError } from '$lib/server/services/actionError.service';
@@ -41,6 +41,6 @@ export const actions: Actions = {
 		const raw = Object.fromEntries(await event.request.formData());
 		const id = raw.id as string;
 		await softDeleteMilestone(workspace.id, user.id, id);
-		throw redirect(303, '/timeline');
+		return { ok: true };
 	}
 };
