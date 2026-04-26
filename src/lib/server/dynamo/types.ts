@@ -64,6 +64,7 @@ export type MilestoneItem = DynamoBaseItem & {
 	ownerId: string | null;
 	owner: { id: string; name: string | null; email: string } | null;
 	subTasks?: Array<{ id: string; text: string; done: boolean }>;
+	location?: string | null;
 };
 
 export type QuickLinkItem = DynamoBaseItem & {

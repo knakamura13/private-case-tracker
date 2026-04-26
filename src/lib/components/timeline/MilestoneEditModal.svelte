@@ -78,6 +78,8 @@
 	let locationAddress = $state('');
 	let dueDateValue = $state('');
 	let appointmentDateValue = $state('');
+	let isEditingLocation = $state(false);
+	let currentLocation = $state('');
 
 	// Auto-save state
 	let isSaving = $state(false);
@@ -105,6 +107,7 @@
 			editableSubTasks = (initial.subTasks as SubTask[]) || [];
 			dueDateValue = val('dueDate');
 			appointmentDateValue = val('scheduledAt');
+			currentLocation = val('location', '');
 		}
 	});
 
@@ -151,23 +154,19 @@
 		return o?.name?.[0] || o?.email?.[0] || 'U';
 	}
 
-	function openGoogleMaps(address: string) {
-		if (!address.trim()) return;
-		const query = encodeURIComponent(address.trim());
-		window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
-	}
-
 	function handleLocationSave() {
 		if (!locationAddress.trim()) return;
-		// Store location in a hidden form field
-		const hiddenInput = document.querySelector('input[name="location"]') as HTMLInputElement;
-		if (hiddenInput) {
-			hiddenInput.value = locationAddress.trim();
-		}
-		openGoogleMaps(locationAddress);
+		currentLocation = locationAddress.trim();
 		locationAddress = '';
 		showLocationInput = false;
+		isEditingLocation = false;
 		triggerAutoSave();
+	}
+
+	function generateGoogleMapsUrl(address: string | null | undefined) {
+		if (!address?.trim()) return '#';
+		const query = encodeURIComponent(address.trim());
+		return `https://www.google.com/maps/search/?api=1&query=${query}`;
 	}
 
 	function handleDueDateSave() {
@@ -211,7 +210,7 @@
 				formData.append('dueDate', dueDateValue);
 				formData.append('scheduledAt', appointmentDateValue);
 				formData.append('subTasks', subTasksJson);
-				formData.append('location', val('location', ''));
+				formData.append('location', currentLocation);
 
 				const cancel = () => {
 					isSaving = false;
@@ -355,15 +354,43 @@
 						</div>
 
 						<!-- Location Input -->
-						{#if showLocationInput}
+						{#if showLocationInput || isEditingLocation}
 							<div class="mt-2 flex gap-2">
 								<Input
 									bind:value={locationAddress}
-									placeholder="Enter address..."
+									placeholder="Enter business name, address, or coordinates..."
 									class="flex-1 text-sm"
+									onkeydown={(e) => {
+										if (e.key === 'Enter') {
+											e.preventDefault();
+											handleLocationSave();
+										}
+									}}
 								/>
-								<Button type="button" size="sm" onclick={handleLocationSave}>Open Maps</Button>
-								<Button type="button" variant="ghost" size="sm" onclick={() => showLocationInput = false}>Cancel</Button>
+								<Button type="button" size="sm" onclick={handleLocationSave}>Save</Button>
+								<Button type="button" variant="ghost" size="sm" onclick={() => {
+									showLocationInput = false;
+									isEditingLocation = false;
+									locationAddress = '';
+								}}>Cancel</Button>
+							</div>
+						{:else if currentLocation}
+							<div class="mt-2 flex items-center gap-2">
+								<a
+									href={generateGoogleMapsUrl(currentLocation)}
+									target="_blank"
+									rel="noopener noreferrer"
+									class="flex items-center gap-1 text-sm text-primary hover:underline"
+								>
+									<MapPin class="h-3.5 w-3.5" />
+									<span class="line-clamp-1">{currentLocation}</span>
+								</a>
+								<Button type="button" variant="ghost" size="sm" class="h-6 w-6 p-0" onclick={() => {
+									locationAddress = currentLocation;
+									isEditingLocation = true;
+								}}>
+									{#snippet children()}<MoreHorizontal class="h-4 w-4" />{/snippet}
+								</Button>
 							</div>
 						{/if}
 

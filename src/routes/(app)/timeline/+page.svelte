@@ -6,7 +6,7 @@
 	import MarkdownRenderer from '$lib/components/shared/MarkdownRenderer.svelte';
 	import InlineMilestoneCreate from '$lib/components/timeline/InlineMilestoneCreate.svelte';
 	import MilestoneEditModal from '$lib/components/timeline/MilestoneEditModal.svelte';
-	import { Plus } from 'lucide-svelte';
+	import { Plus, MapPin } from 'lucide-svelte';
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { fmtDate } from '$lib/utils/dates';
@@ -16,6 +16,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { showSuccessToast } from '$lib/stores/toast';
 	import type { PageData } from './$types';
+	import type { MilestoneItem } from '$lib/server/dynamo/types';
 
 	interface TimelinePageData extends PageData {
 		members: { id: string; name: string | null; email: string }[];
@@ -62,6 +63,12 @@
 		if (s === 'BLOCKED') return 'bg-destructive border-destructive';
 		if (s === 'SKIPPED') return 'bg-secondary border-secondary';
 		return 'border-border bg-card';
+	}
+
+	function generateGoogleMapsUrl(address: string | null | undefined) {
+		if (!address?.trim()) return '#';
+		const query = encodeURIComponent(address.trim());
+		return `https://www.google.com/maps/search/?api=1&query=${query}`;
 	}
 </script>
 
@@ -136,6 +143,7 @@
 										{/if}
 										<div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
 											{#if m.dueDate}<span>Due {fmtDate(m.dueDate)}</span>{/if}
+											{#if (m as MilestoneItem).location}<span>· <a href={generateGoogleMapsUrl((m as MilestoneItem).location)} target="_blank" rel="noopener noreferrer" class="flex items-center gap-1 hover:text-primary"><MapPin class="h-3 w-3" /> {(m as MilestoneItem).location}</a></span>{/if}
 											{#if m.owner}<span>· {m.owner.name ?? m.owner.email}</span>{/if}
 										</div>
 									</div>
@@ -182,7 +190,8 @@
 				owner: milestone.owner,
 				dueDate: milestone.dueDate,
 				notes: (milestone as { notes?: string }).notes,
-				subTasks: milestone.subTasks
+				subTasks: milestone.subTasks,
+				location: (milestone as MilestoneItem).location
 			}}
 			error={form?.error}
 			errorId={form?.errorId}
