@@ -2,14 +2,47 @@
 	import PageHeader from '$lib/components/shared/PageHeader.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import TaskCard from '$lib/components/tasks/TaskCard.svelte';
+	import TaskCreateModal from '$lib/components/tasks/TaskCreateModal.svelte';
+	import TaskEditModal from '$lib/components/tasks/TaskEditModal.svelte';
 	import { Plus } from 'lucide-svelte';
+	import { page } from '$app/stores';
+	import { invalidateAll } from '$app/navigation';
+	import { showSuccessToast } from '$lib/stores/toast';
 	import type { PageData } from './$types';
 
 	interface TasksPageData extends PageData {
 		members: { id: string; name: string | null; email: string }[];
 	}
 
-	let { data }: { data: TasksPageData } = $props();
+	let { data, form }: { data: TasksPageData; form: { error?: string; errorId?: string } } = $props();
+
+	let showCreateModal = $state(false);
+	let defaultStatus = $state<string | undefined>(undefined);
+	let editingTask = $state<{ id: string } | null>(null);
+
+	$effect(() => {
+		const editParam = $page.url.searchParams.get('edit');
+		if (editParam && !editingTask) {
+			const taskExists = data.tasks.some((t) => t.id === editParam);
+			if (taskExists) {
+				editingTask = { id: editParam };
+			} else {
+				updateUrl(null);
+			}
+		} else if (!editParam && editingTask) {
+			editingTask = null;
+		}
+	});
+
+	function updateUrl(id: string | null) {
+		const url = new URL(window.location.href);
+		if (id) {
+			url.searchParams.set('edit', id);
+		} else {
+			url.searchParams.delete('edit');
+		}
+		window.history.replaceState({}, '', url.toString());
+	}
 
 	const COLUMNS = [
 		{ id: 'TODO', label: 'To Do', color: 'bg-muted' },
@@ -44,7 +77,10 @@
 				{#each column.tasks as task (task.id)}
 					<TaskCard
 						task={task}
-						onEdit={(id) => (window.location.href = `/tasks/${id}`)}
+						onEdit={(id) => {
+							editingTask = { id };
+							updateUrl(id);
+						}}
 					/>
 				{/each}
 				{#if column.tasks.length === 0}
@@ -56,10 +92,77 @@
 			<Button
 				variant="ghost"
 				class="w-full justify-start text-muted-foreground hover:text-foreground"
-				href="/tasks/new?status={column.id}"
+				onclick={() => {
+					defaultStatus = column.id;
+					showCreateModal = true;
+				}}
 			>
 				{#snippet children()}<Plus class="h-4 w-4 mr-2" /> Add a card{/snippet}
 			</Button>
 		</div>
 	{/each}
 </div>
+
+{#if editingTask}
+	{@const task = data.tasks.find((t) => t.id === editingTask?.id)}
+	{#if task}
+		<TaskEditModal
+			open={true}
+			onClose={async () => {
+				editingTask = null;
+				updateUrl(null);
+			}}
+			action="?/update"
+			deleteAction="?/delete"
+			onenhance={({ formData, cancel }: { formData: FormData; cancel: () => void }) => {
+				return async () => {
+					const response = await fetch('?/update', { method: 'POST', body: formData });
+					if (response.ok) {
+						await invalidateAll();
+						showSuccessToast('Task updated successfully');
+					} else {
+						cancel();
+					}
+				};
+			}}
+			members={data.members}
+			initial={{
+				id: task.id,
+				title: task.title,
+				description: task.description,
+				status: task.status,
+				priority: task.priority,
+				ownerId: task.ownerId,
+				dueDate: task.dueDate,
+				checklist: task.checklist
+			}}
+			error={form?.error}
+			errorId={form?.errorId}
+		/>
+	{/if}
+{/if}
+
+{#if showCreateModal}
+	<TaskCreateModal
+		open={true}
+		onClose={() => {
+			showCreateModal = false;
+			defaultStatus = undefined;
+		}}
+		action="?/create"
+		members={data.members}
+		defaultStatus={defaultStatus}
+		error={form?.error}
+		errorId={form?.errorId}
+		onenhance={() => {
+			return async ({ result }: { result: { type: string } }) => {
+				if (result.type === 'success') {
+					showCreateModal = false;
+					defaultStatus = undefined;
+					await invalidateAll();
+					showSuccessToast('Task created successfully');
+				}
+			};
+		}}
+	/>
+{/if}

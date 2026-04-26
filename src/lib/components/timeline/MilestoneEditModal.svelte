@@ -4,6 +4,7 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
 	import { PHASE_LABELS, PHASE_ORDER } from '$lib/constants/phases';
 	import { showSuccessToast, showErrorToast } from '$lib/stores/toast';
@@ -42,17 +43,12 @@
 	let editingSubTaskId = $state<string | null>(null);
 	let editingSubTaskText = $state('');
 	let newSubTaskInputEl = $state<HTMLInputElement | null>(null);
+	let dueDateInputEl = $state<HTMLInputElement | null>(null);
+	let scheduledAtInputEl = $state<HTMLInputElement | null>(null);
 
 	// Focus new sub-task input when shown
 	$effect(() => {
 		if (showChecklistInput && newSubTaskInputEl) {
-			newSubTaskInputEl.focus();
-		}
-	});
-
-	// Focus input after adding a task
-	$effect(() => {
-		if (editableSubTasks.length > 0 && showChecklistInput && newSubTaskInputEl) {
 			newSubTaskInputEl.focus();
 		}
 	});
@@ -170,20 +166,16 @@
 	}
 
 	function handleDueDateSave() {
-		// Store due date in a hidden form field
-		const hiddenInput = document.querySelector('input[name="dueDate"]') as HTMLInputElement;
-		if (hiddenInput) {
-			hiddenInput.value = dueDateValue;
+		if (dueDateInputEl) {
+			dueDateInputEl.value = dueDateValue;
 		}
 		showDueDatePicker = false;
 		triggerAutoSave();
 	}
 
 	function handleAppointmentDateSave() {
-		// Store appointment date in a hidden form field
-		const hiddenInput = document.querySelector('input[name="scheduledAt"]') as HTMLInputElement;
-		if (hiddenInput) {
-			hiddenInput.value = appointmentDateValue;
+		if (scheduledAtInputEl) {
+			scheduledAtInputEl.value = appointmentDateValue;
 		}
 		showAppointmentDatePicker = false;
 		triggerAutoSave();
@@ -228,31 +220,8 @@
 	}
 </script>
 
-{#if open}
-	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-		role="dialog"
-		aria-modal="true"
-		tabindex="-1"
-		onclick={(e) => {
-			if (e.target === e.currentTarget) onClose();
-		}}
-		onkeydown={(e) => {
-			if (e.key === 'Escape') {
-				if (showMenuDropdown) {
-					showMenuDropdown = false;
-					e.stopPropagation();
-				} else {
-					onClose();
-				}
-			}
-		}}
-	>
-		<div
-			class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-card shadow-xl"
-			role="document"
-		>
-			<form method="post" {action} class="flex flex-col">
+<Dialog {open} {onClose}>
+	<form method="post" {action} class="flex flex-col">
 				<!-- Header -->
 				<div class="flex items-start justify-between border-b border-border p-4">
 					<div class="flex flex-1 items-start">
@@ -599,8 +568,8 @@
 					<input type="hidden" name="subTasks" value={subTasksJson} />
 					<input type="hidden" name="id" value={val('id')} />
 					<input type="hidden" name="ownerId" value={ownerIdValue} />
-					<input type="hidden" name="dueDate" value={dueDateValue} />
-					<input type="hidden" name="scheduledAt" value={appointmentDateValue} />
+					<input type="hidden" name="dueDate" value={dueDateValue} bind:this={dueDateInputEl} />
+					<input type="hidden" name="scheduledAt" value={appointmentDateValue} bind:this={scheduledAtInputEl} />
 					<input type="hidden" name="location" value={val('location', '')} />
 					<div class="flex justify-between gap-2">
 						{#if isSaving}
@@ -609,6 +578,4 @@
 					</div>
 				</div>
 			</form>
-		</div>
-	</div>
-{/if}
+</Dialog>

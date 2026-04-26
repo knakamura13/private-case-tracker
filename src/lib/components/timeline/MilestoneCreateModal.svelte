@@ -3,6 +3,7 @@
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
 	import { PHASE_LABELS, PHASE_ORDER } from '$lib/constants/phases';
 	import { X, Plus, Calendar, MapPin, User } from 'lucide-svelte';
@@ -109,24 +110,8 @@
 	}
 </script>
 
-{#if open}
-	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-		role="dialog"
-		aria-modal="true"
-		tabindex="-1"
-		onclick={(e) => {
-			if (e.target === e.currentTarget) onClose();
-		}}
-		onkeydown={(e) => {
-			if (e.key === 'Escape') onClose();
-		}}
-	>
-		<div
-			class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-card shadow-xl"
-			role="document"
-		>
-			<form method="post" {action} use:enhance={onenhance} class="flex flex-col">
+<Dialog {open} {onClose}>
+	<form method="post" {action} use:enhance={onenhance} class="flex flex-col">
 				<input type="hidden" name="subTasks" value={subTasksJson} />
 				<input type="hidden" name="location" value={currentLocation} />
 				<!-- Header -->
@@ -345,6 +330,4 @@
 					<Button type="submit">Create milestone</Button>
 				</div>
 			</form>
-		</div>
-	</div>
-{/if}
+</Dialog>
