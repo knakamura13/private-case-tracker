@@ -1,35 +1,25 @@
 import { listTasks, reorderOnBoard } from '$lib/server/services/task.service';
-import { fail, redirect } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
+import { requireWorkspace } from '$lib/server/guards';
 import { taskStatusEnum } from '$lib/schemas/task';
+import { getMembers } from '$lib/server/cache/membersCache';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals }) => {
-	const workspaceId = locals.session?.workspaceId;
-	if (!workspaceId) throw redirect(302, '/onboarding');
-
-	const tasks = await listTasks(workspaceId);
-	const members = await locals.db
-		.query('workspace_member')
-		.where('workspace_id', '=', workspaceId)
-		.join('user', 'user_id', 'id')
-		.select();
+export const load: PageServerLoad = async (event) => {
+	const { workspace } = requireWorkspace(event);
+	const tasks = await listTasks(workspace.id);
+	const members = await getMembers(workspace.id);
 
 	return {
 		tasks,
-		members: members.map((m) => ({
-			id: m.user_id,
-			name: m.user.name,
-			email: m.user.email
-		}))
+		members: members.map((m) => ({ id: m.user.id, name: m.user.name, email: m.user.email }))
 	};
 };
 
 export const actions: Actions = {
-	reorder: async ({ locals, request }) => {
-		const workspaceId = locals.session?.workspaceId;
-		if (!workspaceId) return fail(401, { error: 'Unauthorized' });
-
-		const formData = await request.formData();
+	reorder: async (event) => {
+		const { workspace, user } = requireWorkspace(event);
+		const formData = await event.request.formData();
 		const updatesJson = formData.get('updates') as string;
 		if (!updatesJson) return fail(400, { error: 'Missing updates' });
 
@@ -43,7 +33,7 @@ export const actions: Actions = {
 				}
 				updates.push({ id: u.id, status: parsed.data, order: u.order });
 			}
-			await reorderOnBoard(workspaceId, locals.session.userId, updates);
+			await reorderOnBoard(workspace.id, user.id, updates);
 			return { success: true };
 		} catch {
 			return fail(500, { error: 'Failed to reorder tasks' });
