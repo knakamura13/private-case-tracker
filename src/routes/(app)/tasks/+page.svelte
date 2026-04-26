@@ -6,7 +6,7 @@
 	import TaskEditModal from '$lib/components/tasks/TaskEditModal.svelte';
 	import { Plus } from 'lucide-svelte';
 	import { page } from '$app/stores';
-	import { invalidateAll } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { showSuccessToast } from '$lib/stores/toast';
 	import { getPageNumber } from '$lib/constants/navigation';
 	import { cn } from '$lib/utils/cn';
@@ -50,14 +50,14 @@
 		}
 	});
 
-	function updateUrl(id: string | null) {
+	async function updateUrl(id: string | null) {
 		const url = new URL(window.location.href);
 		if (id) {
 			url.searchParams.set('edit', id);
 		} else {
 			url.searchParams.delete('edit');
 		}
-		window.history.replaceState({}, '', url.toString());
+		await goto(url.toString(), { replaceState: true, noScroll: true });
 	}
 
 	const COLUMNS = [
@@ -331,9 +331,9 @@
 				{#each column.tasks as task (task.id)}
 					<TaskCard
 						task={task}
-						onEdit={(id: string) => {
+						onEdit={async (id: string) => {
 							editingTask = { id };
-							updateUrl(id);
+							await updateUrl(id);
 						}}
 						draggable={true}
 						onDragStart={handleDragStart}
@@ -382,7 +382,7 @@
 			open={true}
 			onClose={async () => {
 				editingTask = null;
-				updateUrl(null);
+				await updateUrl(null);
 			}}
 			action="?/update"
 			deleteAction="?/delete"

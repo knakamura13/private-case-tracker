@@ -5,10 +5,19 @@
 		maxWidth?: string;
 		children: import('svelte').Snippet;
 	} = $props();
+
+	let backdropEl: HTMLElement | undefined = $state();
+
+	$effect(() => {
+		if (open && backdropEl) {
+			backdropEl.focus();
+		}
+	});
 </script>
 
 {#if open}
 	<div
+		bind:this={backdropEl}
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
 		role="dialog"
 		aria-modal="true"
