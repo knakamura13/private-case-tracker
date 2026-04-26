@@ -34,14 +34,14 @@
 
 <PageHeader title="Tasks" description="Personal todos and errands (not legal proceedings)." number="03" />
 
-<div class="flex gap-4 overflow-x-auto h-[calc(100vh-14rem)]">
+<div class="flex gap-4 overflow-x-auto">
 	{#each grouped as column (column.id)}
-		<div class="flex min-w-[300px] flex-col gap-3 h-full">
+		<div class="flex min-w-[300px] flex-col gap-3">
 			<div class="flex items-center justify-between">
 				<h2 class="font-semibold">{column.label}</h2>
 				<span class="text-sm text-muted-foreground">{column.tasks.length}</span>
 			</div>
-			<div class="flex-1 space-y-2 overflow-y-auto">
+			<div class="space-y-2">
 				{#each column.tasks as task (task.id)}
 					<TaskCard
 						task={task}
