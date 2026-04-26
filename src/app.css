@@ -75,6 +75,12 @@ main::after {
 	pointer-events: none;
 }
 
+/* iOS scroll optimizations */
+main {
+	-webkit-overflow-scrolling: touch;
+	overscroll-behavior-y: contain;
+}
+
 button,
 select,
 a {

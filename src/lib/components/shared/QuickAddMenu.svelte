@@ -61,7 +61,7 @@
 
 {#if open}
 	<div
-		class="fixed inset-0 z-50 flex items-start justify-center bg-background/60 p-4 pt-24 backdrop-blur-sm"
+		class="fixed inset-0 z-50 bg-background/60 p-4 backdrop-blur-sm {window.innerWidth < 768 ? 'flex items-end justify-center' : 'flex items-start justify-center pt-24'}"
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby="quick-add-title"
@@ -72,7 +72,7 @@
 		}}
 	>
 		<div class="absolute inset-0 z-0 cursor-default" aria-hidden="true" onclick={() => (open = false)}></div>
-		<div bind:this={dialogEl} class="relative z-10 w-full max-w-sm overflow-hidden rounded-lg border border-border bg-card shadow-xl">
+		<div bind:this={dialogEl} class="relative z-10 w-full {window.innerWidth < 768 ? 'max-h-[85vh] rounded-t-lg' : 'max-w-sm'} overflow-hidden rounded-lg border border-border bg-card shadow-xl" style="padding-bottom: env(safe-area-inset-bottom)">
 			<div class="flex items-center justify-between border-b border-border px-4 py-3">
 				<h2 id="quick-add-title" class="text-sm font-semibold">Quick create</h2>
 				<button type="button" class="rounded-md p-1 hover:bg-muted" aria-label="Close" onclick={() => (open = false)}>
