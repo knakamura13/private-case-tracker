@@ -43,6 +43,7 @@ export type QuestionItem = DynamoBaseItem & {
 	category: string | null;
 	citationUrl: string | null;
 	answeredAt: string | null;
+	relatedFormId: string | null;
 	relatedEvidenceId: string | null;
 	relatedTaskId: string | null;
 	relatedEvidence: { id: string } | null;

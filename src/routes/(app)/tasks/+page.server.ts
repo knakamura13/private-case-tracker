@@ -1,8 +1,10 @@
-import { listTasks, reorderOnBoard } from '$lib/server/services/task.service';
+import { listTasks, reorderOnBoard, createTask, updateTask, softDeleteTask } from '$lib/server/services/task.service';
 import { fail } from '@sveltejs/kit';
 import { requireWorkspace } from '$lib/server/guards';
 import { taskStatusEnum } from '$lib/schemas/task';
 import { getMembers } from '$lib/server/cache/membersCache';
+import { logActionError } from '$lib/server/services/actionError.service';
+import { taskCreateSchema, taskUpdateSchema } from '$lib/schemas/task';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
@@ -38,5 +40,62 @@ export const actions: Actions = {
 		} catch {
 			return fail(500, { error: 'Failed to reorder tasks' });
 		}
+	},
+	create: async (event) => {
+		const { workspace, user } = requireWorkspace(event);
+		const raw = Object.fromEntries(await event.request.formData());
+		let checklist = undefined;
+		if (raw.checklist) {
+			try {
+				checklist = JSON.parse(raw.checklist as string);
+			} catch {
+				const errorId = await logActionError(event, { message: 'Invalid checklist format', status: 400 });
+				return fail(400, { error: 'Invalid checklist format', errorId });
+			}
+		}
+		const parsed = taskCreateSchema.safeParse({
+			...raw,
+			checklist
+		});
+		if (!parsed.success) {
+			const errorId = await logActionError(event, { message: parsed.error.message, status: 400 });
+			return fail(400, { error: parsed.error.message, errorId });
+		}
+		await createTask(workspace.id, user.id, parsed.data);
+		return { success: true };
+	},
+	update: async (event) => {
+		const { workspace, user } = requireWorkspace(event);
+		const raw = Object.fromEntries(await event.request.formData());
+		const taskId = raw.id as string;
+		if (!taskId) return fail(400, { error: 'Missing task id' });
+
+		let checklist = undefined;
+		if (raw.checklist) {
+			try {
+				checklist = JSON.parse(raw.checklist as string);
+			} catch {
+				const errorId = await logActionError(event, { message: 'Invalid checklist format', status: 400 });
+				return fail(400, { error: 'Invalid checklist format', errorId });
+			}
+		}
+		const parsed = taskUpdateSchema.safeParse({
+			...raw,
+			checklist
+		});
+		if (!parsed.success) {
+			const errorId = await logActionError(event, { message: parsed.error.message, status: 400 });
+			return fail(400, { error: parsed.error.message, errorId });
+		}
+		await updateTask(workspace.id, user.id, taskId, parsed.data);
+		return { success: true };
+	},
+	delete: async (event) => {
+		const { workspace, user } = requireWorkspace(event);
+		const formData = await event.request.formData();
+		const taskId = formData.get('id') as string;
+		if (!taskId) return fail(400, { error: 'Missing task id' });
+		await softDeleteTask(workspace.id, user.id, taskId);
+		return { success: true };
 	}
 };
