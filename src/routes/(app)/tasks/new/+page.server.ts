@@ -9,8 +9,10 @@ import { getMembers } from '$lib/server/cache/membersCache';
 export const load: PageServerLoad = async (event) => {
 	const { workspace } = requireWorkspace(event);
 	const members = await getMembers(workspace.id);
+	const status = event.url.searchParams.get('status') || 'TODO';
 	return {
-		members: members.map((m) => ({ id: m.user.id, name: m.user.name, email: m.user.email }))
+		members: members.map((m) => ({ id: m.user.id, name: m.user.name, email: m.user.email })),
+		initialStatus: status
 	};
 };
 

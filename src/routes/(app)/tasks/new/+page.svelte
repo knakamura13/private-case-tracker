@@ -9,6 +9,7 @@
 <PageHeader title="New task" />
 <TaskForm
 	members={data.members}
+	initial={{ status: data.initialStatus }}
 	submitLabel="Add task"
 	error={form?.error}
 	errorId={form?.errorId}

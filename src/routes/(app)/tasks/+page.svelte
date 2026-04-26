@@ -60,6 +60,13 @@
 					</div>
 				{/if}
 			</div>
+			<Button
+				variant="ghost"
+				class="w-full justify-start text-muted-foreground hover:text-foreground"
+				href="/tasks/new?status={column.id}"
+			>
+				{#snippet children()}<Plus class="h-4 w-4 mr-2" /> Add a card{/snippet}
+			</Button>
 		</div>
 	{/each}
 </div>
