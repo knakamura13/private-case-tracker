@@ -13,6 +13,7 @@
 	import { PHASE_ORDER, PHASE_LABELS, PHASE_DESCRIPTIONS } from '$lib/constants/phases';
 	import { titleCase } from '$lib/utils/format';
 	import { page } from '$app/stores';
+	import { getPageNumber } from '$lib/constants/navigation';
 	import { invalidateAll } from '$app/navigation';
 	import { showSuccessToast } from '$lib/stores/toast';
 	import type { PageData } from './$types';
@@ -75,7 +76,7 @@
 	}
 </script>
 
-<PageHeader title="Timeline" description="Case phases from preparation through final outcome." number="02" />
+<PageHeader title="Timeline" description="Case phases from preparation through final outcome." number={getPageNumber('/timeline')} />
 
 <div class="space-y-6">
 	{#each grouped as g, _i (g.phase)}

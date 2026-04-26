@@ -5,6 +5,7 @@
 	import DropdownMenu from '$lib/components/ui/DropdownMenu.svelte';
 	import { enhance } from '$app/forms';
 	import { Plus, Minus, Check, X, MoreHorizontal, Pencil, Trash2 } from 'lucide-svelte';
+	import { getPageNumber } from '$lib/constants/navigation';
 	import type { PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: { error?: string } } = $props();
@@ -53,7 +54,7 @@
 	}
 </script>
 
-<PageHeader title="Evidence" description="Track evidence collection progress by category." number="03">
+<PageHeader title="Evidence" description="Track evidence collection progress by category." number={getPageNumber('/evidence')}>
 	{#snippet actions()}
 		{#if data.isOwner}
 			<Button onclick={openAddModal}>

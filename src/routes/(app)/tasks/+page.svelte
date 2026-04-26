@@ -8,6 +8,7 @@
 	import { page } from '$app/stores';
 	import { invalidateAll } from '$app/navigation';
 	import { showSuccessToast } from '$lib/stores/toast';
+	import { getPageNumber } from '$lib/constants/navigation';
 	import type { PageData } from './$types';
 
 	interface TasksPageData extends PageData {
@@ -71,7 +72,7 @@
 	);
 </script>
 
-<PageHeader title="Tasks" description="Personal todos and errands (not legal proceedings)." number="03" />
+<PageHeader title="Tasks" description="Personal todos and errands (not legal proceedings)." number={getPageNumber('/tasks')} />
 
 <div class="flex gap-4 overflow-x-auto min-h-[calc(100vh-14rem)]">
 	{#each grouped as column (column.id)}

@@ -6,13 +6,14 @@
 	import { titleCase } from '$lib/utils/format';
 	import { CalendarClock, AlertTriangle } from 'lucide-svelte';
 	import QuickLinksWidget from '$lib/components/dashboard/QuickLinksWidget.svelte';
+	import { getPageNumber } from '$lib/constants/navigation';
 	import type { ActionData, PageData } from './$types';
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	let mounted = $state(true);
 </script>
 
-<PageHeader title="Dashboard" number="01" />
+<PageHeader title="Dashboard" number={getPageNumber('/dashboard')} />
 
 <div class="mb-4">
 	<Widget title="Quick links">

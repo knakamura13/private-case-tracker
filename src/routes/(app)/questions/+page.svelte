@@ -15,6 +15,7 @@
 	import { page } from '$app/stores';
 	import { invalidateAll } from '$app/navigation';
 	import { showSuccessToast } from '$lib/stores/toast';
+	import { getPageNumber } from '$lib/constants/navigation';
 	import type { PageData } from './$types';
 
 	interface QuestionsPageData extends PageData {
@@ -70,7 +71,7 @@
 	]);
 </script>
 
-<PageHeader title="Questions" description="Track unresolved questions, their sources, and answers." number="04">
+<PageHeader title="Questions" description="Track unresolved questions, their sources, and answers." number={getPageNumber('/questions')}>
 	{#snippet actions()}
 		<Button onclick={() => showCreateModal = true}>
 			{#snippet children()}<Plus class="h-4 w-4" /> New question{/snippet}
