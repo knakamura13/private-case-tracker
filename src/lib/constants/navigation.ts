@@ -2,7 +2,8 @@ import {
 	LayoutDashboard,
 	List,
 	Layers,
-	HelpCircle
+	HelpCircle,
+	CheckSquare
 } from 'lucide-svelte';
 
 export interface NavItem {
@@ -16,6 +17,7 @@ export interface NavItem {
 export const navigation: NavItem[] = [
 	{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
 	{ href: '/timeline', label: 'Timeline', icon: List, description: 'Case phases and milestones' },
+	{ href: '/tasks', label: 'Tasks', icon: CheckSquare, description: 'Personal todos and errands' },
 	{ href: '/evidence', label: 'Evidence', icon: Layers, description: 'Evidence library' },
 	{ href: '/questions', label: 'Questions', icon: HelpCircle, description: 'Research tracker' }
 ];
