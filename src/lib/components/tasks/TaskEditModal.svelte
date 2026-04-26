@@ -8,6 +8,7 @@
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
 	import { showSuccessToast, showErrorToast } from '$lib/stores/toast';
 	import { X, Plus, Calendar, CheckSquare, User, MoreHorizontal } from 'lucide-svelte';
+	import { invalidateAll } from '$app/navigation';
 
 	let { open, onClose, action, deleteAction, onenhance, members, initial, error, errorId }: {
 		open: boolean;
@@ -72,6 +73,7 @@
 	// Auto-save state
 	let isSaving = $state(false);
 	let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+	let pendingSavePromise: Promise<void> | null = null;
 
 	// Reactive form values
 	let titleValue = $state('');
@@ -90,7 +92,7 @@
 			statusValue = val('status', 'TODO');
 			priorityValue = val('priority', 'MEDIUM');
 			ownerIdValue = val('ownerId');
-			editableChecklist = (initial.checklist as ChecklistItem[]) || [];
+			editableChecklist = parseChecklist(initial.checklist);
 			dueDateValue = val('dueDate');
 		} else {
 			// Reset state when modal closes
@@ -103,6 +105,7 @@
 			editingChecklistText = '';
 			isSaving = false;
 			if (saveTimeout) clearTimeout(saveTimeout);
+			pendingSavePromise = null;
 		}
 	});
 
@@ -114,6 +117,19 @@
 		if (v == null) return fallback;
 		if (v instanceof Date) return v.toISOString().slice(0, 10);
 		return String(v);
+	}
+
+	function parseChecklist(checklist: unknown): ChecklistItem[] {
+		if (!checklist) return [];
+		try {
+			const parsed = checklist as ChecklistItem[];
+			if (Array.isArray(parsed)) {
+				return parsed.filter((item) => item && typeof item === 'object' && 'id' in item && 'text' in item);
+			}
+			return [];
+		} catch {
+			return [];
+		}
 	}
 
 	function addChecklistItem() {
@@ -179,17 +195,21 @@
 					isSaving = false;
 				};
 
-				try {
-					const result = onenhance({ formData, cancel });
-					if (result && typeof result === 'function') {
-						await result();
+				pendingSavePromise = (async () => {
+					try {
+						const result = onenhance({ formData, cancel });
+						if (result && typeof result === 'function') {
+							await result();
+						}
+					} catch {
+						showErrorToast('Failed to auto-save task');
+						cancel();
 					}
-				} catch {
-					showErrorToast('Failed to auto-save task');
-					cancel();
-				}
+					isSaving = false;
+					pendingSavePromise = null;
+				})();
 
-				isSaving = false;
+				await pendingSavePromise;
 			}
 		}, delay);
 	}
@@ -226,7 +246,8 @@
 											const response = await fetch(deleteAction, { method: 'POST', body: formData });
 											if (response.ok) {
 												showSuccessToast('Task deleted successfully');
-												window.location.href = '/tasks';
+												await invalidateAll();
+												onClose();
 											} else {
 												showErrorToast('Failed to delete task');
 											}

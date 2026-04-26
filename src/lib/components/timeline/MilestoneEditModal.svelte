@@ -279,7 +279,7 @@
 							<Button type="button" variant="outline" size="sm" onclick={() => showLocationInput = !showLocationInput}>
 								{#snippet children()}<MapPin class="h-3.5 w-3.5" /> Location{/snippet}
 							</Button>
-							<div class="relative">
+							<div class="relative" use:clickOutside={() => showOwnerDropdown = false}>
 								<Button type="button" variant="outline" size="sm" onclick={() => showOwnerDropdown = !showOwnerDropdown}>
 									{#snippet children()}<User class="h-3.5 w-3.5" /> Owner{/snippet}
 								</Button>

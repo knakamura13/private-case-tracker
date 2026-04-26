@@ -31,6 +31,13 @@
 			}
 		} else if (!editParam && editingTask) {
 			editingTask = null;
+		} else if (editParam && editingTask) {
+			// Validate that the task still exists while modal is open
+			const taskExists = data.tasks.some((t) => t.id === editParam);
+			if (!taskExists) {
+				editingTask = null;
+				updateUrl(null);
+			}
 		}
 	});
 
