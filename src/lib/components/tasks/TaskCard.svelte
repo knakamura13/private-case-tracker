@@ -30,24 +30,13 @@
 </script>
 
 <Card
-	class="group relative cursor-grab active:cursor-grabbing hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-md hover:shadow-primary/10 dark:hover:shadow-primary/20 hover:bg-card/90"
+	class="group relative p-4 cursor-pointer hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-md hover:shadow-primary/10 dark:hover:shadow-primary/20 hover:bg-card/90"
+	onclick={() => onEdit && onEdit(task.id)}
 >
-	<div class="flex items-start gap-3">
-		<GripVertical class="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
+	<div class="flex items-center gap-3">
+		<GripVertical class="h-4 w-4 shrink-0 text-muted-foreground" />
 		<div class="min-w-0 flex-1">
-			<div class="flex items-start justify-between gap-2">
-				<p class="line-clamp-2 font-medium">{task.title}</p>
-				{#if onEdit}
-					<button
-						type="button"
-						onclick={() => onEdit(task.id)}
-						class="shrink-0 text-muted-foreground hover:text-foreground"
-						aria-label="Edit task"
-					>
-						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-					</button>
-				{/if}
-			</div>
+			<p class="line-clamp-2 font-medium">{task.title}</p>
 			{#if task.priority !== 'MEDIUM'}
 				<Badge variant="outline" class="shrink-0">{titleCase(task.priority)}</Badge>
 			{/if}
@@ -72,11 +61,13 @@
 					</ul>
 				</div>
 			{/if}
-			<div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-				{#if task.dueDate}<span>Due {fmtDate(task.dueDate)}</span>{/if}
-				{#if task.owner}<span>· {task.owner.name ?? task.owner.email}</span>{/if}
-			</div>
+			{#if task.dueDate || task.owner}
+				<div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+					{#if task.dueDate}<span>Due {fmtDate(task.dueDate)}</span>{/if}
+					{#if task.owner}<span>· {task.owner.name ?? task.owner.email}</span>{/if}
+				</div>
+			{/if}
 		</div>
-		<div class="mt-1 h-2.5 w-2.5 shrink-0 rounded-full border-2 {statusColor(task.status)}" title={titleCase(task.status)}></div>
+		<div class="h-2.5 w-2.5 shrink-0 rounded-full border-2 {statusColor(task.status)}" title={titleCase(task.status)}></div>
 	</div>
 </Card>
