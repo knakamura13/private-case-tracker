@@ -142,7 +142,7 @@
 
 {#if open}
 	<div
-		class="fixed inset-0 z-50 flex items-start justify-center bg-background/60 p-4 pt-24 backdrop-blur-sm"
+		class="fixed inset-0 z-50 bg-background/60 p-4 backdrop-blur-sm {window.innerWidth < 768 ? 'flex items-end justify-center' : 'flex items-start justify-center pt-24'}"
 		role="dialog"
 		aria-modal="true"
 		aria-label="Search"
@@ -153,7 +153,7 @@
 		}}
 	>
 		<div class="absolute inset-0 z-0 cursor-default" aria-hidden="true" onclick={() => (open = false)}></div>
-		<div bind:this={dialogContentEl} class="relative z-10 w-full max-w-xl overflow-hidden rounded-lg border border-border bg-card shadow-xl">
+		<div bind:this={dialogContentEl} class="relative z-10 w-full {window.innerWidth < 768 ? 'max-h-[85vh] rounded-t-lg' : 'max-w-xl max-h-[60vh]'} overflow-hidden rounded-lg border border-border bg-card shadow-xl" style="padding-bottom: env(safe-area-inset-bottom)">
 			<div class="flex items-center gap-2 border-b border-border px-3">
 				<Search class="h-4 w-4 text-muted-foreground" />
 				<label class="sr-only" for="command-palette-input">Search</label>

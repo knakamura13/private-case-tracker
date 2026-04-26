@@ -98,7 +98,7 @@
 	>
 		<Card class="p-4 border-none shadow-none bg-transparent">
 		<div class="flex items-center gap-3">
-			<GripVertical class="h-4 w-4 shrink-0 text-muted-foreground" />
+			<GripVertical class="h-4 w-4 shrink-0 text-muted-foreground hidden md:block" />
 			<div class="min-w-0 flex-1">
 				<p class="line-clamp-2 font-medium">{task.title}</p>
 				{#if task.priority !== 'MEDIUM'}
