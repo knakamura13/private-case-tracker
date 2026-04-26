@@ -35,6 +35,10 @@
 		} else if (!editParam && editingMilestone) {
 			editingMilestone = null;
 		}
+		// Keep modal open if there's a form error
+		if (form?.error && !showCreateModal) {
+			showCreateModal = true;
+		}
 	});
 
 	function updateUrl(id: string | null) {

@@ -24,9 +24,18 @@ export const actions: Actions = {
 	create: async (event) => {
 		const { workspace, user } = requireWorkspace(event);
 		const raw = Object.fromEntries(await event.request.formData());
+		let subTasks = [];
+		if (raw.subTasks) {
+			try {
+				subTasks = JSON.parse(raw.subTasks as string);
+			} catch {
+				const errorId = await logActionError(event, { message: 'Invalid subTasks format', status: 400 });
+				return fail(400, { error: 'Invalid subTasks format', errorId });
+			}
+		}
 		const parsed = milestoneCreateSchema.safeParse({
 			...raw,
-			subTasks: raw.subTasks ? JSON.parse(raw.subTasks as string) : []
+			subTasks
 		});
 		if (!parsed.success) {
 			const errorId = await logActionError(event, { message: parsed.error.message, status: 400 });
@@ -39,9 +48,18 @@ export const actions: Actions = {
 		const { workspace, user } = requireWorkspace(event);
 		const raw = Object.fromEntries(await event.request.formData());
 		const id = raw.id as string;
+		let subTasks = [];
+		if (raw.subTasks) {
+			try {
+				subTasks = JSON.parse(raw.subTasks as string);
+			} catch {
+				const errorId = await logActionError(event, { message: 'Invalid subTasks format', status: 400 });
+				return fail(400, { error: 'Invalid subTasks format', errorId });
+			}
+		}
 		const parsed = milestoneUpdateSchema.safeParse({
 			...raw,
-			subTasks: raw.subTasks ? JSON.parse(raw.subTasks as string) : []
+			subTasks
 		});
 		if (!parsed.success) {
 			const errorId = await logActionError(event, { message: parsed.error.message, status: 400 });

@@ -104,10 +104,6 @@
 		locationAddress = '';
 		showLocationInput = false;
 	}
-
-	function handleDueDateSave() {
-		showDueDatePicker = false;
-	}
 </script>
 
 {#if open}
@@ -229,7 +225,7 @@
 						{#if showDueDatePicker}
 							<div class="flex items-center gap-2">
 								<Input type="date" bind:value={dueDateValue} class="flex-1" />
-								<Button type="button" variant="default" size="sm" onclick={handleDueDateSave}>Save</Button>
+								<Button type="button" variant="default" size="sm" onclick={() => showDueDatePicker = false}>Done</Button>
 							</div>
 						{:else if dueDateValue}
 							<div class="flex items-center gap-2 text-sm">
@@ -302,14 +298,14 @@
 					<!-- Right Column - Settings -->
 					<div class="w-full space-y-4 md:w-64">
 						<div>
-							<label class="mb-1 block text-sm font-medium">Phase</label>
-							<Select name="phase" bind:value={phaseValue}>
+							<label for="phase" class="mb-1 block text-sm font-medium">Phase</label>
+							<Select id="phase" name="phase" bind:value={phaseValue}>
 								{#each PHASE_ORDER as p}<option value={p}>{PHASE_LABELS[p]}</option>{/each}
 							</Select>
 						</div>
 						<div>
-							<label class="mb-1 block text-sm font-medium">Status</label>
-							<Select name="status" bind:value={statusValue}>
+							<label for="status" class="mb-1 block text-sm font-medium">Status</label>
+							<Select id="status" name="status" bind:value={statusValue}>
 								<option value="PLANNED">Planned</option>
 								<option value="IN_PROGRESS">In progress</option>
 								<option value="DONE">Done</option>
@@ -318,8 +314,8 @@
 							</Select>
 						</div>
 						<div>
-							<label class="mb-1 block text-sm font-medium">Priority</label>
-							<Select name="priority" bind:value={priorityValue}>
+							<label for="priority" class="mb-1 block text-sm font-medium">Priority</label>
+							<Select id="priority" name="priority" bind:value={priorityValue}>
 								<option value="LOW">Low</option>
 								<option value="MEDIUM">Medium</option>
 								<option value="HIGH">High</option>
