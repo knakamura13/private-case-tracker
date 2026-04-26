@@ -21,7 +21,7 @@ export type MilestoneStatus = 'PLANNED' | 'IN_PROGRESS' | 'DONE' | 'BLOCKED' | '
 
 export type Priority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
-export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'BLOCKED' | 'DONE' | 'ARCHIVED';
+export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
 
 export type FormFilingStatus =
 	| 'NOT_STARTED'

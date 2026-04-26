@@ -8,8 +8,8 @@ import { ddbGet, ddbPut, ddbQuery, ddbUpdate, ddbDelete } from '$lib/server/dyna
 import { baPk, entitySk, gsi1Sk, gsi1UserPk, wsPk } from '$lib/server/dynamo/keys';
 import { invalidateMembers } from '$lib/server/cache/membersCache';
 import { invalidateWorkspace } from '$lib/server/cache/workspaceCache';
+import type { BetterAuthUserItem, MembershipItem, InvitationItem } from '$lib/server/dynamo/types';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export async function createInvitation(input: {
 	workspaceId: string;
@@ -56,7 +56,7 @@ export async function createInvitation(input: {
 
 export async function findActiveInvitation(token: string) {
 	const now = new Date().toISOString();
-	const rows = await ddbQuery<any>({
+	const rows = await ddbQuery<InvitationItem>({
 		IndexName: 'GSI1',
 		KeyConditionExpression: 'GSI1PK = :pk',
 		ExpressionAttributeValues: { ':pk': `INVITE#${token}` },
@@ -77,11 +77,11 @@ export async function acceptInvitation(token: string, userId: string) {
 	if (!invitation) throw new Error('Invitation not found or expired');
 
 	// Better Auth user record is stored in DynamoDB under BA#user.
-	const user = await ddbGet<any>({ PK: baPk('user'), SK: userId });
+	const user = await ddbGet<BetterAuthUserItem>({ PK: baPk('user'), SK: userId });
 	if (!user) throw new Error('User not found');
 
 	const membershipKey = { PK: wsPk(invitation.workspaceId), SK: entitySk('Membership', userId) };
-	const existingMembership = await ddbGet<any>(membershipKey);
+	const existingMembership = await ddbGet<MembershipItem>(membershipKey);
 	const membership = {
 		id: existingMembership?.id ?? randomUUID(),
 		workspaceId: invitation.workspaceId,
@@ -115,7 +115,7 @@ export async function acceptInvitation(token: string, userId: string) {
 }
 
 export async function listPendingInvitations(workspaceId: string) {
-	const rows = await ddbQuery<any>({
+	const rows = await ddbQuery<InvitationItem>({
 		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
 		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'Invitation#' }
 	});
@@ -130,4 +130,3 @@ export async function revokeInvitation(workspaceId: string, invitationId: string
 	invalidateMembers(workspaceId);
 }
 
-/* eslint-enable @typescript-eslint/no-explicit-any */

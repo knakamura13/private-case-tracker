@@ -7,8 +7,8 @@ import { ddbPut, ddbGet, ddbQuery, ddbUpdate, ddbDelete } from '$lib/server/dyna
 import { baPk, entitySk, gsi1Sk, gsi1UserPk, wsPk } from '$lib/server/dynamo/keys';
 import { invalidateMembers } from '$lib/server/cache/membersCache';
 import { invalidateWorkspace } from '$lib/server/cache/workspaceCache';
+import type { MembershipItem, BetterAuthUserItem, BetterAuthSessionItem, WorkspaceItem } from '$lib/server/dynamo/types';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export async function createWorkspace(input: { name: string; ownerUserId: string }) {
 	const now = new Date().toISOString();
@@ -74,7 +74,7 @@ export async function getMembership(workspaceId: string, userId: string) {
 }
 
 export async function listMembers(workspaceId: string) {
-	const rows = await ddbQuery<any>({
+	const rows = await ddbQuery<MembershipItem>({
 		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
 		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'Membership#' }
 	});
@@ -82,7 +82,7 @@ export async function listMembers(workspaceId: string) {
 	// Fetch user data for each member from Better Auth table
 	const membersWithUsers = await Promise.all(
 		rows.map(async (r) => {
-			const user = await ddbGet<any>({ PK: baPk('user'), SK: r.userId });
+			const user = await ddbGet<BetterAuthUserItem>({ PK: baPk('user'), SK: r.userId });
 			return {
 				id: r.id ?? `${r.workspaceId}:${r.userId}`,
 				workspaceId: r.workspaceId,
@@ -128,27 +128,22 @@ export async function removeMember(workspaceId: string, userId: string) {
 	invalidateWorkspace(userId);
 
 	// Invalidate all sessions for the user to immediately revoke access
-	try {
-		const sessions = await ddbQuery<any>({
-			KeyConditionExpression: 'PK = :pk',
-			ExpressionAttributeValues: { ':pk': baPk('session') },
-			Limit: 500
-		});
+	const sessions = await ddbQuery<BetterAuthSessionItem>({
+		KeyConditionExpression: 'PK = :pk',
+		ExpressionAttributeValues: { ':pk': baPk('session') },
+		Limit: 500
+	});
 
-		for (const session of sessions) {
-			if (session.userId === userId) {
-				await ddbDelete({ PK: baPk('session'), SK: session.id });
-			}
+	for (const session of sessions) {
+		if (session.userId === userId) {
+			await ddbDelete({ PK: baPk('session'), SK: session.id });
 		}
-	} catch (err) {
-		console.error('[workspace] failed to invalidate sessions for user', userId, err);
-		// Continue anyway - membership is removed, sessions will expire naturally
 	}
 }
 
 export async function renameWorkspace(workspaceId: string, name: string, actorId: string) {
 	const updated =
-		(await ddbUpdate<any>(
+		(await ddbUpdate<WorkspaceItem>(
 			{ PK: wsPk(workspaceId), SK: entitySk('Workspace', workspaceId) },
 			'SET #name = :n, #updatedAt = :u',
 			{ ':n': name, ':u': new Date().toISOString() },
@@ -177,4 +172,3 @@ export async function deleteWorkspace(workspaceId: string) {
 	await ddbDelete({ PK: wsPk(workspaceId), SK: entitySk('Workspace', workspaceId) });
 }
 
-/* eslint-enable @typescript-eslint/no-explicit-any */

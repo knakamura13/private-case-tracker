@@ -230,7 +230,6 @@
 							bind:value={descriptionValue}
 							placeholder="Add description..."
 							rows={4}
-							class="resize-none"
 						/>
 
 						<!-- Checklist -->

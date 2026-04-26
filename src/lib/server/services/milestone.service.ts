@@ -8,7 +8,6 @@ import { entitySk, wsPk } from '$lib/server/dynamo/keys';
 import type { MilestoneItem } from '$lib/server/dynamo/types';
 import { PHASE_ORDER } from '$lib/constants/phases';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export async function listMilestones(
 	workspaceId: string,
@@ -38,7 +37,7 @@ export async function listMilestones(
 }
 
 export async function getMilestone(workspaceId: string, id: string) {
-	const milestone = await ddbGet<any>({
+	const milestone = await ddbGet<MilestoneItem>({
 		PK: wsPk(workspaceId),
 		SK: entitySk('TimelineMilestone', id)
 	});
@@ -94,7 +93,7 @@ export async function updateMilestone(
 	id: string,
 	input: MilestoneUpdate
 ) {
-	const existing = await ddbGet<any>({
+	const existing = await ddbGet<MilestoneItem>({
 		PK: wsPk(workspaceId),
 		SK: entitySk('TimelineMilestone', id)
 	});
@@ -118,7 +117,7 @@ export async function updateMilestone(
 		values[vk] = v;
 		sets.push(`${nk} = ${vk}`);
 	}
-	const milestone = (await ddbUpdate<any>(
+	const milestone = (await ddbUpdate<MilestoneItem>(
 		{ PK: wsPk(workspaceId), SK: entitySk('TimelineMilestone', id) },
 		`SET ${sets.join(', ')}`,
 		values,
@@ -139,7 +138,7 @@ export async function updateMilestone(
 }
 
 export async function softDeleteMilestone(workspaceId: string, actorId: string, id: string) {
-	const existing = await ddbGet<any>({
+	const existing = await ddbGet<MilestoneItem>({
 		PK: wsPk(workspaceId),
 		SK: entitySk('TimelineMilestone', id)
 	});
@@ -173,4 +172,3 @@ export function currentPhase(
 	return 'OUTCOME';
 }
 
-/* eslint-enable @typescript-eslint/no-explicit-any */

@@ -59,6 +59,7 @@ export type MilestoneItem = DynamoBaseItem & {
 	priority: string;
 	dueDate: string;
 	scheduledAt: string | null;
+	completedAt: string | null;
 	order: number;
 	ownerId: string | null;
 	owner: { id: string; name: string | null; email: string } | null;
@@ -82,4 +83,61 @@ export type QuickLinkFolderItem = DynamoBaseItem & {
 	workspaceId: string;
 	name: string | null;
 	order: number;
+};
+
+export type WorkspaceItem = DynamoBaseItem & {
+	id: string;
+	name: string;
+	ownerId: string;
+	evidenceCategories: string[];
+	evidenceTargets: Record<string, number>;
+	evidenceCounts: Record<string, number>;
+};
+
+export type MembershipItem = DynamoBaseItem & {
+	id: string;
+	workspaceId: string;
+	userId: string;
+	role: string;
+	acceptedAt: string | null;
+	workspaceName?: string;
+};
+
+export type InvitationItem = DynamoBaseItem & {
+	id: string;
+	workspaceId: string;
+	inviterUserId: string;
+	email: string;
+	role: string;
+	token: string;
+	expiresAt: string;
+	acceptedAt: string | null;
+	workspaceName?: string;
+};
+
+export type EvidenceCategoryItem = DynamoBaseItem & {
+	id: string;
+	workspaceId: string;
+	name: string;
+	target: number;
+	count: number;
+};
+
+export type BetterAuthUserItem = DynamoBaseItem & {
+	id: string;
+	email: string;
+	name: string | null;
+	image: string | null;
+	emailVerified: boolean;
+	createdAt: string;
+	updatedAt: string;
+};
+
+export type BetterAuthSessionItem = DynamoBaseItem & {
+	id: string;
+	userId: string;
+	token: string;
+	expiresAt: string;
+	ipAddress: string | null;
+	userAgent: string | null;
 };

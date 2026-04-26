@@ -355,7 +355,6 @@
 						oninput={() => triggerAutoSave()}
 						placeholder="Add a more detailed description..."
 						rows={3}
-						class="resize-none"
 					/>
 				</div>
 

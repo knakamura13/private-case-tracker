@@ -7,7 +7,6 @@ import { ddbGet, ddbPut, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
 import type { QuestionItem } from '$lib/server/dynamo/types';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export async function listQuestions(
 	workspaceId: string,
@@ -86,7 +85,7 @@ export async function updateQuestion(
 	id: string,
 	input: QuestionUpdate
 ) {
-	const existing = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('QuestionItem', id) });
+	const existing = await ddbGet<QuestionItem>({ PK: wsPk(workspaceId), SK: entitySk('QuestionItem', id) });
 	if (!existing) throw new Error('Question not found');
 	if (existing.deletedAt) throw new Error('Question not found');
 	const answeredAt =
@@ -107,7 +106,7 @@ export async function updateQuestion(
 		values[vk] = v;
 		sets.push(`${nk} = ${vk}`);
 	}
-	const question = (await ddbUpdate<any>(
+	const question = (await ddbUpdate<QuestionItem>(
 		{ PK: wsPk(workspaceId), SK: entitySk('QuestionItem', id) },
 		`SET ${sets.join(', ')}`,
 		values,
@@ -126,7 +125,7 @@ export async function updateQuestion(
 }
 
 export async function softDeleteQuestion(workspaceId: string, actorId: string, id: string) {
-	const existing = await ddbGet<any>({ PK: wsPk(workspaceId), SK: entitySk('QuestionItem', id) });
+	const existing = await ddbGet<QuestionItem>({ PK: wsPk(workspaceId), SK: entitySk('QuestionItem', id) });
 	if (!existing) throw new Error('Question not found');
 	if (existing.deletedAt) throw new Error('Question not found');
 	await ddbUpdate(
@@ -145,4 +144,3 @@ export async function softDeleteQuestion(workspaceId: string, actorId: string, i
 	});
 }
 
-/* eslint-enable @typescript-eslint/no-explicit-any */

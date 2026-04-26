@@ -3,8 +3,7 @@ import type { EntityType } from '$lib/server/dynamo/keys';
 import { logActivity } from '$lib/server/activity';
 import { ddbGet, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { DynamoBaseItem } from '$lib/server/dynamo/types';
 
 export async function softDeleteEntity(
 	workspaceId: string,
@@ -14,7 +13,7 @@ export async function softDeleteEntity(
 	entityName: string,
 	action: ActivityAction
 ) {
-	const existing = await ddbGet<any>({
+	const existing = await ddbGet<DynamoBaseItem>({
 		PK: wsPk(workspaceId),
 		SK: entitySk(entityType, entityId)
 	});
@@ -37,5 +36,3 @@ export async function softDeleteEntity(
 		summary: `${entityType} "${entityName}" deleted`
 	});
 }
-
-/* eslint-enable @typescript-eslint/no-explicit-any */

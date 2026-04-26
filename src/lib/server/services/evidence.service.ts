@@ -3,8 +3,8 @@ import { logActivity } from '$lib/server/activity';
 import { EVIDENCE_CATEGORIES, EVIDENCE_TARGETS } from '$lib/constants/categories';
 import { ddbGet, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
+import type { WorkspaceItem } from '$lib/server/dynamo/types';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export interface EvidenceCategory {
 	category: string;
@@ -13,7 +13,7 @@ export interface EvidenceCategory {
 }
 
 export async function getEvidenceCategories(workspaceId: string): Promise<EvidenceCategory[]> {
-	const ws = await ddbGet<any>({
+	const ws = await ddbGet<WorkspaceItem>({
 		PK: wsPk(workspaceId),
 		SK: entitySk('Workspace', workspaceId)
 	});
@@ -84,7 +84,7 @@ export async function incrementEvidenceCount(
 	}
 
 	// Atomic increment/decrement using DynamoDB
-	const workspace = await ddbUpdate<any>(
+	const workspace = await ddbUpdate<WorkspaceItem>(
 		{ PK: wsPk(workspaceId), SK: entitySk('Workspace', workspaceId) },
 		'SET #evidenceCounts.#category = if_not_exists(#evidenceCounts.#category, :zero) + :delta, #updatedAt = :u',
 		{ ':zero': 0, ':delta': delta, ':u': new Date().toISOString() },
@@ -175,7 +175,7 @@ export async function addEvidenceCategory(
 		throw new Error('Category already exists');
 	}
 
-	await ddbUpdate<any>(
+	await ddbUpdate<WorkspaceItem>(
 		{ PK: wsPk(workspaceId), SK: entitySk('Workspace', workspaceId) },
 		'SET #evidenceCategories = list_append(if_not_exists(#evidenceCategories, :empty), :newCat), #evidenceTargets.#category = if_not_exists(#evidenceTargets, :empty), #evidenceTargets.#category = :zero, #evidenceCounts.#category = if_not_exists(#evidenceCounts, :empty), #evidenceCounts.#category = :zero, #updatedAt = :u',
 		{ ':empty': {}, ':newCat': [category], ':zero': 0, ':u': new Date().toISOString() },
@@ -224,7 +224,7 @@ export async function renameEvidenceCategory(
 	const updatedCategories = categories.map((c) => (c.category.toLowerCase() === oldName.toLowerCase() ? newName : c.category));
 
 	// Update counts and targets maps
-	const ws = await ddbGet<any>({
+	const ws = await ddbGet<WorkspaceItem>({
 		PK: wsPk(workspaceId),
 		SK: entitySk('Workspace', workspaceId)
 	});
@@ -301,7 +301,7 @@ export async function deleteEvidenceCategory(
 	const updatedCategories = categories.filter((c) => c.category.toLowerCase() !== category.toLowerCase()).map((c) => c.category);
 
 	// Remove from counts and targets maps
-	const ws = await ddbGet<any>({
+	const ws = await ddbGet<WorkspaceItem>({
 		PK: wsPk(workspaceId),
 		SK: entitySk('Workspace', workspaceId)
 	});
@@ -353,4 +353,3 @@ export async function deleteEvidenceCategory(
 	return { category };
 }
 
-/* eslint-enable @typescript-eslint/no-explicit-any */
