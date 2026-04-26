@@ -32,13 +32,7 @@
 	);
 </script>
 
-<PageHeader title="Tasks" description="Personal todos and errands (not legal proceedings)." number="03">
-	{#snippet actions()}
-		<Button href="/tasks/new">
-			{#snippet children()}<Plus class="h-4 w-4" /> New task{/snippet}
-		</Button>
-	{/snippet}
-</PageHeader>
+<PageHeader title="Tasks" description="Personal todos and errands (not legal proceedings)." number="03" />
 
 <div class="flex gap-4 overflow-x-auto pb-4">
 	{#each grouped as column (column.id)}
