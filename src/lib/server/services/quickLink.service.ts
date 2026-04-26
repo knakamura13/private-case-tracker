@@ -39,7 +39,6 @@ export async function createQuickLink(
 		url: input.url,
 		title: input.title ?? null,
 		description: input.description ?? null,
-		notes: input.notes ?? null,
 		folderId: input.folderId ?? null,
 		faviconUrl,
 		order,
@@ -81,7 +80,6 @@ export async function updateQuickLink(
 	}
 	if (input.title !== undefined) patch.title = input.title ?? null;
 	if (input.description !== undefined) patch.description = input.description ?? null;
-	if (input.notes !== undefined) patch.notes = input.notes ?? null;
 	patch.updatedAt = new Date().toISOString();
 
 	const exprParts: string[] = [];

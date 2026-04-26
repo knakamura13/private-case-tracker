@@ -22,7 +22,6 @@
 	let draftUrl = $state('');
 	let draftTitle = $state('');
 	let draftDescription = $state('');
-	let draftNotes = $state('');
 	let draftFolderName = $state('');
 	let menuOpenId = $state<string | null>(null);
 	let folderPopoverId = $state<string | null>(null);
@@ -34,6 +33,7 @@
 	let dragEnterCount = $state(0);
 	let dropInsertIndex = $state<number | null>(null);
 	let isDragging = $state(false);
+	let menuPosition = $state<{ top: number; left: number } | null>(null);
 
 	// Separate root links and folder links
 	let rootLinks = $derived(links.filter((l) => !l.folderId));
@@ -194,7 +194,6 @@
 		draftUrl = '';
 		draftTitle = '';
 		draftDescription = '';
-		draftNotes = '';
 		draftFolderName = '';
 		modalOpen = true;
 	}
@@ -206,7 +205,6 @@
 		draftUrl = link.url;
 		draftTitle = link.title ?? '';
 		draftDescription = link.description ?? '';
-		draftNotes = link.notes ?? '';
 		draftFolderName = '';
 		modalOpen = true;
 		menuOpenId = null;
@@ -219,7 +217,6 @@
 		draftUrl = '';
 		draftTitle = '';
 		draftDescription = '';
-		draftNotes = '';
 		draftFolderName = '';
 		modalOpen = true;
 	}
@@ -231,7 +228,6 @@
 		draftUrl = '';
 		draftTitle = '';
 		draftDescription = '';
-		draftNotes = '';
 		draftFolderName = folder.name ?? '';
 		modalOpen = true;
 		menuOpenId = null;
@@ -244,7 +240,24 @@
 	function toggleMenu(id: string, e: MouseEvent) {
 		e.preventDefault();
 		e.stopPropagation();
-		menuOpenId = menuOpenId === id ? null : id;
+		if (menuOpenId === id) {
+			menuOpenId = null;
+			menuPosition = null;
+		} else {
+			menuOpenId = id;
+			const target = e.currentTarget as HTMLElement;
+			const rect = target.getBoundingClientRect();
+			const dropdownHeight = 150; // Estimated dropdown height in pixels
+			const spaceBelow = window.innerHeight - rect.bottom;
+			
+			// Flip dropdown to appear above if there's not enough space below
+			const top = spaceBelow < dropdownHeight ? rect.top - dropdownHeight - 4 : rect.bottom + 4;
+			
+			menuPosition = {
+				top,
+				left: rect.left + rect.width / 2
+			};
+		}
 	}
 
 	function toggleFolderPopover(folderId: string, e: Event) {
@@ -252,6 +265,7 @@
 		e.stopPropagation();
 		folderPopoverId = folderPopoverId === folderId ? null : folderId;
 		menuOpenId = null;
+		menuPosition = null;
 	}
 
 	$effect(() => {
@@ -260,12 +274,31 @@
 			const t = e.target;
 			if (!(t instanceof HTMLElement)) return;
 			if (t.closest('[data-quicklink-menu]')) return;
-			if (t.closest('[data-folder-popover]')) return;
+			if (t.closest('[data-folder-popover="trigger"]')) return;
+			if (t.closest('[data-folder-popover="panel"]') && !t.closest('[data-quicklink-menu="panel"]')) {
+				menuOpenId = null;
+				menuPosition = null;
+				return;
+			}
 			menuOpenId = null;
+			menuPosition = null;
 			folderPopoverId = null;
 		};
 		document.addEventListener('click', onDoc, true);
 		return () => document.removeEventListener('click', onDoc, true);
+	});
+
+	$effect(() => {
+		if (menuOpenId === null && folderPopoverId === null) return;
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') {
+				menuOpenId = null;
+				menuPosition = null;
+				folderPopoverId = null;
+			}
+		};
+		document.addEventListener('keydown', onKey, true);
+		return () => document.removeEventListener('keydown', onKey, true);
 	});
 
 	function handleDragStart(event: DragEvent, id: string) {
@@ -635,9 +668,10 @@
 										<EllipsisVertical class="h-3.5 w-3.5" />
 									</button>
 
-									{#if menuOpenId === link.id}
+									{#if menuOpenId === link.id && menuPosition}
 										<div
-											class="absolute left-1/2 top-full z-20 mt-1 min-w-34 -translate-x-1/2 rounded-md border border-border bg-card py-1 text-sm shadow-md"
+											style="top: {menuPosition.top}px; left: {menuPosition.left}px;"
+											class="fixed z-50 -translate-x-1/2 min-w-34 rounded-md border border-border bg-card py-1 text-sm shadow-md"
 											data-quicklink-menu="panel"
 											role="menu"
 										>
@@ -853,7 +887,7 @@
 
 {#if modalOpen}
 	<div
-		class="fixed inset-0 z-50 flex items-start justify-center bg-background/60 p-4 pt-24 backdrop-blur-sm"
+		class="fixed inset-0 z-50 flex items-center justify-center bg-background/60 p-4 backdrop-blur-sm"
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby="quicklink-modal-title"
@@ -865,7 +899,7 @@
 			onclick={closeModal}
 		></button>
 		<div
-			class="relative z-10 w-full max-w-md overflow-hidden rounded-lg border border-border bg-card shadow-xl"
+			class="relative z-10 w-full max-w-md max-h-[calc(100vh-2rem)] flex flex-col rounded-lg border border-border bg-card shadow-xl"
 		>
 			<div class="flex items-center justify-between border-b border-border px-4 py-3">
 				<p id="quicklink-modal-title" class="text-sm font-semibold">
@@ -882,7 +916,7 @@
 					<span aria-hidden="true" class="text-lg leading-none">×</span>
 				</button>
 			</div>
-			<div class="max-h-[70vh] overflow-y-auto p-4">
+			<div class="overflow-y-auto flex-1 p-4">
 				{#if modalMode === 'folder'}
 					{#if editingFolder}
 						<form
@@ -960,10 +994,6 @@
 								<Label for="ql-description">Description (optional)</Label>
 								<Textarea id="ql-description" name="description" rows={2} bind:value={draftDescription} />
 							</div>
-							<div>
-								<Label for="ql-notes">Notes (optional)</Label>
-								<Textarea id="ql-notes" name="notes" bind:value={draftNotes} />
-							</div>
 							{#if form?.error}
 								<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
 							{/if}
@@ -1003,10 +1033,6 @@
 							<div>
 								<Label for="ql-description-new">Description (optional)</Label>
 								<Textarea id="ql-description-new" name="description" rows={2} bind:value={draftDescription} />
-							</div>
-							<div>
-								<Label for="ql-notes-new">Notes (optional)</Label>
-								<Textarea id="ql-notes-new" name="notes" bind:value={draftNotes} />
 							</div>
 							{#if form?.error}
 								<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />

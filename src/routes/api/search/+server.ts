@@ -22,7 +22,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		listQuickLinks(workspaceId).then((r) =>
 			r
 				.filter((l) =>
-					[l.title, l.url, l.description, l.notes].some((x) =>
+					[l.title, l.url, l.description].some((x) =>
 						String(x ?? '')
 							.toLowerCase()
 							.includes(q.toLowerCase())

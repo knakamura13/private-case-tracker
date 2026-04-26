@@ -35,7 +35,6 @@ export const quickLinkCreateSchema = z.object({
 	url: httpHttpsUrl,
 	title: optionalTitle,
 	description: stringOrEmpty(2000),
-	notes: stringOrEmpty(5000),
 	folderId: z.string().nullable().optional()
 });
 

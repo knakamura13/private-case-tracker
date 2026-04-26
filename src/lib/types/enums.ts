@@ -97,7 +97,6 @@ export type QuickLink = {
 	url: string;
 	title?: string | null;
 	description?: string | null;
-	notes?: string | null;
 	folderId?: string | null;
 	faviconUrl?: string | null;
 	order: number;
