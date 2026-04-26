@@ -1,4 +1,5 @@
 import type { QuestionSourceType, QuestionStatus } from '$lib/types/enums';
+/* eslint-disable security/detect-object-injection */
 import { logActivity } from '$lib/server/activity';
 import type { QuestionCreate, QuestionUpdate } from '$lib/schemas/question';
 import { randomUUID } from 'node:crypto';

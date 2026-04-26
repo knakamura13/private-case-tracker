@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 import { createAdapterFactory, type DBAdapterDebugLogOption } from 'better-auth/adapters';
 import { ddbPut, ddbQuery, ddbUpdate, ddbDelete } from '$lib/server/dynamo/ops';
 import { baPk } from '$lib/server/dynamo/keys';

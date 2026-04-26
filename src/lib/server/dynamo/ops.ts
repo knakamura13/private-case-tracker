@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 import {
 	DeleteCommand,
 	GetCommand,

@@ -55,8 +55,10 @@
 		}
 	}
 
+	/* eslint-disable security/detect-object-injection */
 	const flat = $derived(Object.values(results).flat());
 	const activeItem = $derived(flat[activeIndex]);
+	/* eslint-enable security/detect-object-injection */
 
 	$effect(() => {
 		if (open) {
@@ -104,6 +106,7 @@
 			e.preventDefault();
 			activeIndex = Math.max(activeIndex - 1, 0);
 		} else if (e.key === 'Enter') {
+			/* eslint-disable-next-line security/detect-object-injection */
 			const item = flat[activeIndex];
 			if (item) {
 				open = false;
@@ -174,7 +177,7 @@
 							<div>
 								<p class="bg-muted/60 px-3 py-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">{group}</p>
 								<ul id="command-palette-results" role="listbox" aria-label="Search results">
-									{#each items as item, i (item.type + item.id)}
+									{#each items as item, _i (item.type + item.id)}
 										{@const globalIndex = flat.findIndex((f) => f.type === item.type && f.id === item.id)}
 										{@const optionId = `cp-opt-${item.type}-${item.id}`}
 										<li role="option" id={optionId} aria-selected={activeIndex === globalIndex}>

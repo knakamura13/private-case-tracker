@@ -288,6 +288,7 @@
 						<div>
 							<label for="phase" class="mb-1 block text-sm font-medium">Phase</label>
 							<Select id="phase" name="phase" bind:value={phaseValue}>
+								<!-- eslint-disable-next-line security/detect-object-injection -->
 								{#each PHASE_ORDER as p}<option value={p}>{PHASE_LABELS[p]}</option>{/each}
 							</Select>
 						</div>

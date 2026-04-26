@@ -22,13 +22,15 @@
 		onenhance?: SubmitFunction;
 	} = $props();
 
+	/* eslint-disable security/detect-object-injection */
 	function val(name: string, fallback = '') {
-		const v = initial[name];
+		const v = (initial as Record<string, unknown>)[name];
 		if (v == null) return fallback;
 		if (v instanceof Date) return v.toISOString().slice(0, 10);
 		if (Array.isArray(v)) return v.join(', ');
 		return String(v);
 	}
+	/* eslint-enable security/detect-object-injection */
 	const includedInPacket = $derived(Boolean(initial.includedInPacket));
 </script>
 

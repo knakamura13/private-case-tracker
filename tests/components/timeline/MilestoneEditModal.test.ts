@@ -14,6 +14,7 @@ describe('MilestoneEditModal', () => {
 		open: true,
 		onClose: mockOnClose,
 		action: '/timeline/update',
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		onenhance: mockOnEnhance as any,
 		members: mockMembers,
 		initial: {

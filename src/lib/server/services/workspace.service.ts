@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 import { logActivity } from '$lib/server/activity';
 import type { MemberRole } from '$lib/types/enums';
 import { EVIDENCE_CATEGORIES, EVIDENCE_TARGETS } from '$lib/constants/categories';

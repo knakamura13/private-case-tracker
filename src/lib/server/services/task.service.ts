@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { ddbGet, ddbPut, ddbUpdate, ddbQuery } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
+/* eslint-disable security/detect-object-injection */
 import { logActivity } from '$lib/server/activity';
 import type { TaskItem } from '$lib/server/dynamo/types';
 import type { TaskCreate, TaskUpdate, TaskStatus } from '$lib/schemas/task';

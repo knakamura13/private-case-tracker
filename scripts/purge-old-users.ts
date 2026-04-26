@@ -16,7 +16,7 @@ function loadEnv() {
 				process.env[key.trim()] = valueParts.join('=').trim();
 			}
 		});
-	} catch (err) {
+	} catch {
 		console.warn('Could not load .env file, using defaults');
 	}
 }

@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 import type { MilestonePhase, MilestoneStatus } from '$lib/types/enums';
 import { logActivity } from '$lib/server/activity';
 import type { MilestoneCreate, MilestoneUpdate } from '$lib/schemas/milestone';

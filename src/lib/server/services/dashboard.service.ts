@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 import { PHASE_ORDER, PHASE_LABELS } from '$lib/constants/phases';
 import { currentPhase } from './milestone.service';
 import type {

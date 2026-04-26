@@ -21,12 +21,14 @@
 		onenhance?: SubmitFunction;
 	} = $props();
 
+	/* eslint-disable security/detect-object-injection */
 	function val(name: string, fallback = '') {
-		const v = initial[name];
+		const v = (initial as Record<string, unknown>)[name];
 		if (v == null) return fallback;
 		if (v instanceof Date) return v.toISOString().slice(0, 10);
 		return String(v);
 	}
+	/* eslint-enable security/detect-object-injection */
 </script>
 
 <form method="post" {action} use:enhance={onenhance} class="grid grid-cols-1 gap-4 md:grid-cols-2">

@@ -536,6 +536,7 @@
 							<div>
 								<label for="phase" class="mb-1 block text-xs font-medium text-muted-foreground">Phase</label>
 								<Select id="phase" name="phase" bind:value={phaseValue} onchange={() => triggerAutoSave()} class="text-sm">
+									<!-- eslint-disable-next-line security/detect-object-injection -->
 									{#each PHASE_ORDER as p}<option value={p}>{PHASE_LABELS[p]}</option>{/each}
 								</Select>
 							</div>

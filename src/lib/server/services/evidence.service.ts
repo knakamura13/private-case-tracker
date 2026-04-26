@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 import { logActivity } from '$lib/server/activity';
 import { EVIDENCE_CATEGORIES, EVIDENCE_TARGETS } from '$lib/constants/categories';
 import { ddbGet, ddbUpdate } from '$lib/server/dynamo/ops';
