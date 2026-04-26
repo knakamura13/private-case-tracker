@@ -99,6 +99,7 @@ export type QuickLink = {
 	description?: string | null;
 	notes?: string | null;
 	folderId?: string | null;
+	faviconUrl?: string | null;
 	order: number;
 	createdAt: string;
 	updatedAt: string;

@@ -27,11 +27,13 @@
 	let menuOpenId = $state<string | null>(null);
 	let folderPopoverId = $state<string | null>(null);
 	let brokenFavicons = $state<Set<string>>(new Set());
+	let preloadedFavicons = $state<Set<string>>(new Set());
 	let draggingId = $state<string | null>(null);
 	let dropTargetId = $state<string | null>(null);
 	let dropIntent = $state<DropIntent | null>(null);
 	let dragEnterCount = $state(0);
 	let dropInsertIndex = $state<number | null>(null);
+	let isDragging = $state(false);
 
 	// Separate root links and folder links
 	let rootLinks = $derived(links.filter((l) => !l.folderId));
@@ -46,6 +48,9 @@
 	let allItems = $derived([...folders, ...rootLinks]);
 	let itemIds = $derived(allItems.map((item) => item.id));
 
+	const faviconCache = new Map<string, string>();
+	const fallbackFaviconCache = new Map<string, string>();
+
 	function prettyHostname(url: string): string {
 		try {
 			return new URL(url).hostname;
@@ -54,14 +59,117 @@
 		}
 	}
 
-	function faviconForUrl(url: string): string {
+	function faviconForLink(link: QuickLink): string {
+		// Use cached faviconUrl from database if available
+		if (link.faviconUrl) return link.faviconUrl;
+
+		// Check cache first
+		if (faviconCache.has(link.url)) {
+			return faviconCache.get(link.url) || '';
+		}
+
+		// Fallback to direct domain favicon (no placeholders)
 		try {
-			const h = new URL(url).hostname;
-			return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(h)}&sz=256`;
+			const h = new URL(link.url).hostname;
+			// Skip localhost and internal domains
+			if (/^(localhost|127\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/.test(h)) {
+				faviconCache.set(link.url, ''); // Cache empty string for internal domains
+				return '';
+			}
+			const faviconUrl = `https://${h}/favicon.ico`;
+			faviconCache.set(link.url, faviconUrl); // Cache the URL
+			return faviconUrl;
 		} catch {
+			faviconCache.set(link.url, ''); // Cache empty string on error
 			return '';
 		}
 	}
+
+	function getFallbackFavicon(link: QuickLink): string {
+		// Check fallback cache
+		if (fallbackFaviconCache.has(link.url)) {
+			return fallbackFaviconCache.get(link.url) || '';
+		}
+
+		try {
+			const h = new URL(link.url).hostname;
+			if (/^(localhost|127\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/.test(h)) {
+				fallbackFaviconCache.set(link.url, '');
+				return '';
+			}
+			const fallbackUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(h)}&sz=128`;
+			fallbackFaviconCache.set(link.url, fallbackUrl);
+			return fallbackUrl;
+		} catch {
+			fallbackFaviconCache.set(link.url, '');
+			return '';
+		}
+	}
+
+	// Preload all favicons to prevent flickering
+	$effect(() => {
+		const allLinks = [...links];
+		const imageElements: HTMLImageElement[] = [];
+
+		const preloadPromises = allLinks.map((link) => {
+			// Skip if already processed
+			if (preloadedFavicons.has(link.id) || brokenFavicons.has(link.id)) {
+				return Promise.resolve();
+			}
+
+			const url = faviconForLink(link);
+			if (!url) return Promise.resolve();
+
+			return new Promise<void>((resolve) => {
+				const img = new Image();
+				imageElements.push(img);
+				img.onload = () => {
+					const next = new Set(preloadedFavicons);
+					next.add(link.id);
+					preloadedFavicons = next;
+					resolve();
+				};
+				img.onerror = () => {
+					// Try fallback favicon if direct fails
+					const fallbackUrl = getFallbackFavicon(link);
+					if (fallbackUrl) {
+						const fallbackImg = new Image();
+						imageElements.push(fallbackImg);
+						fallbackImg.onload = () => {
+							const next = new Set(preloadedFavicons);
+							next.add(link.id);
+							preloadedFavicons = next;
+							resolve();
+						};
+						fallbackImg.onerror = () => {
+							const next = new Set(brokenFavicons);
+							next.add(link.id);
+							brokenFavicons = next;
+							resolve();
+						};
+						fallbackImg.src = fallbackUrl;
+					} else {
+						const next = new Set(brokenFavicons);
+						next.add(link.id);
+						brokenFavicons = next;
+						resolve();
+					}
+				};
+				img.src = url;
+			});
+		});
+		// Don't await - let preloading happen in background
+		void Promise.all(preloadPromises);
+
+		// Cleanup: abort image loading on effect rerun or unmount
+		return () => {
+			imageElements.forEach((img) => {
+				img.src = '';
+				img.onload = null;
+				img.onerror = null;
+			});
+		};
+	});
 
 	function labelFor(link: QuickLink) {
 		return link.title?.trim() ? link.title : prettyHostname(link.url);
@@ -137,20 +245,13 @@
 		e.preventDefault();
 		e.stopPropagation();
 		menuOpenId = menuOpenId === id ? null : id;
-		folderPopoverId = null;
 	}
 
-	function toggleFolderPopover(folderId: string, e: MouseEvent) {
+	function toggleFolderPopover(folderId: string, e: Event) {
 		e.preventDefault();
 		e.stopPropagation();
 		folderPopoverId = folderPopoverId === folderId ? null : folderId;
 		menuOpenId = null;
-	}
-
-	function markFaviconBroken(id: string) {
-		const next = new Set(brokenFavicons);
-		next.add(id);
-		brokenFavicons = next;
 	}
 
 	$effect(() => {
@@ -168,6 +269,8 @@
 	});
 
 	function handleDragStart(event: DragEvent, id: string) {
+		if (isDragging) return; // Prevent concurrent drag operations
+		isDragging = true; // Set immediately to prevent race condition
 		dropTargetId = null;
 		dropIntent = null;
 		dragEnterCount = 0;
@@ -188,6 +291,7 @@
 		dropIntent = null;
 		dragEnterCount = 0;
 		dropInsertIndex = null;
+		isDragging = false;
 	}
 
 	function handleDragEnter(event: DragEvent, id: string) {
@@ -240,62 +344,83 @@
 		dropIntent = null;
 		dragEnterCount = 0;
 		dropInsertIndex = null;
+		isDragging = false;
 		if (!activeId || activeId === targetId) return;
 
 		const activeLink = links.find((l) => l.id === activeId);
 		const targetLink = links.find((l) => l.id === targetId);
 		const targetFolder = folders.find((f) => f.id === targetId);
 
-		// 1. Drop a root link onto another root link → create folder with both
-		if (activeLink && targetLink && !activeLink.folderId && !targetLink.folderId) {
-			const response = await fetch('api/quick-link-folders', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ name: null })
-			});
-			if (!response.ok) return;
-			const folder = await response.json();
+		try {
+			// 1. Drop a root link onto another root link → create folder with both
+			if (activeLink && targetLink && !activeLink.folderId && !targetLink.folderId) {
+				const response = await fetch('api/quick-link-folders', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ name: null })
+				});
+				if (!response.ok) {
+					console.error('Failed to create folder:', response.statusText);
+					return;
+				}
+				const folder = await response.json();
 
-			if (folder?.id) {
-				await Promise.all([
-					moveLinkToFolderAction(activeId, folder.id),
-					moveLinkToFolderAction(targetId, folder.id)
-				]);
+				if (folder?.id) {
+					try {
+						await Promise.all([
+							moveLinkToFolderAction(activeId, folder.id),
+							moveLinkToFolderAction(targetId, folder.id)
+						]);
+						await invalidateAll();
+					} catch (error) {
+						console.error('Failed to move links to folder:', error);
+						throw error; // Re-throw to be caught by outer try/catch
+					}
+				}
+				return;
+			}
+
+			// 2. Drop a link onto a folder → move link into that folder
+			if (activeLink && targetFolder) {
+				await moveLinkToFolderAction(activeId, targetFolder.id);
+				await invalidateAll();
+				return;
+			}
+
+			// 3. Reorder (folders and root links share the same order)
+			const oldIndex = itemIds.indexOf(activeId);
+			const newIndex = itemIds.indexOf(targetId);
+
+			if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+				const newOrder = [...itemIds];
+				newOrder.splice(oldIndex, 1);
+				newOrder.splice(newIndex, 0, activeId);
+
+				const isFolderDrag = folders.some((f) => f.id === activeId);
+				const formData = new FormData();
+				if (isFolderDrag) {
+					newOrder
+						.filter((id) => folders.some((f) => f.id === id))
+						.forEach((id) => formData.append('folderIds', id));
+					const response = await fetch('?/reorderFolders', { method: 'POST', body: formData });
+					if (!response.ok) {
+						console.error('Failed to reorder folders:', response.statusText);
+						return;
+					}
+				} else {
+					newOrder
+						.filter((id) => rootLinks.some((l) => l.id === id))
+						.forEach((id) => formData.append('linkIds', id));
+					const response = await fetch('?/reorderLinks', { method: 'POST', body: formData });
+					if (!response.ok) {
+						console.error('Failed to reorder links:', response.statusText);
+						return;
+					}
+				}
 				await invalidateAll();
 			}
-			return;
-		}
-
-		// 2. Drop a link onto a folder → move link into that folder
-		if (activeLink && targetFolder) {
-			await moveLinkToFolderAction(activeId, targetFolder.id);
-			await invalidateAll();
-			return;
-		}
-
-		// 3. Reorder (folders and root links share the same order)
-		const oldIndex = itemIds.indexOf(activeId);
-		const newIndex = itemIds.indexOf(targetId);
-
-		if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-			const newOrder = [...itemIds];
-			newOrder.splice(oldIndex, 1);
-			newOrder.splice(newIndex, 0, activeId);
-
-			const isFolderDrag = folders.some((f) => f.id === activeId);
-			const formData = new FormData();
-			if (isFolderDrag) {
-				newOrder
-					.filter((id) => folders.some((f) => f.id === id))
-					.forEach((id) => formData.append('folderIds', id));
-				await fetch('?/reorderFolders', { method: 'POST', body: formData });
-			} else {
-				newOrder
-					.filter((id) => rootLinks.some((l) => l.id === id))
-					.forEach((id) => formData.append('linkIds', id));
-				await fetch('?/reorderLinks', { method: 'POST', body: formData });
-			}
-			await invalidateAll();
+		} catch (error) {
+			console.error('Drag operation failed:', error);
 		}
 	}
 
@@ -303,20 +428,36 @@
 		const formData = new FormData();
 		formData.append('linkId', linkId);
 		if (folderId) formData.append('folderId', folderId);
-		await fetch('?/moveToFolder', { method: 'POST', body: formData });
+		const response = await fetch('?/moveToFolder', { method: 'POST', body: formData });
+		if (!response.ok) {
+			console.error('Failed to move link to folder:', response.statusText);
+			throw new Error('Failed to move link');
+		}
 	}
 
 	async function moveLinkToRoot(linkId: string) {
-		await moveLinkToFolderAction(linkId, null);
-		await invalidateAll();
+		try {
+			await moveLinkToFolderAction(linkId, null);
+			await invalidateAll();
+		} catch (error) {
+			console.error('Failed to move link to root:', error);
+		}
 	}
 
 	async function deleteFolder(folderId: string) {
 		if (!confirm('Delete this folder? Links will be moved to the root level.')) return;
-		const formData = new FormData();
-		formData.append('id', folderId);
-		await fetch('?/deleteFolder', { method: 'POST', body: formData });
-		await invalidateAll();
+		try {
+			const formData = new FormData();
+			formData.append('id', folderId);
+			const response = await fetch('?/deleteFolder', { method: 'POST', body: formData });
+			if (!response.ok) {
+				console.error('Failed to delete folder:', response.statusText);
+				return;
+			}
+			await invalidateAll();
+		} catch (error) {
+			console.error('Failed to delete folder:', error);
+		}
 	}
 </script>
 
@@ -353,6 +494,7 @@
 				<!-- ⋮ button anchored to the top-right corner of the circle -->
 				<button
 					type="button"
+					draggable={false}
 					class="absolute -right-1 -top-1 z-10 rounded-full bg-background/90 p-0.5 text-muted-foreground opacity-0 shadow ring-1 ring-border transition-opacity hover:text-foreground group-hover:opacity-100 group-focus-within:opacity-100"
 					aria-label={`Actions for ${folder.name ?? 'Folder'}`}
 					aria-expanded={menuOpenId === folder.id}
@@ -389,10 +531,17 @@
 				{/if}
 
 				<!-- Folder circle with preview icons -->
-				<button
-					type="button"
+				<div
 					onclick={(e) => toggleFolderPopover(folder.id, e)}
-					class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60 outline-none focus-visible:ring-2 focus-visible:ring-ring relative"
+					onkeydown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							toggleFolderPopover(folder.id, e);
+						}
+					}}
+					class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60 outline-none focus-visible:ring-2 focus-visible:ring-ring relative cursor-pointer"
+					role="button"
+					tabindex="0"
 					aria-label={folder.name ?? 'Folder'}
 				>
 					<Folder class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
@@ -400,19 +549,21 @@
 					{#if previewLinks.length > 0}
 						<div class="absolute bottom-0 right-0 flex h-4 w-4">
 							{#each previewLinks.slice(0, 2) as pl}
-								<img
-									src={faviconForUrl(pl.url)}
-									alt=""
-									class="h-3 w-3 rounded-sm object-contain"
-									referrerpolicy="no-referrer"
-									class:opacity-50={previewLinks.length > 1}
-									draggable={false}
-									style="image-rendering: crisp-edges"
-								/>
+								{#if pl.faviconUrl || preloadedFavicons.has(pl.id)}
+									<img
+										src={faviconForLink(pl)}
+										alt=""
+										class="h-3 w-3 rounded-sm object-contain"
+										referrerpolicy="no-referrer"
+										class:opacity-50={previewLinks.length > 1}
+										draggable={false}
+										style="image-rendering: crisp-edges"
+									/>
+								{/if}
 							{/each}
 						</div>
 					{/if}
-				</button>
+				</div>
 			</div>
 
 			<!-- Label: up to 2 lines, then ellipsis -->
@@ -476,6 +627,7 @@
 								<div class="relative">
 									<button
 										type="button"
+										draggable={false}
 										class="absolute -right-1 -top-1 z-10 rounded-full bg-background/90 p-0.5 text-muted-foreground opacity-0 shadow ring-1 ring-border transition-opacity hover:text-foreground group-hover:opacity-100"
 										aria-label={`Actions for ${labelFor(link)}`}
 										onclick={(e) => toggleMenu(link.id, e)}
@@ -508,8 +660,7 @@
 											<form
 												method="post"
 												action="?/delete"
-												use:enhance={({ cancel }) => {
-													if (!confirm('Remove this shortcut?')) cancel();
+												use:enhance={() => {
 													return async ({ result, update }) => {
 														await update();
 														if (result.type === 'redirect') closeModal();
@@ -538,16 +689,17 @@
 									>
 										{#if brokenFavicons.has(link.id)}
 											<Link2 class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
-										{:else}
+										{:else if link.faviconUrl || preloadedFavicons.has(link.id)}
 											<img
-												src={faviconForUrl(link.url)}
+												src={faviconForLink(link)}
 												alt=""
 												class="h-8 w-8 rounded-sm object-contain"
 												referrerpolicy="no-referrer"
-												loading="lazy"
-												onerror={() => markFaviconBroken(link.id)}
 												style="image-rendering: crisp-edges"
 											/>
+										{:else}
+											<!-- Show Link2 icon while preloading -->
+											<Link2 class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
 										{/if}
 									</div>
 								</div>
@@ -590,6 +742,7 @@
 				<!-- ⋮ button anchored to the top-right corner of the circle -->
 				<button
 					type="button"
+					draggable={false}
 					class="absolute -right-1 -top-1 z-10 rounded-full bg-background/90 p-0.5 text-muted-foreground opacity-0 shadow ring-1 ring-border transition-opacity hover:text-foreground group-hover:opacity-100 group-focus-within:opacity-100"
 					aria-label={`Actions for ${labelFor(link)}`}
 					aria-expanded={menuOpenId === link.id}
@@ -617,8 +770,7 @@
 						<form
 							method="post"
 							action="?/delete"
-							use:enhance={({ cancel }) => {
-								if (!confirm('Remove this shortcut?')) cancel();
+							use:enhance={() => {
 								return async ({ result, update }) => {
 									await update();
 									if (result.type === 'redirect') closeModal();
@@ -648,17 +800,18 @@
 				>
 					{#if brokenFavicons.has(link.id)}
 						<Link2 class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
-					{:else}
+					{:else if link.faviconUrl || preloadedFavicons.has(link.id)}
 						<img
-							src={faviconForUrl(link.url)}
+							src={faviconForLink(link)}
 							alt=""
 							class="h-8 w-8 rounded-sm object-contain"
 							referrerpolicy="no-referrer"
-							loading="lazy"
-							onerror={() => markFaviconBroken(link.id)}
 							draggable={false}
 							style="image-rendering: crisp-edges"
 						/>
+					{:else}
+						<!-- Show Link2 icon while preloading -->
+						<Link2 class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
 					{/if}
 				</div>
 			</div>

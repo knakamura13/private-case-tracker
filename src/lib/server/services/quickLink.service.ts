@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { ddbGet, ddbPut, ddbQuery, ddbUpdate } from '$lib/server/dynamo/ops';
 import { entitySk, wsPk } from '$lib/server/dynamo/keys';
 import type { QuickLinkItem } from '$lib/server/dynamo/types';
+import { fetchFaviconUrl } from '$lib/server/utils/favicon';
 
 /* eslint-disable security/detect-object-injection */
 
@@ -31,6 +32,7 @@ export async function createQuickLink(
 	const existing = await listQuickLinks(workspaceId, undefined, input.folderId ?? undefined);
 	const order = (existing.at(-1)?.order ?? -1) + 1;
 	const now = new Date().toISOString();
+	const faviconUrl = await fetchFaviconUrl(input.url);
 	const link = {
 		id: randomUUID(),
 		workspaceId,
@@ -39,6 +41,7 @@ export async function createQuickLink(
 		description: input.description ?? null,
 		notes: input.notes ?? null,
 		folderId: input.folderId ?? null,
+		faviconUrl,
 		order,
 		deletedAt: null as string | null,
 		createdAt: now,
@@ -71,7 +74,11 @@ export async function updateQuickLink(
 	if (!existing) throw new Error('Quick link not found');
 	if (existing.deletedAt) throw new Error('Quick link not found');
 	const patch: Partial<typeof existing> = {};
-	if (input.url !== undefined) patch.url = input.url;
+	if (input.url !== undefined) {
+		patch.url = input.url;
+		// Refetch favicon when URL changes
+		patch.faviconUrl = await fetchFaviconUrl(input.url);
+	}
 	if (input.title !== undefined) patch.title = input.title ?? null;
 	if (input.description !== undefined) patch.description = input.description ?? null;
 	if (input.notes !== undefined) patch.notes = input.notes ?? null;

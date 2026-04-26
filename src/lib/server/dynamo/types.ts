@@ -74,6 +74,7 @@ export type QuickLinkItem = DynamoBaseItem & {
 	description: string | null;
 	notes: string | null;
 	folderId: string | null;
+	faviconUrl: string | null;
 	order: number;
 };
 
