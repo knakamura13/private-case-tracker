@@ -305,8 +305,6 @@
 							</div>
 						{/if}
 					</div>
-				</div>
-				<div class="flex flex-wrap gap-2">
 					<Button type="button" variant="outline" size="sm" onclick={() => showDueDatePicker = !showDueDatePicker}>
 						{#snippet children()}<Calendar class="h-3.5 w-3.5" /> Due date{/snippet}
 					</Button>
