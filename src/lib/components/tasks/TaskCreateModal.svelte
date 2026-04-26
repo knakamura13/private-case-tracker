@@ -22,8 +22,10 @@
 
 	interface ChecklistItem {
 		id: string;
+		taskId?: string;
 		text: string;
 		done: boolean;
+		order?: number;
 	}
 
 	let editableChecklist = $state<ChecklistItem[]>([]);
@@ -81,7 +83,7 @@
 
 	function addChecklistItem() {
 		if (!newChecklistText.trim()) return;
-		editableChecklist = [...editableChecklist, { id: crypto.randomUUID(), text: newChecklistText.trim(), done: false }];
+		editableChecklist = [...editableChecklist, { id: crypto.randomUUID(), text: newChecklistText.trim(), done: false, order: editableChecklist.length }];
 		newChecklistText = '';
 	}
 

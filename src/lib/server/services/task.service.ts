@@ -50,11 +50,22 @@ export async function createTask(
 		checklist: [],
 		tags: []
 	};
+	
+	// Extract checklist from input to handle separately
+	const checklist = input.checklist;
+	delete (task as any).checklist;
+	
 	await ddbPut({
 		PK: wsPk(workspaceId),
 		SK: entitySk('Task', task.id),
 		...task
 	});
+	
+	// Set checklist if provided
+	if (checklist && checklist.length > 0) {
+		await setChecklist(workspaceId, actorId, task.id, checklist);
+	}
+	
 	await logActivity({
 		workspaceId,
 		userId: actorId,
@@ -79,6 +90,12 @@ export async function updateTask(
 	if (!existing) throw new Error('Task not found');
 	if (existing.deletedAt) throw new Error('Task not found');
 
+	// Handle checklist separately to preserve taskId and order fields
+	if (input.checklist !== undefined) {
+		await setChecklist(workspaceId, actorId, id, input.checklist);
+		delete input.checklist;
+	}
+
 	const patch: Record<string, unknown> = { ...input, updatedAt: new Date().toISOString() };
 	const names: Record<string, string> = {};
 	const values: Record<string, unknown> = {};
@@ -90,12 +107,19 @@ export async function updateTask(
 		values[vk] = v;
 		sets.push(`${nk} = ${vk}`);
 	}
-	const task = (await ddbUpdate<any>(
-		{ PK: wsPk(workspaceId), SK: entitySk('Task', id) },
-		`SET ${sets.join(', ')}`,
-		values,
-		names
-	)) ?? { ...existing, ...patch };
+	
+	let task;
+	if (sets.length > 0) {
+		task = (await ddbUpdate<any>(
+			{ PK: wsPk(workspaceId), SK: entitySk('Task', id) },
+			`SET ${sets.join(', ')}`,
+			values,
+			names
+		)) ?? { ...existing, ...patch };
+	} else {
+		task = existing;
+	}
+	
 	const statusChanged = input.status && input.status !== existing.status;
 	await logActivity({
 		workspaceId,

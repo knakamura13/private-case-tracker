@@ -6,8 +6,11 @@ export const taskStatusEnum = z.enum(['TODO', 'IN_PROGRESS', 'DONE']);
 export type TaskStatus = z.infer<typeof taskStatusEnum>;
 
 export const checklistItemSchema = z.object({
+	id: z.string().optional(),
+	taskId: z.string().optional(),
 	text: z.string().min(1).max(200),
-	done: z.coerce.boolean().default(false)
+	done: z.coerce.boolean().default(false),
+	order: z.number().optional()
 });
 
 export type ChecklistItem = z.infer<typeof checklistItemSchema>;
