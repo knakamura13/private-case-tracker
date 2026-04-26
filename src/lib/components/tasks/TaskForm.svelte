@@ -53,7 +53,7 @@
 		if (!newChecklistText.trim()) return;
 		editableChecklist = [
 			...editableChecklist,
-			{ id: crypto.randomUUID(), text: newChecklistText.trim(), done: false }
+			{ id: `ci-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`, text: newChecklistText.trim(), done: false }
 		];
 		newChecklistText = '';
 	}

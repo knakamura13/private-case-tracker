@@ -138,6 +138,7 @@ export async function restoreTask(workspaceId: string, actorId: string, id: stri
 		SK: entitySk('Task', id)
 	});
 	if (!existing) throw new Error('Task not found');
+	if (!existing.deletedAt) throw new Error('Task not deleted');
 	await ddbUpdate(
 		{ PK: wsPk(workspaceId), SK: entitySk('Task', id) },
 		'SET #deletedAt = :d, #updatedAt = :u',
