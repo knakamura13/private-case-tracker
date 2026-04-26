@@ -14,7 +14,6 @@
 	const COLUMNS = [
 		{ id: 'TODO', label: 'To Do', color: 'bg-muted' },
 		{ id: 'IN_PROGRESS', label: 'In Progress', color: 'bg-warning/20' },
-		{ id: 'ON_HOLD', label: 'On Hold', color: 'bg-secondary/20' },
 		{ id: 'DONE', label: 'Done', color: 'bg-success/20' }
 	] as const;
 

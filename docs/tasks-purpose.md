@@ -12,7 +12,6 @@ The **Tasks** route (`/tasks`) is for personal todos and errands that are **not 
 **Status columns:**
 - To Do
 - In Progress
-- On Hold
 - Done
 
 ## Timeline

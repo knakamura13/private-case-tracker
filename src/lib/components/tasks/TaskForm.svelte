@@ -87,7 +87,6 @@
 		<Select id="status" name="status" value={val('status', 'TODO')}>
 			<option value="TODO">To Do</option>
 			<option value="IN_PROGRESS">In Progress</option>
-			<option value="ON_HOLD">On Hold</option>
 			<option value="DONE">Done</option>
 		</Select>
 	</div>

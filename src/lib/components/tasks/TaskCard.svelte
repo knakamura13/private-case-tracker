@@ -25,7 +25,6 @@
 	function statusColor(s: string) {
 		if (s === 'DONE') return 'bg-success border-success';
 		if (s === 'IN_PROGRESS') return 'bg-warning border-warning';
-		if (s === 'ON_HOLD') return 'bg-secondary border-secondary';
 		return 'border-border bg-card';
 	}
 </script>
