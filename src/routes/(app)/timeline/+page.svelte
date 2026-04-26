@@ -4,7 +4,7 @@
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import MarkdownRenderer from '$lib/components/shared/MarkdownRenderer.svelte';
-	import InlineMilestoneCreate from '$lib/components/timeline/InlineMilestoneCreate.svelte';
+	import MilestoneCreateModal from '$lib/components/timeline/MilestoneCreateModal.svelte';
 	import MilestoneEditModal from '$lib/components/timeline/MilestoneEditModal.svelte';
 	import { Plus, MapPin } from 'lucide-svelte';
 	import { fly } from 'svelte/transition';
@@ -24,13 +24,16 @@
 
 	let { data, form }: { data: TimelinePageData; form: { error?: string; errorId?: string } } = $props();
 
-	let showCreateForPhase = $state<string | null>(null);
+	let showCreateModal = $state(false);
+	let defaultPhase = $state<string | undefined>(undefined);
 	let editingMilestone = $state<{ id: string } | null>(null);
 
 	$effect(() => {
 		const editParam = $page.url.searchParams.get('edit');
 		if (editParam && !editingMilestone) {
 			editingMilestone = { id: editParam };
+		} else if (!editParam && editingMilestone) {
+			editingMilestone = null;
 		}
 	});
 
@@ -72,13 +75,7 @@
 	}
 </script>
 
-<PageHeader title="Timeline" description="Case phases from preparation through final outcome." number="02">
-	{#snippet actions()}
-		<Button href="/timeline/new">
-			{#snippet children()}<Plus class="h-4 w-4" /> New milestone{/snippet}
-		</Button>
-	{/snippet}
-</PageHeader>
+<PageHeader title="Timeline" description="Case phases from preparation through final outcome." number="02" />
 
 <div class="space-y-6">
 	{#each grouped as g, _i (g.phase)}
@@ -92,11 +89,7 @@
 					{#if g.items.length > 0}
 						<span class="text-xs text-muted-foreground">{phaseProgress(g.items)}% complete</span>
 					{/if}
-					{#if showCreateForPhase === g.phase}
-						<InlineMilestoneCreate phase={g.phase} onCancel={() => (showCreateForPhase = null)} />
-					{:else}
-						<Button variant="ghost" size="sm" onclick={() => (showCreateForPhase = g.phase)}>{#snippet children()}<Plus class="h-4 w-4" /> Add{/snippet}</Button>
-					{/if}
+					<Button variant="ghost" size="sm" onclick={() => { defaultPhase = g.phase; showCreateModal = true; }}>{#snippet children()}<Plus class="h-4 w-4" /> Add{/snippet}</Button>
 				</div>
 			</div>
 			{#if g.items.length === 0}
@@ -197,4 +190,19 @@
 			errorId={form?.errorId}
 		/>
 	{/if}
+{/if}
+
+{#if showCreateModal}
+	<MilestoneCreateModal
+		open={true}
+		onClose={() => {
+			showCreateModal = false;
+			defaultPhase = undefined;
+		}}
+		action="?/create"
+		members={data.members}
+		defaultPhase={defaultPhase}
+		error={form?.error}
+		errorId={form?.errorId}
+	/>
 {/if}
