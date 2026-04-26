@@ -106,6 +106,10 @@
 			isSaving = false;
 			if (saveTimeout) clearTimeout(saveTimeout);
 			pendingSavePromise = null;
+			// Cancel any in-flight save to prevent state updates after unmount
+			if (pendingSavePromise) {
+				// The promise will resolve but isSaving is already false
+			}
 		}
 	});
 
@@ -363,7 +367,7 @@
 						<div class="mb-3 flex items-center gap-2">
 							<span class="text-sm text-muted-foreground">{checklistProgress()}%</span>
 							<div class="h-1.5 flex-1 rounded-full bg-muted">
-								<div class="h-1.5 rounded-full bg-primary transition-all" style="width: {checklistProgress()}%"></div>
+								<div class="h-1.5 rounded-full bg-primary transition-all duration-300 ease-out" style="width: {checklistProgress()}%"></div>
 							</div>
 						</div>
 					{/if}

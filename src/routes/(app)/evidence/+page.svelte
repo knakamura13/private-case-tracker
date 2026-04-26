@@ -153,7 +153,7 @@
 			</div>
 			<div class="mb-4 h-2 overflow-hidden rounded bg-muted">
 				<div
-					class="h-full bg-primary transition-all"
+					class="h-full bg-primary transition"
 					style:width={`${Math.min(100, cat.targetCount > 0 ? (cat.currentCount / cat.targetCount) * 100 : cat.currentCount > 0 ? 100 : 0)}%`}
 				></div>
 			</div>

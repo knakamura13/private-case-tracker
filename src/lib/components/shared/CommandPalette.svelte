@@ -19,6 +19,7 @@
 	let activeIndex = $state(0);
 	let inputEl = $state<HTMLInputElement | null>(null);
 	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+	let searchRequestId = $state(0);
 
 	let dialogContentEl = $state<HTMLDivElement | null>(null);
 	let lastActiveEl = $state<HTMLElement | null>(null);
@@ -72,7 +73,7 @@
 		}
 	});
 
-	async function runSearch(q: string) {
+	async function runSearch(q: string, requestId: number) {
 		if (!q.trim()) {
 			results = {};
 			return;
@@ -81,19 +82,27 @@
 		try {
 			const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
 			if (res.ok) {
-				results = await res.json();
+				// Only update results if this is still the current request
+				if (requestId === searchRequestId) {
+					results = await res.json();
+				}
 			}
 		} catch (err) {
 			console.error('[search]', err);
 		} finally {
-			loading = false;
+			// Only set loading to false if this is still the current request
+			if (requestId === searchRequestId) {
+				loading = false;
+			}
 		}
 	}
 
 	function onInput() {
 		if (debounceTimer) clearTimeout(debounceTimer);
 		const q = query;
-		debounceTimer = setTimeout(() => runSearch(q), 150);
+		searchRequestId++;
+		const currentRequestId = searchRequestId;
+		debounceTimer = setTimeout(() => runSearch(q, currentRequestId), 150);
 	}
 
 	function onKeydown(e: KeyboardEvent) {
@@ -158,7 +167,7 @@
 					aria-activedescendant={activeItem ? `cp-opt-${activeItem.type}-${activeItem.id}` : undefined}
 					aria-autocomplete="list"
 					placeholder="Search across tasks, forms, evidence, questions, notes, files…"
-					class="h-12 w-full bg-transparent text-sm outline-none"
+					class="h-12 w-full bg-transparent text-sm focus-visible:outline-none"
 				/>
 				<button class="rounded-md p-1 hover:bg-muted" aria-label="Close" onclick={() => (open = false)}>
 					<X class="h-4 w-4" />

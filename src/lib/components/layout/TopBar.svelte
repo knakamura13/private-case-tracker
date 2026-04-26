@@ -16,6 +16,7 @@
 	let menuOpen = $state(false);
 	let menuButtonEl = $state<HTMLButtonElement | null>(null);
 	let menuEl = $state<HTMLDivElement | null>(null);
+	let abortController = $state<AbortController | null>(null);
 
 	function closeMenu() {
 		menuOpen = false;
@@ -24,6 +25,9 @@
 
 	$effect(() => {
 		if (!menuOpen) return;
+		abortController = new AbortController();
+		const signal = abortController.signal;
+		
 		function onKeydown(e: KeyboardEvent) {
 			if (e.key === 'Escape') closeMenu();
 		}
@@ -31,17 +35,18 @@
 			if (menuButtonEl?.contains(e.target as Node) || menuEl?.contains(e.target as Node)) return;
 			closeMenu();
 		}
-		window.addEventListener('keydown', onKeydown);
-		window.addEventListener('click', onClick, { capture: true });
+		window.addEventListener('keydown', onKeydown, { signal });
+		window.addEventListener('click', onClick, { capture: true, signal });
+		
 		return () => {
-			window.removeEventListener('keydown', onKeydown);
-			window.removeEventListener('click', onClick, { capture: true });
+			abortController?.abort();
+			abortController = null;
 		};
 	});
 </script>
 
 <header
-	class="sticky top-0 z-30 flex h-14 items-center justify-between gap-1 border-b border-border/50 bg-card/70 px-3 sm:gap-2 sm:px-4 backdrop-blur-xl transition-all duration-300"
+	class="sticky top-0 z-30 flex h-14 items-center justify-between gap-1 border-b border-border/50 px-3 sm:gap-2 sm:px-4 transition duration-300 glass"
 >
 	<div class="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
 		<button
@@ -69,7 +74,7 @@
 		<div class="relative">
 			<button
 				bind:this={menuButtonEl}
-				class="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-xs font-semibold transition-all duration-200 hover:bg-muted-foreground hover:text-foreground"
+				class="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-xs font-semibold transition duration-200 hover:bg-muted-foreground hover:text-foreground active:scale-95"
 				aria-label="Open user menu"
 				type="button"
 				aria-haspopup="true"

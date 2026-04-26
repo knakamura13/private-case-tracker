@@ -20,7 +20,12 @@
 
 	let showCreateModal = $state(false);
 	let defaultStatus = $state<string | undefined>(undefined);
-	let editingTask = $state<{ id: string } | null>(null);
+	const editParam = $derived($page.url.searchParams.get('edit'));
+	const editingTask = $derived(
+		editParam && data.tasks.some((t) => t.id === editParam)
+			? { id: editParam }
+			: null
+	);
 
 	// Drag and drop state
 	let draggingId = $state<string | null>(null);
@@ -29,26 +34,6 @@
 	let dragEnterCount = $state(0);
 	let isDragging = $state(false);
 
-	$effect(() => {
-		const editParam = $page.url.searchParams.get('edit');
-		if (editParam && !editingTask) {
-			const taskExists = data.tasks.some((t) => t.id === editParam);
-			if (taskExists) {
-				editingTask = { id: editParam };
-			} else {
-				updateUrl(null);
-			}
-		} else if (!editParam && editingTask) {
-			editingTask = null;
-		} else if (editParam && editingTask) {
-			// Validate that the task still exists while modal is open
-			const taskExists = data.tasks.some((t) => t.id === editParam);
-			if (!taskExists) {
-				editingTask = null;
-				updateUrl(null);
-			}
-		}
-	});
 
 	async function updateUrl(id: string | null) {
 		const url = new URL(window.location.href);
@@ -332,7 +317,6 @@
 					<TaskCard
 						task={task}
 						onEdit={async (id: string) => {
-							editingTask = { id };
 							await updateUrl(id);
 						}}
 						draggable={true}
@@ -351,7 +335,7 @@
 				{#if column.tasks.length === 0}
 					<div
 						class={cn(
-							'rounded-lg border-2 border-dashed p-8 text-center text-sm text-muted-foreground transition-all duration-200',
+							'rounded-lg border-2 border-dashed p-8 text-center text-sm text-muted-foreground transition duration-200',
 							dropTargetId === column.id
 								? 'scale-[1.02] border-primary bg-primary/5 text-primary'
 								: 'border-border'
@@ -381,7 +365,6 @@
 		<TaskEditModal
 			open={true}
 			onClose={async () => {
-				editingTask = null;
 				await updateUrl(null);
 			}}
 			action="?/update"

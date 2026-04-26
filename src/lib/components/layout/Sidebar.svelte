@@ -27,7 +27,7 @@
 						onclick={() => onNavigate?.()}
 						aria-current={active ? 'page' : undefined}
 						class={cn(
-							'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200',
+							'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition duration-200 active:scale-[0.98]',
 							active
 								? 'bg-primary/10 text-primary'
 								: 'text-muted-foreground hover:bg-muted hover:text-foreground'

@@ -13,7 +13,7 @@
 	import { cubicOut } from 'svelte/easing';
 	import { titleCase } from '$lib/utils/format';
 	import { page } from '$app/stores';
-	import { invalidateAll } from '$app/navigation';
+	import { invalidateAll, goto } from '$app/navigation';
 	import { showSuccessToast } from '$lib/stores/toast';
 	import { getPageNumber } from '$lib/constants/navigation';
 	import type { PageData } from './$types';
@@ -25,37 +25,21 @@
 	let { data, form }: { data: QuestionsPageData; form: { error?: string; errorId?: string } } = $props();
 
 	let showCreateModal = $state(false);
-	let editingQuestion = $state<{ id: string } | null>(null);
+	const editParam = $derived($page.url.searchParams.get('edit'));
+	const editingQuestion = $derived(
+		editParam && data.items.some((q) => q.id === editParam)
+			? { id: editParam }
+			: null
+	);
 
-	$effect(() => {
-		const editParam = $page.url.searchParams.get('edit');
-		if (editParam && !editingQuestion) {
-			const questionExists = data.items.some((q) => q.id === editParam);
-			if (questionExists) {
-				editingQuestion = { id: editParam };
-			} else {
-				updateUrl(null);
-			}
-		} else if (!editParam && editingQuestion) {
-			editingQuestion = null;
-		} else if (editParam && editingQuestion) {
-			// Validate that the question still exists while modal is open
-			const questionExists = data.items.some((q) => q.id === editParam);
-			if (!questionExists) {
-				editingQuestion = null;
-				updateUrl(null);
-			}
-		}
-	});
-
-	function updateUrl(id: string | null) {
+	async function updateUrl(id: string | null) {
 		const url = new URL(window.location.href);
 		if (id) {
 			url.searchParams.set('edit', id);
 		} else {
 			url.searchParams.delete('edit');
 		}
-		window.history.replaceState({}, '', url.toString());
+		await goto(url.toString(), { replaceState: true, noScroll: true });
 	}
 
 	function sectionVariant(source: string) {
@@ -122,10 +106,9 @@
 						<li in:fly={{ y: 30, duration: 500, delay: i * 50 + 100, easing: cubicOut }}>
 							<button
 								type="button"
-								onclick={(e) => {
+								onclick={async (e) => {
 									e.currentTarget.blur();
-									editingQuestion = { id: q.id };
-									updateUrl(q.id);
+									await updateUrl(q.id);
 								}}
 								class="w-full text-left"
 							>
@@ -155,8 +138,7 @@
 		<QuestionEditModal
 			open={true}
 			onClose={async () => {
-				editingQuestion = null;
-				updateUrl(null);
+				await updateUrl(null);
 			}}
 			action="?/update"
 			deleteAction="?/delete"

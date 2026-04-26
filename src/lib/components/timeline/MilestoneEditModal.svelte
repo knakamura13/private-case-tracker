@@ -80,6 +80,7 @@
 	// Auto-save state
 	let isSaving = $state(false);
 	let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+	let pendingSavePromise: Promise<void> | null = null;
 
 	// Reactive form values
 	let titleValue = $state('');
@@ -104,6 +105,10 @@
 			dueDateValue = val('dueDate');
 			appointmentDateValue = val('scheduledAt');
 			currentLocation = val('location', '');
+			// Reset auto-save state
+			isSaving = false;
+			if (saveTimeout) clearTimeout(saveTimeout);
+			pendingSavePromise = null;
 		}
 	});
 
@@ -208,13 +213,22 @@
 					isSaving = false;
 				};
 
-				// Call onenhance - it may return a function (timeline pattern) or be void
-				const result = onenhance({ formData, cancel });
-				if (result && typeof result === 'function') {
-					await result();
-				}
+				pendingSavePromise = (async () => {
+					try {
+						// Call onenhance - it may return a function (timeline pattern) or be void
+						const result = onenhance({ formData, cancel });
+						if (result && typeof result === 'function') {
+							await result();
+						}
+					} catch {
+						showErrorToast('Failed to auto-save milestone');
+						cancel();
+					}
+					isSaving = false;
+					pendingSavePromise = null;
+				})();
 
-				isSaving = false;
+				await pendingSavePromise;
 			}
 		}, delay);
 	}
@@ -420,7 +434,7 @@
 								<div class="mb-3 flex items-center gap-2">
 									<span class="text-sm text-muted-foreground">{checklistProgress()}%</span>
 									<div class="h-1.5 flex-1 rounded-full bg-muted">
-										<div class="h-1.5 rounded-full bg-primary transition-all" style="width: {checklistProgress()}%"></div>
+										<div class="h-1.5 rounded-full bg-primary transition-all duration-300 ease-out" style="width: {checklistProgress()}%"></div>
 									</div>
 								</div>
 							{/if}

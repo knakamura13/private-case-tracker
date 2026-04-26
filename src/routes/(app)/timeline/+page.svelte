@@ -14,7 +14,7 @@
 	import { titleCase } from '$lib/utils/format';
 	import { page } from '$app/stores';
 	import { getPageNumber } from '$lib/constants/navigation';
-	import { invalidateAll } from '$app/navigation';
+	import { invalidateAll, goto } from '$app/navigation';
 	import { showSuccessToast } from '$lib/stores/toast';
 	import type { PageData } from './$types';
 	import type { MilestoneItem } from '$lib/server/dynamo/types';
@@ -27,25 +27,22 @@
 
 	let showCreateModal = $state(false);
 	let defaultPhase = $state<string | undefined>(undefined);
-	let editingMilestone = $state<{ id: string } | null>(null);
 
-	$effect(() => {
-		const editParam = $page.url.searchParams.get('edit');
-		if (editParam && !editingMilestone) {
-			editingMilestone = { id: editParam };
-		} else if (!editParam && editingMilestone) {
-			editingMilestone = null;
-		}
-	});
+	const editParam = $derived($page.url.searchParams.get('edit'));
+	const editingMilestone = $derived(
+		editParam && data.milestones.some((m) => m.id === editParam)
+			? { id: editParam }
+			: null
+	);
 
-	function updateUrl(id: string | null) {
+	async function updateUrl(id: string | null) {
 		const url = new URL(window.location.href);
 		if (id) {
 			url.searchParams.set('edit', id);
 		} else {
 			url.searchParams.delete('edit');
 		}
-		window.history.replaceState({}, '', url.toString());
+		await goto(url.toString(), { replaceState: true, noScroll: true });
 	}
 
 	const grouped = $derived(
@@ -103,10 +100,9 @@
 						<li in:fly={{ y: 30, duration: 500, delay: i * 50 + 100, easing: cubicOut }}>
 							<button
 								type="button"
-								onclick={(e) => {
+								onclick={async (e) => {
 									e.currentTarget.blur();
-									editingMilestone = { id: m.id };
-									updateUrl(m.id);
+									await updateUrl(m.id);
 								}}
 								class="w-full text-left"
 							>
@@ -157,8 +153,7 @@
 		<MilestoneEditModal
 			open={true}
 			onClose={async () => {
-				editingMilestone = null;
-				updateUrl(null);
+				await updateUrl(null);
 			}}
 			action="?/update"
 			deleteAction="?/delete"
