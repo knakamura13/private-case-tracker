@@ -23,7 +23,7 @@
 						{status}
 					</span>
 				{/if}
-				<p class="min-w-0 break-words text-sm font-medium text-foreground">{message}</p>
+				<p class="min-w-0 wrap-break-word text-sm font-medium text-foreground">{message}</p>
 			</div>
 
 			{#if requestId || errorId}
