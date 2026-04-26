@@ -26,8 +26,6 @@ export type TaskItem = DynamoBaseItem & {
 	priority: string;
 	status: string; // Stored as string, validated as TaskStatus at service layer
 	ownerId: string | null;
-	linkedEvidenceId: string | null;
-	linkedMilestoneId: string | null;
 	order: number;
 	checklist?: Array<{ id: string; taskId: string; text: string; done: boolean; order: number }>;
 	tags?: unknown[];
