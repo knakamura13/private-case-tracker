@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
+	import RichText from '$lib/components/ui/RichText.svelte';
 	import { titleCase } from '$lib/utils/format';
 	import { fmtDate } from '$lib/utils/dates';
 	import { GripVertical } from 'lucide-svelte';
@@ -105,7 +106,7 @@
 					<Badge variant="outline" class="shrink-0">{titleCase(task.priority)}</Badge>
 				{/if}
 				{#if task.description}
-					<p class="mt-1 line-clamp-2 text-sm text-muted-foreground">{task.description}</p>
+					<RichText text={task.description} lineClamp={true} class="mt-1" />
 				{/if}
 				{#if task.checklist && task.checklist.length > 0}
 					<div class="mt-2">

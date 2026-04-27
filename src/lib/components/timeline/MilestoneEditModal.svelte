@@ -6,6 +6,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
+	import RichText from '$lib/components/ui/RichText.svelte';
 	import { PHASE_LABELS, PHASE_ORDER } from '$lib/constants/phases';
 	import { showSuccessToast, showErrorToast } from '$lib/stores/toast';
 	import { X, Plus, Calendar, MapPin, CheckSquare, User, MoreHorizontal } from 'lucide-svelte';
@@ -39,6 +40,7 @@
 	let showChecklistInput = $state(false);
 	let showOwnerDropdown = $state(false);
 	let showMenuDropdown = $state(false);
+	let isEditingDescription = $state(false);
 	let openSubTaskMenuId = $state<string | null>(null);
 	let editingSubTaskId = $state<string | null>(null);
 	let editingSubTaskText = $state('');
@@ -105,7 +107,7 @@
 			dueDateValue = val('dueDate');
 			appointmentDateValue = val('scheduledAt');
 			currentLocation = val('location', '');
-			// Reset auto-save state
+			isEditingDescription = false;
 			isSaving = false;
 			if (saveTimeout) clearTimeout(saveTimeout);
 			pendingSavePromise = null;
@@ -414,13 +416,55 @@
 
 						<!-- Description -->
 						<div>
-							<Textarea
-								name="description"
-								bind:value={descriptionValue}
-								oninput={() => triggerAutoSave()}
-								placeholder="Add a more detailed description..."
-								rows={3}
-							/>
+							<div class="mb-2 text-sm font-medium">Description</div>
+							{#if isEditingDescription}
+								<Textarea
+									name="description"
+									bind:value={descriptionValue}
+									oninput={() => triggerAutoSave()}
+									onblur={() => {
+										isEditingDescription = false;
+										triggerAutoSave(true);
+									}}
+									onkeydown={(e) => {
+										if (e.key === 'Escape') {
+											e.preventDefault();
+											isEditingDescription = false;
+										}
+									}}
+									placeholder="Add a more detailed description... URLs and phone numbers will be clickable."
+									rows={3}
+								/>
+							{:else}
+								<Card class="p-3 bg-muted/50">
+									{#if descriptionValue}
+										<RichText
+											text={descriptionValue}
+											editable={true}
+											onClick={() => {
+												isEditingDescription = true;
+											}}
+										/>
+									{:else}
+										<div
+											class="text-sm text-muted-foreground italic cursor-pointer hover:bg-muted/50 rounded px-2 py-1"
+											onclick={() => {
+												isEditingDescription = true;
+											}}
+											role="button"
+											tabindex={0}
+											onkeydown={(e) => {
+												if (e.key === 'Enter' || e.key === ' ') {
+													e.preventDefault();
+													isEditingDescription = true;
+												}
+											}}
+										>
+											Add a more detailed description...
+										</div>
+									{/if}
+								</Card>
+							{/if}
 						</div>
 
 						<!-- Checklist -->

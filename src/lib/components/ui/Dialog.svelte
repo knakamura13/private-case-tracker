@@ -34,7 +34,7 @@
 			if (e.key === 'Escape') onClose();
 		}}
 	>
-		<div class="{isMobile ? 'w-full max-h-[85vh] rounded-t-lg' : 'max-h-[90vh]'} {maxWidth} overflow-y-auto rounded-lg bg-card shadow-xl" role="document" style="padding-bottom: env(safe-area-inset-bottom)">
+		<div class="{isMobile ? 'w-full max-h-[85vh] rounded-t-lg' : 'max-h-[90vh]'} w-full {maxWidth} overflow-y-auto rounded-lg bg-card shadow-xl" role="document" style="padding-bottom: env(safe-area-inset-bottom)">
 			{@render children()}
 		</div>
 	</div>
