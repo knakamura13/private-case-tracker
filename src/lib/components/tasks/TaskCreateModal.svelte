@@ -3,8 +3,10 @@
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import Card from '$lib/components/ui/Card.svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
+	import RichText from '$lib/components/ui/RichText.svelte';
 	import { X, Plus, Calendar, User } from 'lucide-svelte';
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
@@ -36,6 +38,7 @@
 	let showDueDatePicker = $state(false);
 	let showChecklistInput = $state(false);
 	let showOwnerDropdown = $state(false);
+	let isEditingDescription = $state(false);
 
 	// Input values
 	let dueDateValue = $state('');
@@ -61,6 +64,7 @@
 			showDueDatePicker = false;
 			showChecklistInput = false;
 			showOwnerDropdown = false;
+			isEditingDescription = false;
 		}
 	});
 
@@ -173,12 +177,56 @@
 				{/if}
 
 				<!-- Description -->
-				<Textarea
-					name="description"
-					bind:value={descriptionValue}
-					placeholder="Add description..."
-					rows={4}
-				/>
+				<div>
+					<div class="mb-2 text-sm font-medium">Description</div>
+					<!-- Hidden input ensures description is always submitted even when textarea is unmounted -->
+					<input type="hidden" name="description" value={descriptionValue} />
+					{#if isEditingDescription}
+						<Textarea
+							bind:value={descriptionValue}
+							onblur={() => {
+								isEditingDescription = false;
+							}}
+							onkeydown={(e) => {
+								if (e.key === 'Escape') {
+									e.preventDefault();
+									isEditingDescription = false;
+								}
+							}}
+							placeholder="Add a more detailed description... URLs and phone numbers will be clickable."
+							rows={4}
+						/>
+					{:else}
+						<Card class="p-3 bg-muted/50">
+							{#if descriptionValue}
+								<RichText
+									text={descriptionValue}
+									editable={true}
+									onClick={() => {
+										isEditingDescription = true;
+									}}
+								/>
+							{:else}
+								<div
+									class="text-sm text-muted-foreground italic cursor-pointer hover:bg-muted/50 rounded px-2 py-1"
+									onclick={() => {
+										isEditingDescription = true;
+									}}
+									role="button"
+									tabindex={0}
+									onkeydown={(e) => {
+										if (e.key === 'Enter' || e.key === ' ') {
+											e.preventDefault();
+											isEditingDescription = true;
+										}
+									}}
+								>
+									Add a more detailed description...
+								</div>
+							{/if}
+						</Card>
+					{/if}
+				</div>
 
 				<!-- Checklist -->
 				<div>
