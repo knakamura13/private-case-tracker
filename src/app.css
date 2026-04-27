@@ -88,6 +88,10 @@ a {
 	cursor: pointer;
 }
 
+input[type='checkbox'] {
+	cursor: pointer;
+}
+
 /* Smooth hover feedback on all interactive elements */
 input:not(:disabled),
 select:not(:disabled),

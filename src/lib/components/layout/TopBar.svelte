@@ -16,7 +16,6 @@
 	let menuOpen = $state(false);
 	let menuButtonEl = $state<HTMLButtonElement | null>(null);
 	let menuEl = $state<HTMLDivElement | null>(null);
-	let abortController = $state<AbortController | null>(null);
 
 	function closeMenu() {
 		menuOpen = false;
@@ -25,9 +24,9 @@
 
 	$effect(() => {
 		if (!menuOpen) return;
-		abortController = new AbortController();
-		const signal = abortController.signal;
-		
+		const controller = new AbortController();
+		const { signal } = controller;
+
 		function onKeydown(e: KeyboardEvent) {
 			if (e.key === 'Escape') closeMenu();
 		}
@@ -37,10 +36,9 @@
 		}
 		window.addEventListener('keydown', onKeydown, { signal });
 		window.addEventListener('click', onClick, { capture: true, signal });
-		
+
 		return () => {
-			abortController?.abort();
-			abortController = null;
+			controller.abort();
 		};
 	});
 </script>

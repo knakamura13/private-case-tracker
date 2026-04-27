@@ -2,15 +2,27 @@
 	import PageHeader from '$lib/components/shared/PageHeader.svelte';
 	import Widget from '$lib/components/dashboard/Widget.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
-	import { fmtDateTime, fmtRelative, daysUntil } from '$lib/utils/dates';
+	import { fmtDate, fmtDateTime, fmtRelative, daysUntil } from '$lib/utils/dates';
 	import { titleCase } from '$lib/utils/format';
-	import { CalendarClock, AlertTriangle } from 'lucide-svelte';
+	import { CalendarClock, AlertTriangle, CheckSquare } from 'lucide-svelte';
 	import QuickLinksWidget from '$lib/components/dashboard/QuickLinksWidget.svelte';
 	import { getPageNumber } from '$lib/constants/navigation';
 	import type { ActionData, PageData } from './$types';
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	let mounted = $state(true);
+
+	const taskStatusTone = {
+		TODO: 'secondary',
+		IN_PROGRESS: 'warning',
+		DONE: 'secondary'
+	} as const;
+
+	const taskStatusLabel = {
+		TODO: 'Pending',
+		IN_PROGRESS: 'In progress',
+		DONE: 'Completed'
+	} as const;
 </script>
 
 <PageHeader title="Dashboard" number={getPageNumber('/dashboard')} />
@@ -22,6 +34,47 @@
 </div>
 
 <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+	<Widget title="Tasks" href="/tasks">
+		<div class="space-y-4">
+			<div class="grid grid-cols-3 gap-2 text-center">
+				<div class="rounded-lg border border-border/70 bg-muted/30 px-2 py-3">
+					<p class="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Pending</p>
+					<p class="mt-1 text-2xl font-display font-semibold">{data.taskSummary.pending}</p>
+				</div>
+				<div class="rounded-lg border border-border/70 bg-warning/10 px-2 py-3">
+					<p class="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">In Progress</p>
+					<p class="mt-1 text-2xl font-display font-semibold">{data.taskSummary.inProgress}</p>
+				</div>
+				<div class="rounded-lg border border-border/70 bg-success/10 px-2 py-3">
+					<p class="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Completed</p>
+					<p class="mt-1 text-2xl font-display font-semibold">{data.taskSummary.completed}</p>
+				</div>
+			</div>
+
+			{#if data.tasksPreview.length === 0}
+				<p class="text-sm text-muted-foreground">No open tasks right now.</p>
+			{:else}
+				<ul class="space-y-2 text-sm">
+					{#each data.tasksPreview as task (task.id)}
+						{@const status = task.status as keyof typeof taskStatusTone}
+						<li class="flex items-start gap-2 rounded-lg border border-border/60 bg-card/70 px-3 py-2">
+							<CheckSquare class="mt-0.5 h-3.5 w-3.5 text-muted-foreground" />
+							<div class="min-w-0 flex-1">
+								<p class="truncate font-medium">{task.title}</p>
+								<div class="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+									<Badge variant={taskStatusTone[status]}>{taskStatusLabel[status]}</Badge>
+									{#if task.dueDate}
+										<span>Due {fmtDate(task.dueDate)}</span>
+									{/if}
+								</div>
+							</div>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+		</div>
+	</Widget>
+
 	<Widget title="Case progress" href="/timeline">
 		<ul class="space-y-1.5 text-xs">
 			{#each data.phaseProgress as p (p.label)}

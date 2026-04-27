@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { QuickLink, QuickLinkFolder } from '$lib/types/enums';
+	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
 	import { EllipsisVertical, Plus, Link2, Folder } from 'lucide-svelte';
@@ -34,18 +35,27 @@
 	let dropInsertIndex = $state<number | null>(null);
 	let isDragging = $state(false);
 	let menuPosition = $state<{ top: number; left: number } | null>(null);
+	let optimisticFolders = $state<QuickLinkFolder[]>([]);
+	let inlineEditingFolderId = $state<string | null>(null);
+	let inlineFolderName = $state('');
+	let inlineFolderInputEl = $state<HTMLInputElement | null>(null);
+	let creatingFolder = $state(false);
+
+	let visibleFolders = $derived(
+		[...folders, ...optimisticFolders].sort((a, b) => a.order - b.order)
+	);
 
 	// Separate root links and folder links
 	let rootLinks = $derived(links.filter((l) => !l.folderId));
 	let folderLinksMap = $derived(
-		folders.reduce((acc, f) => {
+		visibleFolders.reduce((acc, f) => {
 			acc[f.id] = links.filter((l) => l.folderId === f.id);
 			return acc;
 		}, {} as Record<string, QuickLink[]>)
 	);
 
 	// Combine folders and root links for drag context
-	let allItems = $derived([...folders, ...rootLinks]);
+	let allItems = $derived([...visibleFolders, ...rootLinks]);
 	let itemIds = $derived(allItems.map((item) => item.id));
 
 	const faviconCache = new Map<string, string>();
@@ -211,14 +221,7 @@
 	}
 
 	function openAddFolder() {
-		modalMode = 'folder';
-		editing = null;
-		editingFolder = null;
-		draftUrl = '';
-		draftTitle = '';
-		draftDescription = '';
-		draftFolderName = '';
-		modalOpen = true;
+		void createFolderInline();
 	}
 
 	function openEditFolder(folder: QuickLinkFolder) {
@@ -235,6 +238,67 @@
 
 	function closeModal() {
 		modalOpen = false;
+	}
+
+	$effect(() => {
+		if (!inlineEditingFolderId || !inlineFolderInputEl) return;
+		void tick().then(() => {
+			inlineFolderInputEl?.focus();
+			inlineFolderInputEl?.select();
+		});
+	});
+
+	async function createFolderInline() {
+		if (creatingFolder) return;
+		creatingFolder = true;
+		try {
+			const response = await fetch('/dashboard/api/quick-link-folders', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ name: '' })
+			});
+			if (!response.ok) {
+				console.error('Failed to create folder:', response.statusText);
+				return;
+			}
+
+			const folder = (await response.json()) as QuickLinkFolder;
+			optimisticFolders = [...optimisticFolders, folder];
+			inlineEditingFolderId = folder.id;
+			inlineFolderName = '';
+		} catch (error) {
+			console.error('Failed to create folder:', error);
+		} finally {
+			creatingFolder = false;
+		}
+	}
+
+	async function saveInlineFolderName(folderId: string) {
+		const formData = new FormData();
+		formData.append('id', folderId);
+		formData.append('name', inlineFolderName);
+
+		try {
+			const response = await fetch('?/updateFolder', {
+				method: 'POST',
+				body: formData
+			});
+			if (!response.ok) {
+				console.error('Failed to update folder:', response.statusText);
+				return;
+			}
+			optimisticFolders = optimisticFolders.filter((folder) => folder.id !== folderId);
+			inlineEditingFolderId = null;
+			inlineFolderName = '';
+			await invalidateAll();
+		} catch (error) {
+			console.error('Failed to update folder:', error);
+		}
+	}
+
+	function cancelInlineFolderName() {
+		inlineEditingFolderId = null;
+		inlineFolderName = '';
 	}
 
 	function toggleMenu(id: string, e: MouseEvent) {
@@ -335,7 +399,7 @@
 			// Determine drop intent based on what's being dragged and what it's over
 			const activeLink = links.find((l) => l.id === draggingId);
 			const targetLink = links.find((l) => l.id === id);
-			const targetFolder = folders.find((f) => f.id === id);
+				const targetFolder = visibleFolders.find((f) => f.id === id);
 
 			if (activeLink && targetLink && !activeLink.folderId && !targetLink.folderId) {
 				dropIntent = 'merge';
@@ -382,16 +446,16 @@
 
 		const activeLink = links.find((l) => l.id === activeId);
 		const targetLink = links.find((l) => l.id === targetId);
-		const targetFolder = folders.find((f) => f.id === targetId);
+		const targetFolder = visibleFolders.find((f) => f.id === targetId);
 
 		try {
 			// 1. Drop a root link onto another root link → create folder with both
 			if (activeLink && targetLink && !activeLink.folderId && !targetLink.folderId) {
-				const response = await fetch('api/quick-link-folders', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ name: null })
-				});
+					const response = await fetch('/dashboard/api/quick-link-folders', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ name: '' })
+					});
 				if (!response.ok) {
 					console.error('Failed to create folder:', response.statusText);
 					return;
@@ -429,12 +493,12 @@
 				newOrder.splice(oldIndex, 1);
 				newOrder.splice(newIndex, 0, activeId);
 
-				const isFolderDrag = folders.some((f) => f.id === activeId);
-				const formData = new FormData();
-				if (isFolderDrag) {
-					newOrder
-						.filter((id) => folders.some((f) => f.id === id))
-						.forEach((id) => formData.append('folderIds', id));
+					const isFolderDrag = visibleFolders.some((f) => f.id === activeId);
+					const formData = new FormData();
+					if (isFolderDrag) {
+						newOrder
+							.filter((id) => visibleFolders.some((f) => f.id === id))
+							.forEach((id) => formData.append('folderIds', id));
 					const response = await fetch('?/reorderFolders', { method: 'POST', body: formData });
 					if (!response.ok) {
 						console.error('Failed to reorder folders:', response.statusText);
@@ -500,7 +564,7 @@
   so it doesn't push the circle down or affect alignment.
 -->
 <div class="flex flex-wrap items-start gap-1 sm:gap-2">
-	{#each folders as folder (folder.id)}
+	{#each visibleFolders as folder (folder.id)}
 		{@const folderLinks = folderLinksMap[folder.id] ?? []}
 		{@const previewLinks = folderLinks.slice(0, 4)}
 		<div
@@ -600,7 +664,27 @@
 			</div>
 
 			<!-- Label: up to 2 lines, then ellipsis -->
-			{#if folder.name}
+			{#if inlineEditingFolderId === folder.id}
+				<input
+					bind:this={inlineFolderInputEl}
+					bind:value={inlineFolderName}
+					placeholder="Name this folder"
+					class="h-7 w-full rounded-md border border-input bg-card px-2 text-center text-[11px] ring-offset-background placeholder:text-muted-foreground transition-colors duration-150 hover:border-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+					onclick={(event) => event.stopPropagation()}
+					onkeydown={(event) => {
+						event.stopPropagation();
+						if (event.key === 'Enter') {
+							event.preventDefault();
+							void saveInlineFolderName(folder.id);
+						}
+						if (event.key === 'Escape') {
+							event.preventDefault();
+							cancelInlineFolderName();
+						}
+					}}
+					onblur={() => void saveInlineFolderName(folder.id)}
+				/>
+			{:else if folder.name}
 				<span
 					class="line-clamp-2 w-full text-center text-[11px] leading-tight text-foreground"
 					title={folder.name}
@@ -904,9 +988,7 @@
 			<div class="flex items-center justify-between border-b border-border px-4 py-3">
 				<p id="quicklink-modal-title" class="text-sm font-semibold">
 					{modalMode === 'folder'
-						? editingFolder
-							? 'Rename folder'
-							: 'Add folder'
+						? 'Rename folder'
 						: editing
 							? 'Edit link'
 							: 'Add link'}
@@ -918,56 +1000,30 @@
 			</div>
 			<div class="overflow-y-auto flex-1 p-4">
 				{#if modalMode === 'folder'}
-					{#if editingFolder}
-						<form
-							method="post"
-							action="?/updateFolder"
-							class="grid grid-cols-1 gap-4"
-							use:enhance={() => {
-								return async ({ result, update }) => {
-									await update();
-									if (result.type === 'redirect') closeModal();
-								};
-							}}
-						>
-							<input type="hidden" name="id" value={editingFolder.id} />
-							<div>
-								<Label for="ql-folder-name">Folder name (optional)</Label>
-								<Input id="ql-folder-name" name="name" bind:value={draftFolderName} placeholder="Leave empty for unnamed folder" />
-							</div>
-							{#if form?.error}
-								<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
-							{/if}
-							<div class="flex gap-2">
-								<Button type="submit">Save</Button>
-								<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
-							</div>
-						</form>
-					{:else}
-						<form
-							method="post"
-							action="?/createFolder"
-							class="grid grid-cols-1 gap-4"
-							use:enhance={() => {
-								return async ({ result, update }) => {
-									await update();
-									if (result.type === 'redirect') closeModal();
-								};
-							}}
-						>
-							<div>
-								<Label for="ql-folder-name-new">Folder name (optional)</Label>
-								<Input id="ql-folder-name-new" name="name" bind:value={draftFolderName} placeholder="Leave empty for unnamed folder" />
-							</div>
-							{#if form?.error}
-								<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
-							{/if}
-							<div class="flex gap-2">
-								<Button type="submit">Create</Button>
-								<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
-							</div>
-						</form>
-					{/if}
+					<form
+						method="post"
+						action="?/updateFolder"
+						class="grid grid-cols-1 gap-4"
+						use:enhance={() => {
+							return async ({ result, update }) => {
+								await update();
+								if (result.type === 'redirect') closeModal();
+							};
+						}}
+					>
+						<input type="hidden" name="id" value={editingFolder?.id} />
+						<div>
+							<Label for="ql-folder-name">Folder name (optional)</Label>
+							<Input id="ql-folder-name" name="name" bind:value={draftFolderName} placeholder="Leave empty for unnamed folder" />
+						</div>
+						{#if form?.error}
+							<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
+						{/if}
+						<div class="flex gap-2">
+							<Button type="submit">Save</Button>
+							<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
+						</div>
+					</form>
 				{:else}
 					{#if editing}
 						<form

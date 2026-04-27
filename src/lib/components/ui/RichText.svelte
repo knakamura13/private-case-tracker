@@ -52,7 +52,7 @@
 			role="button"
 			tabindex={0}
 		>
-			{#each parts as part (part.content + part.type)}
+			{#each parts as part}
 				{#if part.type === 'url'}
 					<a
 						href={part.href}
@@ -72,7 +72,7 @@
 		</div>
 	{:else}
 		<p class={cn('text-sm text-muted-foreground whitespace-pre-wrap', lineClamp && 'line-clamp-2', klass)}>
-			{#each parts as part (part.content + part.type)}
+				{#each parts as part}
 				{#if part.type === 'url'}
 					<a
 						href={part.href}

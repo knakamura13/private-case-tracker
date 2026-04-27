@@ -1,6 +1,6 @@
-<script lang="ts">
-	import { onMount } from 'svelte';
-	import { fade } from 'svelte/transition';
+	<script lang="ts">
+		import { onMount } from 'svelte';
+		import { fade, fly } from 'svelte/transition';
 	import { page } from '$app/stores';
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
 	import TopBar from '$lib/components/layout/TopBar.svelte';
@@ -75,6 +75,7 @@
 				bind:this={sidebarDialogEl}
 				tabindex="-1"
 				class="relative z-10 h-full w-60"
+				transition:fly={{ x: -280, duration: 220, opacity: 1 }}
 			>
 				<Sidebar workspaceName={data.workspace.name} onNavigate={() => (sidebarOpen = false)} />
 			</div>

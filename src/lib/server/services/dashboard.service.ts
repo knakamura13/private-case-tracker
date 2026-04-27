@@ -12,6 +12,7 @@ import { listQuestions } from './question.service';
 import { listMilestones } from './milestone.service';
 import { listQuickLinks } from './quickLink.service';
 import { listQuickLinkFolders } from './quickLinkFolder.service';
+import { listTasks } from './task.service';
 
 export async function dashboardFor(workspaceId: string) {
 	const now = new Date();
@@ -20,19 +21,21 @@ export async function dashboardFor(workspaceId: string) {
 		evidenceCategories,
 		openQuestionsAll,
 		milestonesAll,
-		activity,
-		quickLinks,
-		quickLinkFolders
-	] = await Promise.all([
-		getEvidenceCategories(workspaceId),
-		listQuestions(workspaceId, { status: 'OPEN' as QuestionStatus }).then(async (rows) =>
-			rows.concat(await listQuestions(workspaceId, { status: 'RESEARCHING' as QuestionStatus }))
-		),
-		listMilestones(workspaceId),
-		recentActivity(workspaceId, 10),
-		listQuickLinks(workspaceId),
-		listQuickLinkFolders(workspaceId)
-	]);
+			activity,
+			quickLinks,
+			quickLinkFolders,
+			tasks
+		] = await Promise.all([
+			getEvidenceCategories(workspaceId),
+			listQuestions(workspaceId, { status: 'OPEN' as QuestionStatus }).then(async (rows) =>
+				rows.concat(await listQuestions(workspaceId, { status: 'RESEARCHING' as QuestionStatus }))
+			),
+			listMilestones(workspaceId),
+			recentActivity(workspaceId, 10),
+			listQuickLinks(workspaceId),
+			listQuickLinkFolders(workspaceId),
+			listTasks(workspaceId)
+		]);
 
 	const upcomingMeetings = milestonesAll
 		.filter((m) => m.scheduledAt && new Date(m.scheduledAt) >= now)
@@ -98,12 +101,31 @@ export async function dashboardFor(workspaceId: string) {
 				href: `/timeline#${m.id}`,
 				kind: 'milestone' as const
 			}))
-	]
-		.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-		.slice(0, 5);
+		]
+			.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+			.slice(0, 5);
 
-	return {
-		upcomingMeetings,
+		const taskSummary = {
+			pending: tasks.filter((task) => task.status === 'TODO').length,
+			inProgress: tasks.filter((task) => task.status === 'IN_PROGRESS').length,
+			completed: tasks.filter((task) => task.status === 'DONE').length
+		};
+
+		const tasksPreview = tasks
+			.filter((task) => task.status !== 'DONE')
+			.sort((a, b) => {
+				const dueA = a.dueDate ? new Date(a.dueDate).getTime() : Number.POSITIVE_INFINITY;
+				const dueB = b.dueDate ? new Date(b.dueDate).getTime() : Number.POSITIVE_INFINITY;
+				if (a.status !== b.status) {
+					return a.status === 'IN_PROGRESS' ? -1 : 1;
+				}
+				if (dueA !== dueB) return dueA - dueB;
+				return a.order - b.order;
+			})
+			.slice(0, 4);
+
+		return {
+			upcomingMeetings,
 		evidenceCoverage,
 		gapsCount,
 		openQuestionsCount,
@@ -111,11 +133,13 @@ export async function dashboardFor(workspaceId: string) {
 		phaseLabel: PHASE_LABELS[phase],
 		phaseProgress,
 		activity,
-		missingCritical,
-		countdowns,
-		quickLinks: quickLinks,
-		quickLinkFolders: quickLinkFolders
-	};
+			missingCritical,
+			countdowns,
+			taskSummary,
+			tasksPreview,
+			quickLinks: quickLinks,
+			quickLinkFolders: quickLinkFolders
+		};
 }
 
 export type DashboardData = Awaited<ReturnType<typeof dashboardFor>>;
