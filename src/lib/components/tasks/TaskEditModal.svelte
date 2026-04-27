@@ -75,9 +75,12 @@
 	let dueDateValue = $state('');
 
 	// Auto-save state
-	let isSaving = $state(false);
 	let saveTimeout: ReturnType<typeof setTimeout> | null = null;
 	let pendingSavePromise: Promise<void> | null = null;
+	let focusedField = $state<string | null>(null);
+	let hasPendingChanges = $state(false);
+	let saveVersion = 0;
+	let lastSavedVersion = 0;
 
 	// Reactive form values
 	let titleValue = $state('');
@@ -85,6 +88,7 @@
 	let statusValue = $state('TODO');
 	let priorityValue = $state('MEDIUM');
 	let ownerIdValue = $state('');
+	let selectedOwner = $derived(members.find((m) => m.id === ownerIdValue) ?? null);
 
 	const ALLOWED_FIELDS = ['id', 'title', 'description', 'status', 'priority', 'ownerId', 'dueDate', 'checklist'] as const;
 
@@ -99,6 +103,10 @@
 			editableChecklist = parseChecklist(initial.checklist);
 			dueDateValue = val('dueDate');
 			isEditingDescription = false;
+			focusedField = null;
+			hasPendingChanges = false;
+			saveVersion = 0;
+			lastSavedVersion = 0;
 		} else {
 			// Reset state when modal closes
 			showDueDatePicker = false;
@@ -109,7 +117,10 @@
 			openChecklistMenuId = null;
 			editingChecklistId = null;
 			editingChecklistText = '';
-			isSaving = false;
+			focusedField = null;
+			hasPendingChanges = false;
+			saveVersion = 0;
+			lastSavedVersion = 0;
 			if (saveTimeout) clearTimeout(saveTimeout);
 			pendingSavePromise = null;
 		}
@@ -179,49 +190,90 @@
 		triggerAutoSave();
 	}
 
-	async function triggerAutoSave(immediate = false) {
-		if (isSaving) return;
+	function markFocused(field: string) {
+		focusedField = field;
+	}
+
+	function markBlurred(field: string) {
+		if (focusedField === field) {
+			focusedField = null;
+		}
+	}
+
+	async function performAutoSave() {
+		if (!onenhance || !open || !action) return;
+		if (pendingSavePromise) {
+			await pendingSavePromise;
+			if (saveVersion > lastSavedVersion) {
+				await performAutoSave();
+			}
+			return;
+		}
+
+		const versionToSave = saveVersion;
+		const formData = new FormData();
+		formData.append('id', val('id'));
+		formData.append('title', titleValue);
+		formData.append('description', descriptionValue);
+		formData.append('status', statusValue);
+		formData.append('priority', priorityValue);
+		formData.append('ownerId', ownerIdValue);
+		formData.append('dueDate', dueDateValue);
+		formData.append('checklist', checklistJson);
+
+		const cancel = () => undefined;
+
+		pendingSavePromise = (async () => {
+			try {
+				const result = onenhance({ formData, cancel });
+				if (result && typeof result === 'function') {
+					await result();
+				}
+				lastSavedVersion = Math.max(lastSavedVersion, versionToSave);
+				hasPendingChanges = saveVersion > lastSavedVersion;
+			} catch {
+				showErrorToast('Failed to auto-save task');
+				cancel();
+			}
+			pendingSavePromise = null;
+		})();
+
+		await pendingSavePromise;
+	}
+
+	async function triggerAutoSave(immediate = false, force = false) {
+		saveVersion += 1;
+		hasPendingChanges = true;
 		if (saveTimeout) clearTimeout(saveTimeout);
 		if (!open || !action) return;
-		const delay = immediate ? 0 : 2000;
-		saveTimeout = setTimeout(async () => {
-			if (onenhance) {
-				isSaving = true;
-				const formData = new FormData();
-				formData.append('id', val('id'));
-				formData.append('title', titleValue);
-				formData.append('description', descriptionValue);
-				formData.append('status', statusValue);
-				formData.append('priority', priorityValue);
-				formData.append('ownerId', ownerIdValue);
-				formData.append('dueDate', dueDateValue);
-				formData.append('checklist', checklistJson);
+		if (focusedField && !force) return;
 
-				const cancel = () => {
-					isSaving = false;
-				};
+		if (immediate) {
+			await performAutoSave();
+			return;
+		}
 
-				pendingSavePromise = (async () => {
-					try {
-						const result = onenhance({ formData, cancel });
-						if (result && typeof result === 'function') {
-							await result();
-						}
-					} catch {
-						showErrorToast('Failed to auto-save task');
-						cancel();
-					}
-					isSaving = false;
-					pendingSavePromise = null;
-				})();
+		saveTimeout = setTimeout(() => {
+			saveTimeout = null;
+			if (focusedField && !force) return;
+			void performAutoSave();
+		}, 2000);
+	}
 
-				await pendingSavePromise;
-			}
-		}, delay);
+	async function saveBeforeClose() {
+		if (saveTimeout) {
+			clearTimeout(saveTimeout);
+			saveTimeout = null;
+		}
+		if (hasPendingChanges || pendingSavePromise) {
+			focusedField = null;
+			await triggerAutoSave(true, true);
+		}
+		await onClose();
 	}
 </script>
 
-<Dialog {open} {onClose}>
+<Dialog {open} onClose={saveBeforeClose}>
 	<form method="post" {action} class="flex flex-col">
 		<!-- Header -->
 		<div class="flex items-start justify-between border-b border-border p-4">
@@ -230,6 +282,11 @@
 					name="title"
 					bind:value={titleValue}
 					oninput={() => triggerAutoSave()}
+					onfocus={() => markFocused('title')}
+					onblur={() => {
+						markBlurred('title');
+						triggerAutoSave(true);
+					}}
 					class="flex-1 border-none bg-transparent p-0 text-lg font-semibold focus-visible:ring-0 focus-visible:ring-offset-0"
 					placeholder="Title"
 				/>
@@ -266,7 +323,7 @@
 						{/if}
 					</div>
 				{/if}
-				<Button type="button" variant="ghost" size="sm" onclick={onClose} class="shrink-0">
+				<Button type="button" variant="ghost" size="sm" onclick={saveBeforeClose} class="shrink-0">
 					{#snippet children()}<X class="h-5 w-5" />{/snippet}
 				</Button>
 			</div>
@@ -280,7 +337,7 @@
 				<div class="flex flex-wrap gap-2">
 					<div class="relative" use:clickOutside={() => showOwnerDropdown = false}>
 						<Button type="button" variant="outline" size="sm" onclick={() => showOwnerDropdown = !showOwnerDropdown}>
-							{#snippet children()}<User class="h-3.5 w-3.5" /> Owner{/snippet}
+							{#snippet children()}<User class="h-3.5 w-3.5" /> {selectedOwner ? selectedOwner.name ?? selectedOwner.email : 'Owner'}{/snippet}
 						</Button>
 						{#if showOwnerDropdown}
 							<div class="absolute left-0 top-full z-10 mt-1 w-48 rounded-md border border-border bg-card p-1 shadow-md">
@@ -340,10 +397,11 @@
 
 				<!-- Members -->
 				<div class="flex items-center gap-2">
-					{#if initial.owner}
+					{#if selectedOwner}
 						<div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
-							{ownerInitial(initial.owner)}
+							{ownerInitial(selectedOwner)}
 						</div>
+						<span class="text-sm text-muted-foreground">{selectedOwner.name ?? selectedOwner.email}</span>
 					{/if}
 				</div>
 
@@ -355,7 +413,9 @@
 							name="description"
 							bind:value={descriptionValue}
 							oninput={() => triggerAutoSave()}
+							onfocus={() => markFocused('description')}
 							onblur={() => {
+								markBlurred('description');
 								isEditingDescription = false;
 								triggerAutoSave(true);
 							}}
@@ -366,7 +426,7 @@
 								}
 							}}
 							placeholder="Add a more detailed description... URLs and phone numbers will be clickable."
-							rows={3}
+							rows={4}
 						/>
 					{:else}
 						<Card class="p-3 bg-muted/50">

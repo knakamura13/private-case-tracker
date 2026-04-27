@@ -12,17 +12,16 @@
 
 	let mounted = $state(true);
 
-	const taskStatusTone = {
-		TODO: 'secondary',
-		IN_PROGRESS: 'warning',
-		DONE: 'secondary'
-	} as const;
+	function taskStatusTone(status: string) {
+		if (status === 'IN_PROGRESS') return 'warning';
+		return 'secondary';
+	}
 
-	const taskStatusLabel = {
-		TODO: 'Pending',
-		IN_PROGRESS: 'In progress',
-		DONE: 'Completed'
-	} as const;
+	function taskStatusLabel(status: string) {
+		if (status === 'IN_PROGRESS') return 'In progress';
+		if (status === 'DONE') return 'Completed';
+		return 'Pending';
+	}
 </script>
 
 <PageHeader title="Dashboard" number={getPageNumber('/dashboard')} />
@@ -38,15 +37,15 @@
 		<div class="space-y-4">
 			<div class="grid grid-cols-3 gap-2 text-center">
 				<div class="rounded-lg border border-border/70 bg-muted/30 px-2 py-3">
-					<p class="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Pending</p>
+					<p class="text-[10px] uppercase leading-tight tracking-[0.06em] text-muted-foreground">Pending</p>
 					<p class="mt-1 text-2xl font-display font-semibold">{data.taskSummary.pending}</p>
 				</div>
 				<div class="rounded-lg border border-border/70 bg-warning/10 px-2 py-3">
-					<p class="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">In Progress</p>
+					<p class="text-[10px] uppercase leading-tight tracking-[0.06em] text-muted-foreground">In Progress</p>
 					<p class="mt-1 text-2xl font-display font-semibold">{data.taskSummary.inProgress}</p>
 				</div>
 				<div class="rounded-lg border border-border/70 bg-success/10 px-2 py-3">
-					<p class="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Completed</p>
+					<p class="text-[10px] uppercase leading-tight tracking-[0.06em] text-muted-foreground">Completed</p>
 					<p class="mt-1 text-2xl font-display font-semibold">{data.taskSummary.completed}</p>
 				</div>
 			</div>
@@ -56,13 +55,12 @@
 			{:else}
 				<ul class="space-y-2 text-sm">
 					{#each data.tasksPreview as task (task.id)}
-						{@const status = task.status as keyof typeof taskStatusTone}
 						<li class="flex items-start gap-2 rounded-lg border border-border/60 bg-card/70 px-3 py-2">
 							<CheckSquare class="mt-0.5 h-3.5 w-3.5 text-muted-foreground" />
 							<div class="min-w-0 flex-1">
 								<p class="truncate font-medium">{task.title}</p>
 								<div class="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-									<Badge variant={taskStatusTone[status]}>{taskStatusLabel[status]}</Badge>
+									<Badge variant={taskStatusTone(task.status)}>{taskStatusLabel(task.status)}</Badge>
 									{#if task.dueDate}
 										<span>Due {fmtDate(task.dueDate)}</span>
 									{/if}

@@ -51,6 +51,8 @@
 		{ id: 'DONE', label: 'Done', color: 'bg-success/20' }
 	] as const;
 
+	const membersById = $derived(new Map(data.members.map((member) => [member.id, member])));
+
 	const grouped = $derived(
 		COLUMNS.map((col) => ({
 			...col,
@@ -59,7 +61,7 @@
 				.sort((a, b) => a.order - b.order)
 				.map((t) => ({
 					...t,
-					owner: t.ownerId ? { id: t.ownerId, name: null, email: '' } : null
+					owner: t.ownerId ? membersById.get(t.ownerId) ?? null : null
 				}))
 		}))
 	);
@@ -333,15 +335,17 @@
 					/>
 				{/each}
 				{#if column.tasks.length === 0}
-					<div
-						class={cn(
-							'rounded-lg border-2 border-dashed p-8 text-center text-sm text-muted-foreground transition duration-200',
-							dropTargetId === column.id
-								? 'scale-[1.02] border-primary bg-primary/5 text-primary'
-								: 'border-border'
-						)}
-					>
-						{dropTargetId === column.id ? 'Drop here' : 'No tasks'}
+					<div class="py-1" role="listitem">
+						<div
+							class={cn(
+								'rounded-lg border-2 border-dashed p-8 text-center text-sm text-muted-foreground transition duration-200',
+								dropTargetId === column.id
+									? 'scale-[1.02] border-primary bg-primary/5 text-primary'
+									: 'border-border'
+							)}
+						>
+							{dropTargetId === column.id ? 'Drop here' : 'No tasks'}
+						</div>
 					</div>
 				{/if}
 			</div>

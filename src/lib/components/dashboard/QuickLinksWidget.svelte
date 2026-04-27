@@ -3,7 +3,7 @@
 	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
-	import { EllipsisVertical, Plus, Link2, Folder } from 'lucide-svelte';
+	import { EllipsisVertical, MoreHorizontal, Plus, Link2, Folder } from 'lucide-svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import Label from '$lib/components/ui/Label.svelte';
@@ -40,6 +40,9 @@
 	let inlineFolderName = $state('');
 	let inlineFolderInputEl = $state<HTMLInputElement | null>(null);
 	let creatingFolder = $state(false);
+	let folderDialogMenuOpen = $state(false);
+	let folderDialogName = $state('');
+	let folderDialogInputEl = $state<HTMLInputElement | null>(null);
 
 	let visibleFolders = $derived(
 		[...folders, ...optimisticFolders].sort((a, b) => a.order - b.order)
@@ -240,11 +243,24 @@
 		modalOpen = false;
 	}
 
+	function closeFolderDialog() {
+		folderPopoverId = null;
+		folderDialogMenuOpen = false;
+	}
+
 	$effect(() => {
 		if (!inlineEditingFolderId || !inlineFolderInputEl) return;
 		void tick().then(() => {
 			inlineFolderInputEl?.focus();
 			inlineFolderInputEl?.select();
+		});
+	});
+
+	$effect(() => {
+		if (!folderPopoverId || !folderDialogInputEl) return;
+		void tick().then(() => {
+			folderDialogInputEl?.focus();
+			folderDialogInputEl?.select();
 		});
 	});
 
@@ -327,7 +343,14 @@
 	function toggleFolderPopover(folderId: string, e: Event) {
 		e.preventDefault();
 		e.stopPropagation();
-		folderPopoverId = folderPopoverId === folderId ? null : folderId;
+		if (folderPopoverId === folderId) {
+			closeFolderDialog();
+		} else {
+			const folder = visibleFolders.find((f) => f.id === folderId);
+			folderPopoverId = folderId;
+			folderDialogName = folder?.name ?? '';
+			folderDialogMenuOpen = false;
+		}
 		menuOpenId = null;
 		menuPosition = null;
 	}
@@ -551,9 +574,31 @@
 				console.error('Failed to delete folder:', response.statusText);
 				return;
 			}
+			closeFolderDialog();
 			await invalidateAll();
 		} catch (error) {
 			console.error('Failed to delete folder:', error);
+		}
+	}
+
+	async function saveFolderDialogName(folder: QuickLinkFolder) {
+		if (folderDialogName === (folder.name ?? '')) return;
+		const formData = new FormData();
+		formData.append('id', folder.id);
+		formData.append('name', folderDialogName);
+
+		try {
+			const response = await fetch('?/updateFolder', {
+				method: 'POST',
+				body: formData
+			});
+			if (!response.ok) {
+				console.error('Failed to update folder:', response.statusText);
+				return;
+			}
+			await invalidateAll();
+		} catch (error) {
+			console.error('Failed to update folder:', error);
 		}
 	}
 </script>
@@ -706,22 +751,67 @@
 					type="button"
 					class="absolute inset-0 z-0 cursor-default"
 					aria-label="Close"
-					onclick={() => (folderPopoverId = null)}
+					onclick={closeFolderDialog}
 				></button>
 				<div
 					class="relative z-10 w-full max-w-md overflow-hidden rounded-lg border border-border bg-card shadow-xl p-4"
 				>
 					<div class="flex items-center justify-between mb-4">
-						<p class="text-sm font-semibold">{folder.name ?? 'Folder'}</p>
-						<button
-							type="button"
-							class="rounded-md p-1 hover:bg-muted"
-							aria-label="Close"
-							onclick={() => (folderPopoverId = null)}
-						>
-							<span class="sr-only">Close</span>
-							<span aria-hidden="true" class="text-lg leading-none">×</span>
-						</button>
+						<input
+							bind:this={folderDialogInputEl}
+							bind:value={folderDialogName}
+							aria-label="Folder name"
+							placeholder="Folder"
+							class="mr-2 h-8 flex-1 rounded-md border-none bg-transparent px-0 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+							onkeydown={(event) => {
+								if (event.key === 'Enter') {
+									event.preventDefault();
+									void saveFolderDialogName(folder);
+									folderDialogInputEl?.blur();
+								}
+								if (event.key === 'Escape') {
+									event.preventDefault();
+									folderDialogName = folder.name ?? '';
+									folderDialogInputEl?.blur();
+								}
+							}}
+							onblur={() => void saveFolderDialogName(folder)}
+						/>
+						<div class="flex items-center gap-1">
+							<div class="relative" data-quicklink-menu>
+								<button
+									type="button"
+									class="rounded-md p-1 hover:bg-muted"
+									aria-label={`Actions for ${folder.name ?? 'Folder'}`}
+									aria-expanded={folderDialogMenuOpen}
+									aria-haspopup="true"
+									onclick={() => (folderDialogMenuOpen = !folderDialogMenuOpen)}
+								>
+									<MoreHorizontal class="h-4 w-4" aria-hidden="true" />
+								</button>
+								{#if folderDialogMenuOpen}
+									<div class="absolute right-0 top-full z-20 mt-1 w-32 rounded-md border border-border bg-card py-1 text-sm shadow-md" role="menu">
+										<button
+											type="button"
+											class="block w-full px-3 py-1.5 text-left text-destructive hover:bg-muted"
+											role="menuitem"
+											onclick={() => deleteFolder(folder.id)}
+										>
+											Delete
+										</button>
+									</div>
+								{/if}
+							</div>
+							<button
+								type="button"
+								class="rounded-md p-1 hover:bg-muted"
+								aria-label="Close"
+								onclick={closeFolderDialog}
+							>
+								<span class="sr-only">Close</span>
+								<span aria-hidden="true" class="text-lg leading-none">×</span>
+							</button>
+						</div>
 					</div>
 					{#if folderLinks.length === 0}
 						<div class="flex flex-col items-center gap-3 py-8 text-center text-muted-foreground">

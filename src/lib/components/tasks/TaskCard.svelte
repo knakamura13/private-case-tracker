@@ -46,10 +46,12 @@
 		dropPosition?: 'before' | 'after' | null;
 	} = $props();
 
-	function statusColor(s: string) {
-		if (s === 'DONE') return 'bg-success border-success';
-		if (s === 'IN_PROGRESS') return 'bg-warning border-warning';
-		return 'border-border bg-card';
+	function hasMeaningfulDescription(description: string | null) {
+		return /[\p{L}\p{N}]/u.test(description?.trim() ?? '');
+	}
+
+	function ownerLabel(owner: { id: string; name: string | null; email: string } | null) {
+		return owner?.name?.trim() || owner?.email?.trim() || '';
 	}
 </script>
 
@@ -105,7 +107,7 @@
 				{#if task.priority !== 'MEDIUM'}
 					<Badge variant="outline" class="shrink-0">{titleCase(task.priority)}</Badge>
 				{/if}
-				{#if task.description}
+				{#if hasMeaningfulDescription(task.description)}
 					<RichText text={task.description} lineClamp={true} class="mt-1" />
 				{/if}
 				{#if task.checklist && task.checklist.length > 0}
@@ -126,14 +128,13 @@
 						</ul>
 					</div>
 				{/if}
-				{#if task.dueDate || task.owner}
+				{#if task.dueDate || ownerLabel(task.owner)}
 					<div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
 						{#if task.dueDate}<span>Due {fmtDate(task.dueDate)}</span>{/if}
-						{#if task.owner}<span>· {task.owner.name ?? task.owner.email}</span>{/if}
+						{#if ownerLabel(task.owner)}<span>{ownerLabel(task.owner)}</span>{/if}
 					</div>
 				{/if}
 			</div>
-			<div class="h-2.5 w-2.5 shrink-0 rounded-full border-2 {statusColor(task.status)}" title={titleCase(task.status)}></div>
 		</div>
 		</Card>
 	</div>

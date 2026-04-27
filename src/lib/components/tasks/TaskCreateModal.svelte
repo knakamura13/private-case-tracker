@@ -7,7 +7,7 @@
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
 	import RichText from '$lib/components/ui/RichText.svelte';
-	import { X, Plus, Calendar, User } from 'lucide-svelte';
+	import { X, Calendar, User } from 'lucide-svelte';
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
 
@@ -22,21 +22,8 @@
 		onenhance?: SubmitFunction;
 	} = $props();
 
-	interface ChecklistItem {
-		id: string;
-		taskId?: string;
-		text: string;
-		done: boolean;
-		order?: number;
-	}
-
-	let editableChecklist = $state<ChecklistItem[]>([]);
-	let newChecklistText = $state('');
-	let checklistJson = $derived(JSON.stringify(editableChecklist));
-
 	// Button visibility states
 	let showDueDatePicker = $state(false);
-	let showChecklistInput = $state(false);
 	let showOwnerDropdown = $state(false);
 	let isEditingDescription = $state(false);
 
@@ -58,11 +45,8 @@
 			statusValue = defaultStatus || 'TODO';
 			priorityValue = 'MEDIUM';
 			ownerIdValue = '';
-			editableChecklist = [];
 			dueDateValue = '';
-			newChecklistText = '';
 			showDueDatePicker = false;
-			showChecklistInput = false;
 			showOwnerDropdown = false;
 			isEditingDescription = false;
 		}
@@ -85,24 +69,11 @@
 		};
 	}
 
-	function addChecklistItem() {
-		if (!newChecklistText.trim()) return;
-		editableChecklist = [...editableChecklist, { id: crypto.randomUUID(), text: newChecklistText.trim(), done: false, order: editableChecklist.length }];
-		newChecklistText = '';
-	}
-
-	function removeChecklistItem(id: string) {
-		editableChecklist = editableChecklist.filter((ci) => ci.id !== id);
-	}
-
-	function toggleChecklistItem(id: string) {
-		editableChecklist = editableChecklist.map((ci) => (ci.id === id ? { ...ci, done: !ci.done } : ci));
-	}
 </script>
 
 <Dialog {open} {onClose}>
 	<form method="post" {action} use:enhance={onenhance} class="flex flex-col">
-		<input type="hidden" name="checklist" value={checklistJson} />
+		<input type="hidden" name="checklist" value="[]" />
 		<!-- Header -->
 		<div class="flex items-start justify-between border-b border-border p-4">
 			<div class="flex flex-1 items-start">
@@ -194,10 +165,11 @@
 								}
 							}}
 							placeholder="Add a more detailed description... URLs and phone numbers will be clickable."
-							rows={4}
+							rows={6}
+							class="min-h-[120px]"
 						/>
 					{:else}
-						<Card class="p-3 bg-muted/50">
+						<Card class="p-3 bg-muted/50 min-h-[120px]">
 							{#if descriptionValue}
 								<RichText
 									text={descriptionValue}
@@ -225,55 +197,6 @@
 								</div>
 							{/if}
 						</Card>
-					{/if}
-				</div>
-
-				<!-- Checklist -->
-				<div>
-					<Button type="button" variant="outline" size="sm" onclick={() => showChecklistInput = !showChecklistInput}>
-						{#snippet children()}<Plus class="h-3.5 w-3.5" /> Add checklist{/snippet}
-					</Button>
-					{#if showChecklistInput || editableChecklist.length > 0}
-						<div class="mt-2 space-y-2">
-							{#each editableChecklist as ci (ci.id)}
-								<div class="flex items-center gap-2">
-									<input
-										type="checkbox"
-										checked={ci.done}
-										onchange={() => toggleChecklistItem(ci.id)}
-										class="h-4 w-4 rounded border-border"
-									/>
-									<Input
-										value={ci.text}
-										oninput={(e) => {
-											editableChecklist = editableChecklist.map((c) =>
-												c.id === ci.id ? { ...c, text: e.currentTarget.value } : c
-											);
-										}}
-										class="flex-1"
-									/>
-									<Button type="button" variant="ghost" size="sm" onclick={() => removeChecklistItem(ci.id)}>
-										{#snippet children()}<X class="h-4 w-4" />{/snippet}
-									</Button>
-								</div>
-							{/each}
-							<div class="flex items-center gap-2">
-								<Input
-									bind:value={newChecklistText}
-									placeholder="Add an item..."
-									onkeydown={(e) => {
-										if (e.key === 'Enter') {
-											e.preventDefault();
-											addChecklistItem();
-										}
-									}}
-									class="flex-1"
-								/>
-								<Button type="button" variant="outline" size="sm" onclick={addChecklistItem}>
-									{#snippet children()}<Plus class="h-4 w-4" /> Add{/snippet}
-								</Button>
-							</div>
-						</div>
 					{/if}
 				</div>
 			</div>
