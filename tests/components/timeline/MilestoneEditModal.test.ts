@@ -49,7 +49,8 @@ describe('MilestoneEditModal', () => {
 	it('should render with initial values', () => {
 		render(MilestoneEditModal, defaultProps);
 		expect(screen.getByDisplayValue('Test Milestone')).toBeInTheDocument();
-		expect(screen.getByDisplayValue('Test description')).toBeInTheDocument();
+		// Description is now shown as RichText preview, not a textarea
+		expect(screen.getByText('Test description')).toBeInTheDocument();
 	});
 
 	it('should render form with correct action', () => {
