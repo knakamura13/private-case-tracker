@@ -76,7 +76,7 @@
 			<Button class="mt-3" onclick={addPasskey}>Add a passkey</Button>
 		{:else}
 			<div class="mt-3 space-y-2">
-				{#each passkeys as pk}
+				{#each passkeys as pk (pk.id)}
 					<div class="flex items-center justify-between rounded-md border border-border bg-muted/50 p-2">
 						<span class="text-sm">{pk.name || 'Unnamed passkey'}</span>
 						<button
@@ -109,7 +109,7 @@
 			{#if totpSecret.backupCodes}
 				<p class="mt-3 text-xs text-muted-foreground">Backup codes (store somewhere safe):</p>
 				<ul class="mt-1 grid grid-cols-2 gap-1 text-xs font-mono">
-					{#each totpSecret.backupCodes as c}<li>{c}</li>{/each}
+					{#each totpSecret.backupCodes as c (c)}<li>{c}</li>{/each}
 				</ul>
 			{/if}
 			<div class="mt-3 flex items-center gap-2">

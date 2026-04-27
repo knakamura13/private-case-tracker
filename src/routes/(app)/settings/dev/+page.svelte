@@ -78,7 +78,7 @@
 				{:else if data.errors.length === 0}
 					<tr><td class="px-3 py-4 text-muted-foreground" colspan="6">No errors logged yet.</td></tr>
 				{:else}
-					{#each data.errors as e}
+					{#each data.errors as e (e.id)}
 						<tr class="border-t border-border">
 							<td class="px-3 py-2 font-mono text-xs">{new Date(e.occurredAt).toLocaleString()}</td>
 							<td class="px-3 py-2">{e.status ?? '—'}</td>

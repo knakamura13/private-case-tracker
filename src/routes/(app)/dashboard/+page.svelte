@@ -24,7 +24,7 @@
 <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
 	<Widget title="Case progress" href="/timeline">
 		<ul class="space-y-1.5 text-xs">
-			{#each data.phaseProgress as p}
+			{#each data.phaseProgress as p (p.label)}
 				<li class="flex items-center gap-2">
 					<span class="w-32 truncate text-muted-foreground">{p.label}</span>
 					<div class="h-1.5 flex-1 overflow-hidden rounded bg-muted">
@@ -41,7 +41,7 @@
 			<p class="text-sm text-muted-foreground">No upcoming meetings or due milestones.</p>
 		{:else}
 			<ul class="space-y-2 text-sm">
-				{#each data.countdowns as c}
+				{#each data.countdowns as c (c.href)}
 					{@const d = daysUntil(c.date)}
 					<li class="flex items-center justify-between gap-2">
 						<a class="truncate hover:underline" href={c.href}>{c.label}</a>
@@ -59,7 +59,7 @@
 			<p class="text-sm text-muted-foreground">Nothing flagged. 🎉</p>
 		{:else}
 			<ul class="space-y-1 text-sm">
-				{#each data.missingCritical as m}
+				{#each data.missingCritical as m (m)}
 					<li class="flex items-start gap-2">
 						<AlertTriangle class="mt-0.5 h-3.5 w-3.5 text-warning" />
 						<span>{m}</span>
@@ -74,7 +74,7 @@
 			<p class="text-sm text-muted-foreground">Nothing scheduled.</p>
 		{:else}
 			<ul class="space-y-2 text-sm">
-				{#each data.upcomingMeetings as m}
+				{#each data.upcomingMeetings as m (m.id)}
 					<li>
 						<a class="block hover:underline" href={`/timeline#${m.id}`}>
 							<p class="truncate font-medium">{m.title}</p>
@@ -88,7 +88,7 @@
 
 	<Widget title="Evidence coverage" href="/evidence">
 		<ul class="space-y-1.5 text-xs">
-			{#each data.evidenceCoverage.slice(0, 8) as c}
+			{#each data.evidenceCoverage.slice(0, 8) as c (c.category)}
 				<li class="flex items-center gap-2">
 					<span class="w-32 truncate text-muted-foreground">{c.category}</span>
 					<div class="h-1.5 flex-1 overflow-hidden rounded bg-muted">
@@ -107,7 +107,7 @@
 
 	<Widget title="Open questions" href="/questions">
 		<ul class="space-y-1 text-xs">
-			{#each Object.entries(data.openQuestionsCount) as [p, n]}
+			{#each Object.entries(data.openQuestionsCount) as [p, n] (p)}
 				<li class="flex items-center justify-between">
 					<span class="text-muted-foreground">{titleCase(p)}</span>
 					<span class="font-mono text-foreground">{n}</span>
@@ -121,7 +121,7 @@
 			<p class="text-sm text-muted-foreground">No activity yet.</p>
 		{:else}
 			<ul class="space-y-2 text-sm">
-				{#each data.activity as a}
+				{#each data.activity as a (a.id)}
 					<li class="flex items-start gap-2">
 						<CalendarClock class="mt-0.5 h-3 w-3 text-muted-foreground" />
 						<div class="min-w-0 flex-1">

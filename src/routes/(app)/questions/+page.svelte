@@ -96,7 +96,7 @@
 		{#snippet actions()}<Button onclick={() => showCreateModal = true}>New question</Button>{/snippet}
 	</EmptyState>
 {:else}
-	{#each sections as section}
+	{#each sections as section (section.label)}
 		{#if section.items.length > 0}
 			<section class="mb-6">
 				<h2 class="text-sm font-semibold">{section.label}</h2>

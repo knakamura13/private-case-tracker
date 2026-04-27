@@ -71,7 +71,7 @@
 {/if}
 
 <div class="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
-	{#each data.categories as cat}
+	{#each data.categories as cat (cat.category)}
 		<Card class="p-4">
 			<div class="mb-3 flex flex-wrap items-center justify-between gap-2">
 				<div class="flex items-center gap-2">
