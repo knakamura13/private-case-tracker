@@ -84,7 +84,7 @@
 						{part.content}
 					</a>
 				{:else if part.type === 'phone'}
-					<a href={part.href} target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">{part.content}</a>
+					<a href={part.href} target="_blank" rel="noopener noreferrer" class="text-primary hover:underline" onclick={(e) => e.stopPropagation()}>{part.content}</a>
 				{:else}
 					{part.content}
 				{/if}

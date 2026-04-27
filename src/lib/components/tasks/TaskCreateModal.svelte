@@ -179,9 +179,10 @@
 				<!-- Description -->
 				<div>
 					<div class="mb-2 text-sm font-medium">Description</div>
+					<!-- Hidden input ensures description is always submitted even when textarea is unmounted -->
+					<input type="hidden" name="description" value={descriptionValue} />
 					{#if isEditingDescription}
 						<Textarea
-							name="description"
 							bind:value={descriptionValue}
 							onblur={() => {
 								isEditingDescription = false;

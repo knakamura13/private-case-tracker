@@ -37,6 +37,11 @@ export function linkifyText(text: string): LinkifiedPart[] {
 
 	// Build parts array
 	allMatches.forEach(({ type, match, index, length }) => {
+		// Skip matches that overlap with already-consumed text
+		if (index < lastIndex) {
+			return;
+		}
+
 		// Add plain text before this match
 		if (index > lastIndex) {
 			const plainText = text.slice(lastIndex, index);
