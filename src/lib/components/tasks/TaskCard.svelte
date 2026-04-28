@@ -80,7 +80,7 @@
 	<div
 		class={cn(
 			'task-card-inner',
-			!isAnyDragging && '',
+			!isAnyDragging && 'task-card-hoverable',
 			isDragging && 'task-card-dragging'
 		)}
 		draggable={draggable}
