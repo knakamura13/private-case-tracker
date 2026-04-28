@@ -56,7 +56,7 @@
 </script>
 
 <div
-	class="group relative py-1"
+	class="task-card"
 	role="listitem"
 	ondragenter={(e) => {
 		if (onDragEnter) {
@@ -74,15 +74,14 @@
 	ondrop={(e) => onDrop && onDrop(e, task.id, task.status)}
 >
 	{#if isDropTarget && dropPosition === 'before'}
-		<div class="pointer-events-none absolute top-0 left-0 right-0 z-20 h-1 rounded-full bg-primary shadow-[0_0_10px_var(--color-primary)] transition-opacity duration-200 animate-pulse"></div>
+		<div class="task-card-drop-indicator"></div>
 	{/if}
 
 	<div
 		class={cn(
-			'relative z-10 cursor-pointer rounded-lg border border-border transition duration-200 ease-out',
-			!isAnyDragging &&
-				'hover:bg-card/90 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-md hover:shadow-primary/10 dark:hover:shadow-primary/20',
-			isDragging && 'opacity-50'
+			'task-card-inner',
+			!isAnyDragging && '',
+			isDragging && 'task-card-dragging'
 		)}
 		draggable={draggable}
 		data-task-id={task.id}
@@ -100,10 +99,10 @@
 		aria-label={task.title}
 	>
 		<Card class="p-4 border-none shadow-none bg-transparent">
-		<div class="flex items-center gap-3">
-			<GripVertical class="h-4 w-4 shrink-0 text-muted-foreground hidden md:block" />
-			<div class="min-w-0 flex-1">
-				<p class="line-clamp-2 font-medium">{task.title}</p>
+		<div class="task-card-content">
+			<GripVertical class="task-card-grip h-4 w-4 shrink-0 text-muted-foreground" />
+			<div class="task-card-body">
+				<p class="task-card-title">{task.title}</p>
 				{#if task.priority !== 'MEDIUM'}
 					<Badge variant="outline" class="shrink-0">{titleCase(task.priority)}</Badge>
 				{/if}
@@ -111,25 +110,25 @@
 					<RichText text={task.description} lineClamp={true} class="mt-1" />
 				{/if}
 				{#if task.checklist && task.checklist.length > 0}
-					<div class="mt-2">
-						<div class="mb-1 text-xs text-muted-foreground">
+					<div class="task-card-checklist">
+						<div class="task-card-checklist-summary">
 							{task.checklist.filter((ci) => ci.done).length}/{task.checklist.length} checklist items
 						</div>
-						<ul class="space-y-1">
+						<ul class="task-card-checklist-list">
 							{#each task.checklist.slice(0, 3) as ci (ci.id)}
-								<li class="flex items-center gap-2 text-sm">
-									<input type="checkbox" checked={ci.done} disabled class="h-3.5 w-3.5 rounded border-border" />
-									<span class={ci.done ? 'line-through text-muted-foreground' : ''}>{ci.text}</span>
+								<li class="task-card-checklist-item">
+									<input type="checkbox" checked={ci.done} disabled class="task-card-checklist-checkbox" />
+									<span class={ci.done ? 'task-card-checklist-text-done' : ''}>{ci.text}</span>
 								</li>
 							{/each}
 							{#if task.checklist.length > 3}
-								<li class="text-xs text-muted-foreground">+{task.checklist.length - 3} more</li>
+								<li class="task-card-checklist-more">+{task.checklist.length - 3} more</li>
 							{/if}
 						</ul>
 					</div>
 				{/if}
 				{#if task.dueDate || ownerLabel(task.owner)}
-					<div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+					<div class="task-card-meta">
 						{#if task.dueDate}<span>Due {fmtDate(task.dueDate)}</span>{/if}
 						{#if ownerLabel(task.owner)}<span>{ownerLabel(task.owner)}</span>{/if}
 					</div>
@@ -140,6 +139,6 @@
 	</div>
 
 	{#if isDropTarget && dropPosition === 'after'}
-		<div class="pointer-events-none absolute bottom-0 left-0 right-0 z-20 h-1 rounded-full bg-primary shadow-[0_0_10px_var(--color-primary)] transition-opacity duration-200 animate-pulse"></div>
+		<div class="task-card-drop-indicator task-card-drop-indicator-bottom"></div>
 	{/if}
 </div>

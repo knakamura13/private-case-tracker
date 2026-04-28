@@ -14,12 +14,12 @@
 	} = $props();
 </script>
 
-<Card class={cn('flex h-full flex-col p-4', className)}>
-	<div class="mb-4 flex items-center justify-between border-b border-border pb-3">
-		<h2 class="text-lg font-display font-semibold text-foreground tracking-tight">{title}</h2>
+<Card class={cn('widget', className)}>
+	<div class="widget-header">
+		<h2 class="widget-title">{title}</h2>
 		{#if href}
-			<a href={href} class="text-xs text-primary underline-offset-4 hover:underline">Open</a>
+			<a href={href} class="widget-link">Open</a>
 		{/if}
 	</div>
-	<div class="flex-1">{@render children()}</div>
+	<div class="widget-content">{@render children()}</div>
 </Card>
