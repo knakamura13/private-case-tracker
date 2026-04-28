@@ -8,4 +8,4 @@
 	} = $props();
 </script>
 
-<div class={cn("w-full h-px bg-border", klass)} aria-hidden="true"></div>
+<div class={cn("hairline-divider", klass)} aria-hidden="true"></div>
