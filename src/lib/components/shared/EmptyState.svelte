@@ -16,15 +16,15 @@
 	} = $props();
 </script>
 
-<div class={cn('flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/30 p-10 text-center', klass)}>
+<div class={cn('empty-state', klass)}>
 	{#if icon}
-		<div class="mb-3 text-muted-foreground">{@render icon()}</div>
+		<div class="empty-state-icon">{@render icon()}</div>
 	{/if}
-	<h3 class="text-base font-semibold">{title}</h3>
+	<h3 class="empty-state-title">{title}</h3>
 	{#if description}
-		<p class="mt-1 max-w-md text-sm text-muted-foreground">{description}</p>
+		<p class="empty-state-description">{description}</p>
 	{/if}
 	{#if actions}
-		<div class="mt-4 flex items-center gap-2">{@render actions()}</div>
+		<div class="empty-state-actions">{@render actions()}</div>
 	{/if}
 </div>
