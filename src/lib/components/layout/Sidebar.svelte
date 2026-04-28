@@ -8,16 +8,16 @@
 	let { workspaceName, onNavigate }: { workspaceName: string; onNavigate?: () => void } = $props();
 </script>
 
-<aside class="flex h-full w-60 flex-col border-r border-border bg-card">
-	<a href="/dashboard" class="flex h-14 items-center gap-2 px-5 hover:bg-muted/50 transition-colors border-b-0">
-		<img src="/pwa/icon-192.png" alt="" class="h-5 w-5 rounded-sm" aria-hidden="true" />
+<aside class="sidebar">
+	<a href="/dashboard" class="sidebar-header">
+		<img src="/pwa/icon-192.png" alt="" class="sidebar-logo" aria-hidden="true" />
 		<div class="min-w-0">
-			<p class="text-sm font-semibold leading-tight">Case Tracker</p>
-			<p class="truncate text-xs text-muted-foreground" title={workspaceName}>{workspaceName}</p>
+			<p class="sidebar-title">Case Tracker</p>
+			<p class="sidebar-subtitle" title={workspaceName}>{workspaceName}</p>
 		</div>
 	</a>
-	<nav class="flex-1 overflow-y-auto p-2" aria-label="Primary">
-		<ul class="space-y-1">
+	<nav class="sidebar-nav" aria-label="Primary">
+		<ul class="sidebar-nav-list">
 			{#each navigation.filter((i) => !i.ownerOnly || isOwner) as item (item.href)}
 				{@const active = $page.url.pathname === item.href || $page.url.pathname.startsWith(`${item.href}/`)}
 				<li>
@@ -27,13 +27,11 @@
 						onclick={() => onNavigate?.()}
 						aria-current={active ? 'page' : undefined}
 						class={cn(
-							'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition duration-200 active:scale-[0.98]',
-							active
-								? 'bg-primary/10 text-primary'
-								: 'text-muted-foreground hover:bg-muted hover:text-foreground'
+							'sidebar-nav-item',
+							active ? 'sidebar-nav-item-active' : 'sidebar-nav-item-inactive'
 						)}
 					>
-						<item.icon class="h-4 w-4" aria-hidden="true" />
+						<item.icon class="sidebar-nav-icon" aria-hidden="true" />
 						<span>{item.label}</span>
 					</a>
 				</li>

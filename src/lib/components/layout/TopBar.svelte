@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { Menu, Search, LogOut, Settings } from 'lucide-svelte';
 	import { initials } from '$lib/utils/format';
-	import { cn } from '$lib/utils/cn';
 
 	let {
 		user,
@@ -43,13 +42,11 @@
 	});
 </script>
 
-<header
-	class="sticky top-0 z-30 flex h-14 items-center justify-between gap-1 border-b border-border/50 px-3 sm:gap-2 sm:px-4 transition duration-300 glass"
->
-	<div class="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
+<header class="topbar">
+	<div class="topbar-left">
 		<button
 			type="button"
-			class="flex h-11 w-11 items-center justify-center rounded-md hover:bg-muted md:hidden"
+			class="topbar-menu-btn"
 			aria-label="Open sidebar"
 			onclick={onToggleSidebar}
 		>
@@ -58,9 +55,7 @@
 		<button
 			type="button"
 			onclick={onOpenSearch}
-			class={cn(
-				'flex h-9 w-full min-w-[120px] sm:min-w-[220px] max-w-xl items-center gap-2 rounded-md border border-input bg-card px-2 sm:px-3 text-sm text-muted-foreground transition-colors duration-150 hover:border-muted-foreground'
-			)}
+			class="topbar-search-btn"
 		>
 			<Search class="h-4 w-4" />
 			<span class="truncate">Search tasks, forms, evidence…</span>
@@ -68,11 +63,11 @@
 		</button>
 	</div>
 
-	<div class="flex items-center gap-1 sm:gap-2">
+	<div class="topbar-right">
 		<div class="relative">
 			<button
 				bind:this={menuButtonEl}
-				class="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-xs font-semibold transition duration-200 hover:bg-muted-foreground hover:text-foreground active:scale-95"
+				class="topbar-avatar-btn"
 				aria-label="Open user menu"
 				type="button"
 				aria-haspopup="true"
@@ -85,48 +80,48 @@
 			{#if menuOpen}
 				<div
 					bind:this={menuEl}
-					class="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-56 rounded-md border border-border bg-card p-2 text-sm shadow-lg"
+					class="topbar-dropdown"
 					id="user-menu"
 					role="group"
 					aria-label="User menu"
 				>
-					<div class="px-2 py-1.5">
-						<p class="truncate font-medium">{user.name ?? user.email}</p>
-						<p class="truncate text-xs text-muted-foreground">{user.email}</p>
+					<div class="topbar-dropdown-user">
+						<p class="topbar-dropdown-name">{user.name ?? user.email}</p>
+						<p class="topbar-dropdown-email">{user.email}</p>
 					</div>
-					<div class="my-1 border-t border-border"></div>
+					<div class="topbar-dropdown-divider"></div>
 					<a
-						class="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted"
+						class="topbar-dropdown-item"
 						href="/settings/profile"
 						onclick={closeMenu}
 					>
 						Profile
 					</a>
 					<a
-						class="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted"
+						class="topbar-dropdown-item"
 						href="/settings/security"
 						onclick={closeMenu}
 					>
 						Security
 					</a>
 					<a
-						class="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted"
+						class="topbar-dropdown-item"
 						href="/settings/members"
 						onclick={closeMenu}
 					>
 						Members
 					</a>
 					<a
-						class="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted"
+						class="topbar-dropdown-item"
 						href="/settings"
 						onclick={closeMenu}
 					>
 						<Settings class="h-4 w-4" /> Settings
 					</a>
-					<div class="my-1 border-t border-border"></div>
+					<div class="topbar-dropdown-divider"></div>
 					<form method="post" action="/auth/sign-out">
 						<button
-							class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-destructive hover:bg-destructive/10"
+							class="topbar-dropdown-item topbar-dropdown-item-destructive"
 							type="submit"
 							onclick={closeMenu}
 						>
