@@ -34,19 +34,17 @@
 			onClick?.();
 		}
 	}
+
+	const richTextClass = $derived(cn('rich-text', lineClamp && 'rich-text-line-clamp', klass));
+	const editableClass = $derived(cn('rich-text-editable', richTextClass));
 </script>
 
 {#if parts.length === 0}
-	<p class={cn('text-sm text-muted-foreground', klass)}></p>
+	<p class={richTextClass}></p>
 {:else}
 	{#if editable}
 		<div
-			class={cn(
-				'text-sm text-muted-foreground whitespace-pre-wrap',
-				lineClamp && 'line-clamp-2',
-				'cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1 py-0.5 transition-colors',
-				klass
-			)}
+			class={editableClass}
 			onclick={handleClick}
 			onkeydown={handleKeyDown}
 			role="button"
@@ -58,27 +56,27 @@
 						href={part.href}
 						target="_blank"
 						rel="noopener noreferrer"
-						class="text-primary hover:underline break-all"
+						class="rich-text-link"
 						onclick={(e) => e.stopPropagation()}
 					>
 						{part.content}
 					</a>
 				{:else if part.type === 'phone'}
-					<a href={part.href} target="_blank" rel="noopener noreferrer" class="text-primary hover:underline" onclick={(e) => e.stopPropagation()}>{part.content}</a>
+					<a href={part.href} target="_blank" rel="noopener noreferrer" class="rich-text-link" onclick={(e) => e.stopPropagation()}>{part.content}</a>
 				{:else}
 					{part.content}
 				{/if}
 			{/each}
 		</div>
 	{:else}
-		<p class={cn('text-sm text-muted-foreground whitespace-pre-wrap', lineClamp && 'line-clamp-2', klass)}>
+		<p class={richTextClass}>
 				{#each parts as part}
 				{#if part.type === 'url'}
 					<a
 						href={part.href}
 						target="_blank"
 						rel="noopener noreferrer"
-						class="text-primary hover:underline break-all"
+						class="rich-text-link"
 						onclick={(e) => e.stopPropagation()}
 					>
 						{part.content}
@@ -88,7 +86,7 @@
 						href={part.href}
 						target="_blank"
 						rel="noopener noreferrer"
-						class="text-primary hover:underline"
+						class="rich-text-link"
 						onclick={(e) => e.stopPropagation()}
 					>
 						{part.content}

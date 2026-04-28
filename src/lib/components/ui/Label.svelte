@@ -9,8 +9,10 @@
 		...rest
 	}: HTMLLabelAttributes & { class?: string; children?: import('svelte').Snippet } = $props();
 	/* eslint-enable svelte/valid-compile */
+
+	const labelClass = $derived(cn('label', klass));
 </script>
 
-<label class={cn('text-sm font-medium leading-none', klass)} {...rest}>
+<label class={labelClass} {...rest}>
 	{#if children}{@render children()}{/if}
 </label>

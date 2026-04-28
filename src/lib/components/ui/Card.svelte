@@ -9,8 +9,10 @@
 		...rest
 	}: HTMLAttributes<HTMLDivElement> & { class?: string; children?: import('svelte').Snippet } = $props();
 	/* eslint-enable svelte/valid-compile */
+
+	const cardClass = $derived(cn('card', klass));
 </script>
 
-<div class={cn('rounded-lg border border-border bg-card text-card-foreground shadow-sm transition duration-300 ease-out hover:shadow-md', klass)} {...rest}>
+<div class={cardClass} {...rest}>
 	{#if children}{@render children()}{/if}
 </div>
