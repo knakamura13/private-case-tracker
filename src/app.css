@@ -2325,3 +2325,105 @@ a {
 	background-color: color-mix(in srgb, var(--color-brand-primary) 5%, transparent);
 	color: var(--color-brand-primary);
 }
+
+/* Timeline Page */
+.timeline-container {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-lg);
+}
+
+.timeline-phase {
+	margin-bottom: var(--space-sm);
+}
+
+.timeline-phase-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: var(--space-sm);
+}
+
+.timeline-phase-title {
+	font-size: var(--text-size-base);
+	font-weight: 600;
+}
+
+.timeline-phase-description {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+}
+
+.timeline-phase-actions {
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
+}
+
+.timeline-milestone-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+}
+
+.timeline-milestone-card {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-md);
+	padding: var(--space-md);
+	transition: all var(--duration-normal);
+}
+
+.timeline-milestone-card:hover {
+	border-color: color-mix(in srgb, var(--color-brand-primary) 30%, transparent);
+	transform: translateY(-0.125rem);
+	box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--color-brand-primary) 10%, transparent);
+	background-color: color-mix(in srgb, var(--color-card) 90%, transparent);
+}
+
+.timeline-status-indicator {
+	margin-top: 0.25rem;
+	height: 0.75rem;
+	width: 0.75rem;
+	flex-shrink: 0;
+	border-radius: 9999px;
+	border: 2px solid;
+}
+
+.timeline-milestone-content {
+	min-width: 0;
+	flex: 1;
+}
+
+.timeline-milestone-header {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-xs);
+}
+
+.timeline-milestone-title {
+	font-weight: 500;
+}
+
+.timeline-milestone-meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-xs);
+	margin-top: 0.25rem;
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+}
+
+.timeline-subtask-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+}
+
+.timeline-subtask-item {
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
+	font-size: var(--text-size-small);
+}
