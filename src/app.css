@@ -2816,3 +2816,48 @@ a {
 	font-size: var(--text-size-small);
 	color: var(--color-text-tertiary);
 }
+
+/* Auth Pages */
+.auth-form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+}
+
+.auth-divider {
+	position: relative;
+	margin: var(--space-lg) 0;
+}
+
+.auth-divider-line {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+}
+
+.auth-divider-line span {
+	width: 100%;
+	border-top: 1px solid var(--color-border);
+}
+
+.auth-divider-text {
+	position: relative;
+	display: flex;
+	justify-content: center;
+	font-size: var(--text-size-xs);
+	text-transform: uppercase;
+}
+
+.auth-divider-text span {
+	background-color: var(--color-background);
+	padding: 0 var(--space-sm);
+	color: var(--color-text-tertiary);
+}
+
+.auth-footer {
+	margin-top: var(--space-lg);
+	text-align: center;
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+}

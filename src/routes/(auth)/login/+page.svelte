@@ -66,7 +66,7 @@
 
 <AuthShell title="Sign in" subtitle="Sign in to your private case workspace.">
 	{#if needsTwoFactor}
-		<form class="space-y-4" onsubmit={handleTotp}>
+		<form class="auth-form" onsubmit={handleTotp}>
 			<div>
 				<Label for="totp">Authenticator code</Label>
 				<Input id="totp" inputmode="numeric" autocomplete="one-time-code" bind:value={totpCode} required />
@@ -77,7 +77,7 @@
 			</Button>
 		</form>
 	{:else}
-		<form class="space-y-4" onsubmit={handleLogin}>
+		<form class="auth-form" onsubmit={handleLogin}>
 			<div>
 				<Label for="email">Email</Label>
 				<Input id="email" type="email" autocomplete="email" bind:value={email} required />
@@ -91,15 +91,15 @@
 				{#snippet children()}<KeyRound class="h-4 w-4" /> {loading ? 'Signing in…' : 'Sign in'}{/snippet}
 			</Button>
 		</form>
-		<div class="relative my-6">
-			<div class="absolute inset-0 flex items-center"><span class="w-full border-t border-border"></span></div>
-			<div class="relative flex justify-center text-xs uppercase"><span class="bg-background px-2 text-muted-foreground">or</span></div>
+		<div class="auth-divider">
+			<div class="auth-divider-line"><span></span></div>
+			<div class="auth-divider-text"><span>or</span></div>
 		</div>
 		<Button variant="outline" class="w-full" onclick={handlePasskey} disabled={loading}>
 			{#snippet children()}<Fingerprint class="h-4 w-4" /> Sign in with passkey{/snippet}
 		</Button>
 		{#if data.allowSignup}
-			<p class="mt-6 text-center text-xs text-muted-foreground">
+			<p class="auth-footer">
 				Need to create the first account?
 				<a class="text-primary underline-offset-4 hover:underline" href="/signup">Create owner account</a>
 			</p>
