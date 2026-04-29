@@ -3,12 +3,13 @@
 	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
-	import { EllipsisVertical, MoreHorizontal, Plus, Link2, Folder } from 'lucide-svelte';
+	import { EllipsisVertical, MoreHorizontal, Plus, Link2, Folder, X } from 'lucide-svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import Label from '$lib/components/ui/Label.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
 
 	type ActionForm = { error?: string; errorId?: string | null } | undefined;
 	type DropIntent = 'reorder' | 'merge' | 'move-into';
@@ -1058,137 +1059,148 @@
 </div>
 
 {#if modalOpen}
-	<div
-		class="widget-popover"
-		role="dialog"
-		aria-modal="true"
-		aria-labelledby="quicklink-modal-title"
-	>
-		<button
-			type="button"
-			class="widget-popover-overlay"
-			aria-label="Close"
-			onclick={closeModal}
-		></button>
-		<div
-			class="widget-popover-panel"
-		>
-			<div class="widget-popover-header">
-				<p id="quicklink-modal-title" class="text-sm font-semibold">
-					{modalMode === 'folder'
-						? 'Rename folder'
-						: editing
-							? 'Edit link'
-							: 'Add link'}
-				</p>
-				<button type="button" class="rounded-md p-1 hover:bg-muted" aria-label="Close" onclick={closeModal}>
-					<span class="sr-only">Close</span>
-					<span aria-hidden="true" class="text-lg leading-none">×</span>
-				</button>
-			</div>
-			<div class="widget-popover-body">
-				{#if modalMode === 'folder'}
-					<form
-						method="post"
-						action="?/updateFolder"
-						class="modal-form-grid"
-						use:enhance={() => {
-							return async ({ result, update }) => {
-								await update();
-								if (result.type === 'redirect') closeModal();
-							};
-						}}
-					>
-						<input type="hidden" name="id" value={editingFolder?.id} />
+	<Dialog open={modalOpen} onClose={closeModal} maxWidth="max-w-md">
+		{#if modalMode === 'folder'}
+			<form
+				method="post"
+				action="?/updateFolder"
+				class="modal-form"
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						await update();
+						if (result.type === 'redirect') closeModal();
+					};
+				}}
+			>
+				<input type="hidden" name="id" value={editingFolder?.id} />
+				<div class="modal-header">
+					<div class="flex flex-1 items-start">
+						<Input
+							name="name"
+							bind:value={draftFolderName}
+							class="modal-title-input"
+							placeholder="Folder name (optional)"
+						/>
+					</div>
+					<Button type="button" variant="ghost" size="sm" onclick={closeModal} class="shrink-0">
+						{#snippet children()}<X class="h-5 w-5" />{/snippet}
+					</Button>
+				</div>
+				<div class="modal-content">
+					{#if form?.error}
+						<div class="modal-error">
+							<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
+						</div>
+					{/if}
+				</div>
+				<div class="modal-footer">
+					<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
+					<Button type="submit">Save</Button>
+				</div>
+			</form>
+		{:else}
+			{#if editing}
+				<form
+					method="post"
+					action="?/update"
+					class="modal-form"
+					use:enhance={() => {
+						return async ({ result, update }) => {
+							await update();
+							if (result.type === 'redirect') closeModal();
+						};
+					}}
+				>
+					<input type="hidden" name="id" value={editing.id} />
+					<div class="modal-header">
+						<div class="flex flex-1 items-start">
+							<Input
+								name="url"
+								bind:value={draftUrl}
+								class="modal-title-input"
+								placeholder="URL"
+								required
+							/>
+						</div>
+						<Button type="button" variant="ghost" size="sm" onclick={closeModal} class="shrink-0">
+							{#snippet children()}<X class="h-5 w-5" />{/snippet}
+						</Button>
+					</div>
+					<div class="modal-content">
 						<div>
-							<Label for="ql-folder-name">Folder name (optional)</Label>
-							<Input id="ql-folder-name" name="name" bind:value={draftFolderName} placeholder="Leave empty for unnamed folder" />
+							<Label for="ql-title">Title (optional)</Label>
+							<Input id="ql-title" name="title" bind:value={draftTitle} placeholder={prettyHostname(draftUrl)} />
+						</div>
+						<div>
+							<Label for="ql-description">Description (optional)</Label>
+							<Textarea id="ql-description" name="description" rows={2} bind:value={draftDescription} />
 						</div>
 						{#if form?.error}
-							<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
+							<div class="modal-error">
+								<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
+							</div>
 						{/if}
-						<div class="modal-form-actions">
-							<Button type="submit">Save</Button>
-							<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
-						</div>
-					</form>
-				{:else}
-					{#if editing}
-						<form
-							method="post"
-							action="?/update"
-							class="modal-form-grid"
-							use:enhance={() => {
-								return async ({ result, update }) => {
-									await update();
-									if (result.type === 'redirect') closeModal();
-								};
-							}}
-						>
-							<input type="hidden" name="id" value={editing.id} />
-							<div>
-								<Label for="ql-url">URL</Label>
-								<Input id="ql-url" name="url" required bind:value={draftUrl} />
-							</div>
-							<div>
-								<Label for="ql-title">Title (optional)</Label>
-								<Input id="ql-title" name="title" bind:value={draftTitle} placeholder={prettyHostname(draftUrl)} />
-							</div>
-							<div>
-								<Label for="ql-description">Description (optional)</Label>
-								<Textarea id="ql-description" name="description" rows={2} bind:value={draftDescription} />
-							</div>
-							{#if form?.error}
-								<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
-							{/if}
-							<div class="flex gap-2">
-								<Button type="submit">Save</Button>
-								<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
-							</div>
-						</form>
-					{:else}
-						<form
-							method="post"
-							action="?/create"
-							class="modal-form-grid"
-							use:enhance={() => {
-								return async ({ result, update }) => {
-									await update();
-									if (result.type === 'redirect') closeModal();
-								};
-							}}
-						>
-							{#if addingToFolder}
-								<input type="hidden" name="folderId" value={addingToFolder.id} />
-							{/if}
-							<div>
-								<Label for="ql-url-new">URL</Label>
-								<Input id="ql-url-new" name="url" required bind:value={draftUrl} />
-							</div>
-							<div>
-								<Label for="ql-title-new">Title (optional)</Label>
-								<Input
-									id="ql-title-new"
-									name="title"
-									bind:value={draftTitle}
-									placeholder={draftUrl ? prettyHostname(draftUrl) : 'Shown under the icon'}
-								/>
-							</div>
-							<div>
-								<Label for="ql-description-new">Description (optional)</Label>
-								<Textarea id="ql-description-new" name="description" rows={2} bind:value={draftDescription} />
-							</div>
-							{#if form?.error}
-								<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
-							{/if}
-							<div class="flex gap-2">
-								<Button type="submit">Add</Button>
-								<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
-							</div>
-						</form>
+					</div>
+					<div class="modal-footer">
+						<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
+						<Button type="submit">Save</Button>
+					</div>
+				</form>
+			{:else}
+				<form
+					method="post"
+					action="?/create"
+					class="modal-form"
+					use:enhance={() => {
+						return async ({ result, update }) => {
+							await update();
+							if (result.type === 'redirect') closeModal();
+						};
+					}}
+				>
+					{#if addingToFolder}
+						<input type="hidden" name="folderId" value={addingToFolder.id} />
 					{/if}
-				{/if}
-			</div>
-		</div>
-	</div>
+					<div class="modal-header">
+						<div class="flex flex-1 items-start">
+							<Input
+								name="url"
+								bind:value={draftUrl}
+								class="modal-title-input"
+								placeholder="URL"
+								required
+							/>
+						</div>
+						<Button type="button" variant="ghost" size="sm" onclick={closeModal} class="shrink-0">
+							{#snippet children()}<X class="h-5 w-5" />{/snippet}
+						</Button>
+					</div>
+					<div class="modal-content">
+						<div>
+							<Label for="ql-title-new">Title (optional)</Label>
+							<Input
+								id="ql-title-new"
+								name="title"
+								bind:value={draftTitle}
+								placeholder={draftUrl ? prettyHostname(draftUrl) : 'Shown under the icon'}
+							/>
+						</div>
+						<div>
+							<Label for="ql-description-new">Description (optional)</Label>
+							<Textarea id="ql-description-new" name="description" rows={2} bind:value={draftDescription} />
+						</div>
+						{#if form?.error}
+							<div class="modal-error">
+								<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
+							</div>
+						{/if}
+					</div>
+					<div class="modal-footer">
+						<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
+						<Button type="submit">Add</Button>
+					</div>
+				</form>
+			{/if}
+		{/if}
+	</Dialog>
 {/if}
