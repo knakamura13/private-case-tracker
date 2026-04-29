@@ -2513,3 +2513,53 @@ a {
 .evidence-count-btn:disabled {
 	opacity: 0.5;
 }
+
+/* Questions Page */
+.questions-section {
+	margin-bottom: var(--space-lg);
+}
+
+.questions-section-title {
+	font-size: var(--text-size-small);
+	font-weight: 600;
+}
+
+.questions-section-subtitle {
+	margin-bottom: var(--space-sm);
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+}
+
+.questions-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+}
+
+.questions-card {
+	padding: var(--space-sm);
+	transition: all var(--duration-normal);
+}
+
+.questions-card:hover {
+	border-color: color-mix(in srgb, var(--color-brand-primary) 30%, transparent);
+	transform: translateY(-0.25rem);
+	box-shadow: 0 20px 25px -5px color-mix(in srgb, var(--color-brand-primary) 5%, transparent);
+	background-color: color-mix(in srgb, var(--color-card) 90%, transparent);
+}
+
+.questions-card-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--space-xs);
+}
+
+.questions-card-meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-xs);
+	margin-top: var(--space-xs);
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+}
