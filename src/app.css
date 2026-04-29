@@ -2593,3 +2593,38 @@ a {
 .settings-data-danger h2 {
 	color: var(--color-destructive);
 }
+
+/* Settings Activity Page */
+.settings-activity-list {
+	border-top: 1px solid var(--color-border);
+	font-size: var(--text-size-small);
+}
+
+.settings-activity-item {
+	padding: var(--space-sm) var(--space-md);
+}
+
+.settings-activity-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-xs);
+}
+
+.settings-activity-summary {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.settings-activity-meta {
+	font-size: var(--text-size-xs);
+	color: var(--color-text-tertiary);
+}
+
+.settings-activity-empty {
+	padding: var(--space-md) var(--space-md);
+	text-align: center;
+	font-size: var(--text-size-small);
+	color: var(--color-text-tertiary);
+}
