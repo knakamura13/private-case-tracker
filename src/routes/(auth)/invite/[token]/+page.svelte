@@ -6,7 +6,7 @@
 </script>
 
 <AuthShell title="You've been invited" subtitle={`Join "${data.invitation.workspaceName}" as ${data.invitation.role.toLowerCase()}.`}>
-	<div class="space-y-4">
+	<div class="auth-form">
 		<p class="text-sm text-muted-foreground">
 			Invitation for <strong>{data.invitation.email}</strong>.
 		</p>
@@ -23,7 +23,7 @@
 				{data.invitation.email}. <a class="underline" href="/logout">Sign out</a> and sign back in.
 			</p>
 		{:else}
-			<form method="post" action="?/accept" class="space-y-4">
+			<form method="post" action="?/accept" class="auth-form">
 				<Button type="submit" class="w-full">Accept invitation</Button>
 			</form>
 		{/if}
