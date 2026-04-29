@@ -14,7 +14,7 @@
 		: 'Your account exists, but you have not been invited to a workspace yet.'}
 >
 	{#if data.isFirstUser}
-		<form method="post" action="?/create" class="space-y-4">
+		<form method="post" action="?/create" class="auth-form">
 			<div>
 				<Label for="name">Workspace name</Label>
 				<Input id="name" name="name" value="Our case" required />
