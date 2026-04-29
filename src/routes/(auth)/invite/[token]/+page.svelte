@@ -7,24 +7,24 @@
 
 <AuthShell title="You've been invited" subtitle={`Join "${data.invitation.workspaceName}" as ${data.invitation.role.toLowerCase()}.`}>
 	<div class="auth-form">
-		<p class="text-sm text-muted-foreground">
+		<p class="invite-text-sm invite-text-muted">
 			Invitation for <strong>{data.invitation.email}</strong>.
 		</p>
 		{#if !data.isSignedIn}
-			<p class="text-sm">
+			<p class="invite-text-sm">
 				Sign up with that email address to accept, or
-				<a class="text-primary underline-offset-4 hover:underline" href={`/login?next=/invite/${data.token}`}>sign in</a>
+				<a class="invite-link" href={`/login?next=/invite/${data.token}`}>sign in</a>
 				if you already have an account.
 			</p>
-			<Button href={`/signup?invite=${data.token}`} class="w-full">Create account to accept</Button>
+			<Button href={`/signup?invite=${data.token}`} class="invite-w-full">Create account to accept</Button>
 		{:else if data.currentUserEmail !== data.invitation.email}
-			<p class="text-sm text-destructive">
+			<p class="invite-text-sm invite-text-destructive">
 				You are signed in as {data.currentUserEmail}, but this invitation was sent to
-				{data.invitation.email}. <a class="underline" href="/logout">Sign out</a> and sign back in.
+				{data.invitation.email}. <a class="invite-underline" href="/logout">Sign out</a> and sign back in.
 			</p>
 		{:else}
 			<form method="post" action="?/accept" class="auth-form">
-				<Button type="submit" class="w-full">Accept invitation</Button>
+				<Button type="submit" class="invite-w-full">Accept invitation</Button>
 			</form>
 		{/if}
 	</div>

@@ -2864,6 +2864,37 @@ a {
 	color: var(--color-text-tertiary);
 }
 
+/* Invite page utilities */
+.invite-text-sm {
+	font-size: var(--text-size-small);
+}
+
+.invite-text-muted {
+	color: var(--color-text-tertiary);
+}
+
+.invite-text-destructive {
+	color: var(--color-destructive);
+}
+
+.invite-link {
+	color: var(--color-brand-primary);
+	text-decoration: underline;
+	text-underline-offset: 4px;
+}
+
+.invite-link:hover {
+	text-decoration: underline;
+}
+
+.invite-underline {
+	text-decoration: underline;
+}
+
+.invite-w-full {
+	width: 100%;
+}
+
 /* Settings Dev Page */
 .settings-dev-container {
 	margin: 0 auto;
