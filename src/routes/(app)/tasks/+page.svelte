@@ -298,15 +298,15 @@
 
 <PageHeader title="Tasks" description="Personal todos and errands (not legal proceedings)." number={getPageNumber('/tasks')} />
 
-<div class="flex gap-4 overflow-x-auto min-h-[calc(100vh-14rem)]">
+<div class="tasks-board">
 	{#each grouped as column (column.id)}
-		<div class="flex min-w-[300px] flex-col gap-3">
-			<div class="flex items-center justify-between">
+		<div class="tasks-column">
+			<div class="tasks-column-header">
 				<h2 class="font-semibold">{column.label}</h2>
 				<span class="text-sm text-muted-foreground">{column.tasks.length}</span>
 			</div>
 			<div
-				class="flex flex-col rounded-lg transition-colors duration-200"
+				class="tasks-column-content"
 				ondragenter={(e) => handleDragEnter(e, column.id)}
 				ondragover={(e) => handleDragOverColumn(e, column.id)}
 				ondragleave={handleDragLeave}
@@ -335,13 +335,11 @@
 					/>
 				{/each}
 				{#if column.tasks.length === 0}
-					<div class="py-1" role="listitem">
+					<div class="tasks-empty-placeholder" role="listitem">
 						<div
 							class={cn(
-								'rounded-lg border-2 border-dashed p-8 text-center text-sm text-muted-foreground transition duration-200',
-								dropTargetId === column.id
-									? 'scale-[1.02] border-primary bg-primary/5 text-primary'
-									: 'border-border'
+								'tasks-empty-box',
+								dropTargetId === column.id && 'tasks-empty-box-drop-target'
 							)}
 						>
 							{dropTargetId === column.id ? 'Drop here' : 'No tasks'}

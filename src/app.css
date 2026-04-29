@@ -2276,3 +2276,52 @@ a {
 	min-width: 0;
 	flex: 1;
 }
+
+/* Tasks Page */
+.tasks-board {
+	display: flex;
+	gap: var(--space-md);
+	overflow-x: auto;
+	min-height: calc(100vh - 14rem);
+}
+
+.tasks-column {
+	display: flex;
+	min-width: 18.75rem;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.tasks-column-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.tasks-column-content {
+	display: flex;
+	flex-direction: column;
+	border-radius: var(--radius-lg);
+	transition: background-color var(--duration-normal);
+}
+
+.tasks-empty-placeholder {
+	padding: var(--space-xs);
+}
+
+.tasks-empty-box {
+	border-radius: var(--radius-lg);
+	border: 2px dashed var(--color-border);
+	padding: 2rem;
+	text-align: center;
+	font-size: var(--text-size-small);
+	color: var(--color-text-tertiary);
+	transition: all var(--duration-normal);
+}
+
+.tasks-empty-box-drop-target {
+	transform: scale(1.02);
+	border-color: var(--color-brand-primary);
+	background-color: color-mix(in srgb, var(--color-brand-primary) 5%, transparent);
+	color: var(--color-brand-primary);
+}
