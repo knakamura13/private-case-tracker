@@ -1466,6 +1466,9 @@ a {
 	min-width: 0;
 	flex: 1;
 	flex-direction: column;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: var(--space-xs);
 }
 
 .task-card-title {
@@ -2059,6 +2062,9 @@ a {
 	background-color: var(--color-card);
 	box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
 	padding: var(--space-md);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
 }
 
 .widget-popover-overlay {
