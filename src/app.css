@@ -2701,3 +2701,27 @@ a {
 	padding: var(--space-xs) var(--space-sm);
 	font-size: var(--text-size-xs);
 }
+
+/* Settings Profile Page */
+.settings-profile-card {
+	padding: var(--space-md);
+	font-size: var(--text-size-small);
+}
+
+.settings-profile-grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: var(--space-sm);
+}
+
+@media (min-width: 48rem) {
+	.settings-profile-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+.settings-profile-label {
+	font-size: var(--text-size-xs);
+	text-transform: uppercase;
+	color: var(--color-text-tertiary);
+}
