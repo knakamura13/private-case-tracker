@@ -63,21 +63,21 @@
 
 <PageHeader title="Security" description="Passkeys and two-factor authentication." />
 
-<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-	<Card class="p-4">
-		<div class="flex items-start gap-3">
+<div class="settings-security-grid">
+	<Card class="settings-security-card">
+		<div class="settings-security-header">
 			<Fingerprint class="mt-1 h-5 w-5 text-primary" />
 			<div>
-				<h2 class="font-semibold">Passkeys</h2>
-				<p class="text-sm text-muted-foreground">Use Face ID, Touch ID, or a hardware key.</p>
+				<h2>Passkeys</h2>
+				<p>Use Face ID, Touch ID, or a hardware key.</p>
 			</div>
 		</div>
 		{#if passkeys.length === 0}
 			<Button class="mt-3" onclick={addPasskey}>Add a passkey</Button>
 		{:else}
-			<div class="mt-3 space-y-2">
+			<div class="settings-security-passkey-list">
 				{#each passkeys as pk (pk.id)}
-					<div class="flex items-center justify-between rounded-md border border-border bg-muted/50 p-2">
+					<div class="settings-security-passkey-item">
 						<span class="text-sm">{pk.name || 'Unnamed passkey'}</span>
 						<button
 							onclick={() => deletePasskey(pk.id)}
@@ -93,27 +93,27 @@
 		{/if}
 		{#if passkeyMsg}<p class="mt-2 text-xs text-muted-foreground">{passkeyMsg}</p>{/if}
 	</Card>
-	<Card class="p-4">
-		<div class="flex items-start gap-3">
+	<Card class="settings-security-card">
+		<div class="settings-security-header">
 			<ShieldCheck class="mt-1 h-5 w-5 text-primary" />
 			<div>
-				<h2 class="font-semibold">Authenticator app (TOTP)</h2>
-				<p class="text-sm text-muted-foreground">Use a TOTP app like 1Password or Authy as a second factor.</p>
+				<h2>Authenticator app (TOTP)</h2>
+				<p>Use a TOTP app like 1Password or Authy as a second factor.</p>
 			</div>
 		</div>
 		{#if !totpSecret}
 			<Button class="mt-3" onclick={enableTotp}>Enable two-factor</Button>
 		{:else}
 			<p class="mt-3 text-sm">Scan this URI in your authenticator app:</p>
-			<code class="mt-1 block break-all rounded bg-muted p-2 text-xs">{totpSecret.totpURI}</code>
+			<code class="settings-security-totp-uri">{totpSecret.totpURI}</code>
 			{#if totpSecret.backupCodes}
 				<p class="mt-3 text-xs text-muted-foreground">Backup codes (store somewhere safe):</p>
-				<ul class="mt-1 grid grid-cols-2 gap-1 text-xs font-mono">
+				<ul class="settings-security-backup-codes">
 					{#each totpSecret.backupCodes as c (c)}<li>{c}</li>{/each}
 				</ul>
 			{/if}
-			<div class="mt-3 flex items-center gap-2">
-				<input bind:value={totpCode} placeholder="Enter code" class="h-11 rounded-md border border-input bg-card px-3 text-sm" />
+			<div class="settings-security-totp-actions">
+				<input bind:value={totpCode} placeholder="Enter code" class="settings-security-totp-input" />
 				<Button onclick={verifyTotp}>Verify</Button>
 			</div>
 		{/if}
