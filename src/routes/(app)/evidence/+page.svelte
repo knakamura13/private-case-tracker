@@ -70,17 +70,17 @@
 	</Card>
 {/if}
 
-<div class="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
+<div class="evidence-grid">
 	{#each data.categories as cat (cat.category)}
-		<Card class="p-4">
-			<div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-				<div class="flex items-center gap-2">
-					<h3 class="font-semibold">{cat.category}</h3>
+		<Card class="evidence-card">
+			<div class="evidence-card-header">
+				<div class="evidence-card-title">
+					<h3>{cat.category}</h3>
 					{#if editingCategory === cat.category}
 						<form
 							method="post"
 							action="?/updateTarget"
-							class="flex items-center gap-1"
+							class="evidence-target-edit"
 							use:enhance={() => {
 								return async ({ result: _result, update }) => {
 									await update({ reset: false });
@@ -96,7 +96,7 @@
 								bind:value={editTarget}
 								min="0"
 								max="99"
-								class="w-14 rounded border border-border bg-background px-2 py-1 text-center text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+								class="evidence-target-input"
 								onkeydown={(e) => { if (e.key === 'Escape') cancelEdit(); }}
 							/>
 							<button type="submit" class="text-success hover:text-success/80" aria-label="Save">
@@ -151,19 +151,19 @@
 					</DropdownMenu>
 				{/if}
 			</div>
-			<div class="mb-4 h-2 overflow-hidden rounded bg-muted">
+			<div class="evidence-progress-bar">
 				<div
-					class="h-full bg-primary transition"
+					class="evidence-progress-fill"
 					style:width={`${Math.min(100, cat.targetCount > 0 ? (cat.currentCount / cat.targetCount) * 100 : cat.currentCount > 0 ? 100 : 0)}%`}
 				></div>
 			</div>
-			<div class="flex items-center justify-between">
+			<div class="evidence-card-actions">
 				<form method="post" action="?/adjustCount" class="flex gap-2" use:enhance>
 					<input type="hidden" name="category" value={cat.category} />
 					<input type="hidden" name="delta" value="-1" />
 					<button
 						type="submit"
-						class="rounded border border-border p-1.5 hover:bg-muted disabled:opacity-50"
+						class="evidence-count-btn"
 						disabled={cat.currentCount === 0}
 						aria-label="Decrease {cat.category} count"
 					>
@@ -175,7 +175,7 @@
 					<input type="hidden" name="delta" value="1" />
 					<button
 						type="submit"
-						class="rounded border border-border p-1.5 hover:bg-muted"
+						class="evidence-count-btn"
 						aria-label="Increase {cat.category} count"
 					>
 						<Plus class="h-3.5 w-3.5" />
@@ -189,18 +189,25 @@
 <!-- Add Category Modal -->
 {#if showAddModal}
 	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+		class="widget-popover"
 		role="dialog"
 		aria-modal="true"
 		tabindex="-1"
 		onclick={() => showAddModal = false}
 		onkeydown={(e) => { if (e.key === 'Escape') showAddModal = false; }}
 	>
-		<Card class="w-full max-w-md p-6" onclick={(e) => e.stopPropagation()}>
-			<h2 id="add-category-title" class="mb-4 text-lg font-semibold">Add Category</h2>
+		<button
+			type="button"
+			class="widget-popover-overlay"
+			aria-label="Close"
+			onclick={() => showAddModal = false}
+		></button>
+		<Card class="widget-popover-panel modal-form" onclick={(e) => e.stopPropagation()}>
+			<h2 id="add-category-title" class="modal-header-title">Add Category</h2>
 			<form
 				method="post"
 				action="?/addCategory"
+				class="modal-form-grid"
 				use:enhance={() => {
 					return async ({ result, update }) => {
 						await update({ reset: false });
@@ -210,21 +217,21 @@
 						}
 					};
 				}}
-			>
-				<div class="mb-4">
-					<label for="newCategory" class="mb-1 block text-sm font-medium">Category name</label>
+		>
+				<div>
+					<label for="newCategory" class="form-label">Category name</label>
 					<input
 						id="newCategory"
 						name="category"
 						type="text"
 						bind:value={newCategoryName}
 						maxlength="80"
-						class="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+						class="form-input"
 						placeholder="e.g., Passport"
 						onkeydown={(e) => { if (e.key === 'Escape') showAddModal = false; }}
 					/>
 				</div>
-				<div class="flex justify-end gap-2">
+				<div class="modal-actions">
 					<Button type="button" variant="ghost" onclick={() => showAddModal = false}>Cancel</Button>
 					<Button type="submit">Add</Button>
 				</div>
@@ -236,18 +243,25 @@
 <!-- Rename Category Modal -->
 {#if showRenameModal}
 	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+		class="widget-popover"
 		role="dialog"
 		aria-modal="true"
 		tabindex="-1"
 		onclick={() => showRenameModal = false}
 		onkeydown={(e) => { if (e.key === 'Escape') showRenameModal = false; }}
 	>
-		<Card class="w-full max-w-md p-6" onclick={(e) => e.stopPropagation()}>
-			<h2 class="mb-4 text-lg font-semibold">Rename Category</h2>
+		<button
+			type="button"
+			class="widget-popover-overlay"
+			aria-label="Close"
+			onclick={() => showRenameModal = false}
+		></button>
+		<Card class="widget-popover-panel modal-form" onclick={(e) => e.stopPropagation()}>
+			<h2 class="modal-header-title">Rename Category</h2>
 			<form
 				method="post"
 				action="?/renameCategory"
+				class="modal-form-grid"
 				use:enhance={() => {
 					return async ({ result, update }) => {
 						await update({ reset: false });
@@ -258,22 +272,22 @@
 						}
 					};
 				}}
-			>
+		>
 				<input type="hidden" name="oldName" value={renameOldName} />
-				<div class="mb-4">
-					<label for="renameCategory" class="mb-1 block text-sm font-medium">New name</label>
+				<div>
+					<label for="renameCategory" class="form-label">New name</label>
 					<input
 						id="renameCategory"
 						name="newName"
 						type="text"
 						bind:value={renameNewName}
 						maxlength="80"
-						class="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+						class="form-input"
 						placeholder="e.g., Passport"
 						onkeydown={(e) => { if (e.key === 'Escape') showRenameModal = false; }}
 					/>
 				</div>
-				<div class="flex justify-end gap-2">
+				<div class="modal-actions">
 					<Button type="button" variant="ghost" onclick={() => showRenameModal = false}>Cancel</Button>
 					<Button type="submit">Rename</Button>
 				</div>
@@ -285,16 +299,22 @@
 <!-- Delete Category Modal -->
 {#if showDeleteModal}
 	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+		class="widget-popover"
 		role="dialog"
 		aria-modal="true"
 		tabindex="-1"
 		onclick={() => showDeleteModal = false}
 		onkeydown={(e) => { if (e.key === 'Escape') showDeleteModal = false; }}
 	>
-		<Card class="w-full max-w-md p-6" onclick={(e) => e.stopPropagation()}>
-			<h2 class="mb-2 text-lg font-semibold">Delete Category</h2>
-			<p class="mb-4 text-sm text-muted-foreground">
+		<button
+			type="button"
+			class="widget-popover-overlay"
+			aria-label="Close"
+			onclick={() => showDeleteModal = false}
+		></button>
+		<Card class="widget-popover-panel modal-form" onclick={(e) => e.stopPropagation()}>
+			<h2 class="modal-header-title">Delete Category</h2>
+			<p class="modal-description">
 				Are you sure you want to delete "{deleteCategoryName}"? This action cannot be undone.
 			</p>
 			<form
@@ -311,7 +331,7 @@
 				}}
 			>
 				<input type="hidden" name="category" value={deleteCategoryName} />
-				<div class="flex justify-end gap-2">
+				<div class="modal-actions">
 					<Button type="button" variant="ghost" onclick={() => showDeleteModal = false}>Cancel</Button>
 					<Button type="submit" variant="destructive">Delete</Button>
 				</div>
