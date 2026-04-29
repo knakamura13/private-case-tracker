@@ -2960,3 +2960,45 @@ a {
 	-webkit-box-orient: vertical;
 	overflow-wrap: break-word;
 }
+
+/* Question Detail Page */
+.question-detail-card {
+	padding: var(--space-md);
+	margin-bottom: var(--space-md);
+}
+
+.question-detail-card h2 {
+	font-size: var(--text-size-lg);
+	font-weight: 600;
+}
+
+.question-detail-category {
+	margin-top: var(--space-xs);
+	font-size: var(--text-size-xs);
+	text-transform: uppercase;
+	color: var(--color-text-tertiary);
+}
+
+.question-detail-answer-card {
+	padding: var(--space-md);
+	font-size: var(--text-size-small);
+}
+
+.question-detail-answer-card h3 {
+	margin-bottom: var(--space-sm);
+	font-weight: 600;
+}
+
+.question-detail-answer-text {
+	white-space: pre-wrap;
+	color: var(--color-text-tertiary);
+}
+
+.question-detail-source-link {
+	margin-top: var(--space-sm);
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-xs);
+	font-size: var(--text-size-small);
+	color: var(--color-brand-primary);
+}
