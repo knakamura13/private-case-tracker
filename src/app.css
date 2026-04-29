@@ -2085,6 +2085,16 @@ a {
 	flex: 1;
 }
 
+.modal-form-grid {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+}
+
+.modal-form-actions {
+	margin-top: var(--space-md);
+}
+
 .widget-popover-overlay {
 	position: absolute;
 	inset: 0;

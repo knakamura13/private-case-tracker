@@ -1107,7 +1107,7 @@
 						{#if form?.error}
 							<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
 						{/if}
-						<div class="flex gap-2">
+						<div class="modal-form-actions">
 							<Button type="submit">Save</Button>
 							<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
 						</div>
