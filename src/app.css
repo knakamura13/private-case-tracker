@@ -3002,3 +3002,47 @@ a {
 	font-size: var(--text-size-small);
 	color: var(--color-brand-primary);
 }
+
+/* Error Detail Page */
+.error-detail-container {
+	margin: 0 auto;
+	width: 100%;
+	max-width: 64rem;
+	padding: var(--space-lg);
+}
+
+.error-detail-header h1 {
+	margin-top: var(--space-md);
+	font-size: var(--text-size-2xl);
+	font-weight: 600;
+}
+
+.error-detail-header p {
+	margin-top: var(--space-xs);
+	font-size: var(--text-size-small);
+	color: var(--color-text-tertiary);
+	font-family: monospace;
+}
+
+.error-detail-context {
+	margin-top: var(--space-xl);
+	border-radius: var(--radius-lg);
+	border: 1px solid var(--color-border);
+	background-color: var(--color-card);
+	padding: var(--space-md);
+}
+
+.error-detail-context h2 {
+	font-size: var(--text-size-small);
+	font-weight: 600;
+}
+
+.error-detail-context pre {
+	margin-top: var(--space-sm);
+	max-height: 24rem;
+	overflow: auto;
+	border-radius: var(--radius-md);
+	background-color: var(--color-muted);
+	padding: var(--space-sm);
+	font-size: var(--text-size-xs);
+}
