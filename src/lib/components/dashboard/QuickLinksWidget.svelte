@@ -608,12 +608,12 @@
   The ⋮ button is positioned relative to the circle span itself,
   so it doesn't push the circle down or affect alignment.
 -->
-<div class="flex flex-wrap items-start gap-1 sm:gap-2">
+<div class="widget-container">
 	{#each visibleFolders as folder (folder.id)}
 		{@const folderLinks = folderLinksMap[folder.id] ?? []}
 		{@const previewLinks = folderLinks.slice(0, 4)}
 		<div
-			class="group flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 transition-shadow hover:bg-muted/40 focus-within:bg-muted/40 cursor-pointer"
+			class="widget-item"
 			draggable={true}
 			ondragstart={(e) => handleDragStart(e, folder.id)}
 			ondragenter={(e) => handleDragEnter(e, folder.id)}
@@ -621,23 +621,22 @@
 			ondragleave={handleDragLeave}
 			ondrop={(e) => handleDrop(e, folder.id)}
 			ondragend={handleDragEnd}
-			class:ring-2={dropTargetId === folder.id && (dropIntent === 'reorder' || dropIntent === 'move-into')}
-			class:ring-primary={dropTargetId === folder.id && dropIntent === 'reorder'}
-			class:ring-emerald-500={dropTargetId === folder.id && dropIntent === 'move-into'}
-			class:ring-offset-2={dropTargetId === folder.id && (dropIntent === 'reorder' || dropIntent === 'move-into')}
-			class:opacity-0={draggingId === folder.id}
-			class:translate-x-4={dropInsertIndex !== null && allItems.findIndex((i) => i.id === folder.id) === dropInsertIndex}
+			class:widget-drop-target={dropTargetId === folder.id && (dropIntent === 'reorder' || dropIntent === 'move-into')}
+			class:widget-drop-target-reorder={dropTargetId === folder.id && dropIntent === 'reorder'}
+			class:widget-drop-target-move-into={dropTargetId === folder.id && dropIntent === 'move-into'}
+			class:widget-dragging={draggingId === folder.id}
+			class:widget-insert-indicator={dropInsertIndex !== null && allItems.findIndex((i) => i.id === folder.id) === dropInsertIndex}
 			role="button"
 			tabindex="0"
 			aria-label={folder.name ?? 'Folder'}
 		>
 			<!-- Circle + ⋮ menu wrapper -->
-			<div class="relative">
+			<div class="widget-circle-wrapper">
 				<!-- ⋮ button anchored to the top-right corner of the circle -->
 				<button
 					type="button"
 					draggable={false}
-					class="absolute -right-1 -top-1 z-10 rounded-full bg-background/90 p-0.5 text-muted-foreground opacity-0 shadow ring-1 ring-border transition-opacity hover:text-foreground group-hover:opacity-100 group-focus-within:opacity-100"
+					class="widget-action-btn"
 					aria-label={`Actions for ${folder.name ?? 'Folder'}`}
 					aria-expanded={menuOpenId === folder.id}
 					aria-haspopup="true"
@@ -649,13 +648,13 @@
 
 				{#if menuOpenId === folder.id}
 					<div
-						class="absolute left-1/2 top-full z-20 mt-1 min-w-34 -translate-x-1/2 rounded-md border border-border bg-card py-1 text-sm shadow-md"
+						class="widget-dropdown"
 						data-quicklink-menu="panel"
 						role="menu"
 					>
 						<button
 							type="button"
-							class="block w-full px-3 py-1.5 text-left hover:bg-muted"
+							class="widget-dropdown-item"
 							role="menuitem"
 							onclick={() => openEditFolder(folder)}
 						>
@@ -663,7 +662,7 @@
 						</button>
 						<button
 							type="button"
-							class="block w-full px-3 py-1.5 text-left text-destructive hover:bg-muted"
+							class="widget-dropdown-item widget-dropdown-item-destructive"
 							role="menuitem"
 							onclick={() => deleteFolder(folder.id)}
 						>
@@ -681,7 +680,7 @@
 							toggleFolderPopover(folder.id, e);
 						}
 					}}
-					class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60 outline-none focus-visible:ring-2 focus-visible:ring-ring relative cursor-pointer"
+					class="widget-circle"
 					role="button"
 					tabindex="0"
 					aria-label={folder.name ?? 'Folder'}
@@ -689,13 +688,13 @@
 					<Folder class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
 					<!-- Preview icons (up to 4) -->
 					{#if previewLinks.length > 0}
-						<div class="absolute bottom-0 right-0 flex h-4 w-4">
+						<div class="widget-preview-icons">
 							{#each previewLinks.slice(0, 2) as pl}
 								{#if pl.faviconUrl || preloadedFavicons.has(pl.id)}
 									<img
 										src={faviconForLink(pl)}
 										alt=""
-										class="h-3 w-3 rounded-sm object-contain"
+										class="widget-preview-icon"
 										referrerpolicy="no-referrer"
 										class:opacity-50={previewLinks.length > 1}
 										draggable={false}
@@ -709,31 +708,31 @@
 			</div>
 
 			<!-- Label: up to 2 lines, then ellipsis -->
-			{#if inlineEditingFolderId === folder.id}
-				<input
-					bind:this={inlineFolderInputEl}
-					bind:value={inlineFolderName}
-					placeholder="Name this folder"
-					class="h-7 w-full rounded-md border border-input bg-card px-2 text-center text-[11px] ring-offset-background placeholder:text-muted-foreground transition-colors duration-150 hover:border-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-					onclick={(event) => event.stopPropagation()}
-					onkeydown={(event) => {
-						event.stopPropagation();
-						if (event.key === 'Enter') {
-							event.preventDefault();
-							void saveInlineFolderName(folder.id);
-						}
-						if (event.key === 'Escape') {
-							event.preventDefault();
-							cancelInlineFolderName();
-						}
-					}}
-					onblur={() => void saveInlineFolderName(folder.id)}
-				/>
-			{:else if folder.name}
-				<span
-					class="line-clamp-2 w-full text-center text-[11px] leading-tight text-foreground"
-					title={folder.name}
-				>
+				{#if inlineEditingFolderId === folder.id}
+					<input
+						bind:this={inlineFolderInputEl}
+						bind:value={inlineFolderName}
+						placeholder="Name this folder"
+						class="widget-folder-input"
+						onclick={(event) => event.stopPropagation()}
+						onkeydown={(event) => {
+							event.stopPropagation();
+							if (event.key === 'Enter') {
+								event.preventDefault();
+								void saveInlineFolderName(folder.id);
+							}
+							if (event.key === 'Escape') {
+								event.preventDefault();
+								cancelInlineFolderName();
+							}
+						}}
+						onblur={() => void saveInlineFolderName(folder.id)}
+					/>
+				{:else if folder.name}
+					<span
+						class="widget-label"
+						title={folder.name}
+					>
 					{folder.name}
 				</span>
 			{/if}
@@ -742,19 +741,19 @@
 		<!-- Folder popover -->
 		{#if folderPopoverId === folder.id}
 			<div
-				class="fixed inset-0 z-50 flex items-start justify-center bg-background/60 p-4 pt-24 backdrop-blur-sm"
+				class="widget-popover"
 				data-folder-popover="panel"
 				role="dialog"
 				aria-modal="true"
 			>
 				<button
 					type="button"
-					class="absolute inset-0 z-0 cursor-default"
+					class="widget-popover-overlay"
 					aria-label="Close"
 					onclick={closeFolderDialog}
 				></button>
 				<div
-					class="relative z-10 w-full max-w-md overflow-hidden rounded-lg border border-border bg-card shadow-xl p-4"
+					class="widget-popover-panel"
 				>
 					<div class="flex items-center justify-between mb-4">
 						<input
@@ -826,16 +825,16 @@
 							</button>
 						</div>
 					{/if}
-					<div class="flex flex-wrap items-start gap-1 sm:gap-2">
+					<div class="widget-container">
 						{#each folderLinks as link (link.id)}
 							<div
-								class="group flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 hover:bg-muted/40 cursor-pointer"
+								class="widget-item"
 							>
-								<div class="relative">
+								<div class="widget-circle-wrapper">
 									<button
 										type="button"
 										draggable={false}
-										class="absolute -right-1 -top-1 z-10 rounded-full bg-background/90 p-0.5 text-muted-foreground opacity-0 shadow ring-1 ring-border transition-opacity hover:text-foreground group-hover:opacity-100"
+										class="widget-action-btn"
 										aria-label={`Actions for ${labelFor(link)}`}
 										onclick={(e) => toggleMenu(link.id, e)}
 									>
@@ -845,13 +844,13 @@
 									{#if menuOpenId === link.id && menuPosition}
 										<div
 											style="top: {menuPosition.top}px; left: {menuPosition.left}px;"
-											class="fixed z-50 -translate-x-1/2 min-w-34 rounded-md border border-border bg-card py-1 text-sm shadow-md"
+											class="widget-dropdown"
 											data-quicklink-menu="panel"
 											role="menu"
 										>
 											<button
 												type="button"
-												class="block w-full px-3 py-1.5 text-left hover:bg-muted"
+												class="widget-dropdown-item"
 												role="menuitem"
 												onclick={() => openEdit(link)}
 											>
@@ -859,7 +858,7 @@
 											</button>
 											<button
 												type="button"
-												class="block w-full px-3 py-1.5 text-left hover:bg-muted"
+												class="widget-dropdown-item"
 												role="menuitem"
 												onclick={() => moveLinkToRoot(link.id)}
 											>
@@ -878,7 +877,7 @@
 												<input type="hidden" name="id" value={link.id} />
 												<button
 													type="submit"
-													class="block w-full px-3 py-1.5 text-left text-destructive hover:bg-muted"
+													class="widget-dropdown-item widget-dropdown-item-destructive"
 													role="menuitem"
 												>
 													Remove
@@ -893,7 +892,7 @@
 										aria-label={labelFor(link)}
 										role="button"
 										tabindex="0"
-										class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60 outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+										class="widget-circle"
 									>
 										{#if brokenFavicons.has(link.id)}
 											<Link2 class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
@@ -912,7 +911,7 @@
 									</div>
 								</div>
 								<span
-									class="line-clamp-2 w-full text-center text-[11px] leading-tight text-foreground"
+									class="widget-label"
 									title={labelFor(link)}
 								>
 									{labelFor(link)}
@@ -927,7 +926,7 @@
 
 	{#each rootLinks as link (link.id)}
 		<div
-			class="group flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 transition-shadow hover:bg-muted/40 focus-within:bg-muted/40 cursor-pointer"
+			class="widget-item"
 			draggable={true}
 			ondragstart={(e) => handleDragStart(e, link.id)}
 			ondragenter={(e) => handleDragEnter(e, link.id)}
@@ -935,23 +934,22 @@
 			ondragleave={handleDragLeave}
 			ondrop={(e) => handleDrop(e, link.id)}
 			ondragend={handleDragEnd}
-			class:ring-2={dropTargetId === link.id && (dropIntent === 'reorder' || dropIntent === 'merge')}
-			class:ring-primary={dropTargetId === link.id && dropIntent === 'reorder'}
-			class:ring-amber-500={dropTargetId === link.id && dropIntent === 'merge'}
-			class:ring-offset-2={dropTargetId === link.id && (dropIntent === 'reorder' || dropIntent === 'merge')}
-			class:opacity-0={draggingId === link.id}
-			class:translate-x-4={dropInsertIndex !== null && allItems.findIndex((i) => i.id === link.id) === dropInsertIndex}
+			class:widget-drop-target={dropTargetId === link.id && (dropIntent === 'reorder' || dropIntent === 'merge')}
+			class:widget-drop-target-reorder={dropTargetId === link.id && dropIntent === 'reorder'}
+			class:widget-drop-target-merge={dropTargetId === link.id && dropIntent === 'merge'}
+			class:widget-dragging={draggingId === link.id}
+			class:widget-insert-indicator={dropInsertIndex !== null && allItems.findIndex((i) => i.id === link.id) === dropInsertIndex}
 			role="button"
 			tabindex="0"
 			aria-label={labelFor(link)}
 		>
 			<!-- Circle + ⋮ menu wrapper -->
-			<div class="relative">
+			<div class="widget-circle-wrapper">
 				<!-- ⋮ button anchored to the top-right corner of the circle -->
 				<button
 					type="button"
 					draggable={false}
-					class="absolute -right-1 -top-1 z-10 rounded-full bg-background/90 p-0.5 text-muted-foreground opacity-0 shadow ring-1 ring-border transition-opacity hover:text-foreground group-hover:opacity-100 group-focus-within:opacity-100"
+					class="widget-action-btn"
 					aria-label={`Actions for ${labelFor(link)}`}
 					aria-expanded={menuOpenId === link.id}
 					aria-haspopup="true"
@@ -963,13 +961,13 @@
 
 				{#if menuOpenId === link.id}
 					<div
-						class="absolute left-1/2 top-full z-20 mt-1 min-w-34 -translate-x-1/2 rounded-md border border-border bg-card py-1 text-sm shadow-md"
+						class="widget-dropdown"
 						data-quicklink-menu="panel"
 						role="menu"
 					>
 						<button
 							type="button"
-							class="block w-full px-3 py-1.5 text-left hover:bg-muted"
+							class="widget-dropdown-item"
 							role="menuitem"
 							onclick={() => openEdit(link)}
 						>
@@ -988,7 +986,7 @@
 							<input type="hidden" name="id" value={link.id} />
 							<button
 								type="submit"
-								class="block w-full px-3 py-1.5 text-left text-destructive hover:bg-muted"
+								class="widget-dropdown-item widget-dropdown-item-destructive"
 								role="menuitem"
 							>
 								Remove
@@ -1004,7 +1002,7 @@
 					aria-label={labelFor(link)}
 					role="button"
 					tabindex="0"
-					class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60 outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+					class="widget-circle"
 				>
 					{#if brokenFavicons.has(link.id)}
 						<Link2 class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
@@ -1026,7 +1024,7 @@
 
 			<!-- Label: up to 2 lines, then ellipsis -->
 			<span
-				class="line-clamp-2 w-full text-center text-[11px] leading-tight text-foreground"
+				class="widget-label"
 				title={labelFor(link)}
 			>
 				{labelFor(link)}
@@ -1037,43 +1035,43 @@
 	<!-- Add link tile — same structure: circle on top, label below -->
 	<button
 		type="button"
-		class="flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+		class="widget-item text-muted-foreground hover:text-foreground"
 		onclick={() => openAdd()}
 	>
-		<span class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60">
+		<span class="widget-circle">
 			<Plus class="h-6 w-6" aria-hidden="true" />
 		</span>
-		<span class="line-clamp-2 w-full text-center text-[11px] leading-tight">Add link</span>
+		<span class="widget-label">Add link</span>
 	</button>
 
 	<!-- Add folder tile -->
 	<button
 		type="button"
-		class="flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+		class="widget-item text-muted-foreground hover:text-foreground"
 		onclick={openAddFolder}
 	>
-		<span class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60">
+		<span class="widget-circle">
 			<Folder class="h-6 w-6" aria-hidden="true" />
 		</span>
-		<span class="line-clamp-2 w-full text-center text-[11px] leading-tight">Add folder</span>
+		<span class="widget-label">Add folder</span>
 	</button>
 </div>
 
 {#if modalOpen}
 	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-background/60 p-4 backdrop-blur-sm"
+		class="widget-popover"
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby="quicklink-modal-title"
 	>
 		<button
 			type="button"
-			class="absolute inset-0 z-0 cursor-default"
+			class="widget-popover-overlay"
 			aria-label="Close"
 			onclick={closeModal}
 		></button>
 		<div
-			class="relative z-10 w-full max-w-md max-h-[calc(100vh-2rem)] flex flex-col rounded-lg border border-border bg-card shadow-xl"
+			class="widget-popover-panel"
 		>
 			<div class="flex items-center justify-between border-b border-border px-4 py-3">
 				<p id="quicklink-modal-title" class="text-sm font-semibold">
@@ -1093,7 +1091,7 @@
 					<form
 						method="post"
 						action="?/updateFolder"
-						class="grid grid-cols-1 gap-4"
+						class="modal-form-grid"
 						use:enhance={() => {
 							return async ({ result, update }) => {
 								await update();
@@ -1119,7 +1117,7 @@
 						<form
 							method="post"
 							action="?/update"
-							class="grid grid-cols-1 gap-4"
+							class="modal-form-grid"
 							use:enhance={() => {
 								return async ({ result, update }) => {
 									await update();
@@ -1152,7 +1150,7 @@
 						<form
 							method="post"
 							action="?/create"
-							class="grid grid-cols-1 gap-4"
+							class="modal-form-grid"
 							use:enhance={() => {
 								return async ({ result, update }) => {
 									await update();

@@ -274,9 +274,9 @@
 </script>
 
 <Dialog {open} onClose={saveBeforeClose}>
-	<form method="post" {action} class="flex flex-col">
+	<form method="post" {action} class="modal-form">
 		<!-- Header -->
-		<div class="flex items-start justify-between border-b border-border p-4">
+		<div class="modal-header">
 			<div class="flex flex-1 items-start">
 				<Input
 					name="title"
@@ -287,21 +287,21 @@
 						markBlurred('title');
 						triggerAutoSave(true);
 					}}
-					class="flex-1 border-none bg-transparent p-0 text-lg font-semibold focus-visible:ring-0 focus-visible:ring-offset-0"
+					class="modal-title-input"
 					placeholder="Title"
 				/>
 			</div>
 			<div class="flex items-center gap-1">
 				{#if deleteAction}
-					<div class="relative" use:clickOutside={() => showMenuDropdown = false}>
+					<div class="modal-dropdown" use:clickOutside={() => showMenuDropdown = false}>
 						<Button type="button" variant="ghost" size="sm" onclick={() => showMenuDropdown = !showMenuDropdown} class="shrink-0">
 							{#snippet children()}<MoreHorizontal class="h-5 w-5" />{/snippet}
 						</Button>
 						{#if showMenuDropdown}
-							<div class="absolute right-0 top-full z-10 mt-1 w-32 rounded-md border border-border bg-card p-1 shadow-md">
+							<div class="modal-dropdown-menu">
 								<button
 									type="button"
-									class="w-full rounded-md px-2 py-1.5 text-left text-sm text-destructive hover:bg-destructive/10"
+									class="modal-dropdown-button"
 									onclick={async () => {
 										if (confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
 											const formData = new FormData();
@@ -330,20 +330,20 @@
 		</div>
 
 		<!-- Main Content -->
-		<div class="flex flex-col gap-4 p-4 md:flex-row">
+		<div class="modal-content-two-col">
 			<!-- Left Column -->
-			<div class="flex-1 space-y-4">
+			<div class="modal-content-left">
 				<!-- Actions Bar -->
-				<div class="flex flex-wrap gap-2">
-					<div class="relative" use:clickOutside={() => showOwnerDropdown = false}>
+				<div class="modal-actions-bar">
+					<div class="modal-dropdown" use:clickOutside={() => showOwnerDropdown = false}>
 						<Button type="button" variant="outline" size="sm" onclick={() => showOwnerDropdown = !showOwnerDropdown}>
 							{#snippet children()}<User class="h-3.5 w-3.5" /> {selectedOwner ? selectedOwner.name ?? selectedOwner.email : 'Owner'}{/snippet}
 						</Button>
 						{#if showOwnerDropdown}
-							<div class="absolute left-0 top-full z-10 mt-1 w-48 rounded-md border border-border bg-card p-1 shadow-md">
+							<div class="modal-dropdown-menu" style="left: 0; right: auto; width: 12rem;">
 								<button
 									type="button"
-									class="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
+									class="modal-dropdown-item"
 									onclick={() => {
 										ownerIdValue = '';
 										showOwnerDropdown = false;
@@ -355,7 +355,7 @@
 								{#each members as m (m.id)}
 									<button
 										type="button"
-										class="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
+										class="modal-dropdown-item"
 										onclick={() => {
 											ownerIdValue = m.id;
 											showOwnerDropdown = false;
@@ -387,7 +387,7 @@
 				{:else if dueDateValue}
 					<div class="mt-2 flex items-center gap-2 text-sm">
 						<span>Due: {dueDateValue}</span>
-						<Button type="button" variant="ghost" size="sm" class="h-6 w-6 p-0" onclick={() => {
+						<Button type="button" variant="ghost" size="sm" class="modal-icon-btn-sm" onclick={() => {
 							showDueDatePicker = true;
 						}}>
 							{#snippet children()}<MoreHorizontal class="h-4 w-4" />{/snippet}
@@ -398,16 +398,16 @@
 				<!-- Members -->
 				<div class="flex items-center gap-2">
 					{#if selectedOwner}
-						<div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
+						<div class="modal-avatar">
 							{ownerInitial(selectedOwner)}
 						</div>
-						<span class="text-sm text-muted-foreground">{selectedOwner.name ?? selectedOwner.email}</span>
+						<span class="modal-text-muted">{selectedOwner.name ?? selectedOwner.email}</span>
 					{/if}
 				</div>
 
 				<!-- Description -->
 				<div>
-					<div class="mb-2 text-sm font-medium">Description</div>
+					<div class="modal-label">Description</div>
 					{#if isEditingDescription}
 						<Textarea
 							name="description"
@@ -429,7 +429,7 @@
 							rows={4}
 						/>
 					{:else}
-						<Card class="p-3 bg-muted/50">
+						<Card class="modal-editable-card">
 							{#if descriptionValue}
 								<RichText
 									text={descriptionValue}
@@ -440,7 +440,7 @@
 								/>
 							{:else}
 								<div
-									class="text-sm text-muted-foreground italic cursor-pointer hover:bg-muted/50 rounded px-2 py-1"
+									class="modal-editable-placeholder"
 									onclick={() => {
 										isEditingDescription = true;
 									}}
@@ -461,28 +461,28 @@
 				</div>
 
 				<!-- Checklist -->
-				<Card class="p-3">
-					<div class="mb-2 flex items-center gap-2">
+				<Card class="modal-checklist-card">
+					<div class="modal-checklist-header">
 						<CheckSquare class="h-4 w-4 text-muted-foreground" />
 						<span class="text-sm font-medium">Checklist</span>
 					</div>
 					{#if editableChecklist.length > 0}
-						<div class="mb-3 flex items-center gap-2">
-							<span class="text-sm text-muted-foreground">{checklistProgress()}%</span>
-							<div class="h-1.5 flex-1 rounded-full bg-muted">
-								<div class="h-1.5 rounded-full bg-primary transition-all duration-300 ease-out" style="width: {checklistProgress()}%"></div>
+						<div class="modal-checklist-progress">
+							<span>{checklistProgress()}%</span>
+							<div class="modal-checklist-progress-bar">
+								<div class="modal-checklist-progress-fill" style="width: {checklistProgress()}%"></div>
 							</div>
 						</div>
 					{/if}
 					{#if editableChecklist.length > 0}
-						<div class="mb-3 space-y-2">
+						<div class="modal-checklist-items">
 							{#each editableChecklist as ci (ci.id)}
-								<div class="flex items-start gap-2">
+								<div class="modal-checklist-item">
 									<input
 										type="checkbox"
 										checked={ci.done}
 										onchange={() => toggleChecklistItem(ci.id)}
-										class="mt-0.5 h-4 w-4 rounded border-border"
+										class="modal-checklist-checkbox"
 									/>
 									{#if editingChecklistId === ci.id}
 										<Input
@@ -502,26 +502,26 @@
 												}
 												editingChecklistId = null;
 											}}
-											class="flex-1 h-7 text-sm"
+											class="modal-checklist-input"
 										/>
 									{:else}
-										<span class={ci.done ? 'line-through text-muted-foreground' : 'text-sm'}>{ci.text}</span>
+										<span class={ci.done ? 'modal-checklist-text-done' : 'modal-checklist-text'}>{ci.text}</span>
 									{/if}
 									<div class="relative ml-auto">
 										<Button
 											type="button"
 											variant="ghost"
 											size="sm"
-											class="h-6 w-6 p-0"
+											class="modal-icon-btn-sm"
 											onclick={() => openChecklistMenuId = openChecklistMenuId === ci.id ? null : ci.id}
 										>
 											{#snippet children()}<MoreHorizontal class="h-4 w-4" />{/snippet}
 										</Button>
 										{#if openChecklistMenuId === ci.id}
-											<div class="absolute right-0 top-full z-10 mt-1 w-24 rounded-md border border-border bg-card p-1 shadow-md" use:clickOutside={() => openChecklistMenuId = null}>
+											<div class="modal-dropdown-menu" style="width: 6rem;" use:clickOutside={() => openChecklistMenuId = null}>
 												<button
 													type="button"
-													class="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
+													class="modal-dropdown-item"
 													onclick={() => {
 														editingChecklistId = ci.id;
 														editingChecklistText = ci.text;
@@ -532,7 +532,7 @@
 												</button>
 												<button
 													type="button"
-													class="w-full rounded-md px-2 py-1.5 text-left text-sm text-destructive hover:bg-destructive/10"
+													class="modal-dropdown-button"
 													onclick={() => {
 														removeChecklistItem(ci.id);
 														openChecklistMenuId = null;
@@ -564,7 +564,7 @@
 										addChecklistItem();
 									}
 								}}
-								class="w-full rounded-md border border-input bg-card px-3 py-2 text-sm"
+								class="modal-checklist-add-input"
 							/>
 							<div class="flex justify-start gap-2">
 								<Button type="button" size="sm" onclick={() => {
@@ -581,10 +581,10 @@
 			</div>
 
 			<!-- Right Column - Settings -->
-			<div class="w-full space-y-4 md:w-64">
-				<Card class="p-3 space-y-3">
+			<div class="modal-content-right">
+				<Card class="modal-settings-card">
 					<div>
-						<label for="status" class="mb-1 block text-xs font-medium text-muted-foreground">Status</label>
+						<label for="status" class="modal-settings-label">Status</label>
 						<Select id="status" name="status" bind:value={statusValue} onchange={() => triggerAutoSave()} class="text-sm">
 							<option value="TODO">To Do</option>
 							<option value="IN_PROGRESS">In Progress</option>
@@ -592,7 +592,7 @@
 						</Select>
 					</div>
 					<div>
-						<label for="priority" class="mb-1 block text-xs font-medium text-muted-foreground">Priority</label>
+						<label for="priority" class="modal-settings-label">Priority</label>
 						<Select id="priority" name="priority" bind:value={priorityValue} onchange={() => triggerAutoSave()} class="text-sm">
 							<option value="LOW">Low</option>
 							<option value="MEDIUM">Medium</option>

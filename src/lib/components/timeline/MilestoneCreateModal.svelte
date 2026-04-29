@@ -115,267 +115,267 @@
 </script>
 
 <Dialog {open} {onClose}>
-	<form method="post" {action} use:enhance={onenhance} class="flex flex-col">
-				<input type="hidden" name="subTasks" value={subTasksJson} />
-				<input type="hidden" name="location" value={currentLocation} />
-				<!-- Header -->
-				<div class="flex items-start justify-between border-b border-border p-4">
-					<div class="flex flex-1 items-start">
-						<Input
-							name="title"
-							bind:value={titleValue}
-							class="flex-1 border-none bg-transparent p-0 text-lg font-semibold focus-visible:ring-0 focus-visible:ring-offset-0"
-							placeholder="Title"
-							required
-						/>
+	<form method="post" {action} use:enhance={onenhance} class="modal-form">
+		<input type="hidden" name="subTasks" value={subTasksJson} />
+		<input type="hidden" name="location" value={currentLocation} />
+		<!-- Header -->
+		<div class="modal-header">
+			<div class="flex flex-1 items-start">
+				<Input
+					name="title"
+					bind:value={titleValue}
+					class="modal-title-input"
+					placeholder="Title"
+					required
+				/>
+			</div>
+			<Button type="button" variant="ghost" size="sm" onclick={onClose} class="shrink-0">
+				{#snippet children()}<X class="h-5 w-5" />{/snippet}
+			</Button>
+		</div>
+
+		<!-- Main Content -->
+		<div class="modal-content-two-col">
+			<!-- Left Column -->
+			<div class="modal-content-left">
+				<!-- Actions Bar -->
+				<div class="modal-actions-bar">
+					<Button type="button" variant="outline" size="sm" onclick={() => showLocationInput = !showLocationInput}>
+						{#snippet children()}<MapPin class="h-3.5 w-3.5" /> Location{/snippet}
+					</Button>
+					<div class="modal-dropdown" use:clickOutside={() => showOwnerDropdown = false}>
+						<Button type="button" variant="outline" size="sm" onclick={() => showOwnerDropdown = !showOwnerDropdown}>
+							{#snippet children()}<User class="h-3.5 w-3.5" /> Owner{/snippet}
+						</Button>
+						{#if showOwnerDropdown}
+							<div class="modal-dropdown-menu" style="left: 0; right: auto; width: 12rem;">
+								<button
+									type="button"
+									class="modal-dropdown-item"
+									onclick={() => {
+										ownerIdValue = '';
+										showOwnerDropdown = false;
+									}}
+								>
+									Unassigned
+								</button>
+								{#each members as m (m.id)}
+									<button
+										type="button"
+										class="modal-dropdown-item"
+										onclick={() => {
+											ownerIdValue = m.id;
+											showOwnerDropdown = false;
+										}}
+									>
+										{m.name ?? m.email}
+									</button>
+								{/each}
+							</div>
+						{/if}
 					</div>
-					<Button type="button" variant="ghost" size="sm" onclick={onClose} class="shrink-0">
-						{#snippet children()}<X class="h-5 w-5" />{/snippet}
+				</div>
+				<div class="modal-actions-bar">
+					<Button type="button" variant="outline" size="sm" onclick={() => showDueDatePicker = !showDueDatePicker}>
+						{#snippet children()}<Calendar class="h-3.5 w-3.5" /> Due date{/snippet}
 					</Button>
 				</div>
 
-				<!-- Main Content -->
-				<div class="flex flex-col gap-4 p-4 md:flex-row">
-					<!-- Left Column -->
-					<div class="flex-1 space-y-4">
-						<!-- Actions Bar -->
-						<div class="flex flex-wrap gap-2">
-							<Button type="button" variant="outline" size="sm" onclick={() => showLocationInput = !showLocationInput}>
-								{#snippet children()}<MapPin class="h-3.5 w-3.5" /> Location{/snippet}
-							</Button>
-							<div class="relative" use:clickOutside={() => showOwnerDropdown = false}>
-								<Button type="button" variant="outline" size="sm" onclick={() => showOwnerDropdown = !showOwnerDropdown}>
-									{#snippet children()}<User class="h-3.5 w-3.5" /> Owner{/snippet}
-								</Button>
-								{#if showOwnerDropdown}
-									<div class="absolute left-0 top-full z-10 mt-1 w-48 rounded-md border border-border bg-card p-1 shadow-md">
-										<button
-											type="button"
-											class="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
-											onclick={() => {
-												ownerIdValue = '';
-												showOwnerDropdown = false;
-											}}
-										>
-											Unassigned
-										</button>
-										{#each members as m (m.id)}
-											<button
-												type="button"
-												class="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
-												onclick={() => {
-													ownerIdValue = m.id;
-													showOwnerDropdown = false;
-												}}
-											>
-												{m.name ?? m.email}
-											</button>
-										{/each}
-									</div>
-								{/if}
-							</div>
-						</div>
-						<div class="flex flex-wrap gap-2">
-							<Button type="button" variant="outline" size="sm" onclick={() => showDueDatePicker = !showDueDatePicker}>
-								{#snippet children()}<Calendar class="h-3.5 w-3.5" /> Due date{/snippet}
-							</Button>
-						</div>
-
-						<!-- Location Input -->
-						{#if showLocationInput}
-							<div class="flex items-center gap-2">
-								<Input
-									bind:value={locationAddress}
-									placeholder="Enter address..."
-									class="flex-1"
-									onkeydown={(e) => {
-										if (e.key === 'Enter') {
-											e.preventDefault();
-											handleLocationSave();
-										}
-									}}
-								/>
-								<Button type="button" variant="default" size="sm" onclick={handleLocationSave}>Save</Button>
-							</div>
-						{:else if currentLocation}
-							<div class="flex items-center gap-2 text-sm">
-								<a
-									href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(currentLocation)}`}
-									target="_blank"
-									rel="noopener noreferrer"
-									class="text-primary hover:underline"
-								>
-									{currentLocation}
-								</a>
-								<Button type="button" variant="ghost" size="sm" onclick={() => (currentLocation = '')}>
-									{#snippet children()}<X class="h-3 w-3" />{/snippet}
-								</Button>
-							</div>
-						{/if}
-
-						<!-- Due Date Picker -->
-						{#if showDueDatePicker}
-							<div class="flex items-center gap-2">
-								<Input type="date" bind:value={dueDateValue} class="flex-1" />
-								<Button type="button" variant="default" size="sm" onclick={() => showDueDatePicker = false}>Done</Button>
-							</div>
-						{:else if dueDateValue}
-							<div class="flex items-center gap-2 text-sm">
-								<span>Due: {dueDateValue}</span>
-								<Button type="button" variant="ghost" size="sm" onclick={() => (dueDateValue = '')}>
-									{#snippet children()}<X class="h-3 w-3" />{/snippet}
-								</Button>
-							</div>
-						{/if}
-
-						<!-- Description -->
-						<div>
-							<div class="mb-2 text-sm font-medium">Description</div>
-							<!-- Hidden input ensures description is always submitted even when textarea is unmounted -->
-							<input type="hidden" name="description" value={descriptionValue} />
-							{#if isEditingDescription}
-								<Textarea
-									bind:value={descriptionValue}
-									onblur={() => {
-										isEditingDescription = false;
-									}}
-									onkeydown={(e) => {
-										if (e.key === 'Escape') {
-											e.preventDefault();
-											isEditingDescription = false;
-										}
-									}}
-									placeholder="Add a more detailed description... URLs and phone numbers will be clickable."
-									rows={4}
-								/>
-							{:else}
-								<Card class="p-3 bg-muted/50">
-									{#if descriptionValue}
-										<RichText
-											text={descriptionValue}
-											editable={true}
-											onClick={() => {
-												isEditingDescription = true;
-											}}
-										/>
-									{:else}
-										<div
-											class="text-sm text-muted-foreground italic cursor-pointer hover:bg-muted/50 rounded px-2 py-1"
-											onclick={() => {
-												isEditingDescription = true;
-											}}
-											role="button"
-											tabindex={0}
-											onkeydown={(e) => {
-												if (e.key === 'Enter' || e.key === ' ') {
-													e.preventDefault();
-													isEditingDescription = true;
-												}
-											}}
-										>
-											Add a more detailed description...
-										</div>
-									{/if}
-								</Card>
-							{/if}
-						</div>
-
-						<!-- Checklist -->
-						<div>
-							<Button type="button" variant="outline" size="sm" onclick={() => showChecklistInput = !showChecklistInput}>
-								{#snippet children()}<Plus class="h-3.5 w-3.5" /> Add checklist{/snippet}
-							</Button>
-							{#if showChecklistInput || editableSubTasks.length > 0}
-								<div class="mt-2 space-y-2">
-									{#each editableSubTasks as st (st.id)}
-										<div class="flex items-center gap-2">
-											<input
-												type="checkbox"
-												checked={st.done}
-												onchange={() => toggleSubTask(st.id)}
-												class="h-4 w-4 rounded border-border"
-											/>
-											<Input
-												value={st.text}
-												oninput={(e) => {
-													editableSubTasks = editableSubTasks.map((s) =>
-														s.id === st.id ? { ...s, text: e.currentTarget.value } : s
-													);
-												}}
-												class="flex-1"
-											/>
-											<Button type="button" variant="ghost" size="sm" onclick={() => removeSubTask(st.id)}>
-												{#snippet children()}<X class="h-4 w-4" />{/snippet}
-											</Button>
-										</div>
-									{/each}
-									<div class="flex items-center gap-2">
-										<Input
-											bind:value={newSubTaskText}
-											placeholder="Add an item..."
-											onkeydown={(e) => {
-												if (e.key === 'Enter') {
-													e.preventDefault();
-													addSubTask();
-												}
-											}}
-											class="flex-1"
-										/>
-										<Button type="button" variant="outline" size="sm" onclick={addSubTask}>
-											{#snippet children()}<Plus class="h-4 w-4" /> Add{/snippet}
-										</Button>
-									</div>
-								</div>
-							{/if}
-						</div>
+				<!-- Location Input -->
+				{#if showLocationInput}
+					<div class="flex items-center gap-2">
+						<Input
+							bind:value={locationAddress}
+							placeholder="Enter address..."
+							class="flex-1"
+							onkeydown={(e) => {
+								if (e.key === 'Enter') {
+									e.preventDefault();
+									handleLocationSave();
+								}
+							}}
+						/>
+						<Button type="button" variant="default" size="sm" onclick={handleLocationSave}>Save</Button>
 					</div>
-
-					<!-- Right Column - Settings -->
-					<div class="w-full space-y-4 md:w-64">
-						<div>
-							<label for="phase" class="mb-1 block text-sm font-medium">Phase</label>
-							<Select id="phase" name="phase" bind:value={phaseValue}>
-								<!-- eslint-disable-next-line security/detect-object-injection -->
-								{#each PHASE_ORDER as p}<option value={p}>{PHASE_LABELS[p]}</option>{/each}
-							</Select>
-						</div>
-						<div>
-							<label for="status" class="mb-1 block text-sm font-medium">Status</label>
-							<Select id="status" name="status" bind:value={statusValue}>
-								<option value="PLANNED">Planned</option>
-								<option value="IN_PROGRESS">In progress</option>
-								<option value="DONE">Done</option>
-								<option value="BLOCKED">Blocked</option>
-								<option value="SKIPPED">Skipped</option>
-							</Select>
-						</div>
-						<div>
-							<label for="priority" class="mb-1 block text-sm font-medium">Priority</label>
-							<Select id="priority" name="priority" bind:value={priorityValue}>
-								<option value="LOW">Low</option>
-								<option value="MEDIUM">Medium</option>
-								<option value="HIGH">High</option>
-								<option value="CRITICAL">Critical</option>
-							</Select>
-						</div>
-					</div>
-				</div>
-
-				<!-- Hidden fields -->
-				<input type="hidden" name="dueDate" value={dueDateValue} />
-				<input type="hidden" name="ownerId" value={ownerIdValue} />
-
-				<!-- Error -->
-				{#if error}
-					<div class="px-4">
-						<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />
+				{:else if currentLocation}
+					<div class="flex items-center gap-2 text-sm">
+						<a
+							href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(currentLocation)}`}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="modal-link"
+						>
+							{currentLocation}
+						</a>
+						<Button type="button" variant="ghost" size="sm" onclick={() => (currentLocation = '')}>
+							{#snippet children()}<X class="h-3 w-3" />{/snippet}
+						</Button>
 					</div>
 				{/if}
 
-				<!-- Footer -->
-				<div class="flex justify-end gap-2 border-t border-border p-4">
-					<Button type="button" variant="outline" onclick={onClose}>Cancel</Button>
-					<Button type="submit">Create milestone</Button>
+				<!-- Due Date Picker -->
+				{#if showDueDatePicker}
+					<div class="flex items-center gap-2">
+						<Input type="date" bind:value={dueDateValue} class="flex-1" />
+						<Button type="button" variant="default" size="sm" onclick={() => showDueDatePicker = false}>Done</Button>
+					</div>
+				{:else if dueDateValue}
+					<div class="flex items-center gap-2 text-sm">
+						<span>Due: {dueDateValue}</span>
+						<Button type="button" variant="ghost" size="sm" onclick={() => (dueDateValue = '')}>
+							{#snippet children()}<X class="h-3 w-3" />{/snippet}
+						</Button>
+					</div>
+				{/if}
+
+				<!-- Description -->
+				<div>
+					<div class="modal-label">Description</div>
+					<!-- Hidden input ensures description is always submitted even when textarea is unmounted -->
+					<input type="hidden" name="description" value={descriptionValue} />
+					{#if isEditingDescription}
+						<Textarea
+							bind:value={descriptionValue}
+							onblur={() => {
+								isEditingDescription = false;
+							}}
+							onkeydown={(e) => {
+								if (e.key === 'Escape') {
+									e.preventDefault();
+									isEditingDescription = false;
+								}
+							}}
+							placeholder="Add a more detailed description... URLs and phone numbers will be clickable."
+							rows={4}
+						/>
+					{:else}
+						<Card class="modal-editable-card">
+							{#if descriptionValue}
+								<RichText
+									text={descriptionValue}
+									editable={true}
+									onClick={() => {
+										isEditingDescription = true;
+									}}
+								/>
+							{:else}
+								<div
+									class="modal-editable-placeholder"
+									onclick={() => {
+										isEditingDescription = true;
+									}}
+									role="button"
+									tabindex={0}
+									onkeydown={(e) => {
+										if (e.key === 'Enter' || e.key === ' ') {
+											e.preventDefault();
+											isEditingDescription = true;
+										}
+									}}
+								>
+									Add a more detailed description...
+								</div>
+							{/if}
+						</Card>
+					{/if}
 				</div>
-			</form>
+
+				<!-- Checklist -->
+				<div>
+					<Button type="button" variant="outline" size="sm" onclick={() => showChecklistInput = !showChecklistInput}>
+						{#snippet children()}<Plus class="h-3.5 w-3.5" /> Add checklist{/snippet}
+					</Button>
+					{#if showChecklistInput || editableSubTasks.length > 0}
+						<div class="modal-simple-checklist">
+							{#each editableSubTasks as st (st.id)}
+								<div class="modal-simple-checklist-item">
+									<input
+										type="checkbox"
+										checked={st.done}
+										onchange={() => toggleSubTask(st.id)}
+										class="modal-simple-checklist-checkbox"
+									/>
+									<Input
+										value={st.text}
+										oninput={(e) => {
+											editableSubTasks = editableSubTasks.map((s) =>
+												s.id === st.id ? { ...s, text: e.currentTarget.value } : s
+											);
+										}}
+										class="flex-1"
+									/>
+									<Button type="button" variant="ghost" size="sm" onclick={() => removeSubTask(st.id)}>
+										{#snippet children()}<X class="h-4 w-4" />{/snippet}
+									</Button>
+								</div>
+							{/each}
+							<div class="modal-simple-checklist-add">
+								<Input
+									bind:value={newSubTaskText}
+									placeholder="Add an item..."
+									onkeydown={(e) => {
+										if (e.key === 'Enter') {
+											e.preventDefault();
+											addSubTask();
+										}
+									}}
+									class="flex-1"
+								/>
+								<Button type="button" variant="outline" size="sm" onclick={addSubTask}>
+									{#snippet children()}<Plus class="h-4 w-4" /> Add{/snippet}
+								</Button>
+							</div>
+						</div>
+					{/if}
+				</div>
+			</div>
+
+			<!-- Right Column - Settings -->
+			<div class="modal-content-right">
+				<div>
+					<label for="phase" class="modal-label">Phase</label>
+					<Select id="phase" name="phase" bind:value={phaseValue}>
+						<!-- eslint-disable-next-line security/detect-object-injection -->
+						{#each PHASE_ORDER as p}<option value={p}>{PHASE_LABELS[p]}</option>{/each}
+					</Select>
+				</div>
+				<div>
+					<label for="status" class="modal-label">Status</label>
+					<Select id="status" name="status" bind:value={statusValue}>
+						<option value="PLANNED">Planned</option>
+						<option value="IN_PROGRESS">In progress</option>
+						<option value="DONE">Done</option>
+						<option value="BLOCKED">Blocked</option>
+						<option value="SKIPPED">Skipped</option>
+					</Select>
+				</div>
+				<div>
+					<label for="priority" class="modal-label">Priority</label>
+					<Select id="priority" name="priority" bind:value={priorityValue}>
+						<option value="LOW">Low</option>
+						<option value="MEDIUM">Medium</option>
+						<option value="HIGH">High</option>
+						<option value="CRITICAL">Critical</option>
+					</Select>
+				</div>
+			</div>
+		</div>
+
+		<!-- Hidden fields -->
+		<input type="hidden" name="dueDate" value={dueDateValue} />
+		<input type="hidden" name="ownerId" value={ownerIdValue} />
+
+		<!-- Error -->
+		{#if error}
+			<div class="modal-error">
+				<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />
+			</div>
+		{/if}
+
+		<!-- Footer -->
+		<div class="modal-footer">
+			<Button type="button" variant="outline" onclick={onClose}>Cancel</Button>
+			<Button type="submit">Create milestone</Button>
+		</div>
+	</form>
 </Dialog>

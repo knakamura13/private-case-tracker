@@ -34,8 +34,8 @@
 	const includedInPacket = $derived(Boolean(initial.includedInPacket));
 </script>
 
-<form method="post" {action} use:enhance={onenhance} class="grid grid-cols-1 gap-4 md:grid-cols-2">
-	<div class="md:col-span-2">
+<form method="post" {action} use:enhance={onenhance} class="form-grid">
+	<div class="form-grid-full">
 		<Label for="title">Title</Label>
 		<Input id="title" name="title" required value={val('title')} />
 	</div>
@@ -63,15 +63,15 @@
 		<Label for="dateEnd">Date end</Label>
 		<Input id="dateEnd" name="dateEnd" type="date" value={val('dateEnd')} />
 	</div>
-	<div class="md:col-span-2">
+	<div class="form-grid-full">
 		<Label for="peopleInvolved">People involved (comma-separated)</Label>
 		<Input id="peopleInvolved" name="peopleInvolved" value={val('peopleInvolved')} />
 	</div>
-	<div class="md:col-span-2">
+	<div class="form-grid-full">
 		<Label for="description">Description</Label>
 		<Textarea id="description" name="description" value={val('description')} />
 	</div>
-	<div class="md:col-span-2">
+	<div class="form-grid-full">
 		<Label for="significance">Significance</Label>
 		<Textarea id="significance" name="significance" value={val('significance')} rows={2} />
 	</div>
@@ -79,18 +79,18 @@
 		<Label for="confidenceScore">Confidence (1–5)</Label>
 		<Input id="confidenceScore" name="confidenceScore" type="number" min="1" max="5" value={val('confidenceScore', '3')} />
 	</div>
-	<div class="flex items-end gap-2">
-		<label class="inline-flex items-center gap-2 text-sm">
+	<div class="form-checkbox-wrapper">
+		<label class="form-checkbox-label">
 			<input type="checkbox" name="includedInPacket" checked={includedInPacket} />
 			Included in packet
 		</label>
 	</div>
-	<div class="md:col-span-2">
+	<div class="form-grid-full">
 		<Label for="notes">Notes</Label>
 		<Textarea id="notes" name="notes" value={val('notes')} />
 	</div>
-	{#if error}<p class="md:col-span-2 text-sm text-destructive">{error}</p>{/if}
-	<div class="md:col-span-2 flex gap-2">
+	{#if error}<p class="form-grid-full form-error">{error}</p>{/if}
+	<div class="form-grid-full form-actions">
 		<Button type="submit">{submitLabel}</Button>
 		<Button type="button" variant="outline" onclick={() => history.back()}>Cancel</Button>
 	</div>

@@ -31,7 +31,7 @@
 	/* eslint-enable security/detect-object-injection */
 </script>
 
-<form method="post" {action} use:enhance={onenhance} class="grid grid-cols-1 gap-4 md:grid-cols-2">
+<form method="post" {action} use:enhance={onenhance} class="form-grid">
 	<div>
 		<Label for="code">Code</Label>
 		<Input id="code" name="code" required value={val('code')} placeholder="e.g. I-130" />
@@ -40,7 +40,7 @@
 		<Label for="name">Name</Label>
 		<Input id="name" name="name" required value={val('name')} />
 	</div>
-	<div class="md:col-span-2">
+	<div class="form-grid-full">
 		<Label for="purpose">Purpose</Label>
 		<Input id="purpose" name="purpose" value={val('purpose')} />
 	</div>
@@ -68,12 +68,12 @@
 		<Label for="receiptNumber">Receipt number (stored encrypted, displayed masked)</Label>
 		<Input id="receiptNumber" name="receiptNumber" placeholder="IOE••••1234" value={val('receiptNumber')} />
 	</div>
-	<div class="md:col-span-2">
+	<div class="form-grid-full">
 		<Label for="notes">Notes</Label>
 		<Textarea id="notes" name="notes" value={val('notes')} />
 	</div>
-	{#if error}<p class="md:col-span-2 text-sm text-destructive">{error}</p>{/if}
-	<div class="md:col-span-2 flex gap-2">
+	{#if error}<p class="form-grid-full form-error">{error}</p>{/if}
+	<div class="form-grid-full form-actions">
 		<Button type="submit">{submitLabel}</Button>
 		<Button type="button" variant="outline" onclick={() => history.back()}>Cancel</Button>
 	</div>

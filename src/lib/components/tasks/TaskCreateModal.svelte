@@ -72,15 +72,15 @@
 </script>
 
 <Dialog {open} {onClose}>
-	<form method="post" {action} use:enhance={onenhance} class="flex flex-col">
+	<form method="post" {action} use:enhance={onenhance} class="modal-form">
 		<input type="hidden" name="checklist" value="[]" />
 		<!-- Header -->
-		<div class="flex items-start justify-between border-b border-border p-4">
+		<div class="modal-header">
 			<div class="flex flex-1 items-start">
 				<Input
 					name="title"
 					bind:value={titleValue}
-					class="flex-1 border-none bg-transparent p-0 text-lg font-semibold focus-visible:ring-0 focus-visible:ring-offset-0"
+					class="modal-title-input"
 					placeholder="Title"
 					required
 				/>
@@ -91,20 +91,20 @@
 		</div>
 
 		<!-- Main Content -->
-		<div class="flex flex-col gap-4 p-4 md:flex-row">
+		<div class="modal-content-two-col">
 			<!-- Left Column -->
-			<div class="flex-1 space-y-4">
+			<div class="modal-content-left">
 				<!-- Actions Bar -->
-				<div class="flex flex-wrap gap-2">
-					<div class="relative" use:clickOutside={() => showOwnerDropdown = false}>
+				<div class="modal-actions-bar">
+					<div class="modal-dropdown" use:clickOutside={() => showOwnerDropdown = false}>
 						<Button type="button" variant="outline" size="sm" onclick={() => showOwnerDropdown = !showOwnerDropdown}>
 							{#snippet children()}<User class="h-3.5 w-3.5" /> Owner{/snippet}
 						</Button>
 						{#if showOwnerDropdown}
-							<div class="absolute left-0 top-full z-10 mt-1 w-48 rounded-md border border-border bg-card p-1 shadow-md">
+							<div class="modal-dropdown-menu" style="left: 0; right: auto; width: 12rem;">
 								<button
 									type="button"
-									class="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
+									class="modal-dropdown-item"
 									onclick={() => {
 										ownerIdValue = '';
 										showOwnerDropdown = false;
@@ -115,7 +115,7 @@
 								{#each members as m (m.id)}
 									<button
 										type="button"
-										class="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
+										class="modal-dropdown-item"
 										onclick={() => {
 											ownerIdValue = m.id;
 											showOwnerDropdown = false;
@@ -149,7 +149,7 @@
 
 				<!-- Description -->
 				<div>
-					<div class="mb-2 text-sm font-medium">Description</div>
+					<div class="modal-label">Description</div>
 					<!-- Hidden input ensures description is always submitted even when textarea is unmounted -->
 					<input type="hidden" name="description" value={descriptionValue} />
 					{#if isEditingDescription}
@@ -166,10 +166,10 @@
 							}}
 							placeholder="Add a more detailed description... URLs and phone numbers will be clickable."
 							rows={6}
-							class="min-h-[120px]"
+							class="modal-editable-textarea"
 						/>
 					{:else}
-						<Card class="p-3 bg-muted/50 min-h-[120px]">
+						<Card class="modal-editable-card">
 							{#if descriptionValue}
 								<RichText
 									text={descriptionValue}
@@ -180,7 +180,7 @@
 								/>
 							{:else}
 								<div
-									class="text-sm text-muted-foreground italic cursor-pointer hover:bg-muted/50 rounded px-2 py-1"
+									class="modal-editable-placeholder"
 									onclick={() => {
 										isEditingDescription = true;
 									}}
@@ -202,9 +202,9 @@
 			</div>
 
 			<!-- Right Column - Settings -->
-			<div class="w-full space-y-4 md:w-64">
+			<div class="modal-content-right">
 				<div>
-					<label for="status" class="mb-1 block text-sm font-medium">Status</label>
+					<label for="status" class="modal-label">Status</label>
 					<Select id="status" name="status" bind:value={statusValue}>
 						<option value="TODO">To Do</option>
 						<option value="IN_PROGRESS">In Progress</option>
@@ -212,7 +212,7 @@
 					</Select>
 				</div>
 				<div>
-					<label for="priority" class="mb-1 block text-sm font-medium">Priority</label>
+					<label for="priority" class="modal-label">Priority</label>
 					<Select id="priority" name="priority" bind:value={priorityValue}>
 						<option value="LOW">Low</option>
 						<option value="MEDIUM">Medium</option>
@@ -229,13 +229,13 @@
 
 		<!-- Error -->
 		{#if error}
-			<div class="px-4">
+			<div class="modal-error">
 				<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />
 			</div>
 		{/if}
 
 		<!-- Footer -->
-		<div class="flex justify-end gap-2 border-t border-border p-4">
+		<div class="modal-footer">
 			<Button type="button" variant="outline" onclick={onClose}>Cancel</Button>
 			<Button type="submit">Create task</Button>
 		</div>
