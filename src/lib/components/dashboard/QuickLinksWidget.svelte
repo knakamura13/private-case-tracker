@@ -1073,7 +1073,7 @@
 		<div
 			class="widget-popover-panel"
 		>
-			<div class="flex items-center justify-between border-b border-border px-4 py-3">
+			<div class="widget-popover-header">
 				<p id="quicklink-modal-title" class="text-sm font-semibold">
 					{modalMode === 'folder'
 						? 'Rename folder'
@@ -1086,7 +1086,7 @@
 					<span aria-hidden="true" class="text-lg leading-none">×</span>
 				</button>
 			</div>
-			<div class="overflow-y-auto flex-1 p-4">
+			<div class="widget-popover-body">
 				{#if modalMode === 'folder'}
 					<form
 						method="post"
