@@ -827,7 +827,6 @@
 								</button>
 							</div>
 						{/if}
-						<div class="widget-container">
 						{#each folderLinks as link (link.id)}
 							<div
 								class="widget-item"
