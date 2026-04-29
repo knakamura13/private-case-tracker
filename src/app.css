@@ -2149,3 +2149,130 @@ a {
 	flex: 1;
 	padding: var(--space-md);
 }
+
+/* Dashboard Page */
+.dashboard-grid {
+	display: grid;
+	grid-template-columns: repeat(1, minmax(0, 1fr));
+	gap: var(--space-md);
+}
+
+@media (min-width: 768px) {
+	.dashboard-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (min-width: 1280px) {
+	.dashboard-grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
+.dashboard-section {
+	margin-bottom: var(--space-md);
+}
+
+.stats-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: var(--space-xs);
+	text-align: center;
+}
+
+.stat-card {
+	border-radius: var(--radius-lg);
+	border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+	background-color: color-mix(in srgb, var(--color-muted) 30%, transparent);
+	padding: var(--space-xs) var(--space-sm);
+}
+
+.stat-card-warning {
+	background-color: color-mix(in srgb, var(--color-warning) 10%, transparent);
+}
+
+.stat-card-success {
+	background-color: color-mix(in srgb, var(--color-success) 10%, transparent);
+}
+
+.stat-label {
+	font-size: 0.625rem;
+	text-transform: uppercase;
+	line-height: 1.25;
+	letter-spacing: 0.06em;
+	color: var(--color-text-tertiary);
+}
+
+.stat-value {
+	margin-top: 0.25rem;
+	font-size: 1.5rem;
+	font-family: var(--font-display);
+	font-weight: 600;
+}
+
+.task-list-item {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-xs);
+	border-radius: var(--radius-lg);
+	border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+	background-color: color-mix(in srgb, var(--color-card) 70%, transparent);
+	padding: var(--space-xs) var(--space-sm);
+}
+
+.progress-bar-container {
+	height: 0.375rem;
+	flex: 1;
+	overflow: hidden;
+	border-radius: var(--radius-md);
+	background-color: var(--color-muted);
+}
+
+.progress-bar-fill {
+	height: 100%;
+	background-color: var(--color-brand-primary);
+	transition: width 1000ms ease-out;
+}
+
+.progress-bar-fill-warning {
+	background-color: var(--color-warning);
+}
+
+.countdown-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-xs);
+}
+
+.phase-progress-item {
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
+}
+
+.phase-label {
+	width: 8rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--color-text-tertiary);
+}
+
+.phase-count {
+	width: 2.5rem;
+	text-align: right;
+	font-size: 0.625rem;
+	color: var(--color-text-tertiary);
+}
+
+.activity-item {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-xs);
+}
+
+.activity-content {
+	min-width: 0;
+	flex: 1;
+}

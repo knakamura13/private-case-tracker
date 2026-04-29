@@ -26,27 +26,27 @@
 
 <PageHeader title="Dashboard" number={getPageNumber('/dashboard')} />
 
-<div class="mb-4">
+<div class="dashboard-section">
 	<Widget title="Quick links">
 		<QuickLinksWidget links={data.quickLinks} folders={data.quickLinkFolders} form={form as { error?: string; errorId?: string | null } | undefined} />
 	</Widget>
 </div>
 
-<div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+<div class="dashboard-grid">
 	<Widget title="Tasks" href="/tasks">
 		<div class="space-y-4">
-			<div class="grid grid-cols-3 gap-2 text-center">
-				<div class="rounded-lg border border-border/70 bg-muted/30 px-2 py-3">
-					<p class="text-[10px] uppercase leading-tight tracking-[0.06em] text-muted-foreground">Pending</p>
-					<p class="mt-1 text-2xl font-display font-semibold">{data.taskSummary.pending}</p>
+			<div class="stats-grid">
+				<div class="stat-card">
+					<p class="stat-label">Pending</p>
+					<p class="stat-value">{data.taskSummary.pending}</p>
 				</div>
-				<div class="rounded-lg border border-border/70 bg-warning/10 px-2 py-3">
-					<p class="text-[10px] uppercase leading-tight tracking-[0.06em] text-muted-foreground">In Progress</p>
-					<p class="mt-1 text-2xl font-display font-semibold">{data.taskSummary.inProgress}</p>
+				<div class="stat-card stat-card-warning">
+					<p class="stat-label">In Progress</p>
+					<p class="stat-value">{data.taskSummary.inProgress}</p>
 				</div>
-				<div class="rounded-lg border border-border/70 bg-success/10 px-2 py-3">
-					<p class="text-[10px] uppercase leading-tight tracking-[0.06em] text-muted-foreground">Completed</p>
-					<p class="mt-1 text-2xl font-display font-semibold">{data.taskSummary.completed}</p>
+				<div class="stat-card stat-card-success">
+					<p class="stat-label">Completed</p>
+					<p class="stat-value">{data.taskSummary.completed}</p>
 				</div>
 			</div>
 
@@ -55,7 +55,7 @@
 			{:else}
 				<ul class="space-y-2 text-sm">
 					{#each data.tasksPreview as task (task.id)}
-						<li class="flex items-start gap-2 rounded-lg border border-border/60 bg-card/70 px-3 py-2">
+						<li class="task-list-item">
 							<CheckSquare class="mt-0.5 h-3.5 w-3.5 text-muted-foreground" />
 							<div class="min-w-0 flex-1">
 								<p class="truncate font-medium">{task.title}</p>
@@ -76,12 +76,12 @@
 	<Widget title="Case progress" href="/timeline">
 		<ul class="space-y-1.5 text-xs">
 			{#each data.phaseProgress as p (p.label)}
-				<li class="flex items-center gap-2">
-					<span class="w-32 truncate text-muted-foreground">{p.label}</span>
-					<div class="h-1.5 flex-1 overflow-hidden rounded bg-muted">
-						<div class="h-full bg-primary transition duration-1000 ease-out" style:width={mounted ? `${p.total === 0 ? 0 : (p.done / p.total) * 100}%` : '0%'}></div>
+				<li class="phase-progress-item">
+					<span class="phase-label">{p.label}</span>
+					<div class="progress-bar-container">
+						<div class="progress-bar-fill" style:width={mounted ? `${p.total === 0 ? 0 : (p.done / p.total) * 100}%` : '0%'}></div>
 					</div>
-					<span class="w-10 text-right text-[10px] text-muted-foreground">{p.done}/{p.total}</span>
+					<span class="phase-count">{p.done}/{p.total}</span>
 				</li>
 			{/each}
 		</ul>
@@ -94,7 +94,7 @@
 			<ul class="space-y-2 text-sm">
 				{#each data.countdowns as c (c.href)}
 					{@const d = daysUntil(c.date)}
-					<li class="flex items-center justify-between gap-2">
+					<li class="countdown-item">
 						<a class="truncate hover:underline" href={c.href}>{c.label}</a>
 						<Badge variant={d !== null && d < 7 ? 'warning' : 'secondary'}>
 							{d === null ? '—' : d === 0 ? 'Today' : d > 0 ? `in ${d}d` : `${-d}d ago`}
@@ -111,7 +111,7 @@
 		{:else}
 			<ul class="space-y-1 text-sm">
 				{#each data.missingCritical as m (m)}
-					<li class="flex items-start gap-2">
+					<li class="activity-item">
 						<AlertTriangle class="mt-0.5 h-3.5 w-3.5 text-warning" />
 						<span>{m}</span>
 					</li>
@@ -142,13 +142,13 @@
 			{#each data.evidenceCoverage.slice(0, 8) as c (c.category)}
 				<li class="flex items-center gap-2">
 					<span class="w-32 truncate text-muted-foreground">{c.category}</span>
-					<div class="h-1.5 flex-1 overflow-hidden rounded bg-muted">
-						<div
-							class="h-full transition duration-1000 ease-out {c.target > 0 && c.total < c.target ? 'bg-warning' : 'bg-primary'}"
-							style:width={mounted ? `${Math.min(100, c.target > 0 ? (c.total / c.target) * 100 : c.total > 0 ? 100 : 0)}%` : '0%'}
-						></div>
-					</div>
-					<span class="w-10 text-right text-[10px] text-muted-foreground">
+					<div class="progress-bar-container">
+					<div
+						class="progress-bar-fill {c.target > 0 && c.total < c.target ? 'progress-bar-fill-warning' : ''}"
+						style:width={mounted ? `${Math.min(100, c.target > 0 ? (c.total / c.target) * 100 : c.total > 0 ? 100 : 0)}%` : '0%'}
+					></div>
+				</div>
+				<span class="phase-count">
 						{c.total}{c.target > 0 ? `/${c.target}` : ''}
 					</span>
 				</li>
@@ -173,9 +173,9 @@
 		{:else}
 			<ul class="space-y-2 text-sm">
 				{#each data.activity as a (a.id)}
-					<li class="flex items-start gap-2">
+					<li class="activity-item">
 						<CalendarClock class="mt-0.5 h-3 w-3 text-muted-foreground" />
-						<div class="min-w-0 flex-1">
+						<div class="activity-content">
 							<p class="truncate">{a.summary}</p>
 							<p class="text-[10px] text-muted-foreground">{fmtRelative(a.createdAt)} · {a.user?.name ?? a.user?.email ?? 'system'}</p>
 						</div>
