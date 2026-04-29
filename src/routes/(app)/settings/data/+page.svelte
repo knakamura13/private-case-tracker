@@ -14,23 +14,23 @@
 
 <PageHeader title="Data & privacy" description="Export, audit, demo data, and danger zone." />
 
-<div class="space-y-4">
-	<Card class="p-4">
-		<h2 class="text-sm font-semibold">Activity</h2>
-		<p class="text-sm text-muted-foreground">Internal audit feed of important changes.</p>
+<div class="settings-data-container">
+	<Card class="settings-data-card">
+		<h2>Activity</h2>
+		<p>Internal audit feed of important changes.</p>
 		<Button variant="outline" class="mt-2" href="/settings/data/activity">Open activity</Button>
 	</Card>
 
-	<Card class="p-4">
-		<h2 class="text-sm font-semibold">Export</h2>
-		<p class="text-sm text-muted-foreground">Download a JSON snapshot of all your records (excluding raw uploaded files).</p>
+	<Card class="settings-data-card">
+		<h2>Export</h2>
+		<p>Download a JSON snapshot of all your records (excluding raw uploaded files).</p>
 		<Button variant="outline" class="mt-2" href="/api/export">Download JSON</Button>
 	</Card>
 
 	{#if data.hasDemo && isOwner}
-		<Card class="p-4">
-			<h2 class="text-sm font-semibold">Demo data</h2>
-			<p class="text-sm text-muted-foreground">Records prefixed with <code>[Demo]</code> from the seed script. Safe to remove anytime.</p>
+		<Card class="settings-data-card">
+			<h2>Demo data</h2>
+			<p>Records prefixed with <code>[Demo]</code> from the seed script. Safe to remove anytime.</p>
 			<form method="post" action="?/removeDemo" use:enhance>
 				<Button type="submit" variant="outline" class="mt-2">Remove demo data</Button>
 			</form>
@@ -38,9 +38,9 @@
 	{/if}
 
 	{#if isOwner}
-		<Card class="p-4">
-			<h2 class="text-sm font-semibold">Trash</h2>
-			<p class="text-sm text-muted-foreground">
+		<Card class="settings-data-card">
+			<h2>Trash</h2>
+			<p>
 				Permanently delete soft-deleted items.
 				Currently: {Object.values(data.trashedCounts).reduce((a, b) => a + b, 0)} items in trash.
 			</p>
@@ -49,9 +49,9 @@
 			</form>
 		</Card>
 
-		<Card class="border-destructive/40 bg-destructive/5 p-4">
-			<h2 class="text-sm font-semibold text-destructive">Danger zone</h2>
-			<p class="text-sm text-muted-foreground">
+		<Card class="settings-data-card settings-data-danger">
+			<h2>Danger zone</h2>
+			<p>
 				Permanently delete this workspace and all its data. Type the workspace name to confirm.
 			</p>
 			<form method="post" action="?/deleteWorkspace" use:enhance class="mt-3 flex flex-col gap-2 md:flex-row">

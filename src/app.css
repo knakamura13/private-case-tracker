@@ -2563,3 +2563,33 @@ a {
 	font-size: var(--text-size-xs);
 	color: var(--color-text-tertiary);
 }
+
+/* Settings Data Page */
+.settings-data-container {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+}
+
+.settings-data-card {
+	padding: var(--space-md);
+}
+
+.settings-data-card h2 {
+	font-size: var(--text-size-small);
+	font-weight: 600;
+}
+
+.settings-data-card p {
+	font-size: var(--text-size-small);
+	color: var(--color-text-tertiary);
+}
+
+.settings-data-danger {
+	border-color: color-mix(in srgb, var(--color-destructive) 40%, transparent);
+	background-color: color-mix(in srgb, var(--color-destructive) 5%, transparent);
+}
+
+.settings-data-danger h2 {
+	color: var(--color-destructive);
+}
