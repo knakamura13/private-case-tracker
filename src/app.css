@@ -2628,3 +2628,76 @@ a {
 	font-size: var(--text-size-small);
 	color: var(--color-text-tertiary);
 }
+
+/* Settings Members Page */
+.settings-members-card {
+	padding: var(--space-md);
+	margin-bottom: var(--space-lg);
+}
+
+.settings-members-card h2 {
+	margin-bottom: var(--space-sm);
+	font-size: var(--text-size-small);
+	font-weight: 600;
+}
+
+.settings-members-list {
+	border-top: 1px solid var(--color-border);
+}
+
+.settings-members-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--space-xs) 0;
+	font-size: var(--text-size-small);
+}
+
+.settings-members-item-actions {
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
+}
+
+.settings-members-invite-form {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: var(--space-sm);
+}
+
+@media (min-width: 48rem) {
+	.settings-members-invite-form {
+		grid-template-columns: 1fr 10rem auto;
+	}
+}
+
+.settings-members-invite-result {
+	margin-top: var(--space-md);
+	border-radius: var(--radius-lg);
+	border: 1px solid var(--color-border);
+	background-color: color-mix(in srgb, var(--color-muted) 50%, transparent);
+	padding: var(--space-sm);
+}
+
+.settings-members-invite-result p {
+	margin-bottom: var(--space-xs);
+	font-size: var(--text-size-small);
+	font-weight: 500;
+}
+
+.settings-members-invite-url {
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
+}
+
+.settings-members-invite-url code {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	border-radius: var(--radius-md);
+	background-color: var(--color-background);
+	padding: var(--space-xs) var(--space-sm);
+	font-size: var(--text-size-xs);
+}
