@@ -48,7 +48,7 @@
 		? 'You are the first user — this account will own the workspace.'
 		: 'Complete your signup to join the workspace.'}
 >
-	<form class="space-y-4" onsubmit={handleSubmit}>
+	<form class="auth-form" onsubmit={handleSubmit}>
 		<div>
 			<Label for="name">Your name</Label>
 			<Input id="name" autocomplete="name" bind:value={name} required />
@@ -70,7 +70,7 @@
 		{#if error}<p class="text-sm text-destructive">{error}</p>{/if}
 		<Button type="submit" disabled={loading} class="w-full">{loading ? 'Creating…' : 'Create account'}</Button>
 	</form>
-	<p class="mt-6 text-center text-xs text-muted-foreground">
+	<p class="auth-footer">
 		Already have an account?
 		<a class="text-primary underline-offset-4 hover:underline" href="/login">Sign in</a>
 	</p>
