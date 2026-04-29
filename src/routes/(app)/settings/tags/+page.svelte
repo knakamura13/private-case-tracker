@@ -4,6 +4,6 @@
 </script>
 
 <PageHeader title="Tags" description="Default categories are preconfigured; tag management UI coming soon." />
-<Card class="p-4 text-sm text-muted-foreground">
+<Card class="settings-tags-card">
 	<p>Use the task, evidence, and note forms to add tags inline. Full tag management UI is on the roadmap.</p>
 </Card>
