@@ -604,10 +604,12 @@ a {
 
 .rich-text-editable {
 	cursor: pointer;
-	padding: var(--space-sm) var(--space-md);
-	margin: calc(var(--space-sm) * -1) calc(var(--space-md) * -1);
+	padding: var(--space-md);
+	margin: calc(var(--space-md) * -1);
 	border-radius: var(--radius-sm);
 	transition: background-color var(--duration-fast) ease;
+	min-height: 100%;
+	display: inline-block;
 }
 
 .rich-text-editable:hover {
