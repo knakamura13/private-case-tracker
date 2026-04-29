@@ -2095,6 +2095,119 @@ a {
 	margin-top: var(--space-md);
 }
 
+/* Folder popover specific styles */
+.folder-popover-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-sm);
+}
+
+.folder-popover-input {
+	flex: 1;
+	height: 2rem;
+	border: none;
+	background: transparent;
+	padding: 0;
+	font-size: var(--text-size-small);
+	font-weight: 600;
+	color: var(--color-foreground);
+}
+
+.folder-popover-input::placeholder {
+	color: var(--color-text-tertiary);
+}
+
+.folder-popover-input:focus {
+	outline: none;
+}
+
+.folder-popover-actions {
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
+}
+
+.folder-popover-btn {
+	padding: var(--space-xs);
+	border-radius: var(--radius-sm);
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	color: var(--color-foreground);
+}
+
+.folder-popover-btn:hover {
+	background-color: var(--color-muted);
+}
+
+.folder-popover-close {
+	font-size: 1.125rem;
+	line-height: 1;
+}
+
+.folder-popover-menu {
+	position: absolute;
+	right: 0;
+	top: 100%;
+	z-index: 20;
+	margin-top: var(--space-xs);
+	width: 8rem;
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--color-border);
+	background-color: var(--color-card);
+	padding: var(--space-xs);
+	box-shadow: var(--shadow-md);
+}
+
+.folder-popover-menu-item {
+	display: block;
+	width: 100%;
+	padding: var(--space-xs) var(--space-sm);
+	text-align: left;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	color: var(--color-destructive);
+	font-size: var(--text-size-small);
+}
+
+.folder-popover-menu-item:hover {
+	background-color: var(--color-muted);
+}
+
+.folder-popover-empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-md);
+	padding: var(--space-lg) 0;
+	text-align: center;
+	color: var(--color-text-tertiary);
+}
+
+.folder-popover-empty-text {
+	font-size: var(--text-size-small);
+}
+
+.folder-popover-add-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-xs);
+	padding: var(--space-xs) var(--space-sm);
+	border-radius: var(--radius-sm);
+	background-color: var(--color-brand-primary);
+	color: var(--color-brand-primary-foreground);
+	border: none;
+	cursor: pointer;
+	font-size: var(--text-size-small);
+	font-weight: 500;
+}
+
+.folder-popover-add-btn:hover {
+	background-color: color-mix(in srgb, var(--color-brand-primary) 90%, transparent);
+}
+
 .widget-popover-overlay {
 	position: absolute;
 	inset: 0;

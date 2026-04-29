@@ -756,13 +756,13 @@
 				<div
 					class="widget-popover-panel"
 				>
-					<div class="flex items-center justify-between mb-4">
+					<div class="widget-popover-header folder-popover-header">
 						<input
 							bind:this={folderDialogInputEl}
 							bind:value={folderDialogName}
 							aria-label="Folder name"
 							placeholder="Folder"
-							class="mr-2 h-8 flex-1 rounded-md border-none bg-transparent px-0 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+							class="folder-popover-input"
 							onkeydown={(event) => {
 								if (event.key === 'Enter') {
 									event.preventDefault();
@@ -777,11 +777,11 @@
 							}}
 							onblur={() => void saveFolderDialogName(folder)}
 						/>
-						<div class="flex items-center gap-1">
+						<div class="folder-popover-actions">
 							<div class="relative" data-quicklink-menu>
 								<button
 									type="button"
-									class="rounded-md p-1 hover:bg-muted"
+									class="folder-popover-btn"
 									aria-label={`Actions for ${folder.name ?? 'Folder'}`}
 									aria-expanded={folderDialogMenuOpen}
 									aria-haspopup="true"
@@ -790,10 +790,10 @@
 									<MoreHorizontal class="h-4 w-4" aria-hidden="true" />
 								</button>
 								{#if folderDialogMenuOpen}
-									<div class="absolute right-0 top-full z-20 mt-1 w-32 rounded-md border border-border bg-card py-1 text-sm shadow-md" role="menu">
+									<div class="folder-popover-menu" role="menu">
 										<button
 											type="button"
-											class="block w-full px-3 py-1.5 text-left text-destructive hover:bg-muted"
+											class="folder-popover-menu-item"
 											role="menuitem"
 											onclick={() => deleteFolder(folder.id)}
 										>
@@ -804,29 +804,30 @@
 							</div>
 							<button
 								type="button"
-								class="rounded-md p-1 hover:bg-muted"
+								class="folder-popover-btn folder-popover-close"
 								aria-label="Close"
 								onclick={closeFolderDialog}
 							>
 								<span class="sr-only">Close</span>
-								<span aria-hidden="true" class="text-lg leading-none">×</span>
+								<span aria-hidden="true" class="folder-popover-close">×</span>
 							</button>
 						</div>
 					</div>
-					{#if folderLinks.length === 0}
-						<div class="flex flex-col items-center gap-3 py-8 text-center text-muted-foreground">
-							<p class="text-sm">This folder is empty</p>
-							<button
-								type="button"
-								class="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-								onclick={() => openAdd(folder)}
-							>
-								<Plus class="h-4 w-4" aria-hidden="true" />
-								Add link
-							</button>
-						</div>
-					{/if}
-					<div class="widget-container">
+					<div class="widget-popover-body">
+						{#if folderLinks.length === 0}
+							<div class="folder-popover-empty">
+								<p class="folder-popover-empty-text">This folder is empty</p>
+								<button
+									type="button"
+									class="folder-popover-add-btn"
+									onclick={() => openAdd(folder)}
+								>
+									<Plus class="h-4 w-4" aria-hidden="true" />
+									Add link
+								</button>
+							</div>
+						{/if}
+						<div class="widget-container">
 						{#each folderLinks as link (link.id)}
 							<div
 								class="widget-item"
