@@ -1,6 +1,4 @@
-@import 'tailwindcss';
-
-@theme {
+:root {
 	--color-background: #faf9f7;
 	--color-foreground: #0f172a;
 	--color-muted: #94a3b8;
@@ -40,7 +38,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-	@theme {
+	:root {
 		--color-background: #0f172a;
 		--color-foreground: #f8fafc;
 		--color-muted: #334155;
@@ -110,38 +108,42 @@ a {
 	transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease, transform 150ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 150ms ease;
 }
 
-@layer utilities {
-	.glass {
-		@apply bg-background/70 backdrop-blur-xl border border-border shadow-sm;
-	}
-
-	.glass-dark {
-		@apply bg-card/80 backdrop-blur-2xl border border-white/5 shadow-md;
-	}
-
-	@keyframes entrance {
-		0% {
-			opacity: 0;
-			transform: translateY(8px) scale(0.99);
-			filter: blur(2px);
-		}
-		100% {
-			opacity: 1;
-			transform: translateY(0) scale(1);
-			filter: blur(0);
-		}
-	}
-
-	.animate-entrance {
-		animation: entrance var(--duration-entrance) cubic-bezier(0.16, 1, 0.3, 1) forwards;
-	}
-
-	.animate-stagger-1 { animation-delay: 50ms; }
-	.animate-stagger-2 { animation-delay: 100ms; }
-	.animate-stagger-3 { animation-delay: 150ms; }
-	.animate-stagger-4 { animation-delay: 200ms; }
-	.animate-stagger-5 { animation-delay: 250ms; }
+.glass {
+	background-color: color-mix(in srgb, var(--color-background) 70%, transparent);
+	backdrop-filter: blur(16px);
+	border: 1px solid var(--color-border);
+	box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 }
+
+.glass-dark {
+	background-color: color-mix(in srgb, var(--color-card) 80%, transparent);
+	backdrop-filter: blur(24px);
+	border: 1px solid color-mix(in srgb, white 5%, transparent);
+	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+@keyframes entrance {
+	0% {
+		opacity: 0;
+		transform: translateY(8px) scale(0.99);
+		filter: blur(2px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+		filter: blur(0);
+	}
+}
+
+.animate-entrance {
+	animation: entrance var(--duration-entrance) cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-stagger-1 { animation-delay: 50ms; }
+.animate-stagger-2 { animation-delay: 100ms; }
+.animate-stagger-3 { animation-delay: 150ms; }
+.animate-stagger-4 { animation-delay: 200ms; }
+.animate-stagger-5 { animation-delay: 250ms; }
 
 @layer base {
 	*:focus-visible {
