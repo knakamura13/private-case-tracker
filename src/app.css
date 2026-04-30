@@ -3396,7 +3396,11 @@ a {
 .topbar-dropdown-item,
 .topbar-dropdown-item *,
 .folder-popover-menu-item,
-.folder-popover-menu-item * {
+.folder-popover-menu-item *,
+.popover-content button,
+.popover-content button *,
+.popover-content a,
+.popover-content a * {
 	background-color: transparent !important;
 }
 
