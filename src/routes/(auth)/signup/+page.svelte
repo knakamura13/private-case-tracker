@@ -67,11 +67,11 @@
 				<Input id="ws" bind:value={workspaceName} required />
 			</div>
 		{/if}
-		{#if error}<p class="text-sm text-destructive">{error}</p>{/if}
-		<Button type="submit" disabled={loading} class="w-full">{loading ? 'Creating…' : 'Create account'}</Button>
+		{#if error}<p class="auth-text-sm auth-text-destructive">{error}</p>{/if}
+		<Button type="submit" disabled={loading} class="auth-w-full">{loading ? 'Creating…' : 'Create account'}</Button>
 	</form>
 	<p class="auth-footer">
 		Already have an account?
-		<a class="text-primary underline-offset-4 hover:underline" href="/login">Sign in</a>
+		<a class="auth-text-primary auth-underline-offset-4 auth-hover-underline" href="/login">Sign in</a>
 	</p>
 </AuthShell>
