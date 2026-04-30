@@ -11,7 +11,7 @@
 <aside class="sidebar">
 	<a href="/dashboard" class="sidebar-header">
 		<img src="/pwa/icon-192.png" alt="" class="sidebar-logo" aria-hidden="true" />
-		<div class="min-w-0">
+		<div class="sidebar-min-w-0">
 			<p class="sidebar-title">Case Tracker</p>
 			<p class="sidebar-subtitle" title={workspaceName}>{workspaceName}</p>
 		</div>

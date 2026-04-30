@@ -50,16 +50,16 @@
 			aria-label="Open sidebar"
 			onclick={onToggleSidebar}
 		>
-			<Menu class="h-4 w-4" />
+			<Menu class="topbar-icon-sm" />
 		</button>
 		<button
 			type="button"
 			onclick={onOpenSearch}
 			class="topbar-search-btn"
 		>
-			<Search class="h-4 w-4" />
-			<span class="truncate">Search tasks, forms, evidence…</span>
-			<span class="ml-auto hidden text-xs sm:inline">⌘K</span>
+			<Search class="topbar-icon-sm" />
+			<span class="topbar-truncate">Search tasks, forms, evidence…</span>
+			<span class="topbar-ml-auto topbar-hidden topbar-text-xs topbar-sm-inline">⌘K</span>
 		</button>
 	</div>
 
@@ -116,7 +116,7 @@
 						href="/settings"
 						onclick={closeMenu}
 					>
-						<Settings class="h-4 w-4" /> Settings
+						<Settings class="topbar-icon-sm" /> Settings
 					</a>
 					<div class="topbar-dropdown-divider"></div>
 					<form method="post" action="/auth/sign-out">
@@ -125,7 +125,7 @@
 							type="submit"
 							onclick={closeMenu}
 						>
-							<LogOut class="h-4 w-4" /> Sign out
+							<LogOut class="topbar-icon-sm" /> Sign out
 						</button>
 					</form>
 				</div>

@@ -49,13 +49,13 @@
 	onMount(initTruncateTitles);
 </script>
 
-<div class="flex h-screen bg-background">
-	<div class="hidden md:block sticky top-0 h-screen">
+<div class="app-layout-flex app-layout-h-screen app-layout-bg-background">
+	<div class="app-layout-hidden app-layout-md-block app-layout-sticky app-layout-top-0 app-layout-h-screen">
 		<Sidebar workspaceName={data.workspace.name} />
 	</div>
 	{#if sidebarOpen}
 		<div
-			class="fixed inset-0 z-40 md:hidden"
+			class="app-layout-fixed app-layout-inset-0 app-layout-z-40 app-layout-md-hidden"
 			role="dialog"
 			aria-modal="true"
 			aria-label="Sidebar"
@@ -67,14 +67,14 @@
 		>
 			<div
 				transition:fade={{ duration: 200 }}
-				class="absolute inset-0 bg-background/70 backdrop-blur-sm"
+				class="app-layout-absolute app-layout-inset-0 app-layout-bg-background-70 app-layout-backdrop-blur-sm"
 				aria-hidden="true"
 				onclick={() => (sidebarOpen = false)}
 			></div>
 			<div
 				bind:this={sidebarDialogEl}
 				tabindex="-1"
-				class="relative z-10 h-full w-60"
+				class="app-layout-relative app-layout-z-10 app-layout-h-full app-layout-w-60"
 				transition:fly={{ x: -280, duration: 220, opacity: 1 }}
 			>
 				<Sidebar workspaceName={data.workspace.name} onNavigate={() => (sidebarOpen = false)} />
@@ -82,7 +82,7 @@
 		</div>
 	{/if}
 
-	<div class="flex min-w-0 flex-1 min-h-0 flex-col">
+	<div class="app-layout-flex app-layout-min-w-0 app-layout-flex-1 app-layout-min-h-0 app-layout-flex-col">
 		<TopBar
 			user={data.user}
 			onOpenSearch={() => (paletteOpen = true)}
@@ -91,7 +91,7 @@
 				sidebarOpen = !sidebarOpen;
 			}}
 		/>
-		<main id="main" tabindex="-1" class="flex-1 overflow-y-auto overflow-x-hidden p-4 pb-24 md:p-12 md:pb-32">
+		<main id="main" tabindex="-1" class="app-layout-flex-1 app-layout-overflow-y-auto app-layout-overflow-x-hidden app-layout-p-4 app-layout-pb-24 app-layout-md-p-12 app-layout-md-pb-32">
 			{#key $page.url.pathname}
 				{@render children()}
 			{/key}
