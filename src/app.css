@@ -1150,18 +1150,20 @@ a {
 	transition: background-color var(--duration-fast) ease;
 	text-decoration: none;
 	color: inherit;
+	background-color: transparent !important;
 }
 
 .topbar-dropdown-item:hover {
-	background-color: var(--color-border-subtle);
+	background-color: var(--color-border-subtle) !important;
 }
 
 .topbar-dropdown-item-destructive {
 	color: var(--color-destructive);
+	background-color: transparent !important;
 }
 
 .topbar-dropdown-item-destructive:hover {
-	background-color: color-mix(in srgb, var(--color-destructive) 10%, transparent);
+	background-color: color-mix(in srgb, var(--color-destructive) 10%, transparent) !important;
 }
 
 /* Topbar utility classes */
@@ -3085,13 +3087,13 @@ a {
 	border-radius: var(--radius-sm);
 	text-align: left;
 	font-size: var(--text-size-small);
-	background: transparent;
+	background: transparent !important;
 	border: none;
 	cursor: pointer;
 }
 
 .modal-dropdown-item:hover {
-	background-color: var(--color-border-subtle);
+	background-color: var(--color-border-subtle) !important;
 }
 
 /* Editable card */
@@ -3386,20 +3388,20 @@ a {
 	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
 
-.widget-dropdown-item {
-	display: block;
-	width: 100%;
-	padding: var(--space-xs) var(--space-sm);
-	text-align: left;
-	background: transparent;
-	border: none;
-	cursor: pointer;
-	text-decoration: none;
-	color: inherit;
+/* Force transparent backgrounds on all dropdown menu items */
+.widget-dropdown-item,
+.widget-dropdown-item *,
+.modal-dropdown-item,
+.modal-dropdown-item *,
+.topbar-dropdown-item,
+.topbar-dropdown-item *,
+.folder-popover-menu-item,
+.folder-popover-menu-item * {
+	background-color: transparent !important;
 }
 
 .widget-dropdown-item:hover {
-	background-color: var(--color-border-subtle);
+	background-color: var(--color-border-subtle) !important;
 }
 
 .widget-dropdown-item-destructive {
@@ -3407,7 +3409,19 @@ a {
 }
 
 .widget-dropdown-item-destructive:hover {
-	background-color: color-mix(in srgb, var(--color-destructive) 10%, transparent);
+	background-color: color-mix(in srgb, var(--color-destructive) 10%, transparent) !important;
+}
+
+.modal-dropdown-item:hover {
+	background-color: var(--color-border-subtle) !important;
+}
+
+.topbar-dropdown-item:hover {
+	background-color: var(--color-border-subtle) !important;
+}
+
+.topbar-dropdown-item-destructive:hover {
+	background-color: color-mix(in srgb, var(--color-destructive) 10%, transparent) !important;
 }
 
 .widget-popover {
