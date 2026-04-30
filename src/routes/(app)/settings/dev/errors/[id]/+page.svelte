@@ -18,14 +18,14 @@
 </script>
 
 <div class="error-detail-container">
-	<a class="text-sm font-medium text-primary hover:underline" href="/settings/dev">← Back</a>
+	<a class="settings-dev-text-sm settings-dev-font-medium settings-dev-text-primary settings-dev-hover-underline" href="/settings/dev">← Back</a>
 
 	<div class="error-detail-header">
 		<h1>Error</h1>
 		<p>{row.id}</p>
 	</div>
 
-	<div class="mt-6">
+	<div class="settings-dev-mt-4">
 		<ErrorDetails
 			status={row.status ?? undefined}
 			message={row.message}

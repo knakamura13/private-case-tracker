@@ -20,7 +20,7 @@
 		<Button variant="outline" onclick={() => (editing = !editing)}>{editing ? 'Cancel' : 'Edit'}</Button>
 		<form method="post" action="?/delete" use:enhance>
 			<Button type="submit" variant="destructive">
-				{#snippet children()}<Trash2 class="h-4 w-4" /> Delete{/snippet}
+				{#snippet children()}<Trash2 class="qdetail-icon-sm" /> Delete{/snippet}
 			</Button>
 		</form>
 	{/snippet}
@@ -58,15 +58,15 @@
 		{#if data.question.answer}
 			<p class="question-detail-answer-text">{data.question.answer}</p>
 		{:else}
-			<p class="text-muted-foreground italic">No answer yet.</p>
+			<p class="qdetail-text-muted qdetail-italic">No answer yet.</p>
 		{/if}
 		{#if data.question.citationUrl}
 			<a href={data.question.citationUrl} target="_blank" rel="noreferrer noopener" class="question-detail-source-link">
-				<ExternalLink class="h-3 w-3" /> Source
+				<ExternalLink class="qdetail-icon-xs" /> Source
 			</a>
 		{/if}
 		{#if data.question.answeredAt}
-			<p class="mt-2 text-xs text-muted-foreground">Answered {fmtDate(data.question.answeredAt)}</p>
+			<p class="qdetail-mt-2 qdetail-text-xs qdetail-text-muted">Answered {fmtDate(data.question.answeredAt)}</p>
 		{/if}
 	</Card>
 {/if}
