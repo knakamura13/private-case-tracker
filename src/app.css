@@ -221,7 +221,6 @@ a {
 
 /* ========================================
    NEW SEMANTIC CSS TOKEN SYSTEM
-   Added alongside Tailwind for gradual migration
    ======================================== */
 
 :root {
@@ -308,7 +307,6 @@ a {
 
 /* ========================================
    SEMANTIC COMPONENT CLASSES
-   Added alongside Tailwind for gradual migration
    ======================================== */
 
 /* Button component */

@@ -1,6 +1,6 @@
 /**
  * Globally syncs native `title` tooltips on every element that carries the
- * Tailwind `truncate` class.  The tooltip is only set when the element's text
+ * `truncate` CSS class.  The tooltip is only set when the element's text
  * is actually clipped (scrollWidth > offsetWidth), so it never shows
  * redundant tooltips when there is enough space.
  *
