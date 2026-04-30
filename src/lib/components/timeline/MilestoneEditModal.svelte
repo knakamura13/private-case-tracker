@@ -240,7 +240,7 @@
 	<form method="post" {action} class="modal-form">
 		<!-- Header -->
 		<div class="modal-header">
-			<div class="flex flex-1 items-start">
+			<div class="modal-flex modal-flex-1 modal-items-start">
 				<Input
 					name="title"
 					bind:value={titleValue}
@@ -249,11 +249,11 @@
 					placeholder="Title"
 				/>
 			</div>
-			<div class="flex items-center gap-1">
+			<div class="modal-flex modal-items-center modal-gap-1">
 				{#if deleteAction}
 					<div class="modal-dropdown" use:clickOutside={() => showMenuDropdown = false}>
-						<Button type="button" variant="ghost" size="sm" onclick={() => showMenuDropdown = !showMenuDropdown} class="shrink-0">
-							{#snippet children()}<MoreHorizontal class="h-5 w-5" />{/snippet}
+						<Button type="button" variant="ghost" size="sm" onclick={() => showMenuDropdown = !showMenuDropdown} class="modal-shrink-0">
+							{#snippet children()}<MoreHorizontal class="modal-icon-md" />{/snippet}
 						</Button>
 						{#if showMenuDropdown}
 							<div class="modal-dropdown-menu">
@@ -280,8 +280,8 @@
 						{/if}
 					</div>
 				{/if}
-				<Button type="button" variant="ghost" size="sm" onclick={onClose} class="shrink-0">
-					{#snippet children()}<X class="h-5 w-5" />{/snippet}
+				<Button type="button" variant="ghost" size="sm" onclick={onClose} class="modal-shrink-0">
+					{#snippet children()}<X class="modal-icon-md" />{/snippet}
 				</Button>
 			</div>
 		</div>
@@ -293,11 +293,11 @@
 				<!-- Actions Bar -->
 				<div class="modal-actions-bar">
 					<Button type="button" variant="outline" size="sm" onclick={() => showLocationInput = !showLocationInput}>
-						{#snippet children()}<MapPin class="h-3.5 w-3.5" /> Location{/snippet}
+						{#snippet children()}<MapPin class="modal-icon-3-5" /> Location{/snippet}
 					</Button>
 					<div class="modal-dropdown" use:clickOutside={() => showOwnerDropdown = false}>
 						<Button type="button" variant="outline" size="sm" onclick={() => showOwnerDropdown = !showOwnerDropdown}>
-							{#snippet children()}<User class="h-3.5 w-3.5" /> Owner{/snippet}
+							{#snippet children()}<User class="modal-icon-3-5" /> Owner{/snippet}
 						</Button>
 						{#if showOwnerDropdown}
 							<div class="modal-dropdown-menu" style="left: 0; right: auto; width: 12rem;">
@@ -331,20 +331,20 @@
 				</div>
 				<div class="modal-actions-bar">
 					<Button type="button" variant="outline" size="sm" onclick={() => showDueDatePicker = !showDueDatePicker}>
-						{#snippet children()}<Calendar class="h-3.5 w-3.5" /> Due date{/snippet}
+						{#snippet children()}<Calendar class="modal-icon-3-5" /> Due date{/snippet}
 					</Button>
 					<Button type="button" variant="outline" size="sm" onclick={() => showAppointmentDatePicker = !showAppointmentDatePicker}>
-						{#snippet children()}<Calendar class="h-3.5 w-3.5" /> Appointment date{/snippet}
+						{#snippet children()}<Calendar class="modal-icon-3-5" /> Appointment date{/snippet}
 					</Button>
 				</div>
 
 				<!-- Location Input -->
 				{#if showLocationInput || isEditingLocation}
-					<div class="mt-2 flex gap-2">
+					<div class="modal-mt-2 modal-flex modal-gap-2">
 						<Input
 							bind:value={locationAddress}
 							placeholder="Enter business name, address, or coordinates..."
-							class="flex-1 text-sm"
+							class="modal-flex-1 modal-text-sm"
 							onkeydown={(e) => {
 								if (e.key === 'Enter') {
 									e.preventDefault();
@@ -360,32 +360,32 @@
 						}}>Cancel</Button>
 					</div>
 				{:else if currentLocation}
-					<div class="mt-2 flex items-center gap-2">
+					<div class="modal-mt-2 modal-flex modal-items-center modal-gap-2">
 						<a
 							href={generateGoogleMapsUrl(currentLocation)}
 							target="_blank"
 							rel="noopener noreferrer"
-							class="flex items-center gap-1 text-sm modal-link"
+							class="modal-flex modal-items-center modal-gap-1 modal-text-sm modal-link"
 						>
-							<MapPin class="h-3.5 w-3.5" />
+							<MapPin class="modal-icon-3-5" />
 							<span class="line-clamp-1">{currentLocation}</span>
 						</a>
 						<Button type="button" variant="ghost" size="sm" class="modal-icon-btn-sm" onclick={() => {
 							locationAddress = currentLocation;
 							isEditingLocation = true;
 						}}>
-							{#snippet children()}<MoreHorizontal class="h-4 w-4" />{/snippet}
+							{#snippet children()}<MoreHorizontal class="modal-icon-sm" />{/snippet}
 						</Button>
 					</div>
 				{/if}
 
 				<!-- Due Date Picker -->
 				{#if showDueDatePicker}
-					<div class="mt-2 flex gap-2">
+					<div class="modal-mt-2 modal-flex modal-gap-2">
 						<Input
 							bind:value={dueDateValue}
 							type="date"
-							class="text-sm"
+							class="modal-text-sm"
 						/>
 						<Button type="button" size="sm" onclick={handleDueDateSave}>Save</Button>
 						<Button type="button" variant="ghost" size="sm" onclick={() => showDueDatePicker = false}>Cancel</Button>
@@ -394,11 +394,11 @@
 
 				<!-- Appointment Date Picker -->
 				{#if showAppointmentDatePicker}
-					<div class="mt-2 flex gap-2">
+					<div class="modal-mt-2 modal-flex modal-gap-2">
 						<Input
 							bind:value={appointmentDateValue}
 							type="date"
-							class="text-sm"
+							class="modal-text-sm"
 						/>
 						<Button type="button" size="sm" onclick={handleAppointmentDateSave}>Save</Button>
 						<Button type="button" variant="ghost" size="sm" onclick={() => showAppointmentDatePicker = false}>Cancel</Button>
@@ -406,7 +406,7 @@
 				{/if}
 
 				<!-- Members -->
-				<div class="flex items-center gap-2">
+				<div class="modal-flex modal-items-center modal-gap-2">
 					{#if initial.owner}
 						<div class="modal-avatar">
 							{ownerInitial(initial.owner)}
@@ -472,8 +472,8 @@
 				<!-- Checklist -->
 				<Card class="modal-checklist-card">
 					<div class="modal-checklist-header">
-						<CheckSquare class="h-4 w-4 text-muted-foreground" />
-						<span class="text-sm font-medium">Sub-tasks</span>
+						<CheckSquare class="modal-icon-sm text-muted-foreground" />
+						<span class="modal-text-sm modal-font-medium">Sub-tasks</span>
 					</div>
 					{#if editableSubTasks.length > 0}
 						<div class="modal-checklist-progress">
@@ -524,7 +524,7 @@
 											class="modal-icon-btn-sm"
 											onclick={() => openSubTaskMenuId = openSubTaskMenuId === st.id ? null : st.id}
 										>
-											{#snippet children()}<MoreHorizontal class="h-4 w-4" />{/snippet}
+											{#snippet children()}<MoreHorizontal class="modal-icon-sm" />{/snippet}
 										</Button>
 										{#if openSubTaskMenuId === st.id}
 											<div class="modal-dropdown-menu" style="width: 6rem;" use:clickOutside={() => openSubTaskMenuId = null}>
@@ -557,8 +557,8 @@
 						</div>
 					{/if}
 					{#if !showChecklistInput}
-						<Button type="button" variant="ghost" size="sm" onclick={() => showChecklistInput = true} class="w-full justify-start text-muted-foreground">
-							{#snippet children()}<Plus class="h-4 w-4 mr-2" /> Add an item{/snippet}
+						<Button type="button" variant="ghost" size="sm" onclick={() => showChecklistInput = true} class="modal-w-full modal-justify-start text-muted-foreground">
+							{#snippet children()}<Plus class="modal-icon-sm modal-mr-2" /> Add an item{/snippet}
 						</Button>
 					{:else}
 						<div class="space-y-2">
@@ -575,7 +575,7 @@
 								}}
 								class="modal-checklist-add-input"
 							/>
-							<div class="flex justify-start gap-2">
+							<div class="modal-flex modal-justify-start modal-gap-2">
 								<Button type="button" size="sm" onclick={() => {
 									addSubTask();
 								}}>Add</Button>
@@ -594,14 +594,14 @@
 				<Card class="modal-settings-card">
 					<div>
 						<label for="phase" class="modal-settings-label">Phase</label>
-						<Select id="phase" name="phase" bind:value={phaseValue} onchange={() => triggerAutoSave()} class="text-sm">
+						<Select id="phase" name="phase" bind:value={phaseValue} onchange={() => triggerAutoSave()} class="modal-text-sm">
 							<!-- eslint-disable-next-line security/detect-object-injection -->
 							{#each PHASE_ORDER as p}<option value={p}>{PHASE_LABELS[p]}</option>{/each}
 						</Select>
 					</div>
 					<div>
 						<label for="status" class="modal-settings-label">Status</label>
-						<Select id="status" name="status" bind:value={statusValue} onchange={() => triggerAutoSave()} class="text-sm">
+						<Select id="status" name="status" bind:value={statusValue} onchange={() => triggerAutoSave()} class="modal-text-sm">
 							<option value="PLANNED">Planned</option>
 							<option value="IN_PROGRESS">In progress</option>
 							<option value="DONE">Done</option>
@@ -611,7 +611,7 @@
 					</div>
 					<div>
 						<label for="priority" class="modal-settings-label">Priority</label>
-						<Select id="priority" name="priority" bind:value={priorityValue} onchange={() => triggerAutoSave()} class="text-sm">
+						<Select id="priority" name="priority" bind:value={priorityValue} onchange={() => triggerAutoSave()} class="modal-text-sm">
 							<option value="LOW">Low</option>
 							<option value="MEDIUM">Medium</option>
 							<option value="HIGH">High</option>
@@ -623,7 +623,7 @@
 		</div>
 
 		<!-- Footer -->
-		<div class="p-4">
+		<div class="modal-p-4">
 			{#if error}<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />{/if}
 			<input type="hidden" name="subTasks" value={subTasksJson} />
 			<input type="hidden" name="id" value={val('id')} />

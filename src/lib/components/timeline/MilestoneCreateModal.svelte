@@ -283,7 +283,7 @@
 				<!-- Checklist -->
 				<div>
 					<Button type="button" variant="outline" size="sm" onclick={() => showChecklistInput = !showChecklistInput}>
-						{#snippet children()}<Plus class="h-3.5 w-3.5" /> Add checklist{/snippet}
+						{#snippet children()}<Plus class="modal-icon-3-5" /> Add checklist{/snippet}
 					</Button>
 					{#if showChecklistInput || editableSubTasks.length > 0}
 						<div class="modal-simple-checklist">
@@ -302,10 +302,10 @@
 												s.id === st.id ? { ...s, text: e.currentTarget.value } : s
 											);
 										}}
-										class="flex-1"
+										class="modal-flex-1"
 									/>
 									<Button type="button" variant="ghost" size="sm" onclick={() => removeSubTask(st.id)}>
-										{#snippet children()}<X class="h-4 w-4" />{/snippet}
+										{#snippet children()}<X class="modal-icon-sm" />{/snippet}
 									</Button>
 								</div>
 							{/each}
@@ -319,10 +319,10 @@
 											addSubTask();
 										}
 									}}
-									class="flex-1"
+									class="modal-flex-1"
 								/>
 								<Button type="button" variant="outline" size="sm" onclick={addSubTask}>
-									{#snippet children()}<Plus class="h-4 w-4" /> Add{/snippet}
+									{#snippet children()}<Plus class="modal-icon-sm" /> Add{/snippet}
 								</Button>
 							</div>
 						</div>

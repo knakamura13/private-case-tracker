@@ -644,7 +644,7 @@
 					data-quicklink-menu="trigger"
 					onclick={(e) => toggleMenu(folder.id, e)}
 				>
-					<EllipsisVertical class="h-3.5 w-3.5" />
+					<EllipsisVertical class="widget-icon-3-5" />
 				</button>
 
 				{#if menuOpenId === folder.id}
@@ -686,7 +686,7 @@
 					tabindex="0"
 					aria-label={folder.name ?? 'Folder'}
 				>
-					<Folder class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+					<Folder class="widget-icon-6 text-muted-foreground" aria-hidden="true" />
 					<!-- Preview icons (up to 4) -->
 					{#if previewLinks.length > 0}
 						<div class="widget-preview-icons">
@@ -787,7 +787,7 @@
 									aria-haspopup="true"
 									onclick={() => (folderDialogMenuOpen = !folderDialogMenuOpen)}
 								>
-									<MoreHorizontal class="h-4 w-4" aria-hidden="true" />
+									<MoreHorizontal class="widget-icon-4" aria-hidden="true" />
 								</button>
 								{#if folderDialogMenuOpen}
 									<div class="folder-popover-menu" role="menu">
@@ -822,7 +822,7 @@
 									class="folder-popover-add-btn"
 									onclick={() => openAdd(folder)}
 								>
-									<Plus class="h-4 w-4" aria-hidden="true" />
+									<Plus class="widget-icon-4" aria-hidden="true" />
 									Add link
 								</button>
 							</div>
@@ -839,7 +839,7 @@
 										aria-label={`Actions for ${labelFor(link)}`}
 										onclick={(e) => toggleMenu(link.id, e)}
 									>
-										<EllipsisVertical class="h-3.5 w-3.5" />
+										<EllipsisVertical class="widget-icon-3-5" />
 									</button>
 
 									{#if menuOpenId === link.id && menuPosition}
@@ -896,18 +896,18 @@
 										class="widget-circle"
 									>
 										{#if brokenFavicons.has(link.id)}
-											<Link2 class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+											<Link2 class="widget-icon-6 text-muted-foreground" aria-hidden="true" />
 										{:else if link.faviconUrl || preloadedFavicons.has(link.id)}
 											<img
 												src={faviconForLink(link)}
 												alt=""
-												class="h-8 w-8 rounded-sm object-contain"
+												class="widget-icon-8 rounded-sm object-contain"
 												referrerpolicy="no-referrer"
 												style="image-rendering: crisp-edges"
 											/>
 										{:else}
 											<!-- Show Link2 icon while preloading -->
-											<Link2 class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+											<Link2 class="widget-icon-6 text-muted-foreground" aria-hidden="true" />
 										{/if}
 									</div>
 								</div>
@@ -957,7 +957,7 @@
 					data-quicklink-menu="trigger"
 					onclick={(e) => toggleMenu(link.id, e)}
 				>
-					<EllipsisVertical class="h-3.5 w-3.5" />
+					<EllipsisVertical class="widget-icon-3-5" />
 				</button>
 
 				{#if menuOpenId === link.id}
@@ -1006,19 +1006,19 @@
 					class="widget-circle"
 				>
 					{#if brokenFavicons.has(link.id)}
-						<Link2 class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+						<Link2 class="widget-icon-6 text-muted-foreground" aria-hidden="true" />
 					{:else if link.faviconUrl || preloadedFavicons.has(link.id)}
 						<img
 							src={faviconForLink(link)}
 							alt=""
-							class="h-8 w-8 rounded-sm object-contain"
+							class="widget-icon-8 rounded-sm object-contain"
 							referrerpolicy="no-referrer"
 							draggable={false}
 							style="image-rendering: crisp-edges"
 						/>
 					{:else}
 						<!-- Show Link2 icon while preloading -->
-						<Link2 class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+						<Link2 class="widget-icon-6 text-muted-foreground" aria-hidden="true" />
 					{/if}
 				</div>
 			</div>
@@ -1040,7 +1040,7 @@
 		onclick={() => openAdd()}
 	>
 		<span class="widget-circle">
-			<Plus class="h-6 w-6" aria-hidden="true" />
+			<Plus class="widget-icon-6" aria-hidden="true" />
 		</span>
 		<span class="widget-label">Add link</span>
 	</button>
@@ -1052,7 +1052,7 @@
 		onclick={openAddFolder}
 	>
 		<span class="widget-circle">
-			<Folder class="h-6 w-6" aria-hidden="true" />
+			<Folder class="widget-icon-6" aria-hidden="true" />
 		</span>
 		<span class="widget-label">Add folder</span>
 	</button>
@@ -1074,7 +1074,7 @@
 			>
 				<input type="hidden" name="id" value={editingFolder?.id} />
 				<div class="modal-header">
-					<div class="flex flex-1 items-start">
+					<div class="widget-flex widget-flex-1 widget-items-start">
 						<Input
 							name="name"
 							bind:value={draftFolderName}
@@ -1083,7 +1083,7 @@
 						/>
 					</div>
 					<Button type="button" variant="ghost" size="sm" onclick={closeModal} class="shrink-0">
-						{#snippet children()}<X class="h-5 w-5" />{/snippet}
+						{#snippet children()}<X class="widget-icon-5" />{/snippet}
 					</Button>
 				</div>
 				<div class="modal-content">
@@ -1113,7 +1113,7 @@
 				>
 					<input type="hidden" name="id" value={editing.id} />
 					<div class="modal-header">
-						<div class="flex flex-1 items-start">
+						<div class="widget-flex widget-flex-1 widget-items-start">
 							<Input
 								name="url"
 								bind:value={draftUrl}
@@ -1123,7 +1123,7 @@
 							/>
 						</div>
 						<Button type="button" variant="ghost" size="sm" onclick={closeModal} class="shrink-0">
-							{#snippet children()}<X class="h-5 w-5" />{/snippet}
+							{#snippet children()}<X class="widget-icon-5" />{/snippet}
 						</Button>
 					</div>
 					<div class="modal-content">
@@ -1162,7 +1162,7 @@
 						<input type="hidden" name="folderId" value={addingToFolder.id} />
 					{/if}
 					<div class="modal-header">
-						<div class="flex flex-1 items-start">
+						<div class="widget-flex widget-flex-1 widget-items-start">
 							<Input
 								name="url"
 								bind:value={draftUrl}
@@ -1172,7 +1172,7 @@
 							/>
 						</div>
 						<Button type="button" variant="ghost" size="sm" onclick={closeModal} class="shrink-0">
-							{#snippet children()}<X class="h-5 w-5" />{/snippet}
+							{#snippet children()}<X class="widget-icon-5" />{/snippet}
 						</Button>
 					</div>
 					<div class="modal-content">

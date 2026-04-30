@@ -98,16 +98,16 @@
 		tabindex="0"
 		aria-label={task.title}
 	>
-		<Card class="p-4 border-none shadow-none bg-transparent">
+		<Card class="task-card-p-4 task-card-border-none task-card-shadow-none task-card-bg-transparent">
 		<div class="task-card-content">
-			<GripVertical class="task-card-grip h-4 w-4 shrink-0 text-muted-foreground" />
+			<GripVertical class="task-card-grip task-card-icon-4 task-card-shrink-0 text-muted-foreground" />
 			<div class="task-card-body">
 				<p class="task-card-title">{task.title}</p>
 				{#if task.priority !== 'MEDIUM'}
-					<Badge variant="outline" class="shrink-0">{titleCase(task.priority)}</Badge>
+					<Badge variant="outline" class="task-card-shrink-0">{titleCase(task.priority)}</Badge>
 				{/if}
 				{#if hasMeaningfulDescription(task.description)}
-					<RichText text={task.description} lineClamp={true} class="mt-1" />
+					<RichText text={task.description} lineClamp={true} class="task-card-mt-1" />
 				{/if}
 				{#if task.checklist && task.checklist.length > 0}
 					<div class="task-card-checklist">
