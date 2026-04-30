@@ -76,7 +76,7 @@
 		<input type="hidden" name="checklist" value="[]" />
 		<!-- Header -->
 		<div class="modal-header">
-			<div class="flex flex-1 items-start">
+			<div class="modal-flex modal-flex-1 modal-items-start">
 				<Input
 					name="title"
 					bind:value={titleValue}
@@ -85,8 +85,8 @@
 					required
 				/>
 			</div>
-			<Button type="button" variant="ghost" size="sm" onclick={onClose} class="shrink-0">
-				{#snippet children()}<X class="h-5 w-5" />{/snippet}
+			<Button type="button" variant="ghost" size="sm" onclick={onClose} class="modal-shrink-0">
+				{#snippet children()}<X class="modal-icon-md" />{/snippet}
 			</Button>
 		</div>
 
@@ -98,7 +98,7 @@
 				<div class="modal-actions-bar">
 					<div class="modal-dropdown" use:clickOutside={() => showOwnerDropdown = false}>
 						<Button type="button" variant="outline" size="sm" onclick={() => showOwnerDropdown = !showOwnerDropdown}>
-							{#snippet children()}<User class="h-3.5 w-3.5" /> Owner{/snippet}
+							{#snippet children()}<User class="modal-icon-3-5" /> Owner{/snippet}
 						</Button>
 						{#if showOwnerDropdown}
 							<div class="modal-dropdown-menu" style="left: 0; right: auto; width: 12rem;">
@@ -128,21 +128,21 @@
 						{/if}
 					</div>
 					<Button type="button" variant="outline" size="sm" onclick={() => showDueDatePicker = !showDueDatePicker}>
-						{#snippet children()}<Calendar class="h-3.5 w-3.5" /> Due date{/snippet}
+						{#snippet children()}<Calendar class="modal-icon-3-5" /> Due date{/snippet}
 					</Button>
 				</div>
 
 				<!-- Due Date Picker -->
 				{#if showDueDatePicker}
-					<div class="flex items-center gap-2">
-						<Input type="date" bind:value={dueDateValue} class="flex-1" />
+					<div class="modal-flex modal-items-center modal-gap-2">
+						<Input type="date" bind:value={dueDateValue} class="modal-flex-1" />
 						<Button type="button" variant="default" size="sm" onclick={() => showDueDatePicker = false}>Done</Button>
 					</div>
 				{:else if dueDateValue}
-					<div class="flex items-center gap-2 text-sm">
+					<div class="modal-flex modal-items-center modal-gap-2 modal-text-sm">
 						<span>Due: {dueDateValue}</span>
 						<Button type="button" variant="ghost" size="sm" onclick={() => (dueDateValue = '')}>
-							{#snippet children()}<X class="h-3 w-3" />{/snippet}
+							{#snippet children()}<X class="modal-icon-xs" />{/snippet}
 						</Button>
 					</div>
 				{/if}
