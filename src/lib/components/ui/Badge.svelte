@@ -1,28 +1,21 @@
 <script lang="ts" module>
-	import { tv, type VariantProps } from 'tailwind-variants';
+	const badgeVariants = {
+		variant: {
+			default: 'badge-default',
+			secondary: 'badge-secondary',
+			success: 'badge-success',
+			warning: 'badge-warning',
+			destructive: 'badge-destructive',
+			outline: 'badge-outline'
+		}
+	} as const;
 
-	export const badgeVariants = tv({
-		base: 'badge',
-		variants: {
-			variant: {
-				default: 'badge-default',
-				secondary: 'badge-secondary',
-				success: 'badge-success',
-				warning: 'badge-warning',
-				destructive: 'badge-destructive',
-				outline: 'badge-outline'
-			}
-		},
-		defaultVariants: { variant: 'default' }
-	});
-
-	export type BadgeVariant = VariantProps<typeof badgeVariants>['variant'];
+	export type BadgeVariant = keyof typeof badgeVariants.variant;
 </script>
 
 <script lang="ts">
 	/* eslint-disable svelte/valid-compile */
 	import type { HTMLAttributes } from 'svelte/elements';
-	import { cn } from '$lib/utils/cn';
 
 	let {
 		class: klass = '',
@@ -36,7 +29,7 @@
 	} = $props();
 	/* eslint-enable svelte/valid-compile */
 
-	const badgeClass = $derived(cn(badgeVariants({ variant }), klass));
+	const badgeClass = $derived(`badge ${badgeVariants.variant[variant]} ${klass}`.trim());
 </script>
 
 <span class={badgeClass} {...rest}>

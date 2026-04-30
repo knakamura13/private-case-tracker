@@ -1,38 +1,28 @@
 <script lang="ts" module>
-	import { tv, type VariantProps } from 'tailwind-variants';
-
-	export const buttonVariants = tv({
-		base: 'btn',
-		variants: {
-			variant: {
-				default: 'btn-primary',
-				destructive: 'btn-destructive',
-				outline: 'btn-outline',
-				secondary: 'btn-secondary',
-				ghost: 'btn-ghost',
-				link: 'btn-link'
-			},
-			size: {
-				default: '',
-				sm: 'btn-sm',
-				lg: 'btn-lg',
-				icon: 'btn-icon'
-			}
+	const buttonVariants = {
+		variant: {
+			default: 'btn-primary',
+			destructive: 'btn-destructive',
+			outline: 'btn-outline',
+			secondary: 'btn-secondary',
+			ghost: 'btn-ghost',
+			link: 'btn-link'
 		},
-		defaultVariants: {
-			variant: 'default',
-			size: 'default'
+		size: {
+			default: '',
+			sm: 'btn-sm',
+			lg: 'btn-lg',
+			icon: 'btn-icon'
 		}
-	});
+	} as const;
 
-	export type ButtonVariant = VariantProps<typeof buttonVariants>['variant'];
-	export type ButtonSize = VariantProps<typeof buttonVariants>['size'];
+	export type ButtonVariant = keyof typeof buttonVariants.variant;
+	export type ButtonSize = keyof typeof buttonVariants.size;
 </script>
 
 <script lang="ts">
 	/* eslint-disable svelte/valid-compile */
 	import type { HTMLButtonAttributes, HTMLAnchorAttributes } from 'svelte/elements';
-	import { cn } from '$lib/utils/cn';
 
 	type Props = (HTMLButtonAttributes & { href?: undefined }) | (HTMLAnchorAttributes & { href: string });
 
@@ -51,7 +41,7 @@
 	} = $props();
 	/* eslint-enable svelte/valid-compile */
 
-	const classes = $derived(cn(buttonVariants({ variant, size }), klass));
+	const classes = $derived(`btn ${buttonVariants.variant[variant]} ${buttonVariants.size[size]} ${klass}`.trim());
 </script>
 
 {#if href}
