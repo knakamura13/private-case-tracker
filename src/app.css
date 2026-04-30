@@ -86,6 +86,29 @@ a {
 	cursor: pointer;
 }
 
+/* Force remove all borders from buttons */
+button,
+button *,
+button::before,
+button::after,
+.btn,
+.btn *,
+.btn::before,
+.btn::after {
+	border: none !important;
+	border-style: none !important;
+	border-width: 0 !important;
+	border-top: none !important;
+	border-right: none !important;
+	border-bottom: none !important;
+	border-left: none !important;
+	border-top-color: transparent !important;
+	border-right-color: transparent !important;
+	border-bottom-color: transparent !important;
+	border-left-color: transparent !important;
+	border-image: none !important;
+}
+
 input[type='checkbox'] {
 	cursor: pointer;
 }
@@ -296,7 +319,8 @@ a {
 	cursor: pointer;
 	touch-action: manipulation;
 	transition: background-color var(--duration-fast) ease, color var(--duration-fast) ease, opacity var(--duration-fast) ease, transform var(--duration-fast) var(--easing-default), box-shadow var(--duration-fast) ease;
-	border: 1px solid transparent;
+	border: none !important;
+	border-style: none !important;
 	padding: 0 var(--space-xl);
 	height: 2.5rem;
 	min-height: 2.5rem;
@@ -1057,6 +1081,11 @@ a {
 	font-size: var(--text-size-caption);
 	font-weight: 600;
 	transition: background-color var(--duration-normal) ease, color var(--duration-normal) ease, transform var(--duration-fast) var(--easing-default);
+	border: 1px solid transparent;
+	border-top-color: transparent !important;
+	border-right-color: transparent !important;
+	border-bottom-color: transparent !important;
+	border-left-color: transparent !important;
 }
 
 .topbar-avatar-btn:hover {
