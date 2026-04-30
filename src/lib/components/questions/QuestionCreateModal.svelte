@@ -49,8 +49,8 @@
 		<!-- Header -->
 		<div class="modal-header">
 			<h2 class="modal-title">New question</h2>
-			<Button type="button" variant="ghost" size="sm" onclick={onClose} class="shrink-0">
-				{#snippet children()}<X class="h-5 w-5" />{/snippet}
+			<Button type="button" variant="ghost" size="sm" onclick={onClose} class="modal-shrink-0">
+				{#snippet children()}<X class="modal-icon-md" />{/snippet}
 			</Button>
 		</div>
 

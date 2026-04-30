@@ -96,11 +96,11 @@
 		<!-- Header -->
 		<div class="modal-header">
 			<h2 class="modal-title">Edit question</h2>
-			<div class="flex items-center gap-1">
+			<div class="modal-flex modal-items-center modal-gap-1">
 				{#if deleteAction}
 					<div class="modal-dropdown" use:clickOutside={() => showMenuDropdown = false}>
-						<Button type="button" variant="ghost" size="sm" onclick={() => showMenuDropdown = !showMenuDropdown} class="shrink-0">
-							{#snippet children()}<MoreHorizontal class="h-5 w-5" />{/snippet}
+						<Button type="button" variant="ghost" size="sm" onclick={() => showMenuDropdown = !showMenuDropdown} class="modal-shrink-0">
+							{#snippet children()}<MoreHorizontal class="modal-icon-md" />{/snippet}
 						</Button>
 						{#if showMenuDropdown}
 							<div class="modal-dropdown-menu">
@@ -128,8 +128,8 @@
 						{/if}
 					</div>
 				{/if}
-				<Button type="button" variant="ghost" size="sm" onclick={onClose} class="shrink-0">
-					{#snippet children()}<X class="h-5 w-5" />{/snippet}
+				<Button type="button" variant="ghost" size="sm" onclick={onClose} class="modal-shrink-0">
+					{#snippet children()}<X class="modal-icon-md" />{/snippet}
 				</Button>
 			</div>
 		</div>
