@@ -38,32 +38,32 @@
 	});
 </script>
 
-<div class="rounded-lg border border-border bg-card">
-	<div class="flex items-center justify-between border-b border-border px-4 py-2">
+<div class="monthcal-rounded-lg monthcal-border monthcal-bg-card">
+	<div class="monthcal-flex monthcal-items-center monthcal-justify-between monthcal-border-b monthcal-px-4 monthcal-py-2">
 		<Button variant="ghost" size="icon" onclick={() => (cursor = addMonths(cursor, -1))} aria-label="Previous month">
-			{#snippet children()}<ChevronLeft class="h-4 w-4" />{/snippet}
+			{#snippet children()}<ChevronLeft class="monthcal-icon-sm" />{/snippet}
 		</Button>
-		<p class="text-sm font-semibold">{format(cursor, 'MMMM yyyy')}</p>
+		<p class="monthcal-text-sm monthcal-font-semibold">{format(cursor, 'MMMM yyyy')}</p>
 		<Button variant="ghost" size="icon" onclick={() => (cursor = addMonths(cursor, 1))} aria-label="Next month">
-			{#snippet children()}<ChevronRight class="h-4 w-4" />{/snippet}
+			{#snippet children()}<ChevronRight class="monthcal-icon-sm" />{/snippet}
 		</Button>
 	</div>
-	<div class="grid grid-cols-7 border-b border-border bg-muted/30 text-center text-xs text-muted-foreground">
+	<div class="monthcal-grid monthcal-grid-cols-7 monthcal-border-b monthcal-bg-muted-30 monthcal-text-center monthcal-text-xs monthcal-text-muted">
 		{#each ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as d}
-			<div class="py-1">{d}</div>
+			<div class="monthcal-py-1">{d}</div>
 		{/each}
 	</div>
-	<div class="grid grid-cols-7">
+	<div class="monthcal-grid monthcal-grid-cols-7">
 		{#each cells as cell (cell.date.toISOString())}
 			{@const current = isSameMonth(cell.date, cursor)}
-			<div class="min-h-[90px] border-b border-r border-border p-1 text-xs {current ? '' : 'bg-muted/20 text-muted-foreground'}">
-				<div class="mb-1 text-right text-[10px]">{format(cell.date, 'd')}</div>
-				<ul class="space-y-1">
+			<div class="monthcal-min-h-90 monthcal-border-b monthcal-border-r monthcal-p-1 monthcal-text-xs {current ? '' : 'monthcal-bg-muted-20 monthcal-text-muted'}">
+				<div class="monthcal-mb-1 monthcal-text-right monthcal-text-10">{format(cell.date, 'd')}</div>
+				<ul class="monthcal-space-y-1">
 					{#each cell.items as it (it.kind + it.id)}
 						<li>
 							<a
 								href={it.href}
-								class="block truncate rounded bg-primary/10 px-1 py-0.5 text-[10px] text-primary hover:bg-primary/15"
+								class="monthcal-block monthcal-truncate monthcal-rounded monthcal-bg-primary-10 monthcal-px-1 monthcal-py-0-5 monthcal-text-10 monthcal-text-primary monthcal-hover-bg-primary-15"
 								title={it.title}
 							>{it.title}</a>
 						</li>

@@ -26,40 +26,40 @@
 
 <PageHeader title="Dashboard" number={getPageNumber('/dashboard')} />
 
-<div class="mb-4">
+<div class="dashboard-section">
 	<Widget title="Quick links">
 		<QuickLinksWidget links={data.quickLinks} folders={data.quickLinkFolders} form={form as { error?: string; errorId?: string | null } | undefined} />
 	</Widget>
 </div>
 
-<div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+<div class="dashboard-grid">
 	<Widget title="Tasks" href="/tasks">
-		<div class="space-y-4">
-			<div class="grid grid-cols-3 gap-2 text-center">
-				<div class="rounded-lg border border-border/70 bg-muted/30 px-2 py-3">
-					<p class="text-[10px] uppercase leading-tight tracking-[0.06em] text-muted-foreground">Pending</p>
-					<p class="mt-1 text-2xl font-display font-semibold">{data.taskSummary.pending}</p>
+		<div class="dashboard-space-y-4">
+			<div class="stats-grid">
+				<div class="stat-card">
+					<p class="stat-label">Pending</p>
+					<p class="stat-value">{data.taskSummary.pending}</p>
 				</div>
-				<div class="rounded-lg border border-border/70 bg-warning/10 px-2 py-3">
-					<p class="text-[10px] uppercase leading-tight tracking-[0.06em] text-muted-foreground">In Progress</p>
-					<p class="mt-1 text-2xl font-display font-semibold">{data.taskSummary.inProgress}</p>
+				<div class="stat-card stat-card-warning">
+					<p class="stat-label">In Progress</p>
+					<p class="stat-value">{data.taskSummary.inProgress}</p>
 				</div>
-				<div class="rounded-lg border border-border/70 bg-success/10 px-2 py-3">
-					<p class="text-[10px] uppercase leading-tight tracking-[0.06em] text-muted-foreground">Completed</p>
-					<p class="mt-1 text-2xl font-display font-semibold">{data.taskSummary.completed}</p>
+				<div class="stat-card stat-card-success">
+					<p class="stat-label">Completed</p>
+					<p class="stat-value">{data.taskSummary.completed}</p>
 				</div>
 			</div>
 
 			{#if data.tasksPreview.length === 0}
-				<p class="text-sm text-muted-foreground">No open tasks right now.</p>
+				<p class="dashboard-text-sm dashboard-text-muted">No open tasks right now.</p>
 			{:else}
-				<ul class="space-y-2 text-sm">
+				<ul class="dashboard-space-y-2 dashboard-text-sm">
 					{#each data.tasksPreview as task (task.id)}
-						<li class="flex items-start gap-2 rounded-lg border border-border/60 bg-card/70 px-3 py-2">
-							<CheckSquare class="mt-0.5 h-3.5 w-3.5 text-muted-foreground" />
-							<div class="min-w-0 flex-1">
-								<p class="truncate font-medium">{task.title}</p>
-								<div class="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+						<li class="task-list-item">
+							<CheckSquare class="dashboard-mt-0-5 dashboard-icon-sm dashboard-text-muted" />
+							<div class="dashboard-min-w-0 dashboard-flex-1">
+								<p class="dashboard-truncate dashboard-font-medium">{task.title}</p>
+								<div class="dashboard-mt-1 dashboard-flex dashboard-items-center dashboard-gap-2 dashboard-text-xs dashboard-text-muted">
 									<Badge variant={taskStatusTone(task.status)}>{taskStatusLabel(task.status)}</Badge>
 									{#if task.dueDate}
 										<span>Due {fmtDate(task.dueDate)}</span>
@@ -74,14 +74,14 @@
 	</Widget>
 
 	<Widget title="Case progress" href="/timeline">
-		<ul class="space-y-1.5 text-xs">
+		<ul class="dashboard-space-y-1-5 dashboard-text-xs">
 			{#each data.phaseProgress as p (p.label)}
-				<li class="flex items-center gap-2">
-					<span class="w-32 truncate text-muted-foreground">{p.label}</span>
-					<div class="h-1.5 flex-1 overflow-hidden rounded bg-muted">
-						<div class="h-full bg-primary transition duration-1000 ease-out" style:width={mounted ? `${p.total === 0 ? 0 : (p.done / p.total) * 100}%` : '0%'}></div>
+				<li class="phase-progress-item">
+					<span class="phase-label">{p.label}</span>
+					<div class="progress-bar-container">
+						<div class="progress-bar-fill" style:width={mounted ? `${p.total === 0 ? 0 : (p.done / p.total) * 100}%` : '0%'}></div>
 					</div>
-					<span class="w-10 text-right text-[10px] text-muted-foreground">{p.done}/{p.total}</span>
+					<span class="phase-count">{p.done}/{p.total}</span>
 				</li>
 			{/each}
 		</ul>
@@ -89,13 +89,13 @@
 
 	<Widget title="Countdowns" href="/timeline">
 		{#if data.countdowns.length === 0}
-			<p class="text-sm text-muted-foreground">No upcoming meetings or due milestones.</p>
+			<p class="dashboard-text-sm dashboard-text-muted">No upcoming meetings or due milestones.</p>
 		{:else}
-			<ul class="space-y-2 text-sm">
+			<ul class="dashboard-space-y-2 dashboard-text-sm">
 				{#each data.countdowns as c (c.href)}
 					{@const d = daysUntil(c.date)}
-					<li class="flex items-center justify-between gap-2">
-						<a class="truncate hover:underline" href={c.href}>{c.label}</a>
+					<li class="countdown-item">
+						<a class="dashboard-truncate dashboard-hover-underline" href={c.href}>{c.label}</a>
 						<Badge variant={d !== null && d < 7 ? 'warning' : 'secondary'}>
 							{d === null ? '—' : d === 0 ? 'Today' : d > 0 ? `in ${d}d` : `${-d}d ago`}
 						</Badge>
@@ -107,12 +107,12 @@
 
 	<Widget title="Heads up" href="/evidence">
 		{#if data.missingCritical.length === 0}
-			<p class="text-sm text-muted-foreground">Nothing flagged. 🎉</p>
+			<p class="dashboard-text-sm dashboard-text-muted">Nothing flagged. 🎉</p>
 		{:else}
-			<ul class="space-y-1 text-sm">
+			<ul class="dashboard-space-y-1 dashboard-text-sm">
 				{#each data.missingCritical as m (m)}
-					<li class="flex items-start gap-2">
-						<AlertTriangle class="mt-0.5 h-3.5 w-3.5 text-warning" />
+					<li class="activity-item">
+						<AlertTriangle class="dashboard-mt-0-5 dashboard-icon-sm text-warning" />
 						<span>{m}</span>
 					</li>
 				{/each}
@@ -122,14 +122,14 @@
 
 	<Widget title="Upcoming meetings" href="/timeline">
 		{#if data.upcomingMeetings.length === 0}
-			<p class="text-sm text-muted-foreground">Nothing scheduled.</p>
+			<p class="dashboard-text-sm dashboard-text-muted">Nothing scheduled.</p>
 		{:else}
-			<ul class="space-y-2 text-sm">
+			<ul class="dashboard-space-y-2 dashboard-text-sm">
 				{#each data.upcomingMeetings as m (m.id)}
 					<li>
-						<a class="block hover:underline" href={`/timeline#${m.id}`}>
-							<p class="truncate font-medium">{m.title}</p>
-							<p class="text-xs text-muted-foreground">{fmtDateTime(m.scheduledAt)}</p>
+						<a class="dashboard-block dashboard-hover-underline" href={`/timeline#${m.id}`}>
+							<p class="dashboard-truncate dashboard-font-medium">{m.title}</p>
+							<p class="dashboard-text-xs dashboard-text-muted">{fmtDateTime(m.scheduledAt)}</p>
 						</a>
 					</li>
 				{/each}
@@ -138,17 +138,17 @@
 	</Widget>
 
 	<Widget title="Evidence coverage" href="/evidence">
-		<ul class="space-y-1.5 text-xs">
+		<ul class="dashboard-space-y-1-5 dashboard-text-xs">
 			{#each data.evidenceCoverage.slice(0, 8) as c (c.category)}
-				<li class="flex items-center gap-2">
-					<span class="w-32 truncate text-muted-foreground">{c.category}</span>
-					<div class="h-1.5 flex-1 overflow-hidden rounded bg-muted">
-						<div
-							class="h-full transition duration-1000 ease-out {c.target > 0 && c.total < c.target ? 'bg-warning' : 'bg-primary'}"
-							style:width={mounted ? `${Math.min(100, c.target > 0 ? (c.total / c.target) * 100 : c.total > 0 ? 100 : 0)}%` : '0%'}
-						></div>
-					</div>
-					<span class="w-10 text-right text-[10px] text-muted-foreground">
+				<li class="dashboard-flex dashboard-items-center dashboard-gap-2">
+					<span class="dashboard-w-32 dashboard-truncate dashboard-text-muted">{c.category}</span>
+					<div class="progress-bar-container">
+					<div
+						class="progress-bar-fill {c.target > 0 && c.total < c.target ? 'progress-bar-fill-warning' : ''}"
+						style:width={mounted ? `${Math.min(100, c.target > 0 ? (c.total / c.target) * 100 : c.total > 0 ? 100 : 0)}%` : '0%'}
+					></div>
+				</div>
+				<span class="phase-count">
 						{c.total}{c.target > 0 ? `/${c.target}` : ''}
 					</span>
 				</li>
@@ -157,11 +157,11 @@
 	</Widget>
 
 	<Widget title="Open questions" href="/questions">
-		<ul class="space-y-1 text-xs">
+		<ul class="dashboard-space-y-1 dashboard-text-xs">
 			{#each Object.entries(data.openQuestionsCount) as [p, n] (p)}
-				<li class="flex items-center justify-between">
-					<span class="text-muted-foreground">{titleCase(p)}</span>
-					<span class="font-mono text-foreground">{n}</span>
+				<li class="dashboard-flex dashboard-items-center dashboard-justify-between">
+					<span class="dashboard-text-muted">{titleCase(p)}</span>
+					<span class="dashboard-font-mono">{n}</span>
 				</li>
 			{/each}
 		</ul>
@@ -169,15 +169,15 @@
 
 	<Widget title="Recent activity" href="/settings/data/activity">
 		{#if data.activity.length === 0}
-			<p class="text-sm text-muted-foreground">No activity yet.</p>
+			<p class="dashboard-text-sm dashboard-text-muted">No activity yet.</p>
 		{:else}
-			<ul class="space-y-2 text-sm">
+			<ul class="dashboard-space-y-2 dashboard-text-sm">
 				{#each data.activity as a (a.id)}
-					<li class="flex items-start gap-2">
-						<CalendarClock class="mt-0.5 h-3 w-3 text-muted-foreground" />
-						<div class="min-w-0 flex-1">
-							<p class="truncate">{a.summary}</p>
-							<p class="text-[10px] text-muted-foreground">{fmtRelative(a.createdAt)} · {a.user?.name ?? a.user?.email ?? 'system'}</p>
+					<li class="activity-item">
+						<CalendarClock class="dashboard-mt-0-5 dashboard-icon-xs dashboard-text-muted" />
+						<div class="activity-content">
+							<p class="dashboard-truncate">{a.summary}</p>
+							<p class="dashboard-text-10px dashboard-text-muted">{fmtRelative(a.createdAt)} · {a.user?.name ?? a.user?.email ?? 'system'}</p>
 						</div>
 					</li>
 				{/each}

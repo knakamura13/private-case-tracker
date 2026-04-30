@@ -45,28 +45,28 @@
 </script>
 
 <Dialog {open} {onClose}>
-	<form method="post" {action} use:enhance={onenhance} class="flex flex-col">
+	<form method="post" {action} use:enhance={onenhance} class="modal-form">
 		<!-- Header -->
-		<div class="flex items-start justify-between border-b border-border p-4">
-			<h2 class="text-lg font-semibold">New question</h2>
-			<Button type="button" variant="ghost" size="sm" onclick={onClose} class="shrink-0">
-				{#snippet children()}<X class="h-5 w-5" />{/snippet}
+		<div class="modal-header">
+			<h2 class="modal-title">New question</h2>
+			<Button type="button" variant="ghost" size="sm" onclick={onClose} class="modal-shrink-0">
+				{#snippet children()}<X class="modal-icon-md" />{/snippet}
 			</Button>
 		</div>
 
 		<!-- Main Content -->
-		<div class="flex flex-col gap-4 p-4">
+		<div class="modal-content">
 			<div>
-				<label for="question" class="mb-1 block text-sm font-medium">Question</label>
+				<label for="question" class="modal-label">Question</label>
 				<Textarea id="question" name="question" bind:value={questionValue} required rows={3} />
 			</div>
-			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+			<div class="form-grid">
 				<div>
-					<label for="category" class="mb-1 block text-sm font-medium">Category</label>
+					<label for="category" class="modal-label">Category</label>
 					<Input id="category" name="category" bind:value={categoryValue} />
 				</div>
 				<div>
-					<label for="priority" class="mb-1 block text-sm font-medium">Priority</label>
+					<label for="priority" class="modal-label">Priority</label>
 					<Select id="priority" name="priority" bind:value={priorityValue}>
 						<option value="LOW">Low</option>
 						<option value="MEDIUM">Medium</option>
@@ -75,7 +75,7 @@
 					</Select>
 				</div>
 				<div>
-					<label for="status" class="mb-1 block text-sm font-medium">Status</label>
+					<label for="status" class="modal-label">Status</label>
 					<Select id="status" name="status" bind:value={statusValue}>
 						<option value="OPEN">Open</option>
 						<option value="RESEARCHING">Researching</option>
@@ -84,7 +84,7 @@
 					</Select>
 				</div>
 				<div>
-					<label for="sourceType" class="mb-1 block text-sm font-medium">Source type</label>
+					<label for="sourceType" class="modal-label">Source type</label>
 					<Select id="sourceType" name="sourceType" bind:value={sourceTypeValue}>
 						<option value="ATTORNEY">Attorney</option>
 						<option value="NONPROFIT">Nonprofit</option>
@@ -96,28 +96,28 @@
 				</div>
 			</div>
 			<div>
-				<label for="citationUrl" class="mb-1 block text-sm font-medium">Citation URL</label>
+				<label for="citationUrl" class="modal-label">Citation URL</label>
 				<Input id="citationUrl" name="citationUrl" type="url" bind:value={citationUrlValue} />
 			</div>
 			<div>
-				<label for="answer" class="mb-1 block text-sm font-medium">Answer</label>
+				<label for="answer" class="modal-label">Answer</label>
 				<Textarea id="answer" name="answer" bind:value={answerValue} rows={5} />
 			</div>
 			<div>
-				<label for="answeredAt" class="mb-1 block text-sm font-medium">Answered on</label>
+				<label for="answeredAt" class="modal-label">Answered on</label>
 				<Input id="answeredAt" name="answeredAt" type="date" bind:value={answeredAtValue} />
 			</div>
 		</div>
 
 		<!-- Error -->
 		{#if error}
-			<div class="px-4">
+			<div class="modal-error">
 				<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />
 			</div>
 		{/if}
 
 		<!-- Footer -->
-		<div class="flex justify-end gap-2 border-t border-border p-4">
+		<div class="modal-footer">
 			<Button type="button" variant="outline" onclick={onClose}>Cancel</Button>
 			<Button type="submit">Add question</Button>
 		</div>

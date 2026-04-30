@@ -237,400 +237,400 @@
 </script>
 
 <Dialog {open} {onClose}>
-	<form method="post" {action} class="flex flex-col">
-				<!-- Header -->
-				<div class="flex items-start justify-between border-b border-border p-4">
-					<div class="flex flex-1 items-start">
-						<Input
-							name="title"
-							bind:value={titleValue}
-							oninput={() => triggerAutoSave()}
-							class="flex-1 border-none bg-transparent p-0 text-lg font-semibold focus-visible:ring-0 focus-visible:ring-offset-0"
-							placeholder="Title"
-						/>
-					</div>
-					<div class="flex items-center gap-1">
-						{#if deleteAction}
-							<div class="relative" use:clickOutside={() => showMenuDropdown = false}>
-								<Button type="button" variant="ghost" size="sm" onclick={() => showMenuDropdown = !showMenuDropdown} class="shrink-0">
-									{#snippet children()}<MoreHorizontal class="h-5 w-5" />{/snippet}
-								</Button>
-								{#if showMenuDropdown}
-									<div class="absolute right-0 top-full z-10 mt-1 w-32 rounded-md border border-border bg-card p-1 shadow-md">
-										<button
-											type="button"
-											class="w-full rounded-md px-2 py-1.5 text-left text-sm text-destructive hover:bg-destructive/10"
-											onclick={async () => {
-												if (confirm('Are you sure you want to delete this milestone? This action cannot be undone.')) {
-													const formData = new FormData();
-													formData.append('id', val('id'));
-													const response = await fetch(deleteAction, { method: 'POST', body: formData });
-													if (response.ok) {
-														showSuccessToast('Milestone deleted successfully');
-														window.location.href = '/timeline';
-													} else {
-														showErrorToast('Failed to delete milestone');
-													}
-												}
-											}}
-										>
-											Delete
-										</button>
-									</div>
-								{/if}
-							</div>
-						{/if}
-						<Button type="button" variant="ghost" size="sm" onclick={onClose} class="shrink-0">
-							{#snippet children()}<X class="h-5 w-5" />{/snippet}
+	<form method="post" {action} class="modal-form">
+		<!-- Header -->
+		<div class="modal-header">
+			<div class="modal-flex modal-flex-1 modal-items-start">
+				<Input
+					name="title"
+					bind:value={titleValue}
+					oninput={() => triggerAutoSave()}
+					class="modal-title-input"
+					placeholder="Title"
+				/>
+			</div>
+			<div class="modal-flex modal-items-center modal-gap-1">
+				{#if deleteAction}
+					<div class="modal-dropdown" use:clickOutside={() => showMenuDropdown = false}>
+						<Button type="button" variant="ghost" size="sm" onclick={() => showMenuDropdown = !showMenuDropdown} class="modal-shrink-0">
+							{#snippet children()}<MoreHorizontal class="modal-icon-md" />{/snippet}
 						</Button>
-					</div>
-				</div>
-
-				<!-- Main Content -->
-				<div class="flex flex-col gap-4 p-4 md:flex-row">
-					<!-- Left Column -->
-					<div class="flex-1 space-y-4">
-						<!-- Actions Bar -->
-						<div class="flex flex-wrap gap-2">
-							<Button type="button" variant="outline" size="sm" onclick={() => showLocationInput = !showLocationInput}>
-								{#snippet children()}<MapPin class="h-3.5 w-3.5" /> Location{/snippet}
-							</Button>
-							<div class="relative" use:clickOutside={() => showOwnerDropdown = false}>
-								<Button type="button" variant="outline" size="sm" onclick={() => showOwnerDropdown = !showOwnerDropdown}>
-									{#snippet children()}<User class="h-3.5 w-3.5" /> Owner{/snippet}
-								</Button>
-								{#if showOwnerDropdown}
-									<div class="absolute left-0 top-full z-10 mt-1 w-48 rounded-md border border-border bg-card p-1 shadow-md">
-										<button
-											type="button"
-											class="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
-											onclick={() => {
-												ownerIdValue = '';
-												showOwnerDropdown = false;
-												triggerAutoSave(true);
-											}}
-										>
-											Unassigned
-										</button>
-										{#each members as m (m.id)}
-											<button
-												type="button"
-												class="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
-												onclick={() => {
-													ownerIdValue = m.id;
-													showOwnerDropdown = false;
-													triggerAutoSave(true);
-												}}
-											>
-												{m.name ?? m.email}
-											</button>
-										{/each}
-									</div>
-								{/if}
-							</div>
-						</div>
-						<div class="flex flex-wrap gap-2">
-							<Button type="button" variant="outline" size="sm" onclick={() => showDueDatePicker = !showDueDatePicker}>
-								{#snippet children()}<Calendar class="h-3.5 w-3.5" /> Due date{/snippet}
-							</Button>
-							<Button type="button" variant="outline" size="sm" onclick={() => showAppointmentDatePicker = !showAppointmentDatePicker}>
-								{#snippet children()}<Calendar class="h-3.5 w-3.5" /> Appointment date{/snippet}
-							</Button>
-						</div>
-
-						<!-- Location Input -->
-						{#if showLocationInput || isEditingLocation}
-							<div class="mt-2 flex gap-2">
-								<Input
-									bind:value={locationAddress}
-									placeholder="Enter business name, address, or coordinates..."
-									class="flex-1 text-sm"
-									onkeydown={(e) => {
-										if (e.key === 'Enter') {
-											e.preventDefault();
-											handleLocationSave();
+						{#if showMenuDropdown}
+							<div class="modal-dropdown-menu">
+								<button
+									type="button"
+									class="modal-dropdown-button"
+									onclick={async () => {
+										if (confirm('Are you sure you want to delete this milestone? This action cannot be undone.')) {
+											const formData = new FormData();
+											formData.append('id', val('id'));
+											const response = await fetch(deleteAction, { method: 'POST', body: formData });
+											if (response.ok) {
+												showSuccessToast('Milestone deleted successfully');
+												window.location.href = '/timeline';
+											} else {
+												showErrorToast('Failed to delete milestone');
+											}
 										}
 									}}
-								/>
-								<Button type="button" size="sm" onclick={handleLocationSave}>Save</Button>
-								<Button type="button" variant="ghost" size="sm" onclick={() => {
-									showLocationInput = false;
-									isEditingLocation = false;
-									locationAddress = '';
-								}}>Cancel</Button>
-							</div>
-						{:else if currentLocation}
-							<div class="mt-2 flex items-center gap-2">
-								<a
-									href={generateGoogleMapsUrl(currentLocation)}
-									target="_blank"
-									rel="noopener noreferrer"
-									class="flex items-center gap-1 text-sm text-primary hover:underline"
 								>
-									<MapPin class="h-3.5 w-3.5" />
-									<span class="line-clamp-1">{currentLocation}</span>
-								</a>
-								<Button type="button" variant="ghost" size="sm" class="h-6 w-6 p-0" onclick={() => {
-									locationAddress = currentLocation;
-									isEditingLocation = true;
-								}}>
-									{#snippet children()}<MoreHorizontal class="h-4 w-4" />{/snippet}
-								</Button>
+									Delete
+								</button>
 							</div>
 						{/if}
+					</div>
+				{/if}
+				<Button type="button" variant="ghost" size="sm" onclick={onClose} class="modal-shrink-0">
+					{#snippet children()}<X class="modal-icon-md" />{/snippet}
+				</Button>
+			</div>
+		</div>
 
-						<!-- Due Date Picker -->
-						{#if showDueDatePicker}
-							<div class="mt-2 flex gap-2">
-								<Input
-									bind:value={dueDateValue}
-									type="date"
-									class="text-sm"
-								/>
-								<Button type="button" size="sm" onclick={handleDueDateSave}>Save</Button>
-								<Button type="button" variant="ghost" size="sm" onclick={() => showDueDatePicker = false}>Cancel</Button>
-							</div>
-						{/if}
-
-						<!-- Appointment Date Picker -->
-						{#if showAppointmentDatePicker}
-							<div class="mt-2 flex gap-2">
-								<Input
-									bind:value={appointmentDateValue}
-									type="date"
-									class="text-sm"
-								/>
-								<Button type="button" size="sm" onclick={handleAppointmentDateSave}>Save</Button>
-								<Button type="button" variant="ghost" size="sm" onclick={() => showAppointmentDatePicker = false}>Cancel</Button>
-							</div>
-						{/if}
-
-						<!-- Members -->
-						<div class="flex items-center gap-2">
-							{#if initial.owner}
-								<div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
-									{ownerInitial(initial.owner)}
-								</div>
-							{/if}
-						</div>
-
-						<!-- Description -->
-						<div>
-							<div class="mb-2 text-sm font-medium">Description</div>
-							<!-- Hidden input ensures description is always submitted even when textarea is unmounted -->
-							<input type="hidden" name="description" value={descriptionValue} />
-							{#if isEditingDescription}
-								<Textarea
-									name="description"
-									bind:value={descriptionValue}
-									oninput={() => triggerAutoSave()}
-									onblur={() => {
-										isEditingDescription = false;
+		<!-- Main Content -->
+		<div class="modal-content-two-col">
+			<!-- Left Column -->
+			<div class="modal-content-left">
+				<!-- Actions Bar -->
+				<div class="modal-actions-bar">
+					<Button type="button" variant="outline" size="sm" onclick={() => showLocationInput = !showLocationInput}>
+						{#snippet children()}<MapPin class="modal-icon-3-5" /> Location{/snippet}
+					</Button>
+					<div class="modal-dropdown" use:clickOutside={() => showOwnerDropdown = false}>
+						<Button type="button" variant="outline" size="sm" onclick={() => showOwnerDropdown = !showOwnerDropdown}>
+							{#snippet children()}<User class="modal-icon-3-5" /> Owner{/snippet}
+						</Button>
+						{#if showOwnerDropdown}
+							<div class="modal-dropdown-menu" style="left: 0; right: auto; width: 12rem;">
+								<button
+									type="button"
+									class="modal-dropdown-item"
+									onclick={() => {
+										ownerIdValue = '';
+										showOwnerDropdown = false;
 										triggerAutoSave(true);
 									}}
-									onkeydown={(e) => {
-										if (e.key === 'Escape') {
-											e.preventDefault();
-											isEditingDescription = false;
-										}
+								>
+									Unassigned
+								</button>
+								{#each members as m (m.id)}
+									<button
+										type="button"
+										class="modal-dropdown-item"
+										onclick={() => {
+											ownerIdValue = m.id;
+											showOwnerDropdown = false;
+											triggerAutoSave(true);
+										}}
+									>
+										{m.name ?? m.email}
+									</button>
+								{/each}
+							</div>
+						{/if}
+					</div>
+				</div>
+				<div class="modal-actions-bar">
+					<Button type="button" variant="outline" size="sm" onclick={() => showDueDatePicker = !showDueDatePicker}>
+						{#snippet children()}<Calendar class="modal-icon-3-5" /> Due date{/snippet}
+					</Button>
+					<Button type="button" variant="outline" size="sm" onclick={() => showAppointmentDatePicker = !showAppointmentDatePicker}>
+						{#snippet children()}<Calendar class="modal-icon-3-5" /> Appointment date{/snippet}
+					</Button>
+				</div>
+
+				<!-- Location Input -->
+				{#if showLocationInput || isEditingLocation}
+					<div class="modal-mt-2 modal-flex modal-gap-2">
+						<Input
+							bind:value={locationAddress}
+							placeholder="Enter business name, address, or coordinates..."
+							class="modal-flex-1 modal-text-sm"
+							onkeydown={(e) => {
+								if (e.key === 'Enter') {
+									e.preventDefault();
+									handleLocationSave();
+								}
+							}}
+						/>
+						<Button type="button" size="sm" onclick={handleLocationSave}>Save</Button>
+						<Button type="button" variant="ghost" size="sm" onclick={() => {
+							showLocationInput = false;
+							isEditingLocation = false;
+							locationAddress = '';
+						}}>Cancel</Button>
+					</div>
+				{:else if currentLocation}
+					<div class="modal-mt-2 modal-flex modal-items-center modal-gap-2">
+						<a
+							href={generateGoogleMapsUrl(currentLocation)}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="modal-flex modal-items-center modal-gap-1 modal-text-sm modal-link"
+						>
+							<MapPin class="modal-icon-3-5" />
+							<span class="line-clamp-1">{currentLocation}</span>
+						</a>
+						<Button type="button" variant="ghost" size="sm" class="modal-icon-btn-sm" onclick={() => {
+							locationAddress = currentLocation;
+							isEditingLocation = true;
+						}}>
+							{#snippet children()}<MoreHorizontal class="modal-icon-sm" />{/snippet}
+						</Button>
+					</div>
+				{/if}
+
+				<!-- Due Date Picker -->
+				{#if showDueDatePicker}
+					<div class="modal-mt-2 modal-flex modal-gap-2">
+						<Input
+							bind:value={dueDateValue}
+							type="date"
+							class="modal-text-sm"
+						/>
+						<Button type="button" size="sm" onclick={handleDueDateSave}>Save</Button>
+						<Button type="button" variant="ghost" size="sm" onclick={() => showDueDatePicker = false}>Cancel</Button>
+					</div>
+				{/if}
+
+				<!-- Appointment Date Picker -->
+				{#if showAppointmentDatePicker}
+					<div class="modal-mt-2 modal-flex modal-gap-2">
+						<Input
+							bind:value={appointmentDateValue}
+							type="date"
+							class="modal-text-sm"
+						/>
+						<Button type="button" size="sm" onclick={handleAppointmentDateSave}>Save</Button>
+						<Button type="button" variant="ghost" size="sm" onclick={() => showAppointmentDatePicker = false}>Cancel</Button>
+					</div>
+				{/if}
+
+				<!-- Members -->
+				<div class="modal-flex modal-items-center modal-gap-2">
+					{#if initial.owner}
+						<div class="modal-avatar">
+							{ownerInitial(initial.owner)}
+						</div>
+					{/if}
+				</div>
+
+				<!-- Description -->
+				<div>
+					<div class="modal-label">Description</div>
+					<!-- Hidden input ensures description is always submitted even when textarea is unmounted -->
+					<input type="hidden" name="description" value={descriptionValue} />
+					{#if isEditingDescription}
+						<Textarea
+							name="description"
+							bind:value={descriptionValue}
+							oninput={() => triggerAutoSave()}
+							onblur={() => {
+								isEditingDescription = false;
+								triggerAutoSave(true);
+							}}
+							onkeydown={(e) => {
+								if (e.key === 'Escape') {
+									e.preventDefault();
+									isEditingDescription = false;
+								}
+							}}
+							placeholder="Add a more detailed description... URLs and phone numbers will be clickable."
+							rows={3}
+						/>
+					{:else}
+						<Card class="modal-editable-card">
+							{#if descriptionValue}
+								<RichText
+									text={descriptionValue}
+									editable={true}
+									onClick={() => {
+										isEditingDescription = true;
 									}}
-									placeholder="Add a more detailed description... URLs and phone numbers will be clickable."
-									rows={3}
 								/>
 							{:else}
-								<Card class="p-3 bg-muted/50">
-									{#if descriptionValue}
-										<RichText
-											text={descriptionValue}
-											editable={true}
-											onClick={() => {
-												isEditingDescription = true;
-											}}
-										/>
-									{:else}
-										<div
-											class="text-sm text-muted-foreground italic cursor-pointer hover:bg-muted/50 rounded px-2 py-1"
-											onclick={() => {
-												isEditingDescription = true;
-											}}
-											role="button"
-											tabindex={0}
+								<div
+									class="modal-editable-placeholder"
+									onclick={() => {
+										isEditingDescription = true;
+									}}
+									role="button"
+									tabindex={0}
+									onkeydown={(e) => {
+										if (e.key === 'Enter' || e.key === ' ') {
+											e.preventDefault();
+											isEditingDescription = true;
+										}
+									}}
+								>
+									Add a more detailed description...
+								</div>
+							{/if}
+						</Card>
+					{/if}
+				</div>
+
+				<!-- Checklist -->
+				<Card class="modal-checklist-card">
+					<div class="modal-checklist-header">
+						<CheckSquare class="modal-icon-sm text-muted-foreground" />
+						<span class="modal-text-sm modal-font-medium">Sub-tasks</span>
+					</div>
+					{#if editableSubTasks.length > 0}
+						<div class="modal-checklist-progress">
+							<span>{checklistProgress()}%</span>
+							<div class="modal-checklist-progress-bar">
+								<div class="modal-checklist-progress-fill" style="width: {checklistProgress()}%"></div>
+							</div>
+						</div>
+					{/if}
+					{#if editableSubTasks.length > 0}
+						<div class="modal-checklist-items">
+							{#each editableSubTasks as st (st.id)}
+								<div class="modal-checklist-item">
+									<input
+										type="checkbox"
+										checked={st.done}
+										onchange={() => toggleSubTask(st.id)}
+										class="modal-checklist-checkbox"
+									/>
+									{#if editingSubTaskId === st.id}
+										<Input
+											bind:value={editingSubTaskText}
 											onkeydown={(e) => {
-												if (e.key === 'Enter' || e.key === ' ') {
+												if (e.key === 'Enter') {
 													e.preventDefault();
-													isEditingDescription = true;
+													updateSubTaskText(st.id, editingSubTaskText);
+													editingSubTaskId = null;
+												} else if (e.key === 'Escape') {
+													editingSubTaskId = null;
 												}
 											}}
-										>
-											Add a more detailed description...
-										</div>
+											onblur={() => {
+												if (editingSubTaskText !== st.text) {
+													updateSubTaskText(st.id, editingSubTaskText);
+												}
+												editingSubTaskId = null;
+											}}
+											class="modal-checklist-input"
+										/>
+									{:else}
+										<span class={st.done ? 'modal-checklist-text-done' : 'modal-checklist-text'}>{st.text}</span>
 									{/if}
-								</Card>
-							{/if}
-						</div>
-
-						<!-- Checklist -->
-						<Card class="p-3">
-							<div class="mb-2 flex items-center gap-2">
-								<CheckSquare class="h-4 w-4 text-muted-foreground" />
-								<span class="text-sm font-medium">Sub-tasks</span>
-							</div>
-							{#if editableSubTasks.length > 0}
-								<div class="mb-3 flex items-center gap-2">
-									<span class="text-sm text-muted-foreground">{checklistProgress()}%</span>
-									<div class="h-1.5 flex-1 rounded-full bg-muted">
-										<div class="h-1.5 rounded-full bg-primary transition-all duration-300 ease-out" style="width: {checklistProgress()}%"></div>
-									</div>
-								</div>
-							{/if}
-							{#if editableSubTasks.length > 0}
-								<div class="mb-3 space-y-2">
-									{#each editableSubTasks as st (st.id)}
-										<div class="flex items-start gap-2">
-											<input
-												type="checkbox"
-												checked={st.done}
-												onchange={() => toggleSubTask(st.id)}
-												class="mt-0.5 h-4 w-4 rounded border-border"
-											/>
-											{#if editingSubTaskId === st.id}
-												<Input
-													bind:value={editingSubTaskText}
-													onkeydown={(e) => {
-														if (e.key === 'Enter') {
-															e.preventDefault();
-															updateSubTaskText(st.id, editingSubTaskText);
-															editingSubTaskId = null;
-														} else if (e.key === 'Escape') {
-															editingSubTaskId = null;
-														}
-													}}
-													onblur={() => {
-														if (editingSubTaskText !== st.text) {
-															updateSubTaskText(st.id, editingSubTaskText);
-														}
-														editingSubTaskId = null;
-													}}
-													class="flex-1 h-7 text-sm"
-												/>
-											{:else}
-												<span class={st.done ? 'line-through text-muted-foreground' : 'text-sm'}>{st.text}</span>
-											{/if}
-											<div class="relative ml-auto">
-												<Button
+									<div class="relative ml-auto">
+										<Button
+											type="button"
+											variant="ghost"
+											size="sm"
+											class="modal-icon-btn-sm"
+											onclick={() => openSubTaskMenuId = openSubTaskMenuId === st.id ? null : st.id}
+										>
+											{#snippet children()}<MoreHorizontal class="modal-icon-sm" />{/snippet}
+										</Button>
+										{#if openSubTaskMenuId === st.id}
+											<div class="modal-dropdown-menu" style="width: 6rem;" use:clickOutside={() => openSubTaskMenuId = null}>
+												<button
 													type="button"
-													variant="ghost"
-													size="sm"
-													class="h-6 w-6 p-0"
-													onclick={() => openSubTaskMenuId = openSubTaskMenuId === st.id ? null : st.id}
+													class="modal-dropdown-item"
+													onclick={() => {
+														editingSubTaskId = st.id;
+														editingSubTaskText = st.text;
+														openSubTaskMenuId = null;
+													}}
 												>
-													{#snippet children()}<MoreHorizontal class="h-4 w-4" />{/snippet}
-												</Button>
-												{#if openSubTaskMenuId === st.id}
-													<div class="absolute right-0 top-full z-10 mt-1 w-24 rounded-md border border-border bg-card p-1 shadow-md" use:clickOutside={() => openSubTaskMenuId = null}>
-														<button
-															type="button"
-															class="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
-															onclick={() => {
-																editingSubTaskId = st.id;
-																editingSubTaskText = st.text;
-																openSubTaskMenuId = null;
-															}}
-														>
-															Edit
-														</button>
-														<button
-															type="button"
-															class="w-full rounded-md px-2 py-1.5 text-left text-sm text-destructive hover:bg-destructive/10"
-															onclick={() => {
-																_removeSubTask(st.id);
-																openSubTaskMenuId = null;
-															}}
-														>
-															Delete
-														</button>
-													</div>
-												{/if}
+													Edit
+												</button>
+												<button
+													type="button"
+													class="modal-dropdown-button"
+													onclick={() => {
+														_removeSubTask(st.id);
+														openSubTaskMenuId = null;
+													}}
+												>
+													Delete
+												</button>
 											</div>
-										</div>
-									{/each}
-								</div>
-							{/if}
-							{#if !showChecklistInput}
-								<Button type="button" variant="ghost" size="sm" onclick={() => showChecklistInput = true} class="w-full justify-start text-muted-foreground">
-									{#snippet children()}<Plus class="h-4 w-4 mr-2" /> Add an item{/snippet}
-								</Button>
-							{:else}
-								<div class="space-y-2">
-									<input
-										type="text"
-										bind:value={newSubTaskText}
-										bind:this={newSubTaskInputEl}
-										placeholder="Enter item..."
-										onkeydown={(e) => {
-											if (e.key === 'Enter') {
-												e.preventDefault();
-												addSubTask();
-											}
-										}}
-										class="w-full rounded-md border border-input bg-card px-3 py-2 text-sm"
-									/>
-									<div class="flex justify-start gap-2">
-										<Button type="button" size="sm" onclick={() => {
-											addSubTask();
-										}}>Add</Button>
-										<Button type="button" variant="ghost" size="sm" onclick={() => {
-											newSubTaskText = '';
-											showChecklistInput = false;
-										}}>Cancel</Button>
+										{/if}
 									</div>
 								</div>
-							{/if}
-						</Card>
-					</div>
+							{/each}
+						</div>
+					{/if}
+					{#if !showChecklistInput}
+						<Button type="button" variant="ghost" size="sm" onclick={() => showChecklistInput = true} class="modal-w-full modal-justify-start text-muted-foreground">
+							{#snippet children()}<Plus class="modal-icon-sm modal-mr-2" /> Add an item{/snippet}
+						</Button>
+					{:else}
+						<div class="space-y-2">
+							<input
+								type="text"
+								bind:value={newSubTaskText}
+								bind:this={newSubTaskInputEl}
+								placeholder="Enter item..."
+								onkeydown={(e) => {
+									if (e.key === 'Enter') {
+										e.preventDefault();
+										addSubTask();
+									}
+								}}
+								class="modal-checklist-add-input"
+							/>
+							<div class="modal-flex modal-justify-start modal-gap-2">
+								<Button type="button" size="sm" onclick={() => {
+									addSubTask();
+								}}>Add</Button>
+								<Button type="button" variant="ghost" size="sm" onclick={() => {
+									newSubTaskText = '';
+									showChecklistInput = false;
+								}}>Cancel</Button>
+							</div>
+						</div>
+					{/if}
+				</Card>
+			</div>
 
-					<!-- Right Column - Settings -->
-					<div class="w-full space-y-4 md:w-64">
-						<Card class="p-3 space-y-3">
-							<div>
-								<label for="phase" class="mb-1 block text-xs font-medium text-muted-foreground">Phase</label>
-								<Select id="phase" name="phase" bind:value={phaseValue} onchange={() => triggerAutoSave()} class="text-sm">
-									<!-- eslint-disable-next-line security/detect-object-injection -->
-									{#each PHASE_ORDER as p}<option value={p}>{PHASE_LABELS[p]}</option>{/each}
-								</Select>
-							</div>
-							<div>
-								<label for="status" class="mb-1 block text-xs font-medium text-muted-foreground">Status</label>
-								<Select id="status" name="status" bind:value={statusValue} onchange={() => triggerAutoSave()} class="text-sm">
-									<option value="PLANNED">Planned</option>
-									<option value="IN_PROGRESS">In progress</option>
-									<option value="DONE">Done</option>
-									<option value="BLOCKED">Blocked</option>
-									<option value="SKIPPED">Skipped</option>
-								</Select>
-							</div>
-							<div>
-								<label for="priority" class="mb-1 block text-xs font-medium text-muted-foreground">Priority</label>
-								<Select id="priority" name="priority" bind:value={priorityValue} onchange={() => triggerAutoSave()} class="text-sm">
-									<option value="LOW">Low</option>
-									<option value="MEDIUM">Medium</option>
-									<option value="HIGH">High</option>
-									<option value="CRITICAL">Critical</option>
-								</Select>
-							</div>
-						</Card>
+			<!-- Right Column - Settings -->
+			<div class="modal-content-right">
+				<Card class="modal-settings-card">
+					<div>
+						<label for="phase" class="modal-settings-label">Phase</label>
+						<Select id="phase" name="phase" bind:value={phaseValue} onchange={() => triggerAutoSave()} class="modal-text-sm">
+							<!-- eslint-disable-next-line security/detect-object-injection -->
+							{#each PHASE_ORDER as p}<option value={p}>{PHASE_LABELS[p]}</option>{/each}
+						</Select>
 					</div>
-				</div>
+					<div>
+						<label for="status" class="modal-settings-label">Status</label>
+						<Select id="status" name="status" bind:value={statusValue} onchange={() => triggerAutoSave()} class="modal-text-sm">
+							<option value="PLANNED">Planned</option>
+							<option value="IN_PROGRESS">In progress</option>
+							<option value="DONE">Done</option>
+							<option value="BLOCKED">Blocked</option>
+							<option value="SKIPPED">Skipped</option>
+						</Select>
+					</div>
+					<div>
+						<label for="priority" class="modal-settings-label">Priority</label>
+						<Select id="priority" name="priority" bind:value={priorityValue} onchange={() => triggerAutoSave()} class="modal-text-sm">
+							<option value="LOW">Low</option>
+							<option value="MEDIUM">Medium</option>
+							<option value="HIGH">High</option>
+							<option value="CRITICAL">Critical</option>
+						</Select>
+					</div>
+				</Card>
+			</div>
+		</div>
 
-				<!-- Footer -->
-				<div class="p-4">
-					{#if error}<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />{/if}
-					<input type="hidden" name="subTasks" value={subTasksJson} />
-					<input type="hidden" name="id" value={val('id')} />
-					<input type="hidden" name="ownerId" value={ownerIdValue} />
-					<input type="hidden" name="dueDate" value={dueDateValue} bind:this={dueDateInputEl} />
-					<input type="hidden" name="scheduledAt" value={appointmentDateValue} bind:this={scheduledAtInputEl} />
-					<input type="hidden" name="location" value={val('location', '')} />
-				</div>
-			</form>
+		<!-- Footer -->
+		<div class="modal-p-4">
+			{#if error}<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />{/if}
+			<input type="hidden" name="subTasks" value={subTasksJson} />
+			<input type="hidden" name="id" value={val('id')} />
+			<input type="hidden" name="ownerId" value={ownerIdValue} />
+			<input type="hidden" name="dueDate" value={dueDateValue} bind:this={dueDateInputEl} />
+			<input type="hidden" name="scheduledAt" value={appointmentDateValue} bind:this={scheduledAtInputEl} />
+			<input type="hidden" name="location" value={val('location', '')} />
+		</div>
+	</form>
 </Dialog>

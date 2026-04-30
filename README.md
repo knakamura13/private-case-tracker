@@ -21,7 +21,7 @@ Not a legal source of truth. Not affiliated with USCIS or any government agency.
 ## Stack
 
 - SvelteKit 2 + Svelte 5 (runes) + TypeScript strict, deployed via `@sveltejs/adapter-node`
-- Tailwind CSS v4 with a calm neutral design system
+- Semantic CSS with a calm neutral design system
 - DynamoDB (single-table) for primary data
 - Better Auth (`better-auth` + `@better-auth/passkey` + built-in TOTP plugin) for email + password + passkeys + 2FA
 - Zod v4 for validation everywhere

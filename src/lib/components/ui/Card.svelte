@@ -1,7 +1,6 @@
 <script lang="ts">
 	/* eslint-disable svelte/valid-compile */
 	import type { HTMLAttributes } from 'svelte/elements';
-	import { cn } from '$lib/utils/cn';
 
 	let {
 		class: klass = '',
@@ -9,8 +8,10 @@
 		...rest
 	}: HTMLAttributes<HTMLDivElement> & { class?: string; children?: import('svelte').Snippet } = $props();
 	/* eslint-enable svelte/valid-compile */
+
+	const cardClass = $derived(`card ${klass}`.trim());
 </script>
 
-<div class={cn('rounded-lg border border-border bg-card text-card-foreground shadow-sm transition duration-300 ease-out hover:shadow-md', klass)} {...rest}>
+<div class={cardClass} {...rest}>
 	{#if children}{@render children()}{/if}
 </div>

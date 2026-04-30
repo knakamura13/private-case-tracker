@@ -38,9 +38,9 @@
 	}
 </script>
 
-<div class="mb-4 flex flex-wrap items-center gap-2">
+<div class="filter-bar">
 	<form
-		class="flex-1 min-w-[180px]"
+		class="filter-bar-search"
 		onsubmit={(e) => {
 			e.preventDefault();
 			apply();
@@ -52,7 +52,7 @@
 		<Select
 			value={$page.url.searchParams.get(f.name) ?? ''}
 			onchange={(e) => onFilterChange(f.name, (e.currentTarget as HTMLSelectElement).value)}
-			class="w-auto min-w-[140px]"
+			class="filter-bar-select"
 			aria-label={f.label}
 		>
 			<option value="">{f.label}: all</option>

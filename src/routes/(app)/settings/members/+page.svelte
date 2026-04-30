@@ -26,21 +26,21 @@
 
 <PageHeader title="Members" description="This workspace is designed for two users." />
 
-<Card class="mb-6 p-4">
-	<h2 class="mb-3 text-sm font-semibold">Active members</h2>
-	<ul class="divide-y divide-border">
+<Card class="settings-members-card">
+	<h2>Active members</h2>
+	<ul class="settings-members-list">
 		{#each data.members as m (m.id)}
-			<li class="flex items-center justify-between py-2 text-sm">
+			<li class="settings-members-item">
 				<div>
-					<p class="font-medium">{m.user.name ?? m.user.email}</p>
-					<p class="text-xs text-muted-foreground">{m.user.email}</p>
+					<p class="settings-members-font-medium">{m.user.name ?? m.user.email}</p>
+					<p class="settings-members-text-xs settings-members-text-muted">{m.user.email}</p>
 				</div>
-				<div class="flex items-center gap-2">
+				<div class="settings-members-item-actions">
 					{#if isOwner && m.user.id !== $page.data.user?.id}
 						<form method="post" action="?/removeMember" use:enhance>
 							<input type="hidden" name="userId" value={m.user.id} />
 							<Button type="submit" variant="destructive" size="sm" aria-label="Remove member">
-								<Trash2 class="h-4 w-4" />
+								<Trash2 class="settings-members-icon-sm" />
 							</Button>
 						</form>
 					{/if}
@@ -52,9 +52,9 @@
 </Card>
 
 {#if isOwner}
-	<Card class="mb-6 p-4">
-		<h2 class="mb-3 text-sm font-semibold">Invite a user</h2>
-		<form method="post" action="?/invite" use:enhance class="grid grid-cols-1 gap-3 md:grid-cols-[1fr_160px_auto]">
+	<Card class="settings-members-card">
+		<h2>Invite a user</h2>
+		<form method="post" action="?/invite" use:enhance class="settings-members-invite-form">
 			<div>
 				<Label for="email">Email</Label>
 				<Input id="email" name="email" type="email" required />
@@ -66,32 +66,32 @@
 					<option value="OWNER">Owner</option>
 				</Select>
 			</div>
-			<div class="flex items-end"><Button type="submit">Create invite link</Button></div>
-			{#if form?.error}<p class="md:col-span-3 text-sm text-destructive">{form.error}</p>{/if}
+			<div class="settings-members-flex settings-members-items-end"><Button type="submit">Create invite link</Button></div>
+			{#if form?.error}<p class="settings-members-md-col-span-3 settings-members-text-sm settings-members-text-destructive">{form.error}</p>{/if}
 		</form>
 		{#if form?.ok && form?.inviteUrl}
-			<div class="mt-4 rounded-lg border border-border bg-muted/50 p-3">
-				<p class="mb-2 text-sm font-medium">Invite link created</p>
-				<div class="flex items-center gap-2">
-					<code class="flex-1 truncate rounded bg-background px-2 py-1 text-xs">{form.inviteUrl}</code>
+			<div class="settings-members-invite-result">
+				<p>Invite link created</p>
+				<div class="settings-members-invite-url">
+					<code>{form.inviteUrl}</code>
 					<Button onclick={() => copyToClipboard(form.inviteUrl)} size="sm" variant="outline">
 						{copied ? 'Copied!' : 'Copy'}
 					</Button>
 				</div>
-				<p class="mt-2 text-xs text-muted-foreground">Share this link with the user. It expires in 7 days.</p>
+				<p class="settings-members-mt-2 settings-members-text-xs settings-members-text-muted">Share this link with the user. It expires in 7 days.</p>
 			</div>
 		{/if}
 	</Card>
 
 	{#if data.invitations.length > 0}
-		<Card class="p-4">
-			<h2 class="mb-3 text-sm font-semibold">Pending invitations</h2>
-			<ul class="divide-y divide-border">
+		<Card class="settings-members-card">
+			<h2>Pending invitations</h2>
+			<ul class="settings-members-list">
 				{#each data.invitations as inv (inv.id)}
-					<li class="flex items-center justify-between py-2 text-sm">
+					<li class="settings-members-item">
 						<div>
-							<p class="font-medium">{inv.email}</p>
-							<p class="text-xs text-muted-foreground">{inv.role} · expires {fmtDate(inv.expiresAt)}</p>
+							<p class="settings-members-font-medium">{inv.email}</p>
+							<p class="settings-members-text-xs settings-members-text-muted">{inv.role} · expires {fmtDate(inv.expiresAt)}</p>
 						</div>
 						<form method="post" action="?/revoke" use:enhance>
 							<input type="hidden" name="id" value={inv.id} />

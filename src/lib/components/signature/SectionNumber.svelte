@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { cn } from '$lib/utils/cn';
-
 	let {
 		number,
 		title,
@@ -16,13 +14,13 @@
 	const formattedNumber = $derived(String(number).padStart(2, '0'));
 </script>
 
-<div class={cn("relative flex flex-col", klass)}>
-	<div class="text-[120px] leading-none font-display font-bold text-muted opacity-20 dark:opacity-30 select-none absolute -top-5 -left-2 z-0 pointer-events-none tracking-tighter">
+<div class={`section-number ${klass}`}>
+	<div class="section-number-bg">
 		{formattedNumber}
 	</div>
-	<div class="relative z-10 pt-10">
+	<div class="section-number-content">
 		{#if title}
-			<svelte:element this={tag} class="text-3xl md:text-4xl font-display font-bold text-foreground">
+			<svelte:element this={tag} class="section-number-title">
 				{title}
 			</svelte:element>
 		{/if}

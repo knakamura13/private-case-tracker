@@ -8,20 +8,20 @@
 </script>
 
 <PageHeader title="Activity" description="Internal audit feed for this workspace." />
-<Card class="p-0">
-	<ul class="divide-y divide-border text-sm">
+<Card class="settings-activity-p-0">
+	<ul class="settings-activity-list">
 		{#each data.items as a (a.id)}
-			<li class="px-4 py-3">
-				<div class="flex items-center justify-between gap-2">
-					<p class="truncate">{a.summary}</p>
-					<span class="text-xs text-muted-foreground">{fmtDateTime(a.createdAt)}</span>
+			<li class="settings-activity-item">
+				<div class="settings-activity-header">
+					<p class="settings-activity-summary">{a.summary}</p>
+					<span class="settings-activity-text-xs settings-activity-text-muted">{fmtDateTime(a.createdAt)}</span>
 				</div>
-				<p class="text-[11px] text-muted-foreground">
+				<p class="settings-activity-meta">
 					{titleCase(a.action)} on {a.entityType} · {a.user?.name ?? a.user?.email ?? 'system'}
 				</p>
 			</li>
 		{:else}
-			<li class="px-4 py-6 text-center text-sm text-muted-foreground">No activity yet.</li>
+			<li class="settings-activity-empty">No activity yet.</li>
 		{/each}
 	</ul>
 </Card>

@@ -20,7 +20,7 @@
 		<Button variant="outline" onclick={() => (editing = !editing)}>{editing ? 'Cancel' : 'Edit'}</Button>
 		<form method="post" action="?/delete" use:enhance>
 			<Button type="submit" variant="destructive">
-				{#snippet children()}<Trash2 class="h-4 w-4" /> Delete{/snippet}
+				{#snippet children()}<Trash2 class="qdetail-icon-sm" /> Delete{/snippet}
 			</Button>
 		</form>
 	{/snippet}
@@ -47,26 +47,26 @@
 		error={form?.error}
 	/>
 {:else}
-	<Card class="mb-4 p-4">
-		<h2 class="text-lg font-semibold">{data.question.question}</h2>
+	<Card class="question-detail-card">
+		<h2>{data.question.question}</h2>
 		{#if data.question.category}
-			<p class="mt-1 text-xs uppercase text-muted-foreground">{data.question.category}</p>
+			<p class="question-detail-category">{data.question.category}</p>
 		{/if}
 	</Card>
-	<Card class="p-4 text-sm">
-		<h3 class="mb-2 font-semibold">Answer</h3>
+	<Card class="question-detail-answer-card">
+		<h3>Answer</h3>
 		{#if data.question.answer}
-			<p class="whitespace-pre-wrap text-muted-foreground">{data.question.answer}</p>
+			<p class="question-detail-answer-text">{data.question.answer}</p>
 		{:else}
-			<p class="text-muted-foreground italic">No answer yet.</p>
+			<p class="qdetail-text-muted qdetail-italic">No answer yet.</p>
 		{/if}
 		{#if data.question.citationUrl}
-			<a href={data.question.citationUrl} target="_blank" rel="noreferrer noopener" class="mt-3 inline-flex items-center gap-1 text-sm text-primary underline-offset-4 hover:underline">
-				<ExternalLink class="h-3 w-3" /> Source
+			<a href={data.question.citationUrl} target="_blank" rel="noreferrer noopener" class="question-detail-source-link">
+				<ExternalLink class="qdetail-icon-xs" /> Source
 			</a>
 		{/if}
 		{#if data.question.answeredAt}
-			<p class="mt-2 text-xs text-muted-foreground">Answered {fmtDate(data.question.answeredAt)}</p>
+			<p class="qdetail-mt-2 qdetail-text-xs qdetail-text-muted">Answered {fmtDate(data.question.answeredAt)}</p>
 		{/if}
 	</Card>
 {/if}

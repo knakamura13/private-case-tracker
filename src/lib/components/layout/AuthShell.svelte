@@ -10,16 +10,16 @@
 	} = $props();
 </script>
 
-<main id="main" class="relative min-h-screen bg-linear-to-br from-background via-background to-accent/20">
-	<div class="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
-		<div class="mb-6 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-			<img src="/pwa/icon-192.png" alt="" class="h-4 w-4 rounded-sm" aria-hidden="true" />
+<main id="main" class="auth-shell">
+	<div class="auth-shell-container">
+		<div class="auth-shell-brand">
+			<img src="/pwa/icon-192.png" alt="" class="auth-shell-logo" aria-hidden="true" />
 			<span>Private Case Tracker</span>
 		</div>
-		<h1 class="text-2xl font-semibold">{title}</h1>
-		{#if subtitle}<p class="mt-1 text-sm text-muted-foreground">{subtitle}</p>{/if}
-		<div class="mt-8">{@render children()}</div>
-		<div class="mt-8">
+		<h1 class="auth-shell-title">{title}</h1>
+		{#if subtitle}<p class="auth-shell-subtitle">{subtitle}</p>{/if}
+		<div class="auth-shell-content">{@render children()}</div>
+		<div class="auth-shell-footer">
 			
 		</div>
 	</div>

@@ -31,8 +31,8 @@
 	/* eslint-enable security/detect-object-injection */
 </script>
 
-<form method="post" {action} use:enhance={onenhance} class="grid grid-cols-1 gap-4 md:grid-cols-2">
-	<div class="md:col-span-2">
+<form method="post" {action} use:enhance={onenhance} class="form-grid">
+	<div class="form-grid-full">
 		<Label for="question">Question</Label>
 		<Textarea id="question" name="question" required rows={3} value={val('question')} />
 	</div>
@@ -69,11 +69,11 @@
 			<option value="OTHER">Other</option>
 		</Select>
 	</div>
-	<div class="md:col-span-2">
+	<div class="form-grid-full">
 		<Label for="citationUrl">Citation URL</Label>
 		<Input id="citationUrl" name="citationUrl" type="url" value={val('citationUrl')} />
 	</div>
-	<div class="md:col-span-2">
+	<div class="form-grid-full">
 		<Label for="answer">Answer</Label>
 		<Textarea id="answer" name="answer" rows={5} value={val('answer')} />
 	</div>
@@ -81,8 +81,8 @@
 		<Label for="answeredAt">Answered on</Label>
 		<Input id="answeredAt" name="answeredAt" type="date" value={val('answeredAt')} />
 	</div>
-	{#if error}<p class="md:col-span-2 text-sm text-destructive">{error}</p>{/if}
-	<div class="md:col-span-2 flex gap-2">
+	{#if error}<p class="form-grid-full form-error">{error}</p>{/if}
+	<div class="form-grid-full form-actions">
 		<Button type="submit">{submitLabel}</Button>
 		<Button type="button" variant="outline" onclick={() => history.back()}>Cancel</Button>
 	</div>

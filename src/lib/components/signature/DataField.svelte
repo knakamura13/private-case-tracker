@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { cn } from '$lib/utils/cn';
-
 	let {
 		label,
 		value,
@@ -12,7 +10,7 @@
 	} = $props();
 </script>
 
-<div class={cn("flex flex-col gap-1", klass)}>
-	<span class="text-sm text-muted-foreground">{label}</span>
-	<span class="font-mono text-foreground">{value ?? '—'}</span>
+<div class={`data-field ${klass}`}>
+	<span class="data-field-label">{label}</span>
+	<span class="data-field-value">{value ?? '—'}</span>
 </div>

@@ -61,7 +61,7 @@
 
 {#if open}
 	<div
-		class="fixed inset-0 z-50 bg-background/60 p-4 backdrop-blur-sm {window.innerWidth < 768 ? 'flex items-end justify-center' : 'flex items-start justify-center pt-24'}"
+		class="quickadd-fixed quickadd-inset-0 quickadd-z-50 quickadd-bg-background-60 quickadd-p-4 quickadd-backdrop-blur-sm quickadd-flex {window.innerWidth < 768 ? 'quickadd-items-end quickadd-justify-center' : 'quickadd-items-start quickadd-justify-center quickadd-pt-24'}"
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby="quick-add-title"
@@ -71,15 +71,15 @@
 			trapTabKey(e);
 		}}
 	>
-		<div class="absolute inset-0 z-0 cursor-default" aria-hidden="true" onclick={() => (open = false)}></div>
-		<div bind:this={dialogEl} class="relative z-10 w-full {window.innerWidth < 768 ? 'max-h-[85vh] rounded-t-lg' : 'max-w-sm'} overflow-hidden rounded-lg border border-border bg-card shadow-xl" style="padding-bottom: env(safe-area-inset-bottom)">
-			<div class="flex items-center justify-between border-b border-border px-4 py-3">
-				<h2 id="quick-add-title" class="text-sm font-semibold">Quick create</h2>
-				<button type="button" class="rounded-md p-1 hover:bg-muted" aria-label="Close" onclick={() => (open = false)}>
-					<X class="h-4 w-4" />
+		<div class="quickadd-absolute quickadd-inset-0 quickadd-z-0 quickadd-cursor-default" aria-hidden="true" onclick={() => (open = false)}></div>
+		<div bind:this={dialogEl} class="quickadd-relative quickadd-z-10 quickadd-w-full {window.innerWidth < 768 ? 'quickadd-max-h-85vh quickadd-rounded-t-lg' : 'quickadd-max-w-sm'} quickadd-overflow-hidden quickadd-rounded-lg quickadd-border quickadd-bg-card quickadd-shadow-xl" style="padding-bottom: env(safe-area-inset-bottom)">
+			<div class="quickadd-flex quickadd-justify-between quickadd-px-4 quickadd-py-3 quickadd-border-b quickadd-border">
+				<h2 id="quick-add-title" class="quickadd-text-sm quickadd-font-semibold">Quick create</h2>
+				<button type="button" class="quickadd-rounded-md quickadd-p-1 quickadd-hover-bg-muted" aria-label="Close" onclick={() => (open = false)}>
+					<X class="quickadd-icon-sm" />
 				</button>
 			</div>
-			<ul class="p-2">
+			<ul class="quickadd-p-2">
 				{#each actions as a (a.href)}
 					<li>
 						<button
@@ -87,7 +87,7 @@
 								open = false;
 								goto(a.href);
 							}}
-							class="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-muted"
+							class="quickadd-w-full quickadd-rounded-md quickadd-px-3 quickadd-py-2 quickadd-text-left quickadd-text-sm quickadd-hover-bg-muted"
 						>
 							{a.label}
 						</button>

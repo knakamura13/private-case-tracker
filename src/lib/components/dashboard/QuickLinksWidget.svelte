@@ -3,12 +3,13 @@
 	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
-	import { EllipsisVertical, MoreHorizontal, Plus, Link2, Folder } from 'lucide-svelte';
+	import { EllipsisVertical, MoreHorizontal, Plus, Link2, Folder, X } from 'lucide-svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import Label from '$lib/components/ui/Label.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
 
 	type ActionForm = { error?: string; errorId?: string | null } | undefined;
 	type DropIntent = 'reorder' | 'merge' | 'move-into';
@@ -608,12 +609,12 @@
   The ⋮ button is positioned relative to the circle span itself,
   so it doesn't push the circle down or affect alignment.
 -->
-<div class="flex flex-wrap items-start gap-1 sm:gap-2">
+<div class="widget-container">
 	{#each visibleFolders as folder (folder.id)}
 		{@const folderLinks = folderLinksMap[folder.id] ?? []}
 		{@const previewLinks = folderLinks.slice(0, 4)}
 		<div
-			class="group flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 transition-shadow hover:bg-muted/40 focus-within:bg-muted/40 cursor-pointer"
+			class="widget-item"
 			draggable={true}
 			ondragstart={(e) => handleDragStart(e, folder.id)}
 			ondragenter={(e) => handleDragEnter(e, folder.id)}
@@ -621,41 +622,40 @@
 			ondragleave={handleDragLeave}
 			ondrop={(e) => handleDrop(e, folder.id)}
 			ondragend={handleDragEnd}
-			class:ring-2={dropTargetId === folder.id && (dropIntent === 'reorder' || dropIntent === 'move-into')}
-			class:ring-primary={dropTargetId === folder.id && dropIntent === 'reorder'}
-			class:ring-emerald-500={dropTargetId === folder.id && dropIntent === 'move-into'}
-			class:ring-offset-2={dropTargetId === folder.id && (dropIntent === 'reorder' || dropIntent === 'move-into')}
-			class:opacity-0={draggingId === folder.id}
-			class:translate-x-4={dropInsertIndex !== null && allItems.findIndex((i) => i.id === folder.id) === dropInsertIndex}
+			class:widget-drop-target={dropTargetId === folder.id && (dropIntent === 'reorder' || dropIntent === 'move-into')}
+			class:widget-drop-target-reorder={dropTargetId === folder.id && dropIntent === 'reorder'}
+			class:widget-drop-target-move-into={dropTargetId === folder.id && dropIntent === 'move-into'}
+			class:widget-dragging={draggingId === folder.id}
+			class:widget-insert-indicator={dropInsertIndex !== null && allItems.findIndex((i) => i.id === folder.id) === dropInsertIndex}
 			role="button"
 			tabindex="0"
 			aria-label={folder.name ?? 'Folder'}
 		>
 			<!-- Circle + ⋮ menu wrapper -->
-			<div class="relative">
+			<div class="widget-circle-wrapper">
 				<!-- ⋮ button anchored to the top-right corner of the circle -->
 				<button
 					type="button"
 					draggable={false}
-					class="absolute -right-1 -top-1 z-10 rounded-full bg-background/90 p-0.5 text-muted-foreground opacity-0 shadow ring-1 ring-border transition-opacity hover:text-foreground group-hover:opacity-100 group-focus-within:opacity-100"
+					class="widget-action-btn"
 					aria-label={`Actions for ${folder.name ?? 'Folder'}`}
 					aria-expanded={menuOpenId === folder.id}
 					aria-haspopup="true"
 					data-quicklink-menu="trigger"
 					onclick={(e) => toggleMenu(folder.id, e)}
 				>
-					<EllipsisVertical class="h-3.5 w-3.5" />
+					<EllipsisVertical class="widget-icon-3-5" />
 				</button>
 
 				{#if menuOpenId === folder.id}
 					<div
-						class="absolute left-1/2 top-full z-20 mt-1 min-w-34 -translate-x-1/2 rounded-md border border-border bg-card py-1 text-sm shadow-md"
+						class="widget-dropdown"
 						data-quicklink-menu="panel"
 						role="menu"
 					>
 						<button
 							type="button"
-							class="block w-full px-3 py-1.5 text-left hover:bg-muted"
+							class="widget-dropdown-item"
 							role="menuitem"
 							onclick={() => openEditFolder(folder)}
 						>
@@ -663,7 +663,7 @@
 						</button>
 						<button
 							type="button"
-							class="block w-full px-3 py-1.5 text-left text-destructive hover:bg-muted"
+							class="widget-dropdown-item widget-dropdown-item-destructive"
 							role="menuitem"
 							onclick={() => deleteFolder(folder.id)}
 						>
@@ -681,21 +681,21 @@
 							toggleFolderPopover(folder.id, e);
 						}
 					}}
-					class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60 outline-none focus-visible:ring-2 focus-visible:ring-ring relative cursor-pointer"
+					class="widget-circle"
 					role="button"
 					tabindex="0"
 					aria-label={folder.name ?? 'Folder'}
 				>
-					<Folder class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+					<Folder class="widget-icon-6 text-muted-foreground" aria-hidden="true" />
 					<!-- Preview icons (up to 4) -->
 					{#if previewLinks.length > 0}
-						<div class="absolute bottom-0 right-0 flex h-4 w-4">
+						<div class="widget-preview-icons">
 							{#each previewLinks.slice(0, 2) as pl}
 								{#if pl.faviconUrl || preloadedFavicons.has(pl.id)}
 									<img
 										src={faviconForLink(pl)}
 										alt=""
-										class="h-3 w-3 rounded-sm object-contain"
+										class="widget-preview-icon"
 										referrerpolicy="no-referrer"
 										class:opacity-50={previewLinks.length > 1}
 										draggable={false}
@@ -709,31 +709,31 @@
 			</div>
 
 			<!-- Label: up to 2 lines, then ellipsis -->
-			{#if inlineEditingFolderId === folder.id}
-				<input
-					bind:this={inlineFolderInputEl}
-					bind:value={inlineFolderName}
-					placeholder="Name this folder"
-					class="h-7 w-full rounded-md border border-input bg-card px-2 text-center text-[11px] ring-offset-background placeholder:text-muted-foreground transition-colors duration-150 hover:border-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-					onclick={(event) => event.stopPropagation()}
-					onkeydown={(event) => {
-						event.stopPropagation();
-						if (event.key === 'Enter') {
-							event.preventDefault();
-							void saveInlineFolderName(folder.id);
-						}
-						if (event.key === 'Escape') {
-							event.preventDefault();
-							cancelInlineFolderName();
-						}
-					}}
-					onblur={() => void saveInlineFolderName(folder.id)}
-				/>
-			{:else if folder.name}
-				<span
-					class="line-clamp-2 w-full text-center text-[11px] leading-tight text-foreground"
-					title={folder.name}
-				>
+				{#if inlineEditingFolderId === folder.id}
+					<input
+						bind:this={inlineFolderInputEl}
+						bind:value={inlineFolderName}
+						placeholder="Name this folder"
+						class="widget-folder-input"
+						onclick={(event) => event.stopPropagation()}
+						onkeydown={(event) => {
+							event.stopPropagation();
+							if (event.key === 'Enter') {
+								event.preventDefault();
+								void saveInlineFolderName(folder.id);
+							}
+							if (event.key === 'Escape') {
+								event.preventDefault();
+								cancelInlineFolderName();
+							}
+						}}
+						onblur={() => void saveInlineFolderName(folder.id)}
+					/>
+				{:else if folder.name}
+					<span
+						class="widget-label"
+						title={folder.name}
+					>
 					{folder.name}
 				</span>
 			{/if}
@@ -742,27 +742,27 @@
 		<!-- Folder popover -->
 		{#if folderPopoverId === folder.id}
 			<div
-				class="fixed inset-0 z-50 flex items-start justify-center bg-background/60 p-4 pt-24 backdrop-blur-sm"
+				class="widget-popover"
 				data-folder-popover="panel"
 				role="dialog"
 				aria-modal="true"
 			>
 				<button
 					type="button"
-					class="absolute inset-0 z-0 cursor-default"
+					class="widget-popover-overlay"
 					aria-label="Close"
 					onclick={closeFolderDialog}
 				></button>
 				<div
-					class="relative z-10 w-full max-w-md overflow-hidden rounded-lg border border-border bg-card shadow-xl p-4"
+					class="widget-popover-panel"
 				>
-					<div class="flex items-center justify-between mb-4">
+					<div class="widget-popover-header folder-popover-header">
 						<input
 							bind:this={folderDialogInputEl}
 							bind:value={folderDialogName}
 							aria-label="Folder name"
 							placeholder="Folder"
-							class="mr-2 h-8 flex-1 rounded-md border-none bg-transparent px-0 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+							class="folder-popover-input"
 							onkeydown={(event) => {
 								if (event.key === 'Enter') {
 									event.preventDefault();
@@ -777,23 +777,23 @@
 							}}
 							onblur={() => void saveFolderDialogName(folder)}
 						/>
-						<div class="flex items-center gap-1">
+						<div class="folder-popover-actions">
 							<div class="relative" data-quicklink-menu>
 								<button
 									type="button"
-									class="rounded-md p-1 hover:bg-muted"
+									class="folder-popover-btn"
 									aria-label={`Actions for ${folder.name ?? 'Folder'}`}
 									aria-expanded={folderDialogMenuOpen}
 									aria-haspopup="true"
 									onclick={() => (folderDialogMenuOpen = !folderDialogMenuOpen)}
 								>
-									<MoreHorizontal class="h-4 w-4" aria-hidden="true" />
+									<MoreHorizontal class="widget-icon-4" aria-hidden="true" />
 								</button>
 								{#if folderDialogMenuOpen}
-									<div class="absolute right-0 top-full z-20 mt-1 w-32 rounded-md border border-border bg-card py-1 text-sm shadow-md" role="menu">
+									<div class="folder-popover-menu" role="menu">
 										<button
 											type="button"
-											class="block w-full px-3 py-1.5 text-left text-destructive hover:bg-muted"
+											class="folder-popover-menu-item"
 											role="menuitem"
 											onclick={() => deleteFolder(folder.id)}
 										>
@@ -804,54 +804,54 @@
 							</div>
 							<button
 								type="button"
-								class="rounded-md p-1 hover:bg-muted"
+								class="folder-popover-btn folder-popover-close"
 								aria-label="Close"
 								onclick={closeFolderDialog}
 							>
 								<span class="sr-only">Close</span>
-								<span aria-hidden="true" class="text-lg leading-none">×</span>
+								<span aria-hidden="true" class="folder-popover-close">×</span>
 							</button>
 						</div>
 					</div>
-					{#if folderLinks.length === 0}
-						<div class="flex flex-col items-center gap-3 py-8 text-center text-muted-foreground">
-							<p class="text-sm">This folder is empty</p>
-							<button
-								type="button"
-								class="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-								onclick={() => openAdd(folder)}
-							>
-								<Plus class="h-4 w-4" aria-hidden="true" />
-								Add link
-							</button>
-						</div>
-					{/if}
-					<div class="flex flex-wrap items-start gap-1 sm:gap-2">
+					<div class="widget-popover-body">
+						{#if folderLinks.length === 0}
+							<div class="folder-popover-empty">
+								<p class="folder-popover-empty-text">This folder is empty</p>
+								<button
+									type="button"
+									class="folder-popover-add-btn"
+									onclick={() => openAdd(folder)}
+								>
+									<Plus class="widget-icon-4" aria-hidden="true" />
+									Add link
+								</button>
+							</div>
+						{/if}
 						{#each folderLinks as link (link.id)}
 							<div
-								class="group flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 hover:bg-muted/40 cursor-pointer"
+								class="widget-item"
 							>
-								<div class="relative">
+								<div class="widget-circle-wrapper">
 									<button
 										type="button"
 										draggable={false}
-										class="absolute -right-1 -top-1 z-10 rounded-full bg-background/90 p-0.5 text-muted-foreground opacity-0 shadow ring-1 ring-border transition-opacity hover:text-foreground group-hover:opacity-100"
+										class="widget-action-btn"
 										aria-label={`Actions for ${labelFor(link)}`}
 										onclick={(e) => toggleMenu(link.id, e)}
 									>
-										<EllipsisVertical class="h-3.5 w-3.5" />
+										<EllipsisVertical class="widget-icon-3-5" />
 									</button>
 
 									{#if menuOpenId === link.id && menuPosition}
 										<div
 											style="top: {menuPosition.top}px; left: {menuPosition.left}px;"
-											class="fixed z-50 -translate-x-1/2 min-w-34 rounded-md border border-border bg-card py-1 text-sm shadow-md"
+											class="widget-dropdown"
 											data-quicklink-menu="panel"
 											role="menu"
 										>
 											<button
 												type="button"
-												class="block w-full px-3 py-1.5 text-left hover:bg-muted"
+												class="widget-dropdown-item"
 												role="menuitem"
 												onclick={() => openEdit(link)}
 											>
@@ -859,7 +859,7 @@
 											</button>
 											<button
 												type="button"
-												class="block w-full px-3 py-1.5 text-left hover:bg-muted"
+												class="widget-dropdown-item"
 												role="menuitem"
 												onclick={() => moveLinkToRoot(link.id)}
 											>
@@ -878,7 +878,7 @@
 												<input type="hidden" name="id" value={link.id} />
 												<button
 													type="submit"
-													class="block w-full px-3 py-1.5 text-left text-destructive hover:bg-muted"
+													class="widget-dropdown-item widget-dropdown-item-destructive"
 													role="menuitem"
 												>
 													Remove
@@ -893,26 +893,26 @@
 										aria-label={labelFor(link)}
 										role="button"
 										tabindex="0"
-										class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60 outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+										class="widget-circle"
 									>
 										{#if brokenFavicons.has(link.id)}
-											<Link2 class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+											<Link2 class="widget-icon-6 text-muted-foreground" aria-hidden="true" />
 										{:else if link.faviconUrl || preloadedFavicons.has(link.id)}
 											<img
 												src={faviconForLink(link)}
 												alt=""
-												class="h-8 w-8 rounded-sm object-contain"
+												class="widget-icon-8 rounded-sm object-contain"
 												referrerpolicy="no-referrer"
 												style="image-rendering: crisp-edges"
 											/>
 										{:else}
 											<!-- Show Link2 icon while preloading -->
-											<Link2 class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+											<Link2 class="widget-icon-6 text-muted-foreground" aria-hidden="true" />
 										{/if}
 									</div>
 								</div>
 								<span
-									class="line-clamp-2 w-full text-center text-[11px] leading-tight text-foreground"
+									class="widget-label"
 									title={labelFor(link)}
 								>
 									{labelFor(link)}
@@ -927,7 +927,7 @@
 
 	{#each rootLinks as link (link.id)}
 		<div
-			class="group flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 transition-shadow hover:bg-muted/40 focus-within:bg-muted/40 cursor-pointer"
+			class="widget-item"
 			draggable={true}
 			ondragstart={(e) => handleDragStart(e, link.id)}
 			ondragenter={(e) => handleDragEnter(e, link.id)}
@@ -935,41 +935,40 @@
 			ondragleave={handleDragLeave}
 			ondrop={(e) => handleDrop(e, link.id)}
 			ondragend={handleDragEnd}
-			class:ring-2={dropTargetId === link.id && (dropIntent === 'reorder' || dropIntent === 'merge')}
-			class:ring-primary={dropTargetId === link.id && dropIntent === 'reorder'}
-			class:ring-amber-500={dropTargetId === link.id && dropIntent === 'merge'}
-			class:ring-offset-2={dropTargetId === link.id && (dropIntent === 'reorder' || dropIntent === 'merge')}
-			class:opacity-0={draggingId === link.id}
-			class:translate-x-4={dropInsertIndex !== null && allItems.findIndex((i) => i.id === link.id) === dropInsertIndex}
+			class:widget-drop-target={dropTargetId === link.id && (dropIntent === 'reorder' || dropIntent === 'merge')}
+			class:widget-drop-target-reorder={dropTargetId === link.id && dropIntent === 'reorder'}
+			class:widget-drop-target-merge={dropTargetId === link.id && dropIntent === 'merge'}
+			class:widget-dragging={draggingId === link.id}
+			class:widget-insert-indicator={dropInsertIndex !== null && allItems.findIndex((i) => i.id === link.id) === dropInsertIndex}
 			role="button"
 			tabindex="0"
 			aria-label={labelFor(link)}
 		>
 			<!-- Circle + ⋮ menu wrapper -->
-			<div class="relative">
+			<div class="widget-circle-wrapper">
 				<!-- ⋮ button anchored to the top-right corner of the circle -->
 				<button
 					type="button"
 					draggable={false}
-					class="absolute -right-1 -top-1 z-10 rounded-full bg-background/90 p-0.5 text-muted-foreground opacity-0 shadow ring-1 ring-border transition-opacity hover:text-foreground group-hover:opacity-100 group-focus-within:opacity-100"
+					class="widget-action-btn"
 					aria-label={`Actions for ${labelFor(link)}`}
 					aria-expanded={menuOpenId === link.id}
 					aria-haspopup="true"
 					data-quicklink-menu="trigger"
 					onclick={(e) => toggleMenu(link.id, e)}
 				>
-					<EllipsisVertical class="h-3.5 w-3.5" />
+					<EllipsisVertical class="widget-icon-3-5" />
 				</button>
 
 				{#if menuOpenId === link.id}
 					<div
-						class="absolute left-1/2 top-full z-20 mt-1 min-w-34 -translate-x-1/2 rounded-md border border-border bg-card py-1 text-sm shadow-md"
+						class="widget-dropdown"
 						data-quicklink-menu="panel"
 						role="menu"
 					>
 						<button
 							type="button"
-							class="block w-full px-3 py-1.5 text-left hover:bg-muted"
+							class="widget-dropdown-item"
 							role="menuitem"
 							onclick={() => openEdit(link)}
 						>
@@ -988,7 +987,7 @@
 							<input type="hidden" name="id" value={link.id} />
 							<button
 								type="submit"
-								class="block w-full px-3 py-1.5 text-left text-destructive hover:bg-muted"
+								class="widget-dropdown-item widget-dropdown-item-destructive"
 								role="menuitem"
 							>
 								Remove
@@ -1004,29 +1003,29 @@
 					aria-label={labelFor(link)}
 					role="button"
 					tabindex="0"
-					class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60 outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+					class="widget-circle"
 				>
 					{#if brokenFavicons.has(link.id)}
-						<Link2 class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+						<Link2 class="widget-icon-6 text-muted-foreground" aria-hidden="true" />
 					{:else if link.faviconUrl || preloadedFavicons.has(link.id)}
 						<img
 							src={faviconForLink(link)}
 							alt=""
-							class="h-8 w-8 rounded-sm object-contain"
+							class="widget-icon-8 rounded-sm object-contain"
 							referrerpolicy="no-referrer"
 							draggable={false}
 							style="image-rendering: crisp-edges"
 						/>
 					{:else}
 						<!-- Show Link2 icon while preloading -->
-						<Link2 class="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+						<Link2 class="widget-icon-6 text-muted-foreground" aria-hidden="true" />
 					{/if}
 				</div>
 			</div>
 
 			<!-- Label: up to 2 lines, then ellipsis -->
 			<span
-				class="line-clamp-2 w-full text-center text-[11px] leading-tight text-foreground"
+				class="widget-label"
 				title={labelFor(link)}
 			>
 				{labelFor(link)}
@@ -1037,160 +1036,171 @@
 	<!-- Add link tile — same structure: circle on top, label below -->
 	<button
 		type="button"
-		class="flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+		class="widget-item text-muted-foreground hover:text-foreground"
 		onclick={() => openAdd()}
 	>
-		<span class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60">
-			<Plus class="h-6 w-6" aria-hidden="true" />
+		<span class="widget-circle">
+			<Plus class="widget-icon-6" aria-hidden="true" />
 		</span>
-		<span class="line-clamp-2 w-full text-center text-[11px] leading-tight">Add link</span>
+		<span class="widget-label">Add link</span>
 	</button>
 
 	<!-- Add folder tile -->
 	<button
 		type="button"
-		class="flex w-20 shrink-0 flex-col items-center gap-2 rounded-lg px-1 py-2 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+		class="widget-item text-muted-foreground hover:text-foreground"
 		onclick={openAddFolder}
 	>
-		<span class="flex h-14 w-14 items-center justify-center rounded-full bg-muted/90 ring-1 ring-border/60">
-			<Folder class="h-6 w-6" aria-hidden="true" />
+		<span class="widget-circle">
+			<Folder class="widget-icon-6" aria-hidden="true" />
 		</span>
-		<span class="line-clamp-2 w-full text-center text-[11px] leading-tight">Add folder</span>
+		<span class="widget-label">Add folder</span>
 	</button>
 </div>
 
 {#if modalOpen}
-	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-background/60 p-4 backdrop-blur-sm"
-		role="dialog"
-		aria-modal="true"
-		aria-labelledby="quicklink-modal-title"
-	>
-		<button
-			type="button"
-			class="absolute inset-0 z-0 cursor-default"
-			aria-label="Close"
-			onclick={closeModal}
-		></button>
-		<div
-			class="relative z-10 w-full max-w-md max-h-[calc(100vh-2rem)] flex flex-col rounded-lg border border-border bg-card shadow-xl"
-		>
-			<div class="flex items-center justify-between border-b border-border px-4 py-3">
-				<p id="quicklink-modal-title" class="text-sm font-semibold">
-					{modalMode === 'folder'
-						? 'Rename folder'
-						: editing
-							? 'Edit link'
-							: 'Add link'}
-				</p>
-				<button type="button" class="rounded-md p-1 hover:bg-muted" aria-label="Close" onclick={closeModal}>
-					<span class="sr-only">Close</span>
-					<span aria-hidden="true" class="text-lg leading-none">×</span>
-				</button>
-			</div>
-			<div class="overflow-y-auto flex-1 p-4">
-				{#if modalMode === 'folder'}
-					<form
-						method="post"
-						action="?/updateFolder"
-						class="grid grid-cols-1 gap-4"
-						use:enhance={() => {
-							return async ({ result, update }) => {
-								await update();
-								if (result.type === 'redirect') closeModal();
-							};
-						}}
-					>
-						<input type="hidden" name="id" value={editingFolder?.id} />
+	<Dialog open={modalOpen} onClose={closeModal} maxWidth="max-w-md">
+		{#if modalMode === 'folder'}
+			<form
+				method="post"
+				action="?/updateFolder"
+				class="modal-form"
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						await update();
+						if (result.type === 'redirect') closeModal();
+					};
+				}}
+			>
+				<input type="hidden" name="id" value={editingFolder?.id} />
+				<div class="modal-header">
+					<div class="widget-flex widget-flex-1 widget-items-start">
+						<Input
+							name="name"
+							bind:value={draftFolderName}
+							class="modal-title-input"
+							placeholder="Folder name (optional)"
+						/>
+					</div>
+					<Button type="button" variant="ghost" size="sm" onclick={closeModal} class="shrink-0">
+						{#snippet children()}<X class="widget-icon-5" />{/snippet}
+					</Button>
+				</div>
+				<div class="modal-content">
+					{#if form?.error}
+						<div class="modal-error">
+							<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
+						</div>
+					{/if}
+				</div>
+				<div class="modal-footer">
+					<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
+					<Button type="submit">Save</Button>
+				</div>
+			</form>
+		{:else}
+			{#if editing}
+				<form
+					method="post"
+					action="?/update"
+					class="modal-form"
+					use:enhance={() => {
+						return async ({ result, update }) => {
+							await update();
+							if (result.type === 'redirect') closeModal();
+						};
+					}}
+				>
+					<input type="hidden" name="id" value={editing.id} />
+					<div class="modal-header">
+						<div class="widget-flex widget-flex-1 widget-items-start">
+							<Input
+								name="url"
+								bind:value={draftUrl}
+								class="modal-title-input"
+								placeholder="URL"
+								required
+							/>
+						</div>
+						<Button type="button" variant="ghost" size="sm" onclick={closeModal} class="shrink-0">
+							{#snippet children()}<X class="widget-icon-5" />{/snippet}
+						</Button>
+					</div>
+					<div class="modal-content">
 						<div>
-							<Label for="ql-folder-name">Folder name (optional)</Label>
-							<Input id="ql-folder-name" name="name" bind:value={draftFolderName} placeholder="Leave empty for unnamed folder" />
+							<Label for="ql-title">Title (optional)</Label>
+							<Input id="ql-title" name="title" bind:value={draftTitle} placeholder={prettyHostname(draftUrl)} />
+						</div>
+						<div>
+							<Label for="ql-description">Description (optional)</Label>
+							<Textarea id="ql-description" name="description" rows={2} bind:value={draftDescription} />
 						</div>
 						{#if form?.error}
-							<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
+							<div class="modal-error">
+								<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
+							</div>
 						{/if}
-						<div class="flex gap-2">
-							<Button type="submit">Save</Button>
-							<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
-						</div>
-					</form>
-				{:else}
-					{#if editing}
-						<form
-							method="post"
-							action="?/update"
-							class="grid grid-cols-1 gap-4"
-							use:enhance={() => {
-								return async ({ result, update }) => {
-									await update();
-									if (result.type === 'redirect') closeModal();
-								};
-							}}
-						>
-							<input type="hidden" name="id" value={editing.id} />
-							<div>
-								<Label for="ql-url">URL</Label>
-								<Input id="ql-url" name="url" required bind:value={draftUrl} />
-							</div>
-							<div>
-								<Label for="ql-title">Title (optional)</Label>
-								<Input id="ql-title" name="title" bind:value={draftTitle} placeholder={prettyHostname(draftUrl)} />
-							</div>
-							<div>
-								<Label for="ql-description">Description (optional)</Label>
-								<Textarea id="ql-description" name="description" rows={2} bind:value={draftDescription} />
-							</div>
-							{#if form?.error}
-								<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
-							{/if}
-							<div class="flex gap-2">
-								<Button type="submit">Save</Button>
-								<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
-							</div>
-						</form>
-					{:else}
-						<form
-							method="post"
-							action="?/create"
-							class="grid grid-cols-1 gap-4"
-							use:enhance={() => {
-								return async ({ result, update }) => {
-									await update();
-									if (result.type === 'redirect') closeModal();
-								};
-							}}
-						>
-							{#if addingToFolder}
-								<input type="hidden" name="folderId" value={addingToFolder.id} />
-							{/if}
-							<div>
-								<Label for="ql-url-new">URL</Label>
-								<Input id="ql-url-new" name="url" required bind:value={draftUrl} />
-							</div>
-							<div>
-								<Label for="ql-title-new">Title (optional)</Label>
-								<Input
-									id="ql-title-new"
-									name="title"
-									bind:value={draftTitle}
-									placeholder={draftUrl ? prettyHostname(draftUrl) : 'Shown under the icon'}
-								/>
-							</div>
-							<div>
-								<Label for="ql-description-new">Description (optional)</Label>
-								<Textarea id="ql-description-new" name="description" rows={2} bind:value={draftDescription} />
-							</div>
-							{#if form?.error}
-								<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
-							{/if}
-							<div class="flex gap-2">
-								<Button type="submit">Add</Button>
-								<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
-							</div>
-						</form>
+					</div>
+					<div class="modal-footer">
+						<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
+						<Button type="submit">Save</Button>
+					</div>
+				</form>
+			{:else}
+				<form
+					method="post"
+					action="?/create"
+					class="modal-form"
+					use:enhance={() => {
+						return async ({ result, update }) => {
+							await update();
+							if (result.type === 'redirect') closeModal();
+						};
+					}}
+				>
+					{#if addingToFolder}
+						<input type="hidden" name="folderId" value={addingToFolder.id} />
 					{/if}
-				{/if}
-			</div>
-		</div>
-	</div>
+					<div class="modal-header">
+						<div class="widget-flex widget-flex-1 widget-items-start">
+							<Input
+								name="url"
+								bind:value={draftUrl}
+								class="modal-title-input"
+								placeholder="URL"
+								required
+							/>
+						</div>
+						<Button type="button" variant="ghost" size="sm" onclick={closeModal} class="shrink-0">
+							{#snippet children()}<X class="widget-icon-5" />{/snippet}
+						</Button>
+					</div>
+					<div class="modal-content">
+						<div>
+							<Label for="ql-title-new">Title (optional)</Label>
+							<Input
+								id="ql-title-new"
+								name="title"
+								bind:value={draftTitle}
+								placeholder={draftUrl ? prettyHostname(draftUrl) : 'Shown under the icon'}
+							/>
+						</div>
+						<div>
+							<Label for="ql-description-new">Description (optional)</Label>
+							<Textarea id="ql-description-new" name="description" rows={2} bind:value={draftDescription} />
+						</div>
+						{#if form?.error}
+							<div class="modal-error">
+								<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
+							</div>
+						{/if}
+					</div>
+					<div class="modal-footer">
+						<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
+						<Button type="submit">Add</Button>
+					</div>
+				</form>
+			{/if}
+		{/if}
+	</Dialog>
 {/if}

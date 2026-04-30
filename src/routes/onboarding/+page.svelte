@@ -14,21 +14,21 @@
 		: 'Your account exists, but you have not been invited to a workspace yet.'}
 >
 	{#if data.isFirstUser}
-		<form method="post" action="?/create" class="space-y-4">
+		<form method="post" action="?/create" class="auth-form">
 			<div>
 				<Label for="name">Workspace name</Label>
 				<Input id="name" name="name" value="Our case" required />
 			</div>
-			{#if form?.error}<p class="text-sm text-destructive">{form.error}</p>{/if}
-			<Button type="submit" class="w-full">Create workspace</Button>
+			{#if form?.error}<p class="auth-text-sm auth-text-destructive">{form.error}</p>{/if}
+			<Button type="submit" class="auth-w-full">Create workspace</Button>
 		</form>
 	{:else}
-		<p class="text-sm text-muted-foreground">
+		<p class="auth-text-sm auth-text-muted">
 			Ask the workspace owner to send an invitation to your email. Invitations are delivered from
 			within Settings → Members.
 		</p>
-		<form method="post" action="/logout" class="mt-4">
-			<Button type="submit" variant="outline" class="w-full">Sign out</Button>
+		<form method="post" action="/logout" class="auth-mt-4">
+			<Button type="submit" variant="outline" class="auth-w-full">Sign out</Button>
 		</form>
 	{/if}
 </AuthShell>

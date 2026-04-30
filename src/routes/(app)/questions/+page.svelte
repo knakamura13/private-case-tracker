@@ -58,7 +58,7 @@
 <PageHeader title="Questions" description="Track unresolved questions, their sources, and answers." number={getPageNumber('/questions')}>
 	{#snippet actions()}
 		<Button onclick={() => showCreateModal = true}>
-			{#snippet children()}<Plus class="h-4 w-4" /> New question{/snippet}
+			{#snippet children()}<Plus class="questions-icon-sm" /> New question{/snippet}
 		</Button>
 	{/snippet}
 </PageHeader>
@@ -92,16 +92,16 @@
 
 {#if data.items.length === 0}
 	<EmptyState title="No questions yet" description="Capture open questions — you can answer them later and track the source.">
-		{#snippet icon()}<HelpCircle class="h-8 w-8" />{/snippet}
+		{#snippet icon()}<HelpCircle class="questions-icon-lg" />{/snippet}
 		{#snippet actions()}<Button onclick={() => showCreateModal = true}>New question</Button>{/snippet}
 	</EmptyState>
 {:else}
 	{#each sections as section (section.label)}
 		{#if section.items.length > 0}
-			<section class="mb-6">
-				<h2 class="text-sm font-semibold">{section.label}</h2>
-				<p class="mb-2 text-xs text-muted-foreground">{section.subtitle}</p>
-				<ul class="space-y-2">
+			<section class="questions-section">
+				<h2 class="questions-section-title">{section.label}</h2>
+				<p class="questions-section-subtitle">{section.subtitle}</p>
+				<ul class="questions-list">
 					{#each section.items as q, i (q.id)}
 						<li in:fly={{ y: 30, duration: 500, delay: i * 50 + 100, easing: cubicOut }}>
 							<button
@@ -110,14 +110,14 @@
 									e.currentTarget.blur();
 									await updateUrl(q.id);
 								}}
-								class="w-full text-left"
+								class="questions-w-full questions-text-left"
 							>
-								<Card class="p-3 hover:border-primary/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5 dark:hover:shadow-primary/10 hover:bg-card/90">
-									<div class="flex items-start justify-between gap-2">
-										<p class="text-sm">{q.question}</p>
+								<Card class="questions-card">
+									<div class="questions-card-header">
+										<p class="questions-text-sm">{q.question}</p>
 										<Badge variant={sectionVariant(q.sourceType)}>{titleCase(q.sourceType)}</Badge>
 									</div>
-									<div class="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
+									<div class="questions-card-meta">
 										<StatusBadge variant="neutral" status={titleCase(q.status)} />
 										<Badge variant="outline">{titleCase(q.priority)}</Badge>
 										{#if q.category}<span>{q.category}</span>{/if}

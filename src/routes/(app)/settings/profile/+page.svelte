@@ -7,11 +7,11 @@
 </script>
 
 <PageHeader title="Profile" />
-<Card class="p-4 text-sm">
-	<dl class="grid grid-cols-1 gap-3 md:grid-cols-2">
-		<div><dt class="text-xs uppercase text-muted-foreground">Name</dt><dd>{user.name ?? '—'}</dd></div>
-		<div><dt class="text-xs uppercase text-muted-foreground">Email</dt><dd>{user.email}</dd></div>
-		<div><dt class="text-xs uppercase text-muted-foreground">Workspace</dt><dd>{workspace.name}</dd></div>
-		<div><dt class="text-xs uppercase text-muted-foreground">Role</dt><dd>{workspace.role}</dd></div>
+<Card class="settings-profile-card">
+	<dl class="settings-profile-grid">
+		<div><dt class="settings-profile-label">Name</dt><dd>{user.name ?? '—'}</dd></div>
+		<div><dt class="settings-profile-label">Email</dt><dd>{user.email}</dd></div>
+		<div><dt class="settings-profile-label">Workspace</dt><dd>{workspace.name}</dd></div>
+		<div><dt class="settings-profile-label">Role</dt><dd>{workspace.role}</dd></div>
 	</dl>
 </Card>

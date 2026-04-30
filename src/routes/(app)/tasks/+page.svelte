@@ -9,7 +9,6 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { showSuccessToast } from '$lib/stores/toast';
 	import { getPageNumber } from '$lib/constants/navigation';
-	import { cn } from '$lib/utils/cn';
 	import type { PageData } from './$types';
 
 	interface TasksPageData extends PageData {
@@ -298,15 +297,15 @@
 
 <PageHeader title="Tasks" description="Personal todos and errands (not legal proceedings)." number={getPageNumber('/tasks')} />
 
-<div class="flex gap-4 overflow-x-auto min-h-[calc(100vh-14rem)]">
+<div class="tasks-board">
 	{#each grouped as column (column.id)}
-		<div class="flex min-w-[300px] flex-col gap-3">
-			<div class="flex items-center justify-between">
-				<h2 class="font-semibold">{column.label}</h2>
-				<span class="text-sm text-muted-foreground">{column.tasks.length}</span>
+		<div class="tasks-column">
+			<div class="tasks-column-header">
+				<h2 class="tasks-font-semibold">{column.label}</h2>
+				<span class="tasks-text-sm tasks-text-muted">{column.tasks.length}</span>
 			</div>
 			<div
-				class="flex flex-col rounded-lg transition-colors duration-200"
+				class="tasks-column-content"
 				ondragenter={(e) => handleDragEnter(e, column.id)}
 				ondragover={(e) => handleDragOverColumn(e, column.id)}
 				ondragleave={handleDragLeave}
@@ -335,15 +334,8 @@
 					/>
 				{/each}
 				{#if column.tasks.length === 0}
-					<div class="py-1" role="listitem">
-						<div
-							class={cn(
-								'rounded-lg border-2 border-dashed p-8 text-center text-sm text-muted-foreground transition duration-200',
-								dropTargetId === column.id
-									? 'scale-[1.02] border-primary bg-primary/5 text-primary'
-									: 'border-border'
-							)}
-						>
+					<div class="tasks-empty-placeholder" role="listitem">
+						<div class={`tasks-empty-box ${dropTargetId === column.id ? 'tasks-empty-box-drop-target' : ''}`}>
 							{dropTargetId === column.id ? 'Drop here' : 'No tasks'}
 						</div>
 					</div>
@@ -351,13 +343,13 @@
 			</div>
 			<Button
 				variant="ghost"
-				class="w-full justify-start text-muted-foreground hover:text-foreground"
+				class="tasks-w-full tasks-justify-start tasks-text-muted tasks-hover-text"
 				onclick={() => {
 					defaultStatus = column.id;
 					showCreateModal = true;
 				}}
 			>
-				{#snippet children()}<Plus class="h-4 w-4 mr-2" /> Add a card{/snippet}
+				{#snippet children()}<Plus class="tasks-icon-sm tasks-mr-2" /> Add a card{/snippet}
 			</Button>
 		</div>
 	{/each}

@@ -75,27 +75,27 @@
 
 <PageHeader title="Timeline" description="Case phases from preparation through final outcome." number={getPageNumber('/timeline')} />
 
-<div class="space-y-6">
+<div class="timeline-container">
 	{#each grouped as g, _i (g.phase)}
-		<section>
-			<div class="mb-2 flex items-center justify-between">
+		<section class="timeline-phase">
+			<div class="timeline-phase-header">
 				<div>
-					<h2 class="text-base font-semibold">{PHASE_LABELS[g.phase]}</h2>
-					<p class="text-xs text-muted-foreground">{PHASE_DESCRIPTIONS[g.phase]}</p>
+					<h2 class="timeline-phase-title">{PHASE_LABELS[g.phase]}</h2>
+					<p class="timeline-phase-description">{PHASE_DESCRIPTIONS[g.phase]}</p>
 				</div>
-				<div class="flex items-center gap-2">
+				<div class="timeline-phase-actions">
 					{#if g.items.length > 0}
-						<span class="text-xs text-muted-foreground">{phaseProgress(g.items)}% complete</span>
+						<span class="timeline-text-xs timeline-text-muted">{phaseProgress(g.items)}% complete</span>
 					{/if}
-					<Button variant="ghost" size="sm" onclick={() => { defaultPhase = g.phase; showCreateModal = true; }}>{#snippet children()}<Plus class="h-4 w-4" /> Add{/snippet}</Button>
+					<Button variant="ghost" size="sm" onclick={() => { defaultPhase = g.phase; showCreateModal = true; }}>{#snippet children()}<Plus class="timeline-icon-sm" /> Add{/snippet}</Button>
 				</div>
 			</div>
 			{#if g.items.length === 0}
-				<Card class="p-4 text-sm text-muted-foreground">
+				<Card class="timeline-p-4 timeline-text-sm timeline-text-muted">
 					<span>No milestones in this phase yet.</span>
 				</Card>
 			{:else}
-				<ol class="space-y-2">
+				<ol class="timeline-milestone-list">
 					{#each g.items as m, i (m.id)}
 						<li in:fly={{ y: 30, duration: 500, delay: i * 50 + 100, easing: cubicOut }}>
 							<button
@@ -104,36 +104,36 @@
 									e.currentTarget.blur();
 									await updateUrl(m.id);
 								}}
-								class="w-full text-left"
+								class="timeline-w-full timeline-text-left"
 							>
-								<Card id={m.id} class="flex items-start gap-4 p-4 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-md hover:shadow-primary/10 dark:hover:shadow-primary/20 hover:bg-card/90">
-									<div class="mt-1 h-3 w-3 shrink-0 rounded-full border-2 {statusColor(m.status)}" title={titleCase(m.status)}></div>
-									<div class="min-w-0 flex-1">
-										<div class="flex items-start gap-2">
-											<p class="line-clamp-2 font-medium">{m.title}</p>
+								<Card id={m.id} class="timeline-milestone-card">
+									<div class="timeline-status-indicator {statusColor(m.status)}" title={titleCase(m.status)}></div>
+									<div class="timeline-milestone-content">
+										<div class="timeline-milestone-header">
+											<p class="timeline-milestone-title">{m.title}</p>
 											{#if m.priority !== 'MEDIUM'}
-												<Badge variant="outline" class="shrink-0">{titleCase(m.priority)}</Badge>
+												<Badge variant="outline" class="timeline-shrink-0">{titleCase(m.priority)}</Badge>
 											{/if}
 										</div>
-										{#if m.description}<MarkdownRenderer content={m.description} class="mt-1 text-sm text-muted-foreground prose prose-sm max-w-none" />{/if}
+										{#if m.description}<MarkdownRenderer content={m.description} class="timeline-mt-1 timeline-text-sm timeline-text-muted timeline-prose-sm timeline-max-w-none" />{/if}
 										{#if m.subTasks && m.subTasks.length > 0}
-											<div class="mt-2">
-												<div class="mb-1 text-xs text-muted-foreground">
+											<div class="timeline-mt-2">
+												<div class="timeline-mb-1 timeline-text-xs timeline-text-muted">
 													{m.subTasks.filter((st) => st.done).length}/{m.subTasks.length} subtasks
 												</div>
-												<ul class="space-y-1">
+												<ul class="timeline-subtask-list">
 													{#each m.subTasks as st (st.id)}
-														<li class="flex items-center gap-2 text-sm">
-															<input type="checkbox" checked={st.done} disabled class="h-3.5 w-3.5 rounded border-border" />
-															<span class={st.done ? 'line-through text-muted-foreground' : ''}>{st.text}</span>
+														<li class="timeline-subtask-item">
+															<input type="checkbox" checked={st.done} disabled class="timeline-checkbox" />
+															<span class={st.done ? 'timeline-line-through timeline-text-muted' : ''}>{st.text}</span>
 														</li>
 													{/each}
 												</ul>
 											</div>
 										{/if}
-										<div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+										<div class="timeline-milestone-meta">
 											{#if m.dueDate}<span>Due {fmtDate(m.dueDate)}</span>{/if}
-											{#if (m as MilestoneItem).location}<span>· <a href={generateGoogleMapsUrl((m as MilestoneItem).location)} target="_blank" rel="noopener noreferrer" class="flex items-center gap-1 hover:text-primary"><MapPin class="h-3 w-3" /> {(m as MilestoneItem).location}</a></span>{/if}
+											{#if (m as MilestoneItem).location}<span>· <a href={generateGoogleMapsUrl((m as MilestoneItem).location)} target="_blank" rel="noopener noreferrer" class="timeline-flex timeline-items-center timeline-gap-1 timeline-hover-primary"><MapPin class="timeline-icon-xs" /> {(m as MilestoneItem).location}</a></span>{/if}
 											{#if m.owner}<span>· {m.owner.name ?? m.owner.email}</span>{/if}
 										</div>
 									</div>

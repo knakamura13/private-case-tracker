@@ -7,11 +7,6 @@
 	} = $props();
 
 	let backdropEl: HTMLElement | undefined = $state();
-	let isMobile = $state(false);
-
-	$effect(() => {
-		isMobile = window.innerWidth < 768;
-	});
 
 	$effect(() => {
 		if (open && backdropEl) {
@@ -23,7 +18,7 @@
 {#if open}
 	<div
 		bind:this={backdropEl}
-		class="fixed inset-0 z-50 bg-black/50 p-4 {isMobile ? 'flex items-end justify-center' : 'flex items-center justify-center'}"
+		class="dialog-backdrop"
 		role="dialog"
 		aria-modal="true"
 		tabindex="-1"
@@ -34,7 +29,7 @@
 			if (e.key === 'Escape') onClose();
 		}}
 	>
-		<div class="{isMobile ? 'w-full max-h-[85vh] rounded-t-lg' : 'max-h-[90vh]'} w-full {maxWidth} overflow-y-auto rounded-lg bg-card shadow-xl" role="document" style="padding-bottom: env(safe-area-inset-bottom)">
+		<div class="dialog-content {maxWidth}" role="document" style="padding-bottom: env(safe-area-inset-bottom)">
 			{@render children()}
 		</div>
 	</div>

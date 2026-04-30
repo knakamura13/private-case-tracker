@@ -8,6 +8,6 @@
 	export let stack: string | undefined = undefined;
 </script>
 
-<div class="min-w-[320px] max-w-[520px]">
+<div class="errtoast-min-w-320 errtoast-max-w-520">
 	<ErrorDetails {status} {message} {errorId} {requestId} {stack} />
 </div>

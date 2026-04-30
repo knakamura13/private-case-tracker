@@ -142,7 +142,7 @@
 
 {#if open}
 	<div
-		class="fixed inset-0 z-50 bg-background/60 p-4 backdrop-blur-sm {window.innerWidth < 768 ? 'flex items-end justify-center' : 'flex items-start justify-center pt-24'}"
+		class="cmdpal-fixed cmdpal-inset-0 cmdpal-z-50 cmdpal-bg-background-60 cmdpal-p-4 cmdpal-backdrop-blur-sm cmdpal-flex {window.innerWidth < 768 ? 'cmdpal-items-end cmdpal-justify-center' : 'cmdpal-items-start cmdpal-justify-center cmdpal-pt-24'}"
 		role="dialog"
 		aria-modal="true"
 		aria-label="Search"
@@ -152,11 +152,11 @@
 			trapTabKey(e);
 		}}
 	>
-		<div class="absolute inset-0 z-0 cursor-default" aria-hidden="true" onclick={() => (open = false)}></div>
-		<div bind:this={dialogContentEl} class="relative z-10 w-full {window.innerWidth < 768 ? 'max-h-[85vh] rounded-t-lg' : 'max-w-xl max-h-[60vh]'} overflow-hidden rounded-lg border border-border bg-card shadow-xl" style="padding-bottom: env(safe-area-inset-bottom)">
-			<div class="flex items-center gap-2 border-b border-border px-3">
-				<Search class="h-4 w-4 text-muted-foreground" />
-				<label class="sr-only" for="command-palette-input">Search</label>
+		<div class="cmdpal-absolute cmdpal-inset-0 cmdpal-z-0 cmdpal-cursor-default" aria-hidden="true" onclick={() => (open = false)}></div>
+		<div bind:this={dialogContentEl} class="cmdpal-relative cmdpal-z-10 cmdpal-w-full {window.innerWidth < 768 ? 'cmdpal-max-h-85vh cmdpal-rounded-t-lg' : 'cmdpal-max-w-xl cmdpal-max-h-60vh'} cmdpal-overflow-hidden cmdpal-rounded-lg cmdpal-border cmdpal-bg-card cmdpal-shadow-xl" style="padding-bottom: env(safe-area-inset-bottom)">
+			<div class="cmdpal-flex cmdpal-items-center cmdpal-gap-2 cmdpal-border-b cmdpal-px-3">
+				<Search class="cmdpal-icon-sm cmdpal-text-muted" />
+				<label class="cmdpal-sr-only" for="command-palette-input">Search</label>
 				<input
 					id="command-palette-input"
 					bind:this={inputEl}
@@ -167,24 +167,24 @@
 					aria-activedescendant={activeItem ? `cp-opt-${activeItem.type}-${activeItem.id}` : undefined}
 					aria-autocomplete="list"
 					placeholder="Search across tasks, forms, evidence, questions, notes, files…"
-					class="h-12 w-full bg-transparent text-sm focus-visible:outline-none"
+					class="cmdpal-h-12 cmdpal-w-full cmdpal-bg-transparent cmdpal-text-sm cmdpal-focus-visible-outline-none"
 				/>
-				<button class="rounded-md p-1 hover:bg-muted" aria-label="Close" onclick={() => (open = false)}>
-					<X class="h-4 w-4" />
+				<button class="cmdpal-rounded-md cmdpal-p-1 cmdpal-hover-bg-muted" aria-label="Close" onclick={() => (open = false)}>
+					<X class="cmdpal-icon-sm" />
 				</button>
 			</div>
-			<div class="max-h-[60vh] overflow-y-auto">
+			<div class="cmdpal-max-h-60vh cmdpal-overflow-y-auto">
 				{#if loading}
-					<p class="p-6 text-center text-sm text-muted-foreground">Searching…</p>
+					<p class="cmdpal-p-6 cmdpal-text-center cmdpal-text-sm cmdpal-text-muted">Searching…</p>
 				{:else if !query.trim()}
-					<p class="p-6 text-center text-sm text-muted-foreground">Type to search your workspace.</p>
+					<p class="cmdpal-p-6 cmdpal-text-center cmdpal-text-sm cmdpal-text-muted">Type to search your workspace.</p>
 				{:else if flat.length === 0}
-					<p class="p-6 text-center text-sm text-muted-foreground">No results for "{query}"</p>
+					<p class="cmdpal-p-6 cmdpal-text-center cmdpal-text-sm cmdpal-text-muted">No results for "{query}"</p>
 				{:else}
 					{#each Object.entries(results) as [group, items]}
 						{#if items.length > 0}
 							<div>
-								<p class="bg-muted/60 px-3 py-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">{group}</p>
+								<p class="cmdpal-bg-muted-60 cmdpal-px-3 cmdpal-py-1 cmdpal-text-xs cmdpal-font-medium cmdpal-uppercase cmdpal-tracking-wide cmdpal-text-muted">{group}</p>
 								<ul id="command-palette-results" role="listbox" aria-label="Search results">
 									{#each items as item, _i (item.type + item.id)}
 										{@const globalIndex = flat.findIndex((f) => f.type === item.type && f.id === item.id)}
@@ -195,11 +195,11 @@
 												target={item.type === 'quicklink' ? '_blank' : undefined}
 												rel={item.type === 'quicklink' ? 'noopener noreferrer' : undefined}
 												onclick={() => (open = false)}
-												class="flex flex-col border-b border-border/50 px-3 py-2 text-sm hover:bg-muted {activeIndex === globalIndex ? 'bg-muted' : ''}"
+												class="cmdpal-flex cmdpal-flex-col cmdpal-border-b cmdpal-border-50 cmdpal-px-3 cmdpal-py-2 cmdpal-text-sm cmdpal-hover-bg-muted {activeIndex === globalIndex ? 'cmdpal-bg-muted' : ''}"
 											>
-												<span class="font-medium">{item.title}</span>
+												<span class="cmdpal-font-medium">{item.title}</span>
 												{#if item.description}
-													<span class="truncate text-xs text-muted-foreground">{item.description}</span>
+													<span class="cmdpal-truncate cmdpal-text-xs cmdpal-text-muted">{item.description}</span>
 												{/if}
 											</a>
 										</li>

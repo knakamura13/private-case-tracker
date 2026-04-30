@@ -66,18 +66,18 @@
 
 <AuthShell title="Sign in" subtitle="Sign in to your private case workspace.">
 	{#if needsTwoFactor}
-		<form class="space-y-4" onsubmit={handleTotp}>
+		<form class="auth-form" onsubmit={handleTotp}>
 			<div>
 				<Label for="totp">Authenticator code</Label>
 				<Input id="totp" inputmode="numeric" autocomplete="one-time-code" bind:value={totpCode} required />
 			</div>
-			{#if error}<p class="text-sm text-destructive">{error}</p>{/if}
-			<Button type="submit" disabled={loading} class="w-full">
+			{#if error}<p class="auth-text-sm auth-text-destructive">{error}</p>{/if}
+			<Button type="submit" disabled={loading} class="auth-w-full">
 				{loading ? 'Verifying…' : 'Verify'}
 			</Button>
 		</form>
 	{:else}
-		<form class="space-y-4" onsubmit={handleLogin}>
+		<form class="auth-form" onsubmit={handleLogin}>
 			<div>
 				<Label for="email">Email</Label>
 				<Input id="email" type="email" autocomplete="email" bind:value={email} required />
@@ -86,22 +86,22 @@
 				<Label for="password">Password</Label>
 				<Input id="password" type="password" autocomplete="current-password" bind:value={password} required />
 			</div>
-			{#if error}<p class="text-sm text-destructive">{error}</p>{/if}
-			<Button type="submit" disabled={loading} class="w-full">
-				{#snippet children()}<KeyRound class="h-4 w-4" /> {loading ? 'Signing in…' : 'Sign in'}{/snippet}
+			{#if error}<p class="auth-text-sm auth-text-destructive">{error}</p>{/if}
+			<Button type="submit" disabled={loading} class="auth-w-full">
+				{#snippet children()}<KeyRound class="auth-icon-sm" /> {loading ? 'Signing in…' : 'Sign in'}{/snippet}
 			</Button>
 		</form>
-		<div class="relative my-6">
-			<div class="absolute inset-0 flex items-center"><span class="w-full border-t border-border"></span></div>
-			<div class="relative flex justify-center text-xs uppercase"><span class="bg-background px-2 text-muted-foreground">or</span></div>
+		<div class="auth-divider">
+			<div class="auth-divider-line"><span></span></div>
+			<div class="auth-divider-text"><span>or</span></div>
 		</div>
-		<Button variant="outline" class="w-full" onclick={handlePasskey} disabled={loading}>
-			{#snippet children()}<Fingerprint class="h-4 w-4" /> Sign in with passkey{/snippet}
+		<Button variant="outline" class="auth-w-full" onclick={handlePasskey} disabled={loading}>
+			{#snippet children()}<Fingerprint class="auth-icon-sm" /> Sign in with passkey{/snippet}
 		</Button>
 		{#if data.allowSignup}
-			<p class="mt-6 text-center text-xs text-muted-foreground">
+			<p class="auth-footer">
 				Need to create the first account?
-				<a class="text-primary underline-offset-4 hover:underline" href="/signup">Create owner account</a>
+				<a class="auth-text-primary auth-underline-offset-4 auth-hover-underline" href="/signup">Create owner account</a>
 			</p>
 		{/if}
 	{/if}

@@ -17,13 +17,15 @@
 	};
 </script>
 
-<div class="mx-auto w-full max-w-4xl p-6">
-	<a class="text-sm font-medium text-primary hover:underline" href="/settings/dev">← Back</a>
+<div class="error-detail-container">
+	<a class="settings-dev-text-sm settings-dev-font-medium settings-dev-text-primary settings-dev-hover-underline" href="/settings/dev">← Back</a>
 
-	<h1 class="mt-4 text-2xl font-semibold">Error</h1>
-	<p class="mt-1 text-sm text-muted-foreground font-mono">{row.id}</p>
+	<div class="error-detail-header">
+		<h1>Error</h1>
+		<p>{row.id}</p>
+	</div>
 
-	<div class="mt-6">
+	<div class="settings-dev-mt-4">
 		<ErrorDetails
 			status={row.status ?? undefined}
 			message={row.message}
@@ -33,8 +35,8 @@
 		/>
 	</div>
 
-	<div class="mt-8 rounded-lg border border-border bg-card p-4">
-		<h2 class="text-sm font-semibold">Context</h2>
-		<pre class="mt-2 max-h-96 overflow-auto rounded-md bg-muted p-3 text-xs">{JSON.stringify(row.context, null, 2)}</pre>
+	<div class="error-detail-context">
+		<h2>Context</h2>
+		<pre>{JSON.stringify(row.context, null, 2)}</pre>
 	</div>
 </div>
