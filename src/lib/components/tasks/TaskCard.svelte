@@ -5,7 +5,6 @@
 	import { titleCase } from '$lib/utils/format';
 	import { fmtDate } from '$lib/utils/dates';
 	import { GripVertical } from 'lucide-svelte';
-	import { cn } from '$lib/utils/cn';
 
 	let {
 		task,
@@ -53,6 +52,10 @@
 	function ownerLabel(owner: { id: string; name: string | null; email: string } | null) {
 		return owner?.name?.trim() || owner?.email?.trim() || '';
 	}
+
+	const taskCardClasses = $derived(
+		`task-card-inner ${!isAnyDragging ? 'task-card-hoverable' : ''} ${isDragging ? 'task-card-dragging' : ''}`.trim()
+	);
 </script>
 
 <div
@@ -78,11 +81,7 @@
 	{/if}
 
 	<div
-		class={cn(
-			'task-card-inner',
-			!isAnyDragging && 'task-card-hoverable',
-			isDragging && 'task-card-dragging'
-		)}
+		class={taskCardClasses}
 		draggable={draggable}
 		data-task-id={task.id}
 		ondragstart={(e) => onDragStart && onDragStart(e, task.id)}

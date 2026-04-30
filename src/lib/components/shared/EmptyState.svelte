@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { cn } from '$lib/utils/cn';
-
 	let {
 		title,
 		description,
@@ -16,7 +14,7 @@
 	} = $props();
 </script>
 
-<div class={cn('empty-state', klass)}>
+<div class={`empty-state ${klass}`}>
 	{#if icon}
 		<div class="empty-state-icon">{@render icon()}</div>
 	{/if}

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { navigation } from '$lib/constants/navigation';
-	import { cn } from '$lib/utils/cn';
 
 	const isOwner = $page.data.workspace?.role === 'OWNER';
 
@@ -26,10 +25,7 @@
 						data-sveltekit-prefetch
 						onclick={() => onNavigate?.()}
 						aria-current={active ? 'page' : undefined}
-						class={cn(
-							'sidebar-nav-item',
-							active ? 'sidebar-nav-item-active' : 'sidebar-nav-item-inactive'
-						)}
+						class={`sidebar-nav-item ${active ? 'sidebar-nav-item-active' : 'sidebar-nav-item-inactive'}`}
 					>
 						<item.icon class="sidebar-nav-icon" aria-hidden="true" />
 						<span>{item.label}</span>

@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { cn } from '$lib/utils/cn';
-
 	let {
 		number,
 		title,
@@ -16,7 +14,7 @@
 	const formattedNumber = $derived(String(number).padStart(2, '0'));
 </script>
 
-<div class={cn("section-number", klass)}>
+<div class={`section-number ${klass}`}>
 	<div class="section-number-bg">
 		{formattedNumber}
 	</div>

@@ -9,7 +9,6 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { showSuccessToast } from '$lib/stores/toast';
 	import { getPageNumber } from '$lib/constants/navigation';
-	import { cn } from '$lib/utils/cn';
 	import type { PageData } from './$types';
 
 	interface TasksPageData extends PageData {
@@ -336,12 +335,7 @@
 				{/each}
 				{#if column.tasks.length === 0}
 					<div class="tasks-empty-placeholder" role="listitem">
-						<div
-							class={cn(
-								'tasks-empty-box',
-								dropTargetId === column.id && 'tasks-empty-box-drop-target'
-							)}
-						>
+						<div class={`tasks-empty-box ${dropTargetId === column.id ? 'tasks-empty-box-drop-target' : ''}`}>
 							{dropTargetId === column.id ? 'Drop here' : 'No tasks'}
 						</div>
 					</div>

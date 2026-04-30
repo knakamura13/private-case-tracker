@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Card from '$lib/components/ui/Card.svelte';
-	import { cn } from '$lib/utils/cn';
 	let {
 		title,
 		href,
@@ -14,7 +13,7 @@
 	} = $props();
 </script>
 
-<Card class={cn('widget', className)}>
+<Card class={`widget ${className}`}>
 	<div class="widget-header">
 		<h2 class="widget-title">{title}</h2>
 		{#if href}

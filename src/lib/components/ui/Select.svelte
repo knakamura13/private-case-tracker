@@ -1,7 +1,6 @@
 <script lang="ts">
 	/* eslint-disable svelte/valid-compile */
 	import type { HTMLSelectAttributes } from 'svelte/elements';
-	import { cn } from '$lib/utils/cn';
 
 	let {
 		class: klass = '',
@@ -11,7 +10,7 @@
 	}: HTMLSelectAttributes & { class?: string; children?: import('svelte').Snippet } = $props();
 	/* eslint-enable svelte/valid-compile */
 
-	const selectClass = $derived(cn('select', klass));
+	const selectClass = $derived(`select ${klass}`.trim());
 </script>
 
 <select bind:value class={selectClass} {...rest}>

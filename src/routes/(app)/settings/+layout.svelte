@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { cn } from '$lib/utils/cn';
 	let { children }: { children: import('svelte').Snippet } = $props();
 
 	const sections = [
@@ -11,6 +10,14 @@
 		{ href: '/settings/tags', label: 'Tags' },
 		{ href: '/settings/dev', label: 'Dev' }
 	];
+
+	const getNavLinkClass = (active: boolean) => {
+		const base = 'settings-layout-block settings-layout-rounded-md settings-layout-px-3 settings-layout-py-2';
+		const activeClass = active
+			? 'settings-layout-bg-primary-10 settings-layout-text-primary'
+			: 'settings-layout-text-muted settings-layout-hover-bg-muted';
+		return `${base} ${activeClass}`;
+	};
 </script>
 
 <div class="settings-layout-flex settings-layout-flex-col settings-layout-gap-6 settings-layout-md-flex-row">
@@ -23,10 +30,7 @@
 						<a
 							href={s.href}
 							aria-current={active ? 'page' : undefined}
-							class={cn(
-								'settings-layout-block settings-layout-rounded-md settings-layout-px-3 settings-layout-py-2',
-								active ? 'settings-layout-bg-primary-10 settings-layout-text-primary' : 'settings-layout-text-muted settings-layout-hover-bg-muted'
-							)}
+							class={getNavLinkClass(active)}
 						>
 							{s.label}
 						</a>

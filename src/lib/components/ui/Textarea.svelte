@@ -1,7 +1,6 @@
 <script lang="ts">
 	/* eslint-disable svelte/valid-compile */
 	import type { HTMLTextareaAttributes } from 'svelte/elements';
-	import { cn } from '$lib/utils/cn';
 
 	let {
 		class: klass = '',
@@ -48,7 +47,7 @@
 	}
 	/* eslint-enable svelte/valid-compile */
 
-	const textareaClass = $derived(cn('textarea', klass));
+	const textareaClass = $derived(`textarea ${klass}`.trim());
 </script>
 
 <textarea use:autoResize bind:value class={textareaClass} {...rest}></textarea>

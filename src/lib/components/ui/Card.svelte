@@ -1,7 +1,6 @@
 <script lang="ts">
 	/* eslint-disable svelte/valid-compile */
 	import type { HTMLAttributes } from 'svelte/elements';
-	import { cn } from '$lib/utils/cn';
 
 	let {
 		class: klass = '',
@@ -10,7 +9,7 @@
 	}: HTMLAttributes<HTMLDivElement> & { class?: string; children?: import('svelte').Snippet } = $props();
 	/* eslint-enable svelte/valid-compile */
 
-	const cardClass = $derived(cn('card', klass));
+	const cardClass = $derived(`card ${klass}`.trim());
 </script>
 
 <div class={cardClass} {...rest}>

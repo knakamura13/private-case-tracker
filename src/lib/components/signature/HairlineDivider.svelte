@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { cn } from '$lib/utils/cn';
-
 	let {
 		class: klass = ''
 	}: {
@@ -8,4 +6,4 @@
 	} = $props();
 </script>
 
-<div class={cn("hairline-divider", klass)} aria-hidden="true"></div>
+<div class={`hairline-divider ${klass}`} aria-hidden="true"></div>

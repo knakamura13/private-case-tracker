@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { linkifyText } from '$lib/utils/linkify';
-	import { cn } from '$lib/utils/cn';
 
 	let {
 		text,
@@ -35,8 +34,8 @@
 		}
 	}
 
-	const richTextClass = $derived(cn('rich-text', lineClamp && 'rich-text-line-clamp', klass));
-	const editableClass = $derived(cn('rich-text-editable', richTextClass));
+	const richTextClass = $derived(`rich-text ${lineClamp ? 'rich-text-line-clamp' : ''} ${klass}`.trim());
+	const editableClass = $derived(`rich-text-editable ${richTextClass}`.trim());
 </script>
 
 {#if parts.length === 0}

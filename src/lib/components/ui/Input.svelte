@@ -1,7 +1,6 @@
 <script lang="ts">
 	/* eslint-disable svelte/valid-compile */
 	import type { HTMLInputAttributes } from 'svelte/elements';
-	import { cn } from '$lib/utils/cn';
 
 	let {
 		class: klass = '',
@@ -11,7 +10,7 @@
 	}: HTMLInputAttributes & { class?: string; error?: boolean } = $props();
 	/* eslint-enable svelte/valid-compile */
 
-	const inputClass = $derived(cn('input', error && 'input-error', klass));
+	const inputClass = $derived(`input ${error ? 'input-error' : ''} ${klass}`.trim());
 </script>
 
 <input bind:value class={inputClass} {...rest} />

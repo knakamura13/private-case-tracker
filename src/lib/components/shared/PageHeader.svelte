@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { cn } from '$lib/utils/cn';
 	import SectionNumber from '$lib/components/signature/SectionNumber.svelte';
 	let {
 		title,
@@ -16,7 +15,7 @@
 	} = $props();
 </script>
 
-<header class={cn('page-header', klass)}>
+<header class={`page-header ${klass}`}>
 	<div class="page-header-main">
 		{#if number !== undefined}
 			<SectionNumber {number} {title} as="h1" class="-mt-4" />

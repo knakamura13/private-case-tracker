@@ -1,7 +1,6 @@
 <script lang="ts">
 	/* eslint-disable svelte/valid-compile */
 	import type { HTMLLabelAttributes } from 'svelte/elements';
-	import { cn } from '$lib/utils/cn';
 
 	let {
 		class: klass = '',
@@ -10,7 +9,7 @@
 	}: HTMLLabelAttributes & { class?: string; children?: import('svelte').Snippet } = $props();
 	/* eslint-enable svelte/valid-compile */
 
-	const labelClass = $derived(cn('label', klass));
+	const labelClass = $derived(`label ${klass}`.trim());
 </script>
 
 <label class={labelClass} {...rest}>
