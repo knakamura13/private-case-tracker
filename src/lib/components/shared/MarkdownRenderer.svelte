@@ -6,7 +6,7 @@
 
 {#if content}
 	<!-- eslint-disable svelte/no-at-html-tags -->
-	<div class="prose prose-sm max-w-none line-clamp-4 {className}">
+	<div class="mdrender-prose mdrender-prose-sm mdrender-max-w-none mdrender-line-clamp-4 {className}">
 		{@html renderMarkdown(content)}
 	</div>
 	<!-- eslint-enable svelte/no-at-html-tags -->
