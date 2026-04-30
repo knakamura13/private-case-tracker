@@ -109,6 +109,11 @@ button::after,
 	border-image: none !important;
 }
 
+/* Remove default margins from p tags since they're used as labels */
+p {
+	margin: 0;
+}
+
 input[type='checkbox'] {
 	cursor: pointer;
 }
@@ -670,7 +675,7 @@ a {
 
 .dialog-content {
 	width: 100%;
-	max-width: 32rem;
+	max-width: 48rem;
 	max-height: 90vh;
 	overflow-y: auto;
 	border-radius: var(--radius-md);
@@ -2505,7 +2510,6 @@ a {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-md);
-	margin-bottom: 3rem;
 }
 
 @media (min-width: 640px) {
@@ -2538,7 +2542,6 @@ a {
 	flex-wrap: wrap;
 	align-items: center;
 	gap: var(--space-sm);
-	margin-top: var(--space-sm);
 }
 
 @media (min-width: 640px) {
@@ -3561,23 +3564,15 @@ a {
 	gap: var(--space-xs);
 	padding: var(--space-xs) var(--space-sm);
 	border-radius: var(--radius-sm);
-	background-color: var(--color-brand-primary);
-	color: var(--color-brand-primary-foreground);
+	background-color: transparent;
+	color: var(--color-text-primary);
 	border: none;
 	cursor: pointer;
 	font-size: var(--text-size-small);
-	font-weight: 500;
 }
 
 .folder-popover-add-btn:hover {
-	background-color: color-mix(in srgb, var(--color-brand-primary) 90%, transparent);
-}
-
-.widget-popover-overlay {
-	position: absolute;
-	inset: 0;
-	z-index: 0;
-	cursor: default;
+	background-color: var(--color-border-subtle);
 }
 
 .widget-preview-icons {
@@ -4104,6 +4099,16 @@ a {
 
 .timeline-w-full {
 	width: 100%;
+}
+
+.timeline-w-full.timeline-text-left {
+	background-color: transparent;
+	border: none;
+	text-align: left;
+}
+
+.timeline-w-full.timeline-text-left:hover {
+	background-color: transparent;
 }
 
 .timeline-text-left {
