@@ -302,8 +302,8 @@
 	{#each grouped as column (column.id)}
 		<div class="tasks-column">
 			<div class="tasks-column-header">
-				<h2 class="font-semibold">{column.label}</h2>
-				<span class="text-sm text-muted-foreground">{column.tasks.length}</span>
+				<h2 class="tasks-font-semibold">{column.label}</h2>
+				<span class="tasks-text-sm tasks-text-muted">{column.tasks.length}</span>
 			</div>
 			<div
 				class="tasks-column-content"
@@ -349,13 +349,13 @@
 			</div>
 			<Button
 				variant="ghost"
-				class="w-full justify-start text-muted-foreground hover:text-foreground"
+				class="tasks-w-full tasks-justify-start tasks-text-muted tasks-hover-text"
 				onclick={() => {
 					defaultStatus = column.id;
 					showCreateModal = true;
 				}}
 			>
-				{#snippet children()}<Plus class="h-4 w-4 mr-2" /> Add a card{/snippet}
+				{#snippet children()}<Plus class="tasks-icon-sm tasks-mr-2" /> Add a card{/snippet}
 			</Button>
 		</div>
 	{/each}

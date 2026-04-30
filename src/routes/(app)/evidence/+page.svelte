@@ -58,14 +58,14 @@
 	{#snippet actions()}
 		{#if data.isOwner}
 			<Button onclick={openAddModal}>
-				{#snippet children()}<Plus class="h-4 w-4" /> Add category{/snippet}
+				{#snippet children()}<Plus class="evidence-icon-sm" /> Add category{/snippet}
 			</Button>
 		{/if}
 	{/snippet}
 </PageHeader>
 
 {#if form?.error}
-	<Card class="mb-4 border-destructive/50 bg-destructive/10 p-4 text-destructive">
+	<Card class="evidence-mb-4 evidence-border-destructive evidence-bg-destructive-10 evidence-p-4 evidence-text-destructive">
 		{form.error}
 	</Card>
 {/if}
@@ -89,7 +89,7 @@
 							}}
 						>
 							<input type="hidden" name="category" value={cat.category} />
-							<span class="text-sm text-muted-foreground">{cat.currentCount} / </span>
+							<span class="evidence-text-sm evidence-text-muted">{cat.currentCount} / </span>
 							<input
 								type="number"
 								name="target"
@@ -99,22 +99,22 @@
 								class="evidence-target-input"
 								onkeydown={(e) => { if (e.key === 'Escape') cancelEdit(); }}
 							/>
-							<button type="submit" class="text-success hover:text-success/80" aria-label="Save">
-								<Check class="h-4 w-4" />
+							<button type="submit" class="evidence-text-success evidence-hover-success" aria-label="Save">
+								<Check class="evidence-icon-sm" />
 							</button>
-							<button type="button" class="text-muted-foreground hover:text-foreground" aria-label="Cancel" onclick={cancelEdit}>
-								<X class="h-4 w-4" />
+							<button type="button" class="evidence-text-muted evidence-hover-foreground" aria-label="Cancel" onclick={cancelEdit}>
+								<X class="evidence-icon-sm" />
 							</button>
 						</form>
 					{:else}
 						<button
 							type="button"
-							class="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+							class="evidence-flex evidence-items-center evidence-gap-1 evidence-text-sm evidence-text-muted evidence-hover-foreground"
 							aria-label="Edit target for {cat.category}"
 							onclick={() => startEdit(cat.category, cat.targetCount)}
 						>
 							<span>{cat.currentCount} / {cat.targetCount}</span>
-							<Pencil class="h-3 w-3" />
+							<Pencil class="evidence-icon-xs" />
 						</button>
 					{/if}
 				</div>
@@ -123,28 +123,28 @@
 						{#snippet trigger()}
 							<button
 								type="button"
-								class="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+								class="evidence-rounded evidence-p-1-5 evidence-text-muted evidence-hover-muted evidence-hover-foreground"
 								aria-label="Menu for {cat.category}"
 								onclick={() => toggleDropdown(cat.category)}
 							>
-								<MoreHorizontal class="h-4 w-4" />
+								<MoreHorizontal class="evidence-icon-sm" />
 							</button>
 						{/snippet}
 						{#snippet children()}
 							<button
 								type="button"
-								class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-left hover:bg-muted"
+								class="evidence-flex evidence-w-full evidence-items-center evidence-gap-2 evidence-rounded evidence-px-2 evidence-py-1-5 evidence-text-sm evidence-text-left evidence-hover-muted"
 								onclick={() => openRenameModal(cat.category)}
 							>
-								<Pencil class="h-3 w-3" />
+								<Pencil class="evidence-icon-xs" />
 								Rename
 							</button>
 							<button
 								type="button"
-								class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-left text-destructive hover:bg-destructive/10"
+								class="evidence-flex evidence-w-full evidence-items-center evidence-gap-2 evidence-rounded evidence-px-2 evidence-py-1-5 evidence-text-sm evidence-text-left evidence-text-destructive evidence-hover-destructive-10"
 								onclick={() => openDeleteModal(cat.category)}
 							>
-								<Trash2 class="h-3 w-3" />
+								<Trash2 class="evidence-icon-xs" />
 								Delete
 							</button>
 						{/snippet}
@@ -158,7 +158,7 @@
 				></div>
 			</div>
 			<div class="evidence-card-actions">
-				<form method="post" action="?/adjustCount" class="flex gap-2" use:enhance>
+				<form method="post" action="?/adjustCount" class="evidence-flex evidence-gap-2" use:enhance>
 					<input type="hidden" name="category" value={cat.category} />
 					<input type="hidden" name="delta" value="-1" />
 					<button
@@ -167,10 +167,10 @@
 						disabled={cat.currentCount === 0}
 						aria-label="Decrease {cat.category} count"
 					>
-						<Minus class="h-3.5 w-3.5" />
+						<Minus class="evidence-icon-3-5" />
 					</button>
 				</form>
-				<form method="post" action="?/adjustCount" class="flex gap-2" use:enhance>
+				<form method="post" action="?/adjustCount" class="evidence-flex evidence-gap-2" use:enhance>
 					<input type="hidden" name="category" value={cat.category} />
 					<input type="hidden" name="delta" value="1" />
 					<button
@@ -178,7 +178,7 @@
 						class="evidence-count-btn"
 						aria-label="Increase {cat.category} count"
 					>
-						<Plus class="h-3.5 w-3.5" />
+						<Plus class="evidence-icon-3-5" />
 					</button>
 				</form>
 			</div>

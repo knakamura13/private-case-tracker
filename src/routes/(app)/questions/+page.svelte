@@ -58,7 +58,7 @@
 <PageHeader title="Questions" description="Track unresolved questions, their sources, and answers." number={getPageNumber('/questions')}>
 	{#snippet actions()}
 		<Button onclick={() => showCreateModal = true}>
-			{#snippet children()}<Plus class="h-4 w-4" /> New question{/snippet}
+			{#snippet children()}<Plus class="questions-icon-sm" /> New question{/snippet}
 		</Button>
 	{/snippet}
 </PageHeader>
@@ -92,7 +92,7 @@
 
 {#if data.items.length === 0}
 	<EmptyState title="No questions yet" description="Capture open questions — you can answer them later and track the source.">
-		{#snippet icon()}<HelpCircle class="h-8 w-8" />{/snippet}
+		{#snippet icon()}<HelpCircle class="questions-icon-lg" />{/snippet}
 		{#snippet actions()}<Button onclick={() => showCreateModal = true}>New question</Button>{/snippet}
 	</EmptyState>
 {:else}
@@ -110,11 +110,11 @@
 									e.currentTarget.blur();
 									await updateUrl(q.id);
 								}}
-								class="w-full text-left"
+								class="questions-w-full questions-text-left"
 							>
 								<Card class="questions-card">
 									<div class="questions-card-header">
-										<p class="text-sm">{q.question}</p>
+										<p class="questions-text-sm">{q.question}</p>
 										<Badge variant={sectionVariant(q.sourceType)}>{titleCase(q.sourceType)}</Badge>
 									</div>
 									<div class="questions-card-meta">

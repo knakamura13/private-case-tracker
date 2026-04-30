@@ -85,13 +85,13 @@
 				</div>
 				<div class="timeline-phase-actions">
 					{#if g.items.length > 0}
-						<span class="text-xs text-muted-foreground">{phaseProgress(g.items)}% complete</span>
+						<span class="timeline-text-xs timeline-text-muted">{phaseProgress(g.items)}% complete</span>
 					{/if}
-					<Button variant="ghost" size="sm" onclick={() => { defaultPhase = g.phase; showCreateModal = true; }}>{#snippet children()}<Plus class="h-4 w-4" /> Add{/snippet}</Button>
+					<Button variant="ghost" size="sm" onclick={() => { defaultPhase = g.phase; showCreateModal = true; }}>{#snippet children()}<Plus class="timeline-icon-sm" /> Add{/snippet}</Button>
 				</div>
 			</div>
 			{#if g.items.length === 0}
-				<Card class="p-4 text-sm text-muted-foreground">
+				<Card class="timeline-p-4 timeline-text-sm timeline-text-muted">
 					<span>No milestones in this phase yet.</span>
 				</Card>
 			{:else}
@@ -104,7 +104,7 @@
 									e.currentTarget.blur();
 									await updateUrl(m.id);
 								}}
-								class="w-full text-left"
+								class="timeline-w-full timeline-text-left"
 							>
 								<Card id={m.id} class="timeline-milestone-card">
 									<div class="timeline-status-indicator {statusColor(m.status)}" title={titleCase(m.status)}></div>
@@ -112,20 +112,20 @@
 										<div class="timeline-milestone-header">
 											<p class="timeline-milestone-title">{m.title}</p>
 											{#if m.priority !== 'MEDIUM'}
-												<Badge variant="outline" class="shrink-0">{titleCase(m.priority)}</Badge>
+												<Badge variant="outline" class="timeline-shrink-0">{titleCase(m.priority)}</Badge>
 											{/if}
 										</div>
-										{#if m.description}<MarkdownRenderer content={m.description} class="mt-1 text-sm text-muted-foreground prose prose-sm max-w-none" />{/if}
+										{#if m.description}<MarkdownRenderer content={m.description} class="timeline-mt-1 timeline-text-sm timeline-text-muted timeline-prose-sm timeline-max-w-none" />{/if}
 										{#if m.subTasks && m.subTasks.length > 0}
-											<div class="mt-2">
-												<div class="mb-1 text-xs text-muted-foreground">
+											<div class="timeline-mt-2">
+												<div class="timeline-mb-1 timeline-text-xs timeline-text-muted">
 													{m.subTasks.filter((st) => st.done).length}/{m.subTasks.length} subtasks
 												</div>
 												<ul class="timeline-subtask-list">
 													{#each m.subTasks as st (st.id)}
 														<li class="timeline-subtask-item">
-															<input type="checkbox" checked={st.done} disabled class="h-3.5 w-3.5 rounded border-border" />
-															<span class={st.done ? 'line-through text-muted-foreground' : ''}>{st.text}</span>
+															<input type="checkbox" checked={st.done} disabled class="timeline-checkbox" />
+															<span class={st.done ? 'timeline-line-through timeline-text-muted' : ''}>{st.text}</span>
 														</li>
 													{/each}
 												</ul>
@@ -133,7 +133,7 @@
 										{/if}
 										<div class="timeline-milestone-meta">
 											{#if m.dueDate}<span>Due {fmtDate(m.dueDate)}</span>{/if}
-											{#if (m as MilestoneItem).location}<span>· <a href={generateGoogleMapsUrl((m as MilestoneItem).location)} target="_blank" rel="noopener noreferrer" class="flex items-center gap-1 hover:text-primary"><MapPin class="h-3 w-3" /> {(m as MilestoneItem).location}</a></span>{/if}
+											{#if (m as MilestoneItem).location}<span>· <a href={generateGoogleMapsUrl((m as MilestoneItem).location)} target="_blank" rel="noopener noreferrer" class="timeline-flex timeline-items-center timeline-gap-1 timeline-hover-primary"><MapPin class="timeline-icon-xs" /> {(m as MilestoneItem).location}</a></span>{/if}
 											{#if m.owner}<span>· {m.owner.name ?? m.owner.email}</span>{/if}
 										</div>
 									</div>
