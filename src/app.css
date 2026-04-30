@@ -656,6 +656,7 @@ a {
 
 .rich-text-line-clamp {
 	display: -webkit-box;
+	line-clamp: 2;
 	-webkit-line-clamp: 2;
 	-webkit-box-orient: vertical;
 	overflow: hidden;
@@ -1920,6 +1921,7 @@ a {
 
 .mdrender-line-clamp-4 {
 	display: -webkit-box;
+	line-clamp: 4;
 	-webkit-line-clamp: 4;
 	-webkit-box-orient: vertical;
 	overflow: hidden;
@@ -2839,6 +2841,7 @@ a {
 	overflow: hidden;
 	display: -webkit-box;
 	-webkit-box-orient: vertical;
+	line-clamp: 2;
 	-webkit-line-clamp: 2;
 }
 
@@ -3307,7 +3310,7 @@ a {
 
 .widget-item:hover,
 .widget-item:focus-within {
-	background-color: color-mix(in srgb, var(--color-text-tertiary) 10%, transparent);
+	background-color: var(--color-border-subtle);
 }
 
 .widget-circle-wrapper {
@@ -3369,6 +3372,7 @@ a {
 	overflow: hidden;
 	display: -webkit-box;
 	-webkit-box-orient: vertical;
+	line-clamp: 2;
 	-webkit-line-clamp: 2;
 }
 
@@ -3402,6 +3406,28 @@ a {
 .popover-content a,
 .popover-content a * {
 	background-color: transparent !important;
+}
+
+/* Force transparent backgrounds on evidence hover elements */
+.evidence-hover-muted,
+.evidence-hover-muted *,
+.evidence-hover-foreground,
+.evidence-hover-foreground * {
+	background-color: transparent !important;
+}
+
+.evidence-hover-muted:hover {
+	background-color: var(--color-border-subtle) !important;
+}
+
+/* Force transparent backgrounds on widget items */
+.widget-item,
+.widget-item * {
+	background-color: transparent !important;
+}
+
+.widget-item:hover {
+	background-color: var(--color-border-subtle) !important;
 }
 
 .widget-dropdown-item:hover {
@@ -5048,6 +5074,7 @@ a {
 
 .settings-dev-errors-message {
 	display: -webkit-box;
+	line-clamp: 2;
 	-webkit-line-clamp: 2;
 	-webkit-box-orient: vertical;
 	overflow-wrap: break-word;
