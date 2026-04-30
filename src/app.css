@@ -2555,6 +2555,7 @@ a {
 .page-header-description {
 	font-size: var(--text-size-small);
 	color: var(--color-text-tertiary);
+	margin-bottom: 2rem;
 }
 
 .page-header-actions {
@@ -2681,6 +2682,7 @@ a {
 	font-family: var(--font-display);
 	font-weight: 700;
 	color: var(--color-text-primary);
+	margin-bottom: 1rem;
 }
 
 @media (min-width: 768px) {
@@ -3089,7 +3091,7 @@ a {
 }
 
 .modal-dropdown-item:hover {
-	background-color: color-mix(in srgb, var(--color-text-tertiary) 10%, transparent);
+	background-color: var(--color-border-subtle);
 }
 
 /* Editable card */
@@ -3397,7 +3399,7 @@ a {
 }
 
 .widget-dropdown-item:hover {
-	background-color: var(--color-muted);
+	background-color: var(--color-border-subtle);
 }
 
 .widget-dropdown-item-destructive {
@@ -3405,7 +3407,7 @@ a {
 }
 
 .widget-dropdown-item-destructive:hover {
-	background-color: var(--color-muted);
+	background-color: color-mix(in srgb, var(--color-destructive) 10%, transparent);
 }
 
 .widget-popover {
@@ -4347,7 +4349,7 @@ a {
 }
 
 .evidence-hover-muted:hover {
-	background-color: var(--color-muted);
+	background-color: var(--color-border-subtle);
 }
 
 .evidence-hover-destructive-10:hover {
@@ -4355,7 +4357,7 @@ a {
 }
 
 .evidence-count-btn:hover {
-	background-color: var(--color-muted);
+	background-color: var(--color-border-subtle);
 }
 
 .evidence-count-btn:disabled {
