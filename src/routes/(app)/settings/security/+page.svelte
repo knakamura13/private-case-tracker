@@ -66,48 +66,48 @@
 <div class="settings-security-grid">
 	<Card class="settings-security-card">
 		<div class="settings-security-header">
-			<Fingerprint class="mt-1 h-5 w-5 text-primary" />
+			<Fingerprint class="settings-security-mt-1 settings-security-icon-lg settings-security-text-primary" />
 			<div>
 				<h2>Passkeys</h2>
 				<p>Use Face ID, Touch ID, or a hardware key.</p>
 			</div>
 		</div>
 		{#if passkeys.length === 0}
-			<Button class="mt-3" onclick={addPasskey}>Add a passkey</Button>
+			<Button class="settings-security-mt-3" onclick={addPasskey}>Add a passkey</Button>
 		{:else}
 			<div class="settings-security-passkey-list">
 				{#each passkeys as pk (pk.id)}
 					<div class="settings-security-passkey-item">
-						<span class="text-sm">{pk.name || 'Unnamed passkey'}</span>
+						<span class="settings-security-text-sm">{pk.name || 'Unnamed passkey'}</span>
 						<button
 							onclick={() => deletePasskey(pk.id)}
-							class="text-xs text-destructive hover:underline"
+							class="settings-security-text-xs settings-security-text-destructive settings-security-hover-underline"
 							type="button"
 						>
 							Delete
 						</button>
 					</div>
 				{/each}
-				<Button class="mt-2" variant="outline" onclick={addPasskey}>Add another passkey</Button>
+				<Button class="settings-security-mt-2" variant="outline" onclick={addPasskey}>Add another passkey</Button>
 			</div>
 		{/if}
-		{#if passkeyMsg}<p class="mt-2 text-xs text-muted-foreground">{passkeyMsg}</p>{/if}
+		{#if passkeyMsg}<p class="settings-security-mt-2 settings-security-text-xs settings-security-text-muted">{passkeyMsg}</p>{/if}
 	</Card>
 	<Card class="settings-security-card">
 		<div class="settings-security-header">
-			<ShieldCheck class="mt-1 h-5 w-5 text-primary" />
+			<ShieldCheck class="settings-security-mt-1 settings-security-icon-lg settings-security-text-primary" />
 			<div>
 				<h2>Authenticator app (TOTP)</h2>
 				<p>Use a TOTP app like 1Password or Authy as a second factor.</p>
 			</div>
 		</div>
 		{#if !totpSecret}
-			<Button class="mt-3" onclick={enableTotp}>Enable two-factor</Button>
+			<Button class="settings-security-mt-3" onclick={enableTotp}>Enable two-factor</Button>
 		{:else}
-			<p class="mt-3 text-sm">Scan this URI in your authenticator app:</p>
+			<p class="settings-security-mt-3 settings-security-text-sm">Scan this URI in your authenticator app:</p>
 			<code class="settings-security-totp-uri">{totpSecret.totpURI}</code>
 			{#if totpSecret.backupCodes}
-				<p class="mt-3 text-xs text-muted-foreground">Backup codes (store somewhere safe):</p>
+				<p class="settings-security-mt-3 settings-security-text-xs settings-security-text-muted">Backup codes (store somewhere safe):</p>
 				<ul class="settings-security-backup-codes">
 					{#each totpSecret.backupCodes as c (c)}<li>{c}</li>{/each}
 				</ul>
@@ -117,6 +117,6 @@
 				<Button onclick={verifyTotp}>Verify</Button>
 			</div>
 		{/if}
-		{#if totpMsg}<p class="mt-2 text-xs text-muted-foreground">{totpMsg}</p>{/if}
+		{#if totpMsg}<p class="settings-security-mt-2 settings-security-text-xs settings-security-text-muted">{totpMsg}</p>{/if}
 	</Card>
 </div>

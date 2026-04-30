@@ -32,15 +32,15 @@
 		{#each data.members as m (m.id)}
 			<li class="settings-members-item">
 				<div>
-					<p class="font-medium">{m.user.name ?? m.user.email}</p>
-					<p class="text-xs text-muted-foreground">{m.user.email}</p>
+					<p class="settings-members-font-medium">{m.user.name ?? m.user.email}</p>
+					<p class="settings-members-text-xs settings-members-text-muted">{m.user.email}</p>
 				</div>
 				<div class="settings-members-item-actions">
 					{#if isOwner && m.user.id !== $page.data.user?.id}
 						<form method="post" action="?/removeMember" use:enhance>
 							<input type="hidden" name="userId" value={m.user.id} />
 							<Button type="submit" variant="destructive" size="sm" aria-label="Remove member">
-								<Trash2 class="h-4 w-4" />
+								<Trash2 class="settings-members-icon-sm" />
 							</Button>
 						</form>
 					{/if}
@@ -66,8 +66,8 @@
 					<option value="OWNER">Owner</option>
 				</Select>
 			</div>
-			<div class="flex items-end"><Button type="submit">Create invite link</Button></div>
-			{#if form?.error}<p class="md:col-span-3 text-sm text-destructive">{form.error}</p>{/if}
+			<div class="settings-members-flex settings-members-items-end"><Button type="submit">Create invite link</Button></div>
+			{#if form?.error}<p class="settings-members-md-col-span-3 settings-members-text-sm settings-members-text-destructive">{form.error}</p>{/if}
 		</form>
 		{#if form?.ok && form?.inviteUrl}
 			<div class="settings-members-invite-result">
@@ -78,7 +78,7 @@
 						{copied ? 'Copied!' : 'Copy'}
 					</Button>
 				</div>
-				<p class="mt-2 text-xs text-muted-foreground">Share this link with the user. It expires in 7 days.</p>
+				<p class="settings-members-mt-2 settings-members-text-xs settings-members-text-muted">Share this link with the user. It expires in 7 days.</p>
 			</div>
 		{/if}
 	</Card>
@@ -90,8 +90,8 @@
 				{#each data.invitations as inv (inv.id)}
 					<li class="settings-members-item">
 						<div>
-							<p class="font-medium">{inv.email}</p>
-							<p class="text-xs text-muted-foreground">{inv.role} · expires {fmtDate(inv.expiresAt)}</p>
+							<p class="settings-members-font-medium">{inv.email}</p>
+							<p class="settings-members-text-xs settings-members-text-muted">{inv.role} · expires {fmtDate(inv.expiresAt)}</p>
 						</div>
 						<form method="post" action="?/revoke" use:enhance>
 							<input type="hidden" name="id" value={inv.id} />

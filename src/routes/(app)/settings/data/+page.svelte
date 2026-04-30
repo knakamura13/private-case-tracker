@@ -18,13 +18,13 @@
 	<Card class="settings-data-card">
 		<h2>Activity</h2>
 		<p>Internal audit feed of important changes.</p>
-		<Button variant="outline" class="mt-2" href="/settings/data/activity">Open activity</Button>
+		<Button variant="outline" class="settings-data-mt-2" href="/settings/data/activity">Open activity</Button>
 	</Card>
 
 	<Card class="settings-data-card">
 		<h2>Export</h2>
 		<p>Download a JSON snapshot of all your records (excluding raw uploaded files).</p>
-		<Button variant="outline" class="mt-2" href="/api/export">Download JSON</Button>
+		<Button variant="outline" class="settings-data-mt-2" href="/api/export">Download JSON</Button>
 	</Card>
 
 	{#if data.hasDemo && isOwner}
@@ -32,7 +32,7 @@
 			<h2>Demo data</h2>
 			<p>Records prefixed with <code>[Demo]</code> from the seed script. Safe to remove anytime.</p>
 			<form method="post" action="?/removeDemo" use:enhance>
-				<Button type="submit" variant="outline" class="mt-2">Remove demo data</Button>
+				<Button type="submit" variant="outline" class="settings-data-mt-2">Remove demo data</Button>
 			</form>
 		</Card>
 	{/if}
@@ -45,7 +45,7 @@
 				Currently: {Object.values(data.trashedCounts).reduce((a, b) => a + b, 0)} items in trash.
 			</p>
 			<form method="post" action="?/purgeTrash" use:enhance>
-				<Button type="submit" variant="outline" class="mt-2">Empty trash</Button>
+				<Button type="submit" variant="outline" class="settings-data-mt-2">Empty trash</Button>
 			</form>
 		</Card>
 
@@ -54,13 +54,13 @@
 			<p>
 				Permanently delete this workspace and all its data. Type the workspace name to confirm.
 			</p>
-			<form method="post" action="?/deleteWorkspace" use:enhance class="mt-3 flex flex-col gap-2 md:flex-row">
+			<form method="post" action="?/deleteWorkspace" use:enhance class="settings-data-mt-3 settings-data-flex settings-data-flex-col settings-data-gap-2 settings-data-md-flex-row">
 				<Input name="confirm" placeholder={$page.data.workspace?.name ?? ''} bind:value={confirmName} />
 				<Button type="submit" variant="destructive" disabled={confirmName !== ($page.data.workspace?.name ?? '')}>
 					Delete workspace
 				</Button>
 			</form>
-			{#if form?.error}<p class="mt-2 text-sm text-destructive">{form.error}</p>{/if}
+			{#if form?.error}<p class="settings-data-mt-2 settings-data-text-sm settings-data-text-destructive">{form.error}</p>{/if}
 		</Card>
 	{/if}
 </div>

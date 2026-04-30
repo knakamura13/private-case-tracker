@@ -8,13 +8,13 @@
 </script>
 
 <PageHeader title="Activity" description="Internal audit feed for this workspace." />
-<Card class="p-0">
+<Card class="settings-activity-p-0">
 	<ul class="settings-activity-list">
 		{#each data.items as a (a.id)}
 			<li class="settings-activity-item">
 				<div class="settings-activity-header">
 					<p class="settings-activity-summary">{a.summary}</p>
-					<span class="text-xs text-muted-foreground">{fmtDateTime(a.createdAt)}</span>
+					<span class="settings-activity-text-xs settings-activity-text-muted">{fmtDateTime(a.createdAt)}</span>
 				</div>
 				<p class="settings-activity-meta">
 					{titleCase(a.action)} on {a.entityType} · {a.user?.name ?? a.user?.email ?? 'system'}

@@ -53,8 +53,8 @@
 		</div>
 	</div>
 
-	<div class="mt-4">
-		<a class="text-sm font-medium text-primary hover:underline" href={data.railwayProjectUrl} target="_blank" rel="noreferrer">
+	<div class="settings-dev-mt-4">
+		<a class="settings-dev-text-sm settings-dev-font-medium settings-dev-text-primary settings-dev-hover-underline" href={data.railwayProjectUrl} target="_blank" rel="noreferrer">
 			Open Railway project logs
 		</a>
 	</div>
@@ -74,23 +74,23 @@
 			</thead>
 			<tbody>
 				{#if data.errorsLoadFailed}
-					<tr><td class="settings-dev-errors-td text-muted-foreground" colspan="6">
+					<tr><td class="settings-dev-errors-td settings-dev-text-muted" colspan="6">
 						Could not load errors{data.dbHealth.ok ? '' : ' — database is unreachable'}.
 					</td></tr>
 				{:else if data.errors.length === 0}
-					<tr><td class="settings-dev-errors-td text-muted-foreground" colspan="6">No errors logged yet.</td></tr>
+					<tr><td class="settings-dev-errors-td settings-dev-text-muted" colspan="6">No errors logged yet.</td></tr>
 				{:else}
 					{#each data.errors as e (e.id)}
-						<tr class="border-t border-border">
-							<td class="settings-dev-errors-td font-mono text-xs">{new Date(e.occurredAt).toLocaleString()}</td>
+						<tr class="settings-dev-border-t">
+							<td class="settings-dev-errors-td settings-dev-font-mono settings-dev-text-xs">{new Date(e.occurredAt).toLocaleString()}</td>
 							<td class="settings-dev-errors-td">{e.status ?? '—'}</td>
-							<td class="settings-dev-errors-td font-mono text-xs">{e.source}</td>
-							<td class="settings-dev-errors-td font-mono text-xs">{e.route ?? '—'}</td>
+							<td class="settings-dev-errors-td settings-dev-font-mono settings-dev-text-xs">{e.source}</td>
+							<td class="settings-dev-errors-td settings-dev-font-mono settings-dev-text-xs">{e.route ?? '—'}</td>
 							<td class="settings-dev-errors-td">
 								<span class="settings-dev-errors-message">{e.message}</span>
 							</td>
 							<td class="settings-dev-errors-td">
-								<a class="text-primary hover:underline" href={`/settings/dev/errors/${e.id}`}>View</a>
+								<a class="settings-dev-text-primary settings-dev-hover-underline" href={`/settings/dev/errors/${e.id}`}>View</a>
 							</td>
 						</tr>
 					{/each}
