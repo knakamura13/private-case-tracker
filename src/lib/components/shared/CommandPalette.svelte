@@ -142,7 +142,7 @@
 
 {#if open}
 	<div
-		class="cmdpal-fixed cmdpal-inset-0 cmdpal-z-50 cmdpal-bg-background-60 cmdpal-p-4 cmdpal-backdrop-blur-sm cmdpal-flex {window.innerWidth < 768 ? 'cmdpal-items-end cmdpal-justify-center' : 'cmdpal-items-start cmdpal-justify-center cmdpal-pt-24'}"
+		class="dialog-backdrop"
 		role="dialog"
 		aria-modal="true"
 		aria-label="Search"
@@ -153,62 +153,64 @@
 		}}
 	>
 		<div class="cmdpal-absolute cmdpal-inset-0 cmdpal-z-0 cmdpal-cursor-default" aria-hidden="true" onclick={() => (open = false)}></div>
-		<div bind:this={dialogContentEl} class="cmdpal-relative cmdpal-z-10 cmdpal-w-full {window.innerWidth < 768 ? 'cmdpal-max-h-85vh cmdpal-rounded-t-lg' : 'cmdpal-max-w-xl cmdpal-max-h-60vh'} cmdpal-overflow-hidden cmdpal-rounded-lg cmdpal-border cmdpal-bg-card cmdpal-shadow-xl" style="padding-bottom: env(safe-area-inset-bottom)">
-			<div class="cmdpal-flex cmdpal-items-center cmdpal-gap-2 cmdpal-border-b cmdpal-px-3">
-				<Search class="cmdpal-icon-sm cmdpal-text-muted" />
-				<label class="cmdpal-sr-only" for="command-palette-input">Search</label>
-				<input
-					id="command-palette-input"
-					bind:this={inputEl}
-					bind:value={query}
-					oninput={onInput}
-					onkeydown={onKeydown}
-					aria-controls="command-palette-results"
-					aria-activedescendant={activeItem ? `cp-opt-${activeItem.type}-${activeItem.id}` : undefined}
-					aria-autocomplete="list"
-					placeholder="Search across tasks, forms, evidence, questions, notes, files…"
-					class="cmdpal-h-12 cmdpal-w-full cmdpal-bg-transparent cmdpal-text-sm cmdpal-focus-visible-outline-none"
-				/>
-				<button class="cmdpal-rounded-md cmdpal-p-1 cmdpal-hover-bg-muted" aria-label="Close" onclick={() => (open = false)}>
-					<X class="cmdpal-icon-sm" />
-				</button>
-			</div>
-			<div class="cmdpal-max-h-60vh cmdpal-overflow-y-auto">
-				{#if loading}
-					<p class="cmdpal-p-6 cmdpal-text-center cmdpal-text-sm cmdpal-text-muted">Searching…</p>
-				{:else if !query.trim()}
-					<p class="cmdpal-p-6 cmdpal-text-center cmdpal-text-sm cmdpal-text-muted">Type to search your workspace.</p>
-				{:else if flat.length === 0}
-					<p class="cmdpal-p-6 cmdpal-text-center cmdpal-text-sm cmdpal-text-muted">No results for "{query}"</p>
-				{:else}
-					{#each Object.entries(results) as [group, items]}
-						{#if items.length > 0}
-							<div>
-								<p class="cmdpal-bg-muted-60 cmdpal-px-3 cmdpal-py-1 cmdpal-text-xs cmdpal-font-medium cmdpal-uppercase cmdpal-tracking-wide cmdpal-text-muted">{group}</p>
-								<ul id="command-palette-results" role="listbox" aria-label="Search results">
-									{#each items as item, _i (item.type + item.id)}
-										{@const globalIndex = flat.findIndex((f) => f.type === item.type && f.id === item.id)}
-										{@const optionId = `cp-opt-${item.type}-${item.id}`}
-										<li role="option" id={optionId} aria-selected={activeIndex === globalIndex}>
-											<a
-												href={item.href}
-												target={item.type === 'quicklink' ? '_blank' : undefined}
-												rel={item.type === 'quicklink' ? 'noopener noreferrer' : undefined}
-												onclick={() => (open = false)}
-												class="cmdpal-flex cmdpal-flex-col cmdpal-border-b cmdpal-border-50 cmdpal-px-3 cmdpal-py-2 cmdpal-text-sm cmdpal-hover-bg-muted {activeIndex === globalIndex ? 'cmdpal-bg-muted' : ''}"
-											>
-												<span class="cmdpal-font-medium">{item.title}</span>
-												{#if item.description}
-													<span class="cmdpal-truncate cmdpal-text-xs cmdpal-text-muted">{item.description}</span>
-												{/if}
-											</a>
-										</li>
-									{/each}
-								</ul>
-							</div>
-						{/if}
-					{/each}
-				{/if}
+		<div bind:this={dialogContentEl} class="dialog-content" style="max-width: 640px;">
+			<div class="cmdpal-container">
+				<div class="cmdpal-search-row">
+					<Search size={20} style="color: var(--ink-3);" />
+					<label class="cmdpal-sr-only" for="command-palette-input">Search</label>
+					<input
+						id="command-palette-input"
+						bind:this={inputEl}
+						bind:value={query}
+						oninput={onInput}
+						onkeydown={onKeydown}
+						aria-controls="command-palette-results"
+						aria-activedescendant={activeItem ? `cp-opt-${activeItem.type}-${activeItem.id}` : undefined}
+						aria-autocomplete="list"
+						placeholder="Search tasks, evidence, questions…"
+						class="cmdpal-input"
+					/>
+					<button class="btn sm ghost" style="padding: 0 8px; height: 32px;" aria-label="Close" onclick={() => (open = false)}>
+						<X size={16} />
+					</button>
+				</div>
+				<div class="cmdpal-results">
+					{#if loading}
+						<div class="cmdpal-empty">Searching…</div>
+					{:else if !query.trim()}
+						<div class="cmdpal-empty">Type to search your workspace.</div>
+					{:else if flat.length === 0}
+						<div class="cmdpal-empty">No results for "{query}"</div>
+					{:else}
+						{#each Object.entries(results) as [group, items]}
+							{#if items.length > 0}
+								<div>
+									<div class="cmdpal-group-title">{group}</div>
+									<ul id="command-palette-results" role="listbox" aria-label="Search results" style="list-style: none; padding: 0; margin: 0;">
+										{#each items as item, _i (item.type + item.id)}
+											{@const globalIndex = flat.findIndex((f) => f.type === item.type && f.id === item.id)}
+											{@const optionId = `cp-opt-${item.type}-${item.id}`}
+											<li role="option" id={optionId} aria-selected={activeIndex === globalIndex}>
+												<a
+													href={item.href}
+													target={item.type === 'quicklink' ? '_blank' : undefined}
+													rel={item.type === 'quicklink' ? 'noopener noreferrer' : undefined}
+													onclick={() => (open = false)}
+													class="cmdpal-item {activeIndex === globalIndex ? 'active' : ''}"
+												>
+													<span class="cmdpal-item-title">{item.title}</span>
+													{#if item.description}
+														<span class="cmdpal-item-desc">{item.description}</span>
+													{/if}
+												</a>
+											</li>
+										{/each}
+									</ul>
+								</div>
+							{/if}
+						{/each}
+					{/if}
+				</div>
 			</div>
 		</div>
 	</div>

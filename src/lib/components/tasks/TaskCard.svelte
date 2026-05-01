@@ -50,13 +50,9 @@
 		return /[\p{L}\p{N}]/u.test(description?.trim() ?? '');
 	}
 
-	const isOverdue = $derived(() => {
-		if (!task.dueDate || task.status === 'DONE') return false;
-		const due = new Date(task.dueDate);
-		const today = new Date();
-		today.setHours(0, 0, 0, 0);
-		return due < today;
-	});
+	const isOverdue = $derived(
+		task.dueDate && task.status !== 'DONE' && new Date(task.dueDate) < new Date(new Date().setHours(0, 0, 0, 0))
+	);
 
 	const taskCardClasses = $derived(
 		`task-card-inner ${!isAnyDragging ? 'task-card-hoverable' : ''} ${isDragging ? 'task-card-dragging' : ''} ${task.status === 'DONE' ? 'task-card-done' : ''}`.trim()
@@ -105,7 +101,7 @@
 		<Card class="task-card-p-4 task-card-border-none task-card-shadow-none task-card-bg-transparent">
 		<div class="task-card-content">
 			<div class="task-card-body">
-				{#if isOverdue()}
+				{#if isOverdue}
 					<div class="task-card-overdue">● overdue</div>
 				{/if}
 				<p class="task-card-title">{task.title}</p>

@@ -622,13 +622,19 @@
 			ondragleave={handleDragLeave}
 			ondrop={(e) => handleDrop(e, folder.id)}
 			ondragend={handleDragEnd}
+            onclick={(e) => toggleFolderPopover(folder.id, e)}
             role="button"
             tabindex="0"
 		>
-			<div style="width: 48px; height: 48px; background: var(--lilac); border: 1px solid var(--lilac-d); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+			<div style="width: 48px; height: 48px; background: var(--lilac); border: 1px solid var(--lilac-d); border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative;">
 				<Folder style="width: 24px; height: 24px; color: var(--lilac-d);" />
+                {#if folderLinks.length > 0}
+                    <div style="position: absolute; top: -4px; right: -4px; background: var(--lilac-d); color: white; font-size: 10px; font-weight: 700; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--surface);">
+                        {folderLinks.length}
+                    </div>
+                {/if}
 			</div>
-			<span style="font-size: 11px; font-weight: 500; text-align: center;">{folder.name}</span>
+			<span style="font-size: 11px; font-weight: 500; text-align: center;">{folder.name || 'Untitled'}</span>
 		</div>
 	{/each}
 
@@ -669,6 +675,68 @@
 		<span style="font-size: 11px; font-weight: 500; color: var(--ink-3);">Add link</span>
 	</button>
 </div>
+
+{#if folderPopoverId}
+    {@const folder = visibleFolders.find(f => f.id === folderPopoverId)}
+    {@const folderLinks = folderLinksMap[folderPopoverId] ?? []}
+    <Dialog open={!!folderPopoverId} onClose={closeFolderDialog} maxWidth="max-w-md">
+        <div class="modal-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 32px; height: 32px; background: var(--lilac); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <Folder style="width: 16px; height: 16px; color: var(--lilac-d);" />
+                </div>
+                <h3 class="display" style="font-size: 20px; margin: 0;">{folder?.name || 'Untitled Folder'}</h3>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <Button variant="ghost" size="sm" onclick={() => folder && openEditFolder(folder)}>
+                    <MoreHorizontal size={16} />
+                </Button>
+                <Button variant="ghost" size="sm" onclick={closeFolderDialog}>
+                    <X size={16} />
+                </Button>
+            </div>
+        </div>
+        <div class="modal-content" style="display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto; padding: 4px;">
+            {#each folderLinks as link}
+                <div class="card" style="padding: 12px; display: flex; align-items: center; justify-content: space-between; background: var(--surface-2); border-color: transparent;">
+                    <div 
+                        style="display: flex; align-items: center; gap: 12px; cursor: pointer; flex: 1; min-width: 0;"
+                        onclick={() => openLink(link.url)}
+                        role="button"
+                        tabindex="0"
+                    >
+                        <div style="width: 32px; height: 32px; background: var(--surface); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            {#if brokenFavicons.has(link.id) || !(link.faviconUrl || preloadedFavicons.has(link.id))}
+                                <Link2 style="width: 16px; height: 16px; color: var(--ink-3);" />
+                            {:else}
+                                <img src={faviconForLink(link)} alt="" style="width: 16px; height: 16px; object-fit: contain;" />
+                            {/if}
+                        </div>
+                        <span style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{labelFor(link)}</span>
+                    </div>
+                    <div style="display: flex; gap: 4px;">
+                        <Button variant="ghost" size="sm" onclick={() => moveLinkToRoot(link.id)} title="Move to root">
+                            <Plus style="width: 14px; height: 14px; transform: rotate(45deg);" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onclick={() => openEdit(link)}>
+                            <MoreHorizontal size={14} />
+                        </Button>
+                    </div>
+                </div>
+            {/each}
+            {#if folderLinks.length === 0}
+                <div style="padding: 32px; text-align: center; color: var(--ink-3); font-size: 13px;">
+                    This folder is empty.
+                </div>
+            {/if}
+        </div>
+        <div class="modal-footer">
+            <Button variant="outline" style="width: 100%;" onclick={() => folder && openAdd(folder)}>
+                <Plus size={16} style="margin-right: 8px;" /> Add link to folder
+            </Button>
+        </div>
+    </Dialog>
+{/if}
 
 {#if modalOpen}
 	<Dialog open={modalOpen} onClose={closeModal} maxWidth="max-w-md">

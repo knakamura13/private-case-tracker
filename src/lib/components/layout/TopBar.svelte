@@ -24,13 +24,8 @@
 
 	<div style="flex: 1;"></div>
 
-	<!-- Notifications -->
-	<button class="btn ghost btn-icon-pill">
-		<Bell size={18} />
-	</button>
-
 	<!-- Global Add -->
-	<button class="btn primary">
+	<button class="btn primary" onclick={() => alert('Global Add clicked - modal coming soon')}>
 		<Plus size={16} />
 		<span class="add-label">Add</span>
 	</button>
