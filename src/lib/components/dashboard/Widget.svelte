@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Card from '$lib/components/ui/Card.svelte';
 	let {
 		title,
 		href,
@@ -13,12 +12,12 @@
 	} = $props();
 </script>
 
-<Card class={`widget ${className}`}>
-	<div class="widget-header">
-		<h2 class="widget-title">{title}</h2>
+<div class="card {className}" style="display: flex; flex-direction: column; gap: 16px;">
+	<div style="display: flex; align-items: center; justify-content: space-between;">
+		<h3 class="display" style="font-size: 20px; margin: 0;">{title}</h3>
 		{#if href}
-			<a href={href} class="widget-link">Open</a>
+			<a href={href} class="btn sm ghost">View all</a>
 		{/if}
 	</div>
-	<div class="widget-content">{@render children()}</div>
-</Card>
+	<div style="flex: 1;">{@render children()}</div>
+</div>

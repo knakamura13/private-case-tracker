@@ -1,9 +1,9 @@
-	<script lang="ts">
-		import { onMount } from 'svelte';
-		import { fade, fly } from 'svelte/transition';
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import { fade, fly } from 'svelte/transition';
 	import { page } from '$app/stores';
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
-	import TopBar from '$lib/components/layout/TopBar.svelte';
+	import TopBar from '$lib/components/layout/Topbar.svelte';
 	import CommandPalette from '$lib/components/shared/CommandPalette.svelte';
 	import { initTruncateTitles } from '$lib/utils/truncate-titles';
 	import type { LayoutData } from './$types';
@@ -49,13 +49,16 @@
 	onMount(initTruncateTitles);
 </script>
 
-<div class="app-layout-flex app-layout-h-screen app-layout-bg-background">
-	<div class="app-layout-hidden app-layout-md-block app-layout-sticky app-layout-top-0 app-layout-h-screen">
+<div class="app-layout">
+	<!-- Desktop Sidebar -->
+	<div class="sidebar-wrapper">
 		<Sidebar workspaceName={data.workspace.name} />
 	</div>
+
+	<!-- Mobile Sidebar Dialog -->
 	{#if sidebarOpen}
 		<div
-			class="app-layout-fixed app-layout-inset-0 app-layout-z-40 app-layout-md-hidden"
+			class="mobile-sidebar-container"
 			role="dialog"
 			aria-modal="true"
 			aria-label="Sidebar"
@@ -67,14 +70,14 @@
 		>
 			<div
 				transition:fade={{ duration: 200 }}
-				class="app-layout-absolute app-layout-inset-0 app-layout-bg-background-70 app-layout-backdrop-blur-sm"
+				class="mobile-sidebar-overlay"
 				aria-hidden="true"
 				onclick={() => (sidebarOpen = false)}
 			></div>
 			<div
 				bind:this={sidebarDialogEl}
 				tabindex="-1"
-				class="app-layout-relative app-layout-z-10 app-layout-h-full app-layout-w-60"
+				class="mobile-sidebar-panel"
 				transition:fly={{ x: -280, duration: 220, opacity: 1 }}
 			>
 				<Sidebar workspaceName={data.workspace.name} onNavigate={() => (sidebarOpen = false)} />
@@ -82,22 +85,77 @@
 		</div>
 	{/if}
 
-	<div class="app-layout-flex app-layout-min-w-0 app-layout-flex-1 app-layout-min-h-0 app-layout-flex-col">
+	<!-- Main Area -->
+	<div class="main-area">
 		<TopBar
-			user={data.user}
 			onOpenSearch={() => (paletteOpen = true)}
 			onToggleSidebar={() => {
 				if (!sidebarOpen) sidebarOpenerEl = document.activeElement as HTMLElement | null;
 				sidebarOpen = !sidebarOpen;
 			}}
 		/>
-		<main id="main" tabindex="-1" class="app-layout-flex-1 app-layout-overflow-y-auto app-layout-overflow-x-hidden app-layout-p-4 app-layout-pb-24 app-layout-md-p-12 app-layout-md-pb-32">
+		<main id="main" tabindex="-1" class="main-content">
 			{#key $page.url.pathname}
 				{@render children()}
 			{/key}
 		</main>
 	</div>
 </div>
+
+<style>
+	.app-layout {
+		display: flex;
+		height: 100vh;
+		background: var(--bg);
+	}
+	.sidebar-wrapper {
+		display: none;
+		position: sticky;
+		top: 0;
+		height: 100vh;
+	}
+	@media (min-width: 768px) {
+		.sidebar-wrapper {
+			display: block;
+		}
+	}
+	.mobile-sidebar-container {
+		position: fixed;
+		inset: 0;
+		z-index: 40;
+	}
+	@media (min-width: 768px) {
+		.mobile-sidebar-container {
+			display: none;
+		}
+	}
+	.mobile-sidebar-overlay {
+		position: absolute;
+		inset: 0;
+		background: rgba(26, 26, 24, 0.4);
+		backdrop-filter: blur(4px);
+	}
+	.mobile-sidebar-panel {
+		position: relative;
+		z-index: 10;
+		height: 100%;
+		width: 280px;
+	}
+	.main-area {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+		min-width: 0;
+		min-height: 0;
+	}
+	.main-content {
+		flex: 1;
+		min-width: 0;
+		overflow-y: auto;
+		padding: 32px 32px 48px;
+		background: var(--bg);
+	}
+</style>
 
 <CommandPalette bind:open={paletteOpen} />
 
