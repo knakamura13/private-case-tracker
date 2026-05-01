@@ -15,6 +15,5 @@
 	}
 </script>
 
-<a href="#main" class="skip-link">Skip to main content</a>
 <Toaster richColors position="top-right" />
 {@render children()}

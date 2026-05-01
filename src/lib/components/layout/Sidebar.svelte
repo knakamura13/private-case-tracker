@@ -3,10 +3,10 @@
 	import { navigation, getPageNumber } from '$lib/constants/navigation';
 	import { LogOut, Settings, Clock } from 'lucide-svelte';
 
-	let { workspaceName, onNavigate }: { workspaceName: string; onNavigate?: () => void } = $props();
+	let { workspaceName: _workspaceName, onNavigate }: { workspaceName: string; onNavigate?: () => void } = $props();
 </script>
 
-<aside class="sidebar" style="width: 240px; padding: 28px 20px; background: var(--bg); border-right: 1px solid var(--hairline); display: flex; flex-direction: column; gap: 28px; flex-shrink: 0; height: 100%;">
+<aside class="sidebar">
 	<!-- Header -->
 	<div style="display: flex; align-items: center; gap: 12px; padding: 0 8px;">
 		<img src="/monarch-logo.png" alt="Monarch" width="40" height="32" style="flex-shrink: 0; display: block; object-fit: contain;" />
@@ -39,15 +39,17 @@
 
 	<!-- Account Section -->
 	<div>
-		<div class="eyebrow" style="padding: 0 16px 10px;">Account</div>
-		<div style="display: flex; flex-direction: column; gap: 2px;">
-			<a href="/settings" class="nav-item" style="display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 12px; font-size: 14px; font-weight: 500; text-decoration: none; color: var(--ink-2);">
-				<Settings size={18} />
-				<span>Settings</span>
-			</a>
-		</div>
+	<div class="eyebrow" style="padding: 0 16px 10px;">Account</div>
+	<div style="display: flex; flex-direction: column; gap: 2px;">
+		{#if true}
+	        {@const active = $page.url.pathname.startsWith('/settings')}
+	        <a href="/settings" class="nav-item {active ? 'active' : ''}" style="display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 12px; font-size: 14px; font-weight: 500; text-decoration: none; color: {active ? 'var(--surface)' : 'var(--ink-2)'}; background: {active ? 'var(--ink)' : 'transparent'};">
+	                <Settings size={18} />
+	                <span>Settings</span>
+	        </a>
+		{/if}
 	</div>
-
+	</div>
 	<!-- Footer -->
 	<div style="margin-top: auto;">
 		<!-- Next Step Widget -->
@@ -85,3 +87,20 @@
 		</div>
 	</div>
 </aside>
+
+<style>
+	.sidebar {
+		width: 240px;
+		padding: 28px 20px;
+		background: var(--bg);
+		border-right: 1px solid var(--hairline);
+		display: flex;
+		flex-direction: column;
+		gap: 28px;
+		height: 100%;
+		min-height: 0;
+		box-sizing: border-box;
+		overflow-y: auto;
+		flex-shrink: 0;
+	}
+</style>
