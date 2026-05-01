@@ -1,8 +1,6 @@
 <script lang="ts">
 	import AuthShell from '$lib/components/layout/AuthShell.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import Input from '$lib/components/ui/Input.svelte';
-	import Label from '$lib/components/ui/Label.svelte';
 	import type { ActionData, PageData } from './$types';
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 </script>
@@ -14,21 +12,21 @@
 		: 'Your account exists, but you have not been invited to a workspace yet.'}
 >
 	{#if data.isFirstUser}
-		<form method="post" action="?/create" class="auth-form">
+		<form method="post" action="?/create" style="display: flex; flex-direction: column; gap: 16px;">
 			<div>
-				<Label for="name">Workspace name</Label>
-				<Input id="name" name="name" value="Our case" required />
+				<label for="name" style="display: block; font-size: 13px; margin-bottom: 4px;">Workspace name</label>
+				<input id="name" name="name" value="Our case" required class="input" style="width: 100%;" />
 			</div>
-			{#if form?.error}<p class="auth-text-sm auth-text-destructive">{form.error}</p>{/if}
-			<Button type="submit" class="auth-w-full">Create workspace</Button>
+			{#if form?.error}<p style="font-size: 13px; color: var(--blush-d);">{form.error}</p>{/if}
+			<Button type="submit" style="width: 100%;">Create workspace</Button>
 		</form>
 	{:else}
-		<p class="auth-text-sm auth-text-muted">
+		<p style="font-size: 13px; color: var(--ink-2); line-height: 1.5;">
 			Ask the workspace owner to send an invitation to your email. Invitations are delivered from
 			within Settings → Members.
 		</p>
-		<form method="post" action="/logout" class="auth-mt-4">
-			<Button type="submit" variant="outline" class="auth-w-full">Sign out</Button>
+		<form method="post" action="/logout" style="margin-top: 24px;">
+			<Button type="submit" variant="outline" style="width: 100%;">Sign out</Button>
 		</form>
 	{/if}
 </AuthShell>
