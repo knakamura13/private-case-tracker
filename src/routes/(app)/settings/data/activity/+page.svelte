@@ -7,7 +7,7 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
-<PageHeader title="Activity" description="Internal audit feed for this workspace." />
+<PageHeader title="Activity" sub="Internal audit feed for this workspace." />
 <Card class="settings-activity-p-0">
 	<ul class="settings-activity-list">
 		{#each data.items as a (a.id)}

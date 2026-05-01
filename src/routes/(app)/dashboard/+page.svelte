@@ -39,7 +39,7 @@
 						<CheckSquare size={18} style="color: var(--ink-3);" />
 						<div style="flex: 1;">
 							<div style="font-size: 14px; font-weight: 600;">{task.title}</div>
-							<div class="mono" style="font-size: 11px; color: var(--ink-3);">Due {new Date(task.dueDate).toLocaleDateString()}</div>
+							<div class="mono" style="font-size: 11px; color: var(--ink-3);">Due {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No date'}</div>
 						</div>
 						<div class="pill s-active">In progress</div>
 					</div>

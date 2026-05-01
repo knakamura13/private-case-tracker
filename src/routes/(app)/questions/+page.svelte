@@ -55,7 +55,7 @@
 	]);
 </script>
 
-<PageHeader title="Questions" description="Track unresolved questions, their sources, and answers." number={getPageNumber('/questions')}>
+<PageHeader title="Questions" sub="Track unresolved questions, their sources, and answers." number={getPageNumber('/questions')}>
 	{#snippet actions()}
 		<Button onclick={() => showCreateModal = true}>
 			{#snippet children()}<Plus class="questions-icon-sm" /> New question{/snippet}

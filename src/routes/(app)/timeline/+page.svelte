@@ -73,7 +73,7 @@
 	}
 </script>
 
-<PageHeader title="Timeline" description="Case phases from preparation through final outcome." number={getPageNumber('/timeline')} />
+<PageHeader title="Timeline" sub="Case phases from preparation through final outcome." number={getPageNumber('/timeline')} />
 
 <div class="timeline-container">
 	{#each grouped as g, _i (g.phase)}
@@ -168,7 +168,6 @@
 					}
 				};
 			}}
-			members={data.members}
 			initial={{
 				id: milestone.id,
 				title: milestone.title,

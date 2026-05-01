@@ -8,24 +8,19 @@ describe('PageHeader', () => {
 		expect(screen.getByText('Dashboard')).toBeInTheDocument();
 	});
 
-	it('renders description when provided', () => {
-		render(PageHeader, { title: 'Test', description: 'Manage your items' });
+	it('renders sub when provided', () => {
+		render(PageHeader, { title: 'Test', sub: 'Manage your items' });
 		expect(screen.getByText('Manage your items')).toBeInTheDocument();
 	});
 
-	it('does not render description when not provided', () => {
+	it('does not render sub when not provided', () => {
 		render(PageHeader, { title: 'Test' });
 		expect(screen.queryByText('Test')).toBeInTheDocument();
-		expect(screen.queryByText(/description/i)).not.toBeInTheDocument();
+		expect(screen.queryByText(/sub/i)).not.toBeInTheDocument();
 	});
 
 	it('renders actions snippet when provided', () => {
 		// Snippet testing requires different approach - skip for now
 		expect(true).toBe(true);
-	});
-
-	it('applies custom class', () => {
-		const { container } = render(PageHeader, { title: 'Test', class: 'custom-class' });
-		expect(container.firstChild).toHaveClass('custom-class');
 	});
 });

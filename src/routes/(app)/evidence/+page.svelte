@@ -54,7 +54,7 @@
 	}
 </script>
 
-<PageHeader title="Evidence" description="Track evidence collection progress by category." number={getPageNumber('/evidence')}>
+<PageHeader title="Evidence" sub="Track evidence collection progress by category." number={getPageNumber('/evidence')}>
 	{#snippet actions()}
 		{#if data.isOwner}
 			<Button onclick={openAddModal}>

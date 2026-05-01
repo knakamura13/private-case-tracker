@@ -2,9 +2,10 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import RichText from '$lib/components/ui/RichText.svelte';
+	import ByAvatar from '$lib/components/shared/ByAvatar.svelte';
 	import { titleCase } from '$lib/utils/format';
 	import { fmtDate } from '$lib/utils/dates';
-	import { GripVertical } from 'lucide-svelte';
+	import { Calendar } from 'lucide-svelte';
 
 	let {
 		task,
@@ -49,12 +50,16 @@
 		return /[\p{L}\p{N}]/u.test(description?.trim() ?? '');
 	}
 
-	function ownerLabel(owner: { id: string; name: string | null; email: string } | null) {
-		return owner?.name?.trim() || owner?.email?.trim() || '';
-	}
+	const isOverdue = $derived(() => {
+		if (!task.dueDate || task.status === 'DONE') return false;
+		const due = new Date(task.dueDate);
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+		return due < today;
+	});
 
 	const taskCardClasses = $derived(
-		`task-card-inner ${!isAnyDragging ? 'task-card-hoverable' : ''} ${isDragging ? 'task-card-dragging' : ''}`.trim()
+		`task-card-inner ${!isAnyDragging ? 'task-card-hoverable' : ''} ${isDragging ? 'task-card-dragging' : ''} ${task.status === 'DONE' ? 'task-card-done' : ''}`.trim()
 	);
 </script>
 
@@ -99,39 +104,38 @@
 	>
 		<Card class="task-card-p-4 task-card-border-none task-card-shadow-none task-card-bg-transparent">
 		<div class="task-card-content">
-			<GripVertical class="task-card-grip task-card-icon-4 task-card-shrink-0 text-muted-foreground" />
 			<div class="task-card-body">
+				{#if isOverdue()}
+					<div class="task-card-overdue">● overdue</div>
+				{/if}
 				<p class="task-card-title">{task.title}</p>
 				{#if task.priority !== 'MEDIUM'}
-					<Badge variant="outline" class="task-card-shrink-0">{titleCase(task.priority)}</Badge>
+					<Badge variant="outline" class="task-card-badge">{titleCase(task.priority)}</Badge>
 				{/if}
 				{#if hasMeaningfulDescription(task.description)}
-					<RichText text={task.description} lineClamp={true} class="task-card-mt-1" />
+					<RichText text={task.description} lineClamp={true} class="task-card-description" />
 				{/if}
 				{#if task.checklist && task.checklist.length > 0}
 					<div class="task-card-checklist">
 						<div class="task-card-checklist-summary">
-							{task.checklist.filter((ci) => ci.done).length}/{task.checklist.length} checklist items
+							{task.checklist.filter((ci) => ci.done).length}/{task.checklist.length}
 						</div>
-						<ul class="task-card-checklist-list">
-							{#each task.checklist.slice(0, 3) as ci (ci.id)}
-								<li class="task-card-checklist-item">
-									<input type="checkbox" checked={ci.done} disabled class="task-card-checklist-checkbox" />
-									<span class={ci.done ? 'task-card-checklist-text-done' : ''}>{ci.text}</span>
-								</li>
-							{/each}
-							{#if task.checklist.length > 3}
-								<li class="task-card-checklist-more">+{task.checklist.length - 3} more</li>
-							{/if}
-						</ul>
 					</div>
 				{/if}
-				{#if task.dueDate || ownerLabel(task.owner)}
-					<div class="task-card-meta">
-						{#if task.dueDate}<span>Due {fmtDate(task.dueDate)}</span>{/if}
-						{#if ownerLabel(task.owner)}<span>{ownerLabel(task.owner)}</span>{/if}
-					</div>
-				{/if}
+				<div class="task-card-footer">
+					{#if task.dueDate}
+						<div class="task-card-due mono">
+							<Calendar class="task-card-icon-xs" />
+							{fmtDate(task.dueDate)}
+						</div>
+					{/if}
+					{#if task.checklist && task.checklist.length > 0}
+						<span class="task-card-subtask-count mono">{task.checklist.filter((ci) => ci.done).length}/{task.checklist.length}</span>
+					{/if}
+					{#if task.owner}
+						<ByAvatar owner={task.owner} size="sm" color="sage" />
+					{/if}
+				</div>
 			</div>
 		</div>
 		</Card>

@@ -1,14 +1,13 @@
 <script lang="ts">
 	import Input from '$lib/components/ui/Input.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
-	import Select from '$lib/components/ui/Select.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import Card from '$lib/components/ui/Card.svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
 	import RichText from '$lib/components/ui/RichText.svelte';
+	import ByAvatar from '$lib/components/shared/ByAvatar.svelte';
 	import { showSuccessToast, showErrorToast } from '$lib/stores/toast';
-	import { X, Plus, Calendar, CheckSquare, User, MoreHorizontal } from 'lucide-svelte';
+	import { X, Plus, Calendar, CheckSquare, User, MoreHorizontal, Image, Paperclip, Link, FileText } from 'lucide-svelte';
 	import { invalidateAll } from '$app/navigation';
 
 	let { open, onClose, action, deleteAction, onenhance, members, initial, error, errorId }: {
@@ -38,21 +37,11 @@
 	// Button visibility states
 	let showDueDatePicker = $state(false);
 	let showChecklistInput = $state(false);
-	let showOwnerDropdown = $state(false);
 	let showMenuDropdown = $state(false);
 	let isEditingDescription = $state(false);
-	let openChecklistMenuId = $state<string | null>(null);
 	let editingChecklistId = $state<string | null>(null);
 	let editingChecklistText = $state('');
-	let newChecklistInputEl = $state<HTMLInputElement | null>(null);
 	let dueDateInputEl = $state<HTMLInputElement | null>(null);
-
-	// Focus new checklist item input when shown
-	$effect(() => {
-		if (showChecklistInput && newChecklistInputEl) {
-			newChecklistInputEl.focus();
-		}
-	});
 
 	// Click outside handler for dropdowns
 	function clickOutside(node: HTMLElement, callback: () => void) {
@@ -90,6 +79,36 @@
 	let ownerIdValue = $state('');
 	let selectedOwner = $derived(members.find((m) => m.id === ownerIdValue) ?? null);
 
+	// Status pill mapping
+	const statusPillClass = $derived(() => {
+		switch (statusValue) {
+			case 'TODO': return 's-active';
+			case 'IN_PROGRESS': return 's-note';
+			case 'WAITING': return 's-waiting';
+			case 'DONE': return 's-done';
+			default: return '';
+		}
+	});
+
+	const statusLabel = $derived(() => {
+		switch (statusValue) {
+			case 'TODO': return 'This week';
+			case 'IN_PROGRESS': return 'Soon';
+			case 'WAITING': return 'Waiting';
+			case 'DONE': return 'Done';
+			default: return statusValue;
+		}
+	});
+
+	// Overdue calculation
+	const isOverdue = $derived(() => {
+		if (!dueDateValue || statusValue === 'DONE') return false;
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+		const due = new Date(dueDateValue);
+		return due < today;
+	});
+
 	const ALLOWED_FIELDS = ['id', 'title', 'description', 'status', 'priority', 'ownerId', 'dueDate', 'checklist'] as const;
 
 	// Initialize reactive values from initial props when modal opens
@@ -111,10 +130,8 @@
 			// Reset state when modal closes
 			showDueDatePicker = false;
 			showChecklistInput = false;
-			showOwnerDropdown = false;
 			showMenuDropdown = false;
 			isEditingDescription = false;
-			openChecklistMenuId = null;
 			editingChecklistId = null;
 			editingChecklistText = '';
 			focusedField = null;
@@ -175,11 +192,6 @@
 		if (editableChecklist.length === 0) return 0;
 		const done = editableChecklist.filter((ci) => ci.done).length;
 		return Math.round((done / editableChecklist.length) * 100);
-	}
-
-	function ownerInitial(owner: unknown) {
-		const o = owner as { name?: string; email?: string };
-		return o?.name?.[0] || o?.email?.[0] || 'U';
 	}
 
 	function handleDueDateSave() {
@@ -277,25 +289,20 @@
 	<form method="post" {action} class="modal-form">
 		<!-- Header -->
 		<div class="modal-header">
-			<div class="modal-flex modal-flex-1 modal-items-start">
-				<Input
-					name="title"
-					bind:value={titleValue}
-					oninput={() => triggerAutoSave()}
-					onfocus={() => markFocused('title')}
-					onblur={() => {
-						markBlurred('title');
-						triggerAutoSave(true);
-					}}
-					class="modal-title-input"
-					placeholder="Title"
-				/>
+			<div class="modal-header-left">
+				<span class="pill {statusPillClass()}">{statusLabel()}</span>
 			</div>
-			<div class="modal-flex modal-items-center modal-gap-1">
+			<div class="modal-header-right">
+				<Button type="button" variant="ghost" size="sm" class="modal-icon-btn">
+					<Image class="modal-icon-sm" />
+				</Button>
+				<Button type="button" variant="ghost" size="sm" class="modal-icon-btn">
+					<Paperclip class="modal-icon-sm" />
+				</Button>
 				{#if deleteAction}
 					<div class="modal-dropdown" use:clickOutside={() => showMenuDropdown = false}>
-						<Button type="button" variant="ghost" size="sm" onclick={() => showMenuDropdown = !showMenuDropdown} class="modal-shrink-0">
-							{#snippet children()}<MoreHorizontal class="modal-icon-md" />{/snippet}
+						<Button type="button" variant="ghost" size="sm" onclick={() => showMenuDropdown = !showMenuDropdown} class="modal-icon-btn">
+							<MoreHorizontal class="modal-icon-sm" />
 						</Button>
 						{#if showMenuDropdown}
 							<div class="modal-dropdown-menu">
@@ -323,294 +330,259 @@
 						{/if}
 					</div>
 				{/if}
-				<Button type="button" variant="ghost" size="sm" onclick={saveBeforeClose} class="modal-shrink-0">
-					{#snippet children()}<X class="modal-icon-md" />{/snippet}
+				<Button type="button" variant="ghost" size="sm" onclick={saveBeforeClose} class="modal-icon-btn">
+					<X class="modal-icon-sm" />
 				</Button>
 			</div>
 		</div>
 
-		<!-- Main Content -->
-		<div class="modal-content-two-col">
-			<!-- Left Column -->
-			<div class="modal-content-left">
-				<!-- Actions Bar -->
-				<div class="modal-actions-bar">
-					<div class="modal-dropdown" use:clickOutside={() => showOwnerDropdown = false}>
-						<Button type="button" variant="outline" size="sm" onclick={() => showOwnerDropdown = !showOwnerDropdown}>
-							{#snippet children()}<User class="modal-icon-3-5" /> {selectedOwner ? selectedOwner.name ?? selectedOwner.email : 'Owner'}{/snippet}
-						</Button>
-						{#if showOwnerDropdown}
-							<div class="modal-dropdown-menu" style="left: 0; right: auto; width: 12rem;">
-								<button
-									type="button"
-									class="modal-dropdown-item"
-									onclick={() => {
-										ownerIdValue = '';
-										showOwnerDropdown = false;
-										triggerAutoSave(true);
-									}}
-								>
-									Unassigned
-								</button>
-								{#each members as m (m.id)}
-									<button
-										type="button"
-										class="modal-dropdown-item"
-										onclick={() => {
-											ownerIdValue = m.id;
-											showOwnerDropdown = false;
-											triggerAutoSave(true);
-										}}
-									>
-										{m.name ?? m.email}
-									</button>
-								{/each}
-							</div>
-						{/if}
-					</div>
-					<Button type="button" variant="outline" size="sm" onclick={() => showDueDatePicker = !showDueDatePicker}>
-						{#snippet children()}<Calendar class="modal-icon-3-5" /> Due date{/snippet}
-					</Button>
-				</div>
+		<!-- Title Row -->
+		<div class="modal-title-row">
+			<input
+				type="checkbox"
+				checked={statusValue === 'DONE'}
+				onchange={() => {
+					statusValue = statusValue === 'DONE' ? 'TODO' : 'DONE';
+					triggerAutoSave(true);
+				}}
+				class="modal-title-checkbox"
+			/>
+			<Input
+				name="title"
+				bind:value={titleValue}
+				oninput={() => triggerAutoSave()}
+				onfocus={() => markFocused('title')}
+				onblur={() => {
+					markBlurred('title');
+					triggerAutoSave(true);
+				}}
+				class="modal-title-input display"
+				placeholder="Task title"
+			/>
+		</div>
 
-				<!-- Due Date Picker -->
-				{#if showDueDatePicker}
-					<div class="modal-mt-2 modal-flex modal-gap-2">
-						<Input
-							bind:value={dueDateValue}
-							type="date"
-							class="modal-text-sm"
-						/>
-						<Button type="button" size="sm" onclick={handleDueDateSave}>Save</Button>
-						<Button type="button" variant="ghost" size="sm" onclick={() => showDueDatePicker = false}>Cancel</Button>
-					</div>
-				{:else if dueDateValue}
-					<div class="modal-mt-2 modal-flex modal-items-center modal-gap-2 modal-text-sm">
-						<span>Due: {dueDateValue}</span>
-						<Button type="button" variant="ghost" size="sm" class="modal-icon-btn-sm" onclick={() => {
-							showDueDatePicker = true;
-						}}>
-							{#snippet children()}<MoreHorizontal class="modal-icon-sm" />{/snippet}
-						</Button>
-					</div>
-				{/if}
+		<!-- Action Chips -->
+		<div class="modal-action-chips">
+			<Button type="button" variant="ghost" size="sm" class="modal-action-chip">
+				<Plus class="modal-icon-xs" /> Add
+			</Button>
+			<Button type="button" variant="ghost" size="sm" class="modal-action-chip">
+				<FileText class="modal-icon-xs" /> Labels
+			</Button>
+			<Button type="button" variant="ghost" size="sm" class="modal-action-chip">
+				<CheckSquare class="modal-icon-xs" /> Sub-tasks
+			</Button>
+			<Button type="button" variant="ghost" size="sm" class="modal-action-chip">
+				<Paperclip class="modal-icon-xs" /> Attachment
+			</Button>
+			<Button type="button" variant="ghost" size="sm" class="modal-action-chip">
+				<Link class="modal-icon-xs" /> Link
+			</Button>
+		</div>
 
-				<!-- Members -->
-				<div class="modal-flex modal-items-center modal-gap-2">
+		<!-- Metadata Grid -->
+		<div class="modal-metadata-grid">
+			<div class="modal-metadata-item">
+				<span class="modal-metadata-label">Assigned to</span>
+				<div class="modal-metadata-value">
 					{#if selectedOwner}
-						<div class="modal-avatar">
-							{ownerInitial(selectedOwner)}
-						</div>
-						<span class="modal-text-muted">{selectedOwner.name ?? selectedOwner.email}</span>
+						<ByAvatar owner={selectedOwner} size="sm" />
+						<span>{selectedOwner.name ?? selectedOwner.email}</span>
+					{:else}
+						<Button type="button" variant="ghost" size="sm" class="modal-metadata-btn">
+							<User class="modal-icon-xs" /> Assign
+						</Button>
 					{/if}
 				</div>
-
-				<!-- Description -->
-				<div>
-					<div class="modal-label">Description</div>
-					{#if isEditingDescription}
-						<Textarea
-							name="description"
-							bind:value={descriptionValue}
-							oninput={() => triggerAutoSave()}
-							onfocus={() => markFocused('description')}
-							onblur={() => {
-								markBlurred('description');
-								isEditingDescription = false;
-								triggerAutoSave(true);
-							}}
-							onkeydown={(e) => {
-								if (e.key === 'Escape') {
-									e.preventDefault();
-									isEditingDescription = false;
-								}
-							}}
-							placeholder="Add a more detailed description... URLs and phone numbers will be clickable."
-							rows={4}
-						/>
+			</div>
+			<div class="modal-metadata-item">
+				<span class="modal-metadata-label">Due date</span>
+				<div class="modal-metadata-value">
+					{#if dueDateValue}
+						<Calendar class="modal-icon-xs" />
+						<span>{dueDateValue}</span>
+						{#if isOverdue()}
+							<span class="pill s-urgent">Overdue</span>
+						{/if}
 					{:else}
-						<Card class="modal-editable-card">
-							{#if descriptionValue}
-								<RichText
-									text={descriptionValue}
-									editable={true}
-									onClick={() => {
-										isEditingDescription = true;
-									}}
-								/>
-							{:else}
-								<div
-									class="modal-editable-placeholder"
-									onclick={() => {
-										isEditingDescription = true;
-									}}
-									role="button"
-									tabindex={0}
+						<Button type="button" variant="ghost" size="sm" class="modal-metadata-btn" onclick={() => showDueDatePicker = true}>
+							<Calendar class="modal-icon-xs" /> Set due date
+						</Button>
+					{/if}
+				</div>
+			</div>
+		</div>
+
+		<!-- Due Date Picker -->
+		{#if showDueDatePicker}
+			<div class="modal-mt-2 modal-flex modal-gap-2">
+				<Input
+					bind:value={dueDateValue}
+					type="date"
+					class="modal-text-sm"
+				/>
+				<Button type="button" size="sm" onclick={handleDueDateSave}>Save</Button>
+				<Button type="button" variant="ghost" size="sm" onclick={() => showDueDatePicker = false}>Cancel</Button>
+			</div>
+		{/if}
+
+		<!-- Description -->
+		<div class="modal-description-section">
+			{#if isEditingDescription}
+				<Textarea
+					name="description"
+					bind:value={descriptionValue}
+					oninput={() => triggerAutoSave()}
+					onfocus={() => markFocused('description')}
+					onblur={() => {
+						markBlurred('description');
+						isEditingDescription = false;
+						triggerAutoSave(true);
+					}}
+					onkeydown={(e) => {
+						if (e.key === 'Escape') {
+							e.preventDefault();
+							isEditingDescription = false;
+						}
+					}}
+					placeholder="Add a more detailed description..."
+					rows={4}
+					class="modal-description-textarea"
+				/>
+			{:else}
+				<button
+					type="button"
+					class="modal-description-display"
+					onclick={() => isEditingDescription = true}
+					onkeydown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							isEditingDescription = true;
+						}
+					}}
+				>
+					{#if descriptionValue}
+						<RichText text={descriptionValue} />
+					{:else}
+						<span class="modal-description-placeholder">Add a more detailed description...</span>
+					{/if}
+				</button>
+			{/if}
+		</div>
+
+		<!-- Checklist -->
+		<div class="modal-checklist-section">
+			<div class="modal-checklist-header">
+				<CheckSquare class="modal-icon-sm" />
+				<span>Sub-tasks</span>
+				{#if editableChecklist.length > 0}
+					<span class="modal-checklist-progress-text">{checklistProgress()}%</span>
+				{/if}
+			</div>
+			{#if editableChecklist.length > 0}
+				<div class="modal-checklist-progress-bar">
+					<div class="modal-checklist-progress-fill" style="width: {checklistProgress()}%"></div>
+				</div>
+			{/if}
+			{#if editableChecklist.length > 0}
+				<div class="modal-checklist-items">
+					{#each editableChecklist as ci (ci.id)}
+						<div class="modal-checklist-item">
+							<input
+								type="checkbox"
+								checked={ci.done}
+								onchange={() => toggleChecklistItem(ci.id)}
+								class="modal-checklist-checkbox"
+							/>
+							{#if editingChecklistId === ci.id}
+								<Input
+									bind:value={editingChecklistText}
 									onkeydown={(e) => {
-										if (e.key === 'Enter' || e.key === ' ') {
+										if (e.key === 'Enter') {
 											e.preventDefault();
-											isEditingDescription = true;
+											updateChecklistItemText(ci.id, editingChecklistText);
+											editingChecklistId = null;
+										} else if (e.key === 'Escape') {
+											editingChecklistId = null;
 										}
 									}}
-								>
-									Add a more detailed description...
-								</div>
+									onblur={() => {
+										if (editingChecklistText !== ci.text) {
+											updateChecklistItemText(ci.id, editingChecklistText);
+										}
+										editingChecklistId = null;
+									}}
+									class="modal-checklist-input"
+								/>
+							{:else}
+								<span class={ci.done ? 'modal-checklist-text-done' : 'modal-checklist-text'}>{ci.text}</span>
 							{/if}
-						</Card>
-					{/if}
+							<Button
+								type="button"
+								variant="ghost"
+								size="sm"
+								class="modal-icon-btn-sm"
+								onclick={() => removeChecklistItem(ci.id)}
+							>
+								<X class="modal-icon-xs" />
+							</Button>
+						</div>
+					{/each}
 				</div>
-
-				<!-- Checklist -->
-				<Card class="modal-checklist-card">
-					<div class="modal-checklist-header">
-						<CheckSquare class="modal-icon-sm modal-text-muted" />
-						<span class="modal-text-sm modal-font-medium">Checklist</span>
-					</div>
-					{#if editableChecklist.length > 0}
-						<div class="modal-checklist-progress">
-							<span>{checklistProgress()}%</span>
-							<div class="modal-checklist-progress-bar">
-								<div class="modal-checklist-progress-fill" style="width: {checklistProgress()}%"></div>
-							</div>
-						</div>
-					{/if}
-					{#if editableChecklist.length > 0}
-						<div class="modal-checklist-items">
-							{#each editableChecklist as ci (ci.id)}
-								<div class="modal-checklist-item">
-									<input
-										type="checkbox"
-										checked={ci.done}
-										onchange={() => toggleChecklistItem(ci.id)}
-										class="modal-checklist-checkbox"
-									/>
-									{#if editingChecklistId === ci.id}
-										<Input
-											bind:value={editingChecklistText}
-											onkeydown={(e) => {
-												if (e.key === 'Enter') {
-													e.preventDefault();
-													updateChecklistItemText(ci.id, editingChecklistText);
-													editingChecklistId = null;
-												} else if (e.key === 'Escape') {
-													editingChecklistId = null;
-												}
-											}}
-											onblur={() => {
-												if (editingChecklistText !== ci.text) {
-													updateChecklistItemText(ci.id, editingChecklistText);
-												}
-												editingChecklistId = null;
-											}}
-											class="modal-checklist-input"
-										/>
-									{:else}
-										<span class={ci.done ? 'modal-checklist-text-done' : 'modal-checklist-text'}>{ci.text}</span>
-									{/if}
-									<div class="relative ml-auto">
-										<Button
-											type="button"
-											variant="ghost"
-											size="sm"
-											class="modal-icon-btn-sm"
-											onclick={() => openChecklistMenuId = openChecklistMenuId === ci.id ? null : ci.id}
-										>
-											{#snippet children()}<MoreHorizontal class="modal-icon-sm" />{/snippet}
-										</Button>
-										{#if openChecklistMenuId === ci.id}
-											<div class="modal-dropdown-menu" style="width: 6rem;" use:clickOutside={() => openChecklistMenuId = null}>
-												<button
-													type="button"
-													class="modal-dropdown-item"
-													onclick={() => {
-														editingChecklistId = ci.id;
-														editingChecklistText = ci.text;
-														openChecklistMenuId = null;
-													}}
-												>
-													Edit
-												</button>
-												<button
-													type="button"
-													class="modal-dropdown-button"
-													onclick={() => {
-														removeChecklistItem(ci.id);
-														openChecklistMenuId = null;
-													}}
-												>
-													Delete
-												</button>
-											</div>
-										{/if}
-									</div>
-								</div>
-							{/each}
-						</div>
-					{/if}
-					{#if !showChecklistInput}
-						<Button type="button" variant="ghost" size="sm" onclick={() => showChecklistInput = true} class="modal-w-full modal-justify-start-btn modal-text-muted">
-							{#snippet children()}<Plus class="modal-icon-sm modal-mr-2" /> Add an item{/snippet}
-						</Button>
-					{:else}
-						<div class="space-y-2">
-							<input
-								type="text"
-								bind:value={newChecklistText}
-								bind:this={newChecklistInputEl}
-								placeholder="Enter item..."
-								onkeydown={(e) => {
-									if (e.key === 'Enter') {
-										e.preventDefault();
-										addChecklistItem();
-									}
-								}}
-								class="modal-checklist-add-input"
-							/>
-							<div class="modal-flex modal-justify-start modal-gap-2">
-								<Button type="button" size="sm" onclick={() => {
-									addChecklistItem();
-								}}>Add</Button>
-								<Button type="button" variant="ghost" size="sm" onclick={() => {
-									newChecklistText = '';
-									showChecklistInput = false;
-								}}>Cancel</Button>
-							</div>
-						</div>
-					{/if}
-				</Card>
-			</div>
-
-			<!-- Right Column - Settings -->
-			<div class="modal-content-right">
-				<Card class="modal-settings-card">
-					<div>
-						<label for="status" class="modal-settings-label">Status</label>
-						<Select id="status" name="status" bind:value={statusValue} onchange={() => triggerAutoSave()} class="modal-text-sm">
-							<option value="TODO">To Do</option>
-							<option value="IN_PROGRESS">In Progress</option>
-							<option value="DONE">Done</option>
-						</Select>
-					</div>
-					<div>
-						<label for="priority" class="modal-settings-label">Priority</label>
-						<Select id="priority" name="priority" bind:value={priorityValue} onchange={() => triggerAutoSave()} class="modal-text-sm">
-							<option value="LOW">Low</option>
-							<option value="MEDIUM">Medium</option>
-							<option value="HIGH">High</option>
-							<option value="CRITICAL">Critical</option>
-						</Select>
-					</div>
-				</Card>
-			</div>
+			{/if}
+			{#if !showChecklistInput}
+				<Button type="button" variant="ghost" size="sm" onclick={() => showChecklistInput = true} class="modal-add-checklist-btn">
+					<Plus class="modal-icon-xs" /> Add sub-task
+				</Button>
+			{:else}
+				<div class="modal-checklist-add">
+					<Input
+						bind:value={newChecklistText}
+						placeholder="Enter sub-task..."
+						onkeydown={(e) => {
+							if (e.key === 'Enter') {
+								e.preventDefault();
+								addChecklistItem();
+							}
+						}}
+						class="modal-checklist-add-input"
+					/>
+					<Button type="button" size="sm" onclick={addChecklistItem}>Add</Button>
+					<Button type="button" variant="ghost" size="sm" onclick={() => {
+						newChecklistText = '';
+						showChecklistInput = false;
+					}}>Cancel</Button>
+				</div>
+			{/if}
 		</div>
 
 		<!-- Footer -->
-		<div class="modal-p-4">
-			{#if error}<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />{/if}
-			<input type="hidden" name="checklist" value={checklistJson} />
-			<input type="hidden" name="id" value={val('id')} />
-			<input type="hidden" name="ownerId" value={ownerIdValue} />
-			<input type="hidden" name="dueDate" value={dueDateValue} bind:this={dueDateInputEl} />
+		<div class="modal-footer">
+			{#if deleteAction}
+				<Button type="button" variant="ghost" class="modal-footer-delete" onclick={async () => {
+					if (confirm('Are you sure you want to delete this task?')) {
+						const formData = new FormData();
+						formData.append('id', val('id'));
+						const response = await fetch(deleteAction, { method: 'POST', body: formData });
+						if (response.ok) {
+							showSuccessToast('Task deleted');
+							await invalidateAll();
+							onClose();
+						}
+					}
+				}}>
+					Delete
+				</Button>
+			{/if}
+			<Button type="button" variant="ghost" onclick={onClose}>Cancel</Button>
+			<Button type="submit" class="modal-footer-save">Save changes</Button>
 		</div>
+
+		<!-- Hidden Inputs -->
+		{#if error}<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />{/if}
+		<input type="hidden" name="checklist" value={checklistJson} />
+		<input type="hidden" name="id" value={val('id')} />
+		<input type="hidden" name="ownerId" value={ownerIdValue} />
+		<input type="hidden" name="dueDate" value={dueDateValue} bind:this={dueDateInputEl} />
 	</form>
 </Dialog>

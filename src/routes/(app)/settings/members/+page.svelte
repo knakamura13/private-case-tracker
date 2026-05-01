@@ -24,7 +24,7 @@
 	}
 </script>
 
-<PageHeader title="Members" description="This workspace is designed for two users." />
+<PageHeader title="Members" sub="This workspace is designed for two users." />
 
 <Card class="settings-members-card">
 	<h2>Active members</h2>

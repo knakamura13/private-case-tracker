@@ -1,5 +1,7 @@
 <script lang="ts">
-	let { title, sub, eyebrow, number }: { title: string; sub?: string; eyebrow?: string; number?: string } = $props();
+	import type { Snippet } from 'svelte';
+
+	let { title, sub, eyebrow, number, actions }: { title: string; sub?: string; eyebrow?: string; number?: string; actions?: Snippet } = $props();
 </script>
 
 <div style="display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px; gap: 24px; flex-wrap: wrap;">

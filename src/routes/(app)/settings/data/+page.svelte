@@ -12,7 +12,7 @@
 	let confirmName = $state('');
 </script>
 
-<PageHeader title="Data & privacy" description="Export, audit, demo data, and danger zone." />
+<PageHeader title="Data & privacy" sub="Export, audit, demo data, and danger zone." />
 
 <div class="settings-data-container">
 	<Card class="settings-data-card">

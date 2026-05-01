@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { optionalDateLoose, priorityEnum, stringOrEmpty } from './common';
 
-export const taskStatusEnum = z.enum(['TODO', 'IN_PROGRESS', 'DONE']);
+export const taskStatusEnum = z.enum(['TODO', 'IN_PROGRESS', 'WAITING', 'DONE']);
 
 export type TaskStatus = z.infer<typeof taskStatusEnum>;
 

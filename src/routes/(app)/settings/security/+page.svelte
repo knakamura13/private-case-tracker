@@ -61,7 +61,7 @@
 	}
 </script>
 
-<PageHeader title="Security" description="Passkeys and two-factor authentication." />
+<PageHeader title="Security" sub="Passkeys and two-factor authentication." />
 
 <div class="settings-security-grid">
 	<Card class="settings-security-card">

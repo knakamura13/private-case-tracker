@@ -3,7 +3,7 @@
 	import { fade, fly } from 'svelte/transition';
 	import { page } from '$app/stores';
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
-	import TopBar from '$lib/components/layout/Topbar.svelte';
+	import TopBar from '$lib/components/layout/TopBar.svelte';
 	import CommandPalette from '$lib/components/shared/CommandPalette.svelte';
 	import { initTruncateTitles } from '$lib/utils/truncate-titles';
 	import type { LayoutData } from './$types';

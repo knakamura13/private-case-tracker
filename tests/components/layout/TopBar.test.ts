@@ -5,7 +5,6 @@ import TopBar from '$lib/components/layout/TopBar.svelte';
 describe('TopBar', () => {
 	it('opens and closes the user menu repeatedly without leaving it stuck open', async () => {
 		render(TopBar, {
-			user: { email: 'dev@example.com', name: 'Dev User', image: null },
 			onOpenSearch: vi.fn(),
 			onToggleSidebar: vi.fn()
 		});

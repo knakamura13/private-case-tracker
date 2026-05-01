@@ -1,12 +1,11 @@
 <script lang="ts">
 	import Input from '$lib/components/ui/Input.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
-	import Select from '$lib/components/ui/Select.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
 	import { showSuccessToast, showErrorToast } from '$lib/stores/toast';
-	import { X, MoreHorizontal } from 'lucide-svelte';
+	import { X, MoreHorizontal, HelpCircle, Plus, FileText, Paperclip, Link, CheckSquare } from 'lucide-svelte';
 	import { invalidateAll } from '$app/navigation';
 	import { enhance } from '$app/forms';
 
@@ -33,6 +32,27 @@
 	let citationUrlValue = $state('');
 	let answerValue = $state('');
 	let answeredAtValue = $state('');
+
+	// Status pill mapping
+	const statusPillClass = $derived(() => {
+		switch (statusValue) {
+			case 'OPEN': return 's-active';
+			case 'RESEARCHING': return 's-note';
+			case 'ANSWERED': return 's-done';
+			case 'WONT_FIX': return 's-waiting';
+			default: return '';
+		}
+	});
+
+	const statusLabel = $derived(() => {
+		switch (statusValue) {
+			case 'OPEN': return 'Open';
+			case 'RESEARCHING': return 'Researching';
+			case 'ANSWERED': return 'Answered';
+			case 'WONT_FIX': return "Won't pursue";
+			default: return statusValue;
+		}
+	});
 
 	const ALLOWED_FIELDS = [
 		'id',
@@ -95,12 +115,14 @@
 	<form method="post" {action} use:enhance={onenhance} class="modal-form">
 		<!-- Header -->
 		<div class="modal-header">
-			<h2 class="modal-title">Edit question</h2>
-			<div class="modal-flex modal-items-center modal-gap-1">
+			<div class="modal-header-left">
+				<span class="pill {statusPillClass()}">{statusLabel()}</span>
+			</div>
+			<div class="modal-header-right">
 				{#if deleteAction}
 					<div class="modal-dropdown" use:clickOutside={() => showMenuDropdown = false}>
-						<Button type="button" variant="ghost" size="sm" onclick={() => showMenuDropdown = !showMenuDropdown} class="modal-shrink-0">
-							{#snippet children()}<MoreHorizontal class="modal-icon-md" />{/snippet}
+						<Button type="button" variant="ghost" size="sm" onclick={() => showMenuDropdown = !showMenuDropdown} class="modal-icon-btn">
+							<MoreHorizontal class="modal-icon-sm" />
 						</Button>
 						{#if showMenuDropdown}
 							<div class="modal-dropdown-menu">
@@ -128,87 +150,136 @@
 						{/if}
 					</div>
 				{/if}
-				<Button type="button" variant="ghost" size="sm" onclick={onClose} class="modal-shrink-0">
-					{#snippet children()}<X class="modal-icon-md" />{/snippet}
+				<Button type="button" variant="ghost" size="sm" onclick={onClose} class="modal-icon-btn">
+					<X class="modal-icon-sm" />
 				</Button>
 			</div>
 		</div>
 
-		<!-- Main Content -->
-		<div class="modal-content">
-			<div>
-				<label for="question" class="modal-label">Question</label>
-				<Textarea id="question" name="question" bind:value={questionValue} required rows={3} />
-			</div>
-			<div class="form-grid">
-				<div>
-					<label for="category" class="modal-label">Category</label>
-					<Input id="category" name="category" bind:value={categoryValue} />
+		<!-- Title Row -->
+		<div class="modal-title-row">
+			<HelpCircle class="modal-icon-sm" />
+			<Input
+				name="question"
+				bind:value={questionValue}
+				class="modal-title-input display"
+				placeholder="Question"
+				required
+			/>
+		</div>
+
+		<!-- Action Chips -->
+		<div class="modal-action-chips">
+			<Button type="button" variant="ghost" size="sm" class="modal-action-chip">
+				<Plus class="modal-icon-xs" /> Add
+			</Button>
+			<Button type="button" variant="ghost" size="sm" class="modal-action-chip">
+				<FileText class="modal-icon-xs" /> Labels
+			</Button>
+			<Button type="button" variant="ghost" size="sm" class="modal-action-chip">
+				<CheckSquare class="modal-icon-xs" /> Sub-tasks
+			</Button>
+			<Button type="button" variant="ghost" size="sm" class="modal-action-chip">
+				<Paperclip class="modal-icon-xs" /> Attachment
+			</Button>
+			<Button type="button" variant="ghost" size="sm" class="modal-action-chip">
+				<Link class="modal-icon-xs" /> Link
+			</Button>
+		</div>
+
+		<!-- Metadata Grid -->
+		<div class="modal-metadata-grid">
+			<div class="modal-metadata-item">
+				<span class="modal-metadata-label">Category</span>
+				<div class="modal-metadata-value">
+					<Input name="category" bind:value={categoryValue} class="modal-text-sm" placeholder="Category" />
 				</div>
-				<div>
-					<label for="priority" class="modal-label">Priority</label>
-					<Select id="priority" name="priority" bind:value={priorityValue}>
+			</div>
+			<div class="modal-metadata-item">
+				<span class="modal-metadata-label">Priority</span>
+				<div class="modal-metadata-value">
+					<select name="priority" bind:value={priorityValue} class="modal-select-sm">
 						<option value="LOW">Low</option>
 						<option value="MEDIUM">Medium</option>
 						<option value="HIGH">High</option>
 						<option value="CRITICAL">Critical</option>
-					</Select>
+					</select>
 				</div>
-				<div>
-					<label for="status" class="modal-label">Status</label>
-					<Select id="status" name="status" bind:value={statusValue}>
+			</div>
+			<div class="modal-metadata-item">
+				<span class="modal-metadata-label">Status</span>
+				<div class="modal-metadata-value">
+					<select name="status" bind:value={statusValue} class="modal-select-sm">
 						<option value="OPEN">Open</option>
 						<option value="RESEARCHING">Researching</option>
 						<option value="ANSWERED">Answered</option>
 						<option value="WONT_FIX">Won't pursue</option>
-					</Select>
+					</select>
 				</div>
-				<div>
-					<label for="sourceType" class="modal-label">Source type</label>
-					<Select id="sourceType" name="sourceType" bind:value={sourceTypeValue}>
+			</div>
+			<div class="modal-metadata-item">
+				<span class="modal-metadata-label">Source type</span>
+				<div class="modal-metadata-value">
+					<select name="sourceType" bind:value={sourceTypeValue} class="modal-select-sm">
 						<option value="ATTORNEY">Attorney</option>
 						<option value="NONPROFIT">Nonprofit</option>
 						<option value="USCIS_SITE">USCIS site</option>
 						<option value="COUNTY_SITE">County site</option>
 						<option value="COMMUNITY">Community</option>
 						<option value="OTHER">Other</option>
-					</Select>
+					</select>
 				</div>
 			</div>
-			<div>
-				<label for="citationUrl" class="modal-label">Citation URL</label>
-				<Input id="citationUrl" name="citationUrl" type="url" bind:value={citationUrlValue} />
+		</div>
+
+		<!-- Citation URL -->
+		<div class="modal-mt-2">
+			<span class="modal-metadata-label">Citation URL</span>
+			<div class="modal-metadata-value">
+				<Input name="citationUrl" type="url" bind:value={citationUrlValue} placeholder="https://..." />
 			</div>
-			<div>
-				<label for="answer" class="modal-label">Answer</label>
-				<Textarea id="answer" name="answer" bind:value={answerValue} rows={5} />
-			</div>
-			<div>
-				<label for="answeredAt" class="modal-label">Answered on</label>
-				<Input id="answeredAt" name="answeredAt" type="date" bind:value={answeredAtValue} />
+		</div>
+
+		<!-- Answer -->
+		<div class="modal-description-section">
+			<span class="modal-metadata-label">Answer</span>
+			<Textarea name="answer" bind:value={answerValue} placeholder="Enter answer..." rows={5} class="modal-description-textarea" />
+		</div>
+
+		<!-- Answered Date -->
+		<div class="modal-mt-2">
+			<span class="modal-metadata-label">Answered on</span>
+			<div class="modal-metadata-value">
+				<Input name="answeredAt" type="date" bind:value={answeredAtValue} class="modal-text-sm" />
 			</div>
 		</div>
 
 		<!-- Error -->
 		{#if error}
-			<div class="modal-error">
-				<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />
-			</div>
+			<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />
 		{/if}
 
 		<!-- Footer -->
 		<div class="modal-footer">
 			<input type="hidden" name="id" value={val('id')} />
-			<input type="hidden" name="question" value={questionValue} />
-			<input type="hidden" name="category" value={categoryValue} />
-			<input type="hidden" name="priority" value={priorityValue} />
-			<input type="hidden" name="status" value={statusValue} />
-			<input type="hidden" name="sourceType" value={sourceTypeValue} />
-			<input type="hidden" name="citationUrl" value={citationUrlValue} />
-			<input type="hidden" name="answer" value={answerValue} />
-			<input type="hidden" name="answeredAt" value={answeredAtValue} />
-			<Button type="button" variant="outline" onclick={onClose}>Cancel</Button>
-			<Button type="submit">Save changes</Button>
+			{#if deleteAction}
+				<Button type="button" variant="ghost" class="modal-footer-delete" onclick={async () => {
+					if (confirm('Are you sure you want to delete this question?')) {
+						const formData = new FormData();
+						formData.append('id', val('id'));
+						const response = await fetch(deleteAction, { method: 'POST', body: formData });
+						if (response.ok) {
+							showSuccessToast('Question deleted');
+							await invalidateAll();
+							onClose();
+						}
+					}
+				}}>
+					Delete
+				</Button>
+			{/if}
+			<Button type="button" variant="ghost" onclick={onClose}>Cancel</Button>
+			<Button type="submit" class="modal-footer-save">Save changes</Button>
 		</div>
 	</form>
 </Dialog>

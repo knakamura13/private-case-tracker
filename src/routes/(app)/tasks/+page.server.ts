@@ -28,7 +28,7 @@ export const actions: Actions = {
 
 		try {
 			const rawUpdates = JSON.parse(updatesJson) as Array<{ id: string; status: string; order: number }>;
-			const updates: Array<{ id: string; status: 'TODO' | 'IN_PROGRESS' | 'DONE'; order: number }> = [];
+			const updates: Array<{ id: string; status: 'TODO' | 'IN_PROGRESS' | 'WAITING' | 'DONE'; order: number }> = [];
 			for (const u of rawUpdates) {
 				const parsed = taskStatusEnum.safeParse(u.status);
 				if (!parsed.success) {

@@ -45,9 +45,10 @@
 	}
 
 	const COLUMNS = [
-		{ id: 'TODO', label: 'To Do', color: 'bg-muted' },
-		{ id: 'IN_PROGRESS', label: 'In Progress', color: 'bg-warning/20' },
-		{ id: 'DONE', label: 'Done', color: 'bg-success/20' }
+		{ id: 'TODO', label: 'This week', pillClass: 's-active' },
+		{ id: 'IN_PROGRESS', label: 'Soon', pillClass: 's-note' },
+		{ id: 'WAITING', label: 'Waiting', pillClass: 's-waiting' },
+		{ id: 'DONE', label: 'Done', pillClass: 's-done' }
 	] as const;
 
 	const membersById = $derived(new Map(data.members.map((member) => [member.id, member])));
@@ -295,14 +296,17 @@
 	}
 </script>
 
-<PageHeader title="Tasks" description="Personal todos and errands (not legal proceedings)." number={getPageNumber('/tasks')} />
+<PageHeader title="Tasks" sub="Personal todos and errands (not legal proceedings)." number={getPageNumber('/tasks')} />
 
 <div class="tasks-board">
 	{#each grouped as column (column.id)}
 		<div class="tasks-column">
 			<div class="tasks-column-header">
-				<h2 class="tasks-font-semibold">{column.label}</h2>
-				<span class="tasks-text-sm tasks-text-muted">{column.tasks.length}</span>
+				<span class="pill {column.pillClass}">{column.label}</span>
+				<span class="tasks-column-count mono">{column.tasks.length}</span>
+				<button class="tasks-column-menu" aria-label="Column options">
+					⋯
+				</button>
 			</div>
 			<div
 				class="tasks-column-content"
@@ -343,7 +347,7 @@
 			</div>
 			<Button
 				variant="ghost"
-				class="tasks-w-full tasks-justify-start tasks-text-muted tasks-hover-text"
+				class="tasks-add-card-btn"
 				onclick={() => {
 					defaultStatus = column.id;
 					showCreateModal = true;
@@ -401,7 +405,6 @@
 			defaultStatus = undefined;
 		}}
 		action="?/create"
-		members={data.members}
 		defaultStatus={defaultStatus}
 		error={form?.error}
 		errorId={form?.errorId}

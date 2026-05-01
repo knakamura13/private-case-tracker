@@ -76,6 +76,7 @@
 }
 .pill.s-done { background: var(--sage); color: var(--sage-d); }
 .pill.s-active { background: var(--peri); color: var(--peri-d); }
+.pill.s-note { background: var(--surface-3); color: var(--ink-2); }
 .pill.s-waiting { background: var(--butter); color: var(--butter-d); }
 .pill.s-urgent { background: var(--blush); color: var(--blush-d); }
 
@@ -121,6 +122,435 @@
 .card.tinted-butter { background: var(--butter); border-color: var(--butter-d); }
 .card.tinted-blush { background: var(--blush); border-color: var(--blush-d); }
 .card.tinted-peri { background: var(--peri); border-color: var(--peri-d); }
+
+/* Kanban Board */
+.kanban-board {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(240px, 1fr));
+	gap: 24px;
+	align-items: start;
+}
+
+/* Task Card */
+.task-card {
+	margin-bottom: 12px;
+}
+
+.task-card-inner {
+	padding: 16px;
+	background: var(--surface);
+	border: 1px solid var(--hairline);
+	border-radius: var(--r-md);
+	transition: all 150ms ease;
+}
+
+.task-card-hoverable:hover {
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.task-card-dragging {
+	opacity: 0.5;
+}
+
+.task-card-done {
+	opacity: 0.7;
+}
+
+.task-card-done .task-card-title {
+	text-decoration: line-through;
+}
+
+.task-card-overdue {
+	font-size: 10px;
+	font-weight: 600;
+	color: var(--blush-d);
+	margin-bottom: 8px;
+}
+
+.task-card-title {
+	font-size: 13px;
+	font-weight: 500;
+	line-height: 1.4;
+	color: var(--ink);
+	margin: 0 0 8px 0;
+}
+
+.task-card-badge {
+	height: 20px;
+	font-size: 10px;
+	padding: 0 8px;
+	margin-bottom: 8px;
+}
+
+.task-card-description {
+	font-size: 12px;
+	line-height: 1.5;
+	color: var(--ink-2);
+	margin-bottom: 8px;
+}
+
+.task-card-checklist {
+	margin-bottom: 8px;
+}
+
+.task-card-checklist-summary {
+	font-size: 11px;
+	color: var(--ink-3);
+}
+
+.task-card-footer {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-top: 12px;
+}
+
+.task-card-due {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 11px;
+	color: var(--ink-3);
+}
+
+.task-card-icon-xs {
+	width: 12px;
+	height: 12px;
+}
+
+/* Modal - Monarch Design */
+.modal-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 24px;
+}
+
+.modal-header-left {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.modal-header-right {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.modal-icon-btn {
+	background: none;
+	border: none;
+	color: var(--ink-2);
+	cursor: pointer;
+	padding: 8px;
+	border-radius: 8px;
+	transition: background-color 0.15s ease;
+}
+
+.modal-icon-btn:hover {
+	background: var(--surface-2);
+}
+
+.modal-icon-sm {
+	width: 16px;
+	height: 16px;
+}
+
+.modal-icon-xs {
+	width: 12px;
+	height: 12px;
+}
+
+.modal-title-row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 24px;
+}
+
+.modal-title-checkbox {
+	width: 20px;
+	height: 20px;
+	cursor: pointer;
+}
+
+.modal-title-input {
+	flex: 1;
+	font-size: 32px;
+	font-weight: 400;
+	font-family: var(--font-display);
+	border: none;
+	background: none;
+	padding: 0;
+	color: var(--ink-1);
+}
+
+.modal-title-input::placeholder {
+	color: var(--ink-3);
+}
+
+.modal-title-input:focus {
+	outline: none;
+}
+
+.modal-action-chips {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 24px;
+	flex-wrap: wrap;
+}
+
+.modal-action-chip {
+	font-size: 12px;
+	padding: 6px 12px;
+	gap: 6px;
+}
+
+.modal-metadata-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 24px;
+	margin-bottom: 24px;
+}
+
+.modal-metadata-item {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.modal-metadata-label {
+	font-size: 12px;
+	color: var(--ink-3);
+	font-weight: 500;
+}
+
+.modal-metadata-value {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 14px;
+}
+
+.modal-metadata-btn {
+	font-size: 12px;
+	gap: 4px;
+}
+
+.modal-mt-2 {
+	margin-top: 8px;
+}
+
+.modal-description-section {
+	margin-bottom: 24px;
+}
+
+.modal-description-display {
+	width: 100%;
+	text-align: left;
+	background: var(--surface-2);
+	border: 1px solid var(--hairline);
+	border-radius: 8px;
+	padding: 16px;
+	min-height: 80px;
+	cursor: pointer;
+	transition: border-color 0.15s ease;
+}
+
+.modal-description-display:hover {
+	border-color: var(--ink-3);
+}
+
+.modal-description-textarea {
+	width: 100%;
+	font-family: var(--font-body);
+	font-size: 14px;
+	line-height: 1.5;
+	border: 1px solid var(--hairline);
+	border-radius: 8px;
+	padding: 16px;
+	resize: vertical;
+}
+
+.modal-description-placeholder {
+	color: var(--ink-3);
+}
+
+.modal-checklist-section {
+	margin-bottom: 24px;
+}
+
+.modal-checklist-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 12px;
+	font-weight: 500;
+}
+
+.modal-checklist-progress-text {
+	margin-left: auto;
+	font-family: var(--font-mono);
+	font-size: 12px;
+	color: var(--ink-3);
+}
+
+.modal-checklist-progress-bar {
+	height: 4px;
+	background: var(--surface-3);
+	border-radius: 2px;
+	margin-bottom: 12px;
+	overflow: hidden;
+}
+
+.modal-checklist-progress-fill {
+	height: 100%;
+	background: var(--sage-fill);
+	transition: width 0.3s ease;
+}
+
+.modal-checklist-items {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+
+.modal-checklist-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px;
+	background: var(--surface-2);
+	border-radius: 6px;
+}
+
+.modal-checklist-checkbox {
+	width: 16px;
+	height: 16px;
+	cursor: pointer;
+}
+
+.modal-checklist-text {
+	flex: 1;
+	font-size: 13px;
+}
+
+.modal-checklist-text-done {
+	flex: 1;
+	font-size: 13px;
+	text-decoration: line-through;
+	color: var(--ink-3);
+}
+
+.modal-checklist-input {
+	flex: 1;
+	font-size: 13px;
+	padding: 4px 8px;
+}
+
+.modal-checklist-add {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.modal-checklist-add-input {
+	flex: 1;
+	font-size: 13px;
+	padding: 6px 8px;
+}
+
+.modal-add-checklist-btn {
+	width: 100%;
+	justify-content: flex-start;
+	font-size: 13px;
+	gap: 6px;
+}
+
+.modal-footer {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 12px;
+	padding-top: 24px;
+	border-top: 1px solid var(--hairline);
+}
+
+.modal-footer-delete {
+	color: var(--blush-d);
+}
+
+.modal-footer-save {
+	background: var(--ink-1);
+	color: var(--surface-1);
+}
+
+.task-card-subtask-count {
+	font-size: 11px;
+	color: var(--ink-3);
+}
+
+/* Tasks Page */
+.tasks-board {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(240px, 1fr));
+	gap: 24px;
+	margin-top: 32px;
+}
+
+.tasks-column {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.tasks-column-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 0;
+}
+
+.tasks-column-count {
+	font-size: 12px;
+	color: var(--ink-3);
+}
+
+.tasks-column-menu {
+	width: 24px;
+	height: 24px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: none;
+	background: transparent;
+	color: var(--ink-3);
+	cursor: pointer;
+	border-radius: 4px;
+	margin-left: auto;
+}
+
+.tasks-column-menu:hover {
+	background: var(--surface-2);
+}
+
+.tasks-column-content {
+	min-height: 100px;
+	padding: 4px 0;
+}
+
+.tasks-add-card-btn {
+	width: 100%;
+	justify-content: flex-start;
+	color: var(--ink-3);
+}
+
+.tasks-add-card-btn:hover {
+	background: var(--surface-2);
+}
 
 /* ========================================
    SEMANTIC COMPONENT CLASSES
