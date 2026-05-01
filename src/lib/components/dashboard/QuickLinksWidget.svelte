@@ -14,7 +14,7 @@
 	type ActionForm = { error?: string; errorId?: string | null } | undefined;
 	type DropIntent = 'reorder' | 'merge' | 'move-into';
 
-	let { links, folders, form }: { links: QuickLink[]; folders: QuickLinkFolder[]; form?: ActionForm } = $props();
+	let { links, folders = [], form }: { links: QuickLink[]; folders: QuickLinkFolder[]; form?: ActionForm } = $props();
 
 	let modalOpen = $state(false);
 	let modalMode = $state<'link' | 'folder'>('link');
