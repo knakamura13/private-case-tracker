@@ -9,18 +9,17 @@
 		color?: 'sage' | 'blush' | 'butter' | 'peri';
 	} = $props();
 
-	const initial = $derived(() => {
-		if (!owner) return '?';
-		return owner.name?.[0] || owner.email?.[0] || 'U';
-	});
+	const initial = $derived(
+		owner ? (owner.name?.[0] || owner.email?.[0] || 'U') : '?'
+	);
 
-	const sizeClass = $derived(() => {
-		return size === 'sm' ? 'avatar-sm' : 'avatar';
-	});
+	const sizeClass = $derived(
+		size === 'sm' ? 'avatar-sm' : 'avatar'
+	);
 
-	const colorClass = $derived(() => {
-		return `avatar-${color}`;
-	});
+	const colorClass = $derived(
+		`avatar-${color}`
+	);
 </script>
 
 {#if owner}
