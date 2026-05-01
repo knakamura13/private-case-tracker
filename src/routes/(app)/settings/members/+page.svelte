@@ -4,7 +4,7 @@
 	import ByAvatar from '$lib/components/shared/ByAvatar.svelte';
 	import { Trash2, Copy, Shield, UserPlus } from 'lucide-svelte';
 	import { enhance } from '$app/forms';
-	import { fmtDate } from '$lib/utils/dates';
+	import { getPageNumber } from '$lib/constants/navigation';
 	import type { ActionData, PageData } from './$types';
 	import { page } from '$app/stores';
 
@@ -60,12 +60,12 @@
             <h2 class="display" style="font-size: 24px; margin-bottom: 20px;">Invite a user</h2>
             <form method="post" action="?/invite" use:enhance style="display: grid; grid-template-columns: 1fr 160px auto; gap: 16px; align-items: end;">
                 <div>
-                    <label style="display: block; font-size: 13px; margin-bottom: 4px;">Email</label>
-                    <input name="email" type="email" class="input" style="width: 100%;" required />
+                    <label for="invite-email" style="display: block; font-size: 13px; margin-bottom: 4px;">Email</label>
+                    <input id="invite-email" name="email" type="email" class="input" style="width: 100%;" required />
                 </div>
                 <div>
-                    <label style="display: block; font-size: 13px; margin-bottom: 4px;">Role</label>
-                    <select name="role" class="input" style="width: 100%;">
+                    <label for="invite-role" style="display: block; font-size: 13px; margin-bottom: 4px;">Role</label>
+                    <select id="invite-role" name="role" class="input" style="width: 100%;">
                         <option value="COLLABORATOR">Collaborator</option>
                         <option value="OWNER">Owner</option>
                     </select>

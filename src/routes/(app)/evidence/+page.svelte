@@ -100,8 +100,15 @@
 
 <!-- Add Category Modal -->
 {#if showAddModal}
-	<div class="backdrop-blur-sm" style="position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 100;" onclick={() => showAddModal = false}>
-		<div class="card" style="width: 400px; padding: 24px;" onclick={(e) => e.stopPropagation()}>
+	<div 
+    role="button" 
+    tabindex="0" 
+    class="backdrop-blur-sm" 
+    style="position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 100;" 
+    onclick={() => showAddModal = false}
+    onkeydown={(e) => { if (e.key === 'Escape') showAddModal = false; }}
+>
+    <div class="card" style="width: 400px; padding: 24px;" onclick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
 			<h2 style="font-family: var(--font-display); font-size: 24px; margin-bottom: 16px;">Add Category</h2>
 			<form method="post" action="?/addCategory" use:enhance>
 				<label for="newCategory" style="display: block; font-size: 13px; margin-bottom: 4px;">Category name</label>

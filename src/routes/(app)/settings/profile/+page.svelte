@@ -1,5 +1,6 @@
 <script lang="ts">
 	import PageHeader from '$lib/components/shared/PageHeader.svelte';
+	import { getPageNumber } from '$lib/constants/navigation';
 	import { page } from '$app/stores';
 	const user = $derived($page.data.user!);
 	const workspace = $derived($page.data.workspace!);
