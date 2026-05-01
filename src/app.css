@@ -697,7 +697,11 @@ html, body, #svelte {
 .timeline-phase-header {
 	background: var(--surface-2);
 	border-radius: var(--r-md);
-	padding: 20px 24px;
+	padding: 16px 24px;
+}
+
+.timeline-phase-header-done,
+.timeline-phase-header-active {
 	margin-bottom: 20px;
 }
 
@@ -899,12 +903,12 @@ html, body, #svelte {
 	font-family: var(--font-mono);
 	font-size: 11px;
 	color: var(--ink-3);
+	padding-left: 0;
 }
 
 .timeline-add-milestone-btn {
 	width: 100%;
 	justify-content: flex-start;
-	margin-top: 4px;
 	cursor: pointer;
 	background: transparent;
 	border: none;

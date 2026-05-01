@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Search, Bell, Plus, Menu } from 'lucide-svelte';
+	import { Search, Plus, Menu } from 'lucide-svelte';
 
 	let { onOpenSearch, onToggleSidebar }: { onOpenSearch: () => void; onToggleSidebar: () => void } = $props();
 </script>
@@ -17,7 +17,7 @@
 			onclick={onOpenSearch}
 			class="search-input"
 		>
-			Search tasks, evidence, questions…
+			Search tasks, evidence…
 		</button>
 		<span class="mono search-kb">⌘K</span>
 	</div>
@@ -56,7 +56,7 @@
 	.search-container {
 		position: relative;
 		flex: 1;
-		max-width: 420px;
+		max-width: 500px;
 	}
 	:global(.search-icon) {
 		position: absolute;
@@ -87,12 +87,6 @@
 		background: var(--surface-3);
 		padding: 2px 6px;
 		border-radius: 6px;
-	}
-	.btn-icon-pill {
-		width: 44px;
-		padding: 0;
-		justify-content: center;
-		border-radius: 999px;
 	}
 	.add-label {
 		margin-left: 4px;

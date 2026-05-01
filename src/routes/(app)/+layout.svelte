@@ -116,7 +116,7 @@
 	.sidebar-wrapper {
 		display: none;
 		flex-shrink: 0;
-		width: 240px;
+		width: 200px;
 		height: 100%;
 		max-height: 100vh;
 		min-height: 0;
@@ -145,6 +145,25 @@
 		background: var(--bg);
 	}
 
+	/* Responsive main content for shorter screens */
+	@media (max-height: 800px) {
+		.main-content {
+			padding: 24px 24px 32px;
+		}
+	}
+
+	@media (max-height: 700px) {
+		.main-content {
+			padding: 20px 20px 24px;
+		}
+	}
+
+	@media (max-height: 600px) {
+		.main-content {
+			padding: 16px 16px 20px;
+		}
+	}
+
 	/* Mobile Sidebar Styles */
 	.mobile-sidebar-container {
 		position: fixed;
@@ -167,7 +186,7 @@
 	}
 	.mobile-sidebar-panel {
 		position: relative;
-		width: 280px;
+		width: 200px;
 		height: 100%;
 		background: var(--bg);
 		border-right: 1px solid var(--hairline);

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { navigation, getPageNumber } from '$lib/constants/navigation';
+	import { navigation, getPageNumber as _getPageNumber } from '$lib/constants/navigation';
 	import { LogOut, Settings, Clock } from 'lucide-svelte';
 
 	let { workspaceName: _workspaceName, onNavigate }: { workspaceName: string; onNavigate?: () => void } = $props();
@@ -27,28 +27,17 @@
 				>
 					<item.icon size={18} />
 					<span style="flex: 1;">{item.label}</span>
-					{#if getPageNumber(item.href)}
-						<span class="mono" style="font-size: 11px; background: {active ? 'oklch(0.30 0.02 270)' : 'var(--surface-3)'}; padding: 2px 7px; border-radius: 999px; color: {active ? 'var(--butter-fill)' : 'var(--ink-2)'};">
-							{getPageNumber(item.href)}
-						</span>
-					{/if}
 				</a>
 			{/each}
+			<!-- Settings nav item -->
+			{#if true}
+				{@const active = $page.url.pathname.startsWith('/settings')}
+				<a href="/settings" class="nav-item {active ? 'active' : ''}" style="display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 12px; font-size: 14px; font-weight: 500; text-decoration: none; color: {active ? 'var(--surface)' : 'var(--ink-2)'}; background: {active ? 'var(--ink)' : 'transparent'};" onclick={() => onNavigate?.()}>
+					<Settings size={18} />
+					<span style="flex: 1;">Settings</span>
+				</a>
+			{/if}
 		</div>
-	</div>
-
-	<!-- Account Section -->
-	<div>
-	<div class="eyebrow" style="padding: 0 16px 10px;">Account</div>
-	<div style="display: flex; flex-direction: column; gap: 2px;">
-		{#if true}
-	        {@const active = $page.url.pathname.startsWith('/settings')}
-	        <a href="/settings" class="nav-item {active ? 'active' : ''}" style="display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 12px; font-size: 14px; font-weight: 500; text-decoration: none; color: {active ? 'var(--surface)' : 'var(--ink-2)'}; background: {active ? 'var(--ink)' : 'transparent'};">
-	                <Settings size={18} />
-	                <span>Settings</span>
-	        </a>
-		{/if}
-	</div>
 	</div>
 	<!-- Footer -->
 	<div style="margin-top: auto;">
@@ -90,8 +79,8 @@
 
 <style>
 	.sidebar {
-		width: 240px;
-		padding: 28px 20px;
+		width: 200px;
+		padding: 20px 16px;
 		background: var(--bg);
 		border-right: 1px solid var(--hairline);
 		display: flex;
@@ -102,5 +91,184 @@
 		box-sizing: border-box;
 		overflow-y: auto;
 		flex-shrink: 0;
+	}
+
+	.sidebar .mono,
+	.sidebar .eyebrow {
+		padding: 0;
+	}
+
+	/* Compact layout for shorter screens */
+	@media (max-height: 800px) {
+		.sidebar {
+			padding: 20px 16px;
+			gap: 20px;
+		}
+		
+		.sidebar .display {
+			font-size: 20px !important;
+		}
+		
+		.sidebar .eyebrow {
+			font-size: 10px !important;
+			margin-bottom: 6px !important;
+		}
+		
+		.sidebar .nav-item {
+			padding: 8px 12px !important;
+			font-size: 13px !important;
+			gap: 10px !important;
+			transition: background 0.2s ease;
+		}
+
+		.sidebar .nav-item:hover {
+			background: var(--ink-2) !important;
+		}
+		
+		.sidebar .nav-item:not(.active):hover {
+			background: var(--surface) !important;
+		}
+		
+		.sidebar .nav-item span {
+			font-size: 13px !important;
+		}
+		
+		.sidebar .mono {
+			font-size: 10px !important;
+		}
+	}
+
+	/* Very compact layout for very short screens */
+	@media (max-height: 700px) {
+		.sidebar {
+			padding: 16px 12px;
+			gap: 16px;
+		}
+		
+		.sidebar .display {
+			font-size: 18px !important;
+		}
+		
+		.sidebar .eyebrow {
+			font-size: 9px !important;
+			margin-bottom: 4px !important;
+		}
+		
+		.sidebar .nav-item {
+			padding: 6px 10px !important;
+			font-size: 12px !important;
+			gap: 8px !important;
+		}
+		
+		.sidebar .nav-item span {
+			font-size: 12px !important;
+		}
+		
+		.sidebar .mono {
+			font-size: 9px !important;
+		}
+		
+		/* Compact footer section */
+		.sidebar > div:last-child {
+			margin-top: auto;
+			padding-top: 8px !important;
+		}
+		
+		.sidebar .card-tight {
+			padding: 10px !important;
+			margin-bottom: 8px !important;
+		}
+		
+		.sidebar .card-tight .eyebrow {
+			margin-bottom: 4px !important;
+		}
+		
+		.sidebar .card-tight div[style*="font-size: 13px"] {
+			font-size: 12px !important;
+			margin-bottom: 3px !important;
+		}
+		
+		.sidebar .card-tight .mono {
+			font-size: 9px !important;
+		}
+		
+		/* Avatar section */
+		.sidebar div[style*="padding: 16px 8px 0"] {
+			padding: 8px 4px 0 !important;
+		}
+		
+		.sidebar .avatar.sm {
+			width: 18px !important;
+			height: 18px !important;
+			font-size: 9px !important;
+		}
+		
+		.sidebar div[style*="font-size: 12px"] {
+			font-size: 11px !important;
+		}
+		
+		.sidebar div[style*="font-size: 10px"] {
+			font-size: 9px !important;
+		}
+	}
+
+	/* Reduce gap beneath Settings route */
+	.sidebar .nav-item[href="/settings"] {
+		margin-bottom: -8px;
+	}
+
+	/* Ultra compact for extremely short screens */
+	@media (max-height: 600px) {
+		.sidebar {
+			padding: 12px 8px;
+			gap: 12px;
+		}
+		
+		.sidebar .display {
+			font-size: 16px !important;
+		}
+		
+		.sidebar .eyebrow {
+			font-size: 8px !important;
+			margin-bottom: 3px !important;
+		}
+		
+		.sidebar .nav-item {
+			padding: 4px 8px !important;
+			font-size: 11px !important;
+			gap: 6px !important;
+		}
+		
+		.sidebar .nav-item span {
+			font-size: 11px !important;
+		}
+		
+		.sidebar .mono {
+			font-size: 8px !important;
+		}
+		
+		/* Hide or minimize less critical elements */
+		.sidebar .card-tight {
+			padding: 6px !important;
+		}
+		
+		.sidebar .card-tight .eyebrow {
+			display: none;
+		}
+		
+		.sidebar div[style*="padding: 16px 8px 0"] {
+			padding: 4px 2px 0 !important;
+		}
+		
+		.sidebar .avatar.sm {
+			width: 16px !important;
+			height: 16px !important;
+			font-size: 8px !important;
+		}
+		
+		/* Further reduce Settings gap on ultra short screens */
+		.sidebar .nav-item[href="/settings"] {
+			margin-bottom: -12px;
+		}
 	}
 </style>
