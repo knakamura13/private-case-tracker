@@ -483,6 +483,11 @@
 	color: var(--blush-d);
 }
 
+.modal-footer-delete:hover {
+	background: var(--blush);
+	color: var(--blush-d);
+}
+
 .modal-footer-save {
 	background: var(--ink-1);
 	color: var(--surface-1);
@@ -6080,4 +6085,230 @@
 /* Backdrop utilities */
 .backdrop-blur-sm {
 	backdrop-filter: blur(4px);
+}
+
+/* Timeline page styles */
+.timeline-page {
+	display: grid;
+	grid-template-columns: 1fr 320px;
+	gap: 32px;
+}
+
+.timeline-phase-rail {
+	display: flex;
+	flex-direction: column;
+	gap: 32px;
+}
+
+.timeline-phase-header {
+	background: var(--surface-2);
+	border-radius: var(--r-md);
+	padding: 20px 24px;
+	margin-bottom: 20px;
+}
+
+.timeline-phase-header-done {
+	background: var(--sage);
+}
+
+.timeline-phase-header-active {
+	background: var(--peri);
+}
+
+.timeline-phase-number {
+	font-family: var(--font-mono);
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	margin-bottom: 8px;
+}
+
+.timeline-phase-title {
+	font-family: var(--font-display);
+	font-size: 22px;
+	font-weight: 500;
+	line-height: 1.2;
+	margin: 0 0 4px 0;
+}
+
+.timeline-phase-subtitle {
+	font-size: 12px;
+	color: var(--ink-2);
+	margin: 0 0 12px 0;
+}
+
+.timeline-phase-meta {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.timeline-milestone-rail {
+	margin-left: 28px;
+	position: relative;
+	padding-left: 28px;
+}
+
+.timeline-rail-line {
+	position: absolute;
+	left: 11px;
+	top: 0;
+	bottom: 0;
+	width: 2px;
+	background: var(--surface-3);
+}
+
+.timeline-milestone-node {
+	position: absolute;
+	left: 0;
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.timeline-milestone-node-done {
+	background: var(--sage-fill);
+}
+
+.timeline-milestone-node-active {
+	background: var(--ink);
+}
+
+.timeline-milestone-node-future {
+	background: var(--surface-3);
+}
+
+.timeline-milestone-card {
+	background: var(--surface);
+	border: 1px solid var(--hairline);
+	border-radius: var(--r-md);
+	padding: 16px;
+	margin-bottom: 16px;
+	transition: box-shadow 120ms;
+}
+
+.timeline-milestone-card-active {
+	background: var(--peri);
+}
+
+.timeline-milestone-card:hover {
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.timeline-milestone-date {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--ink-3);
+	margin-bottom: 4px;
+}
+
+.timeline-milestone-title {
+	font-family: var(--font-display);
+	font-size: 18px;
+	font-weight: 500;
+	line-height: 1.3;
+	margin: 0 0 8px 0;
+}
+
+.timeline-milestone-body {
+	font-size: 13px;
+	color: var(--ink-2);
+	line-height: 1.5;
+	margin-bottom: 12px;
+}
+
+.timeline-milestone-footer {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.timeline-sidebar {
+	position: sticky;
+	top: 32px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.timeline-sidebar-card {
+	background: var(--surface);
+	border: 1px solid var(--hairline);
+	border-radius: var(--r-md);
+	padding: 20px;
+}
+
+.timeline-sidebar-card-tinted-sage {
+	background: var(--sage);
+}
+
+.timeline-sidebar-card-tinted-peri {
+	background: var(--peri);
+}
+
+.timeline-sidebar-number {
+	font-family: var(--font-display);
+	font-size: 44px;
+	font-weight: 500;
+	line-height: 1;
+	margin-bottom: 4px;
+}
+
+.timeline-sidebar-label {
+	font-size: 13px;
+	color: var(--ink-2);
+}
+
+.timeline-phase-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.timeline-phase-list-item {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 8px 12px;
+	border-radius: var(--r-sm);
+}
+
+.timeline-phase-list-item-active {
+	background: var(--peri);
+}
+
+.timeline-phase-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--surface-3);
+}
+
+.timeline-phase-dot-active {
+	background: var(--peri-fill);
+}
+
+.timeline-phase-dot-done {
+	background: var(--sage-fill);
+}
+
+.timeline-phase-name {
+	font-size: 13px;
+	flex: 1;
+}
+
+.timeline-phase-count {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--ink-3);
+}
+
+.timeline-add-milestone-btn {
+	width: 100%;
+	justify-content: flex-start;
+	margin-top: 12px;
 }

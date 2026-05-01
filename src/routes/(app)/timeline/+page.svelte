@@ -1,17 +1,13 @@
 <script lang="ts">
 	import PageHeader from '$lib/components/shared/PageHeader.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import Badge from '$lib/components/ui/Badge.svelte';
-	import Card from '$lib/components/ui/Card.svelte';
 	import MarkdownRenderer from '$lib/components/shared/MarkdownRenderer.svelte';
 	import MilestoneCreateModal from '$lib/components/timeline/MilestoneCreateModal.svelte';
 	import MilestoneEditModal from '$lib/components/timeline/MilestoneEditModal.svelte';
-	import { Plus, MapPin } from 'lucide-svelte';
-	import { fly } from 'svelte/transition';
-	import { cubicOut } from 'svelte/easing';
+	import ByAvatar from '$lib/components/shared/ByAvatar.svelte';
+	import { Plus, MapPin, Check, Clock } from 'lucide-svelte';
 	import { fmtDate } from '$lib/utils/dates';
 	import { PHASE_ORDER, PHASE_LABELS, PHASE_DESCRIPTIONS } from '$lib/constants/phases';
-	import { titleCase } from '$lib/utils/format';
 	import { page } from '$app/stores';
 	import { getPageNumber } from '$lib/constants/navigation';
 	import { invalidateAll, goto } from '$app/navigation';
@@ -58,12 +54,35 @@
 		return Math.round((done / items.length) * 100);
 	}
 
-	function statusColor(s: string) {
-		if (s === 'DONE') return 'bg-success border-success';
-		if (s === 'IN_PROGRESS') return 'bg-warning border-warning';
-		if (s === 'BLOCKED') return 'bg-destructive border-destructive';
-		if (s === 'SKIPPED') return 'bg-secondary border-secondary';
-		return 'border-border bg-card';
+	function phaseStatus(items: { status: string }[]) {
+		if (items.length === 0) return 'future';
+		const hasActive = items.some((i) => i.status === 'IN_PROGRESS' || i.status === 'PLANNED');
+		const allDone = items.every((i) => i.status === 'DONE' || i.status === 'SKIPPED');
+		if (allDone) return 'done';
+		if (hasActive) return 'active';
+		return 'future';
+	}
+
+	function milestoneNodeStatus(status: string) {
+		if (status === 'DONE' || status === 'SKIPPED') return 'done';
+		if (status === 'IN_PROGRESS' || status === 'PLANNED') return 'active';
+		return 'future';
+	}
+
+	function statusPillClass(status: string) {
+		if (status === 'DONE' || status === 'SKIPPED') return 's-done';
+		if (status === 'IN_PROGRESS' || status === 'PLANNED') return 's-active';
+		if (status === 'BLOCKED') return 's-urgent';
+		return 's-note';
+	}
+
+	function statusLabel(status: string) {
+		if (status === 'DONE') return 'Done';
+		if (status === 'SKIPPED') return 'Skipped';
+		if (status === 'IN_PROGRESS') return 'In progress';
+		if (status === 'PLANNED') return 'Planned';
+		if (status === 'BLOCKED') return 'Blocked';
+		return status;
 	}
 
 	function generateGoogleMapsUrl(address: string | null | undefined) {
@@ -71,80 +90,147 @@
 		const query = encodeURIComponent(address.trim());
 		return `https://www.google.com/maps/search/?api=1&query=${query}`;
 	}
+
+	const totalPhases = $derived(PHASE_ORDER.length);
+	const completedPhases = $derived(
+		grouped.filter((g) => phaseStatus(g.items) === 'done').length
+	);
+	const currentPhaseIndex = $derived(
+		grouped.findIndex((g) => phaseStatus(g.items) === 'active')
+	);
+	const currentPhase = $derived(
+		grouped.at(currentPhaseIndex) ?? null
+	);
 </script>
 
 <PageHeader title="Timeline" sub="Case phases from preparation through final outcome." number={getPageNumber('/timeline')} />
 
-<div class="timeline-container">
-	{#each grouped as g, _i (g.phase)}
-		<section class="timeline-phase">
-			<div class="timeline-phase-header">
-				<div>
+<div class="timeline-page">
+	<!-- Left: Phase Rail -->
+	<div class="timeline-phase-rail">
+		{#each grouped as g, i (g.phase)}
+			{@const status = phaseStatus(g.items)}
+			{@const progress = phaseProgress(g.items)}
+			<section>
+				<!-- Phase Header -->
+				<div class="timeline-phase-header {status === 'done' ? 'timeline-phase-header-done' : ''} {status === 'active' ? 'timeline-phase-header-active' : ''}">
+					<div class="timeline-phase-number">0{i + 1}</div>
 					<h2 class="timeline-phase-title">{PHASE_LABELS[g.phase]}</h2>
-					<p class="timeline-phase-description">{PHASE_DESCRIPTIONS[g.phase]}</p>
+					<p class="timeline-phase-subtitle">{PHASE_DESCRIPTIONS[g.phase]}</p>
+					<div class="timeline-phase-meta">
+						{#if g.items.length > 0}
+							<span class="pill {statusPillClass(g.items[0]?.status ?? 'PLANNED')}">{progress}% complete</span>
+							<span class="mono" style="font-size: 11px; color: var(--ink-3);">{g.items.length} milestones</span>
+						{/if}
+					</div>
 				</div>
-				<div class="timeline-phase-actions">
-					{#if g.items.length > 0}
-						<span class="timeline-text-xs timeline-text-muted">{phaseProgress(g.items)}% complete</span>
-					{/if}
-					<Button variant="ghost" size="sm" onclick={() => { defaultPhase = g.phase; showCreateModal = true; }}>{#snippet children()}<Plus class="timeline-icon-sm" /> Add{/snippet}</Button>
-				</div>
-			</div>
-			{#if g.items.length === 0}
-				<Card class="timeline-p-4 timeline-text-sm timeline-text-muted">
-					<span>No milestones in this phase yet.</span>
-				</Card>
-			{:else}
-				<ol class="timeline-milestone-list">
-					{#each g.items as m, i (m.id)}
-						<li in:fly={{ y: 30, duration: 500, delay: i * 50 + 100, easing: cubicOut }}>
-							<button
-								type="button"
-								onclick={async (e) => {
-									e.currentTarget.blur();
-									await updateUrl(m.id);
-								}}
-								class="timeline-w-full timeline-text-left"
-							>
-								<Card id={m.id} class="timeline-milestone-card">
-									<div class="timeline-status-indicator {statusColor(m.status)}" title={titleCase(m.status)}></div>
-									<div class="timeline-milestone-content">
-										<div class="timeline-milestone-header">
-											<p class="timeline-milestone-title">{m.title}</p>
-											{#if m.priority !== 'MEDIUM'}
-												<Badge variant="outline" class="timeline-shrink-0">{titleCase(m.priority)}</Badge>
-											{/if}
-										</div>
-										{#if m.description}<MarkdownRenderer content={m.description} class="timeline-mt-1 timeline-text-sm timeline-text-muted timeline-prose-sm timeline-max-w-none" />{/if}
-										{#if m.subTasks && m.subTasks.length > 0}
-											<div class="timeline-mt-2">
-												<div class="timeline-mb-1 timeline-text-xs timeline-text-muted">
-													{m.subTasks.filter((st) => st.done).length}/{m.subTasks.length} subtasks
-												</div>
-												<ul class="timeline-subtask-list">
-													{#each m.subTasks as st (st.id)}
-														<li class="timeline-subtask-item">
-															<input type="checkbox" checked={st.done} disabled class="timeline-checkbox" />
-															<span class={st.done ? 'timeline-line-through timeline-text-muted' : ''}>{st.text}</span>
-														</li>
-													{/each}
-												</ul>
+
+				<!-- Milestone Rail -->
+				{#if g.items.length > 0}
+					<div class="timeline-milestone-rail">
+						<div class="timeline-rail-line"></div>
+						{#each g.items as m, _mi (m.id)}
+							{@const nodeStatus = milestoneNodeStatus(m.status)}
+							<div style="position: relative; margin-bottom: 16px;">
+								<div class="timeline-milestone-node {nodeStatus === 'done' ? 'timeline-milestone-node-done' : ''} {nodeStatus === 'active' ? 'timeline-milestone-node-active' : ''} {nodeStatus === 'future' ? 'timeline-milestone-node-future' : ''}">
+									{#if nodeStatus === 'done'}
+										<Check style="width: 14px; height: 14px; color: var(--surface);" />
+									{:else if nodeStatus === 'active'}
+										<Clock style="width: 14px; height: 14px; color: var(--surface);" />
+									{/if}
+								</div>
+								<button
+									type="button"
+									onclick={async (e) => {
+										e.currentTarget.blur();
+										await updateUrl(m.id);
+									}}
+									class="timeline-w-full timeline-text-left"
+									style="background: none; border: none; cursor: pointer; width: 100%; text-align: left;"
+								>
+									<div class="timeline-milestone-card {nodeStatus === 'active' ? 'timeline-milestone-card-active' : ''}">
+										{#if m.dueDate}
+											<div class="timeline-milestone-date">{fmtDate(m.dueDate)}</div>
+										{/if}
+										<h3 class="timeline-milestone-title">{m.title}</h3>
+										{#if m.description}
+											<div class="timeline-milestone-body">
+												<MarkdownRenderer content={m.description} />
 											</div>
 										{/if}
-										<div class="timeline-milestone-meta">
-											{#if m.dueDate}<span>Due {fmtDate(m.dueDate)}</span>{/if}
-											{#if (m as MilestoneItem).location}<span>· <a href={generateGoogleMapsUrl((m as MilestoneItem).location)} target="_blank" rel="noopener noreferrer" class="timeline-flex timeline-items-center timeline-gap-1 timeline-hover-primary"><MapPin class="timeline-icon-xs" /> {(m as MilestoneItem).location}</a></span>{/if}
-											{#if m.owner}<span>· {m.owner.name ?? m.owner.email}</span>{/if}
+										<div class="timeline-milestone-footer">
+											<span class="pill {statusPillClass(m.status)}">{statusLabel(m.status)}</span>
+											{#if m.subTasks && m.subTasks.length > 0}
+												<span style="font-size: 11px; color: var(--ink-3);">
+													{m.subTasks.filter((st) => st.done).length}/{m.subTasks.length} subtasks
+												</span>
+											{/if}
+											{#if (m as MilestoneItem).location}
+												<a
+													href={generateGoogleMapsUrl((m as MilestoneItem).location)}
+													target="_blank"
+													rel="noopener noreferrer"
+													style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--ink-2); text-decoration: none;"
+												>
+													<MapPin style="width: 12px; height: 12px;" />
+													{(m as MilestoneItem).location}
+												</a>
+											{/if}
+											{#if m.owner}
+												<ByAvatar owner={m.owner as { id: string; name: string | null; email: string }} size="sm" />
+											{/if}
 										</div>
 									</div>
-								</Card>
-							</button>
-						</li>
-					{/each}
-				</ol>
-			{/if}
-		</section>
-	{/each}
+								</button>
+							</div>
+						{/each}
+					</div>
+				{/if}
+
+				<!-- Add Milestone Button -->
+				<Button
+					variant="ghost"
+					size="sm"
+					onclick={() => { defaultPhase = g.phase; showCreateModal = true; }}
+					class="timeline-add-milestone-btn"
+				>
+					<Plus style="width: 14px; height: 14px;" /> Add milestone to {PHASE_LABELS[g.phase]}
+				</Button>
+			</section>
+		{/each}
+	</div>
+
+	<!-- Right: Sticky Sidebar -->
+	<div class="timeline-sidebar">
+		<!-- Phases Complete Card -->
+		<div class="timeline-sidebar-card timeline-sidebar-card-tinted-sage">
+			<div class="timeline-sidebar-number">{completedPhases}/{totalPhases}</div>
+			<div class="timeline-sidebar-label">Phases complete</div>
+		</div>
+
+		<!-- Phase Progress Card -->
+		<div class="timeline-sidebar-card">
+			<div class="timeline-phase-list">
+				{#each grouped as g (g.phase)}
+					{@const status = phaseStatus(g.items)}
+					<div class="timeline-phase-list-item {status === 'active' ? 'timeline-phase-list-item-active' : ''}">
+						<div class="timeline-phase-dot {status === 'done' ? 'timeline-phase-dot-done' : ''} {status === 'active' ? 'timeline-phase-dot-active' : ''}"></div>
+						<span class="timeline-phase-name">{PHASE_LABELS[g.phase]}</span>
+						<span class="timeline-phase-count">{g.items.length}</span>
+					</div>
+				{/each}
+			</div>
+		</div>
+
+		<!-- Now Card -->
+		{#if currentPhase}
+			<div class="timeline-sidebar-card timeline-sidebar-card-tinted-peri">
+				<div style="font-family: var(--font-display); font-size: 22px; font-weight: 500; margin-bottom: 4px;">Now</div>
+				<div class="timeline-sidebar-label">{PHASE_LABELS[currentPhase.phase]}</div>
+				<p style="font-size: 12px; color: var(--ink-2); margin-top: 8px;">{PHASE_DESCRIPTIONS[currentPhase.phase]}</p>
+			</div>
+		{/if}
+	</div>
 </div>
 
 {#if editingMilestone}
