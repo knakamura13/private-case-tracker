@@ -609,325 +609,33 @@
   The ⋮ button is positioned relative to the circle span itself,
   so it doesn't push the circle down or affect alignment.
 -->
-<div class="widget-container">
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 16px; padding: 12px;">
 	{#each visibleFolders as folder (folder.id)}
 		{@const folderLinks = folderLinksMap[folder.id] ?? []}
-		{@const previewLinks = folderLinks.slice(0, 4)}
 		<div
 			class="widget-item"
-			draggable={true}
+			style="display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer;"
+            draggable={true}
 			ondragstart={(e) => handleDragStart(e, folder.id)}
 			ondragenter={(e) => handleDragEnter(e, folder.id)}
 			ondragover={(e) => handleDragOver(e, folder.id)}
 			ondragleave={handleDragLeave}
 			ondrop={(e) => handleDrop(e, folder.id)}
 			ondragend={handleDragEnd}
-			class:widget-drop-target={dropTargetId === folder.id && (dropIntent === 'reorder' || dropIntent === 'move-into')}
-			class:widget-drop-target-reorder={dropTargetId === folder.id && dropIntent === 'reorder'}
-			class:widget-drop-target-move-into={dropTargetId === folder.id && dropIntent === 'move-into'}
-			class:widget-dragging={draggingId === folder.id}
-			class:widget-insert-indicator={dropInsertIndex !== null && allItems.findIndex((i) => i.id === folder.id) === dropInsertIndex}
-			role="button"
-			tabindex="0"
-			aria-label={folder.name ?? 'Folder'}
+            role="button"
+            tabindex="0"
 		>
-			<!-- Circle + ⋮ menu wrapper -->
-			<div class="widget-circle-wrapper">
-				<!-- ⋮ button anchored to the top-right corner of the circle -->
-				<button
-					type="button"
-					draggable={false}
-					class="widget-action-btn"
-					aria-label={`Actions for ${folder.name ?? 'Folder'}`}
-					aria-expanded={menuOpenId === folder.id}
-					aria-haspopup="true"
-					data-quicklink-menu="trigger"
-					onclick={(e) => toggleMenu(folder.id, e)}
-				>
-					<EllipsisVertical class="widget-icon-3-5" />
-				</button>
-
-				{#if menuOpenId === folder.id}
-					<div
-						class="widget-dropdown"
-						data-quicklink-menu="panel"
-						role="menu"
-					>
-						<button
-							type="button"
-							class="widget-dropdown-item"
-							role="menuitem"
-							onclick={() => openEditFolder(folder)}
-						>
-							Rename
-						</button>
-						<button
-							type="button"
-							class="widget-dropdown-item widget-dropdown-item-destructive"
-							role="menuitem"
-							onclick={() => deleteFolder(folder.id)}
-						>
-							Delete
-						</button>
-					</div>
-				{/if}
-
-				<!-- Folder circle with preview icons -->
-				<div
-					onclick={(e) => toggleFolderPopover(folder.id, e)}
-					onkeydown={(e) => {
-						if (e.key === 'Enter' || e.key === ' ') {
-							e.preventDefault();
-							toggleFolderPopover(folder.id, e);
-						}
-					}}
-					class="widget-circle"
-					role="button"
-					tabindex="0"
-					aria-label={folder.name ?? 'Folder'}
-				>
-					<Folder class="widget-icon-6 text-muted-foreground" aria-hidden="true" />
-					<!-- Preview icons (up to 4) -->
-					{#if previewLinks.length > 0}
-						<div class="widget-preview-icons">
-							{#each previewLinks.slice(0, 2) as pl}
-								{#if pl.faviconUrl || preloadedFavicons.has(pl.id)}
-									<img
-										src={faviconForLink(pl)}
-										alt=""
-										class="widget-preview-icon"
-										referrerpolicy="no-referrer"
-										class:opacity-50={previewLinks.length > 1}
-										draggable={false}
-										style="image-rendering: crisp-edges"
-									/>
-								{/if}
-							{/each}
-						</div>
-					{/if}
-				</div>
+			<div style="width: 48px; height: 48px; background: var(--lilac); border: 1px solid var(--lilac-d); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+				<Folder style="width: 24px; height: 24px; color: var(--lilac-d);" />
 			</div>
-
-			<!-- Label: up to 2 lines, then ellipsis -->
-				{#if inlineEditingFolderId === folder.id}
-					<input
-						bind:this={inlineFolderInputEl}
-						bind:value={inlineFolderName}
-						placeholder="Name this folder"
-						class="widget-folder-input"
-						onclick={(event) => event.stopPropagation()}
-						onkeydown={(event) => {
-							event.stopPropagation();
-							if (event.key === 'Enter') {
-								event.preventDefault();
-								void saveInlineFolderName(folder.id);
-							}
-							if (event.key === 'Escape') {
-								event.preventDefault();
-								cancelInlineFolderName();
-							}
-						}}
-						onblur={() => void saveInlineFolderName(folder.id)}
-					/>
-				{:else if folder.name}
-					<span
-						class="widget-label"
-						title={folder.name}
-					>
-					{folder.name}
-				</span>
-			{/if}
+			<span style="font-size: 11px; font-weight: 500; text-align: center;">{folder.name}</span>
 		</div>
-
-		<!-- Folder popover -->
-		{#if folderPopoverId === folder.id}
-			<div
-				class="widget-popover"
-				data-folder-popover="panel"
-				role="dialog"
-				aria-modal="true"
-			>
-				<button
-					type="button"
-					class="widget-popover-overlay"
-					aria-label="Close"
-					onclick={closeFolderDialog}
-				></button>
-				<div
-					class="widget-popover-panel"
-				>
-					<div class="widget-popover-header folder-popover-header">
-						<input
-							bind:this={folderDialogInputEl}
-							bind:value={folderDialogName}
-							aria-label="Folder name"
-							placeholder="Folder"
-							class="folder-popover-input"
-							onkeydown={(event) => {
-								if (event.key === 'Enter') {
-									event.preventDefault();
-									void saveFolderDialogName(folder);
-									folderDialogInputEl?.blur();
-								}
-								if (event.key === 'Escape') {
-									event.preventDefault();
-									folderDialogName = folder.name ?? '';
-									folderDialogInputEl?.blur();
-								}
-							}}
-							onblur={() => void saveFolderDialogName(folder)}
-						/>
-						<div class="folder-popover-actions">
-							<div class="relative" data-quicklink-menu>
-								<button
-									type="button"
-									class="folder-popover-btn"
-									aria-label={`Actions for ${folder.name ?? 'Folder'}`}
-									aria-expanded={folderDialogMenuOpen}
-									aria-haspopup="true"
-									onclick={() => (folderDialogMenuOpen = !folderDialogMenuOpen)}
-								>
-									<MoreHorizontal class="widget-icon-4" aria-hidden="true" />
-								</button>
-								{#if folderDialogMenuOpen}
-									<div class="folder-popover-menu" role="menu">
-										<button
-											type="button"
-											class="folder-popover-menu-item"
-											role="menuitem"
-											onclick={() => deleteFolder(folder.id)}
-										>
-											Delete
-										</button>
-									</div>
-								{/if}
-							</div>
-							<button
-								type="button"
-								class="folder-popover-btn folder-popover-close"
-								aria-label="Close"
-								onclick={closeFolderDialog}
-							>
-								<span class="sr-only">Close</span>
-								<span aria-hidden="true" class="folder-popover-close">×</span>
-							</button>
-						</div>
-					</div>
-					<div class="widget-popover-body">
-						{#if folderLinks.length === 0}
-							<div class="folder-popover-empty">
-								<p class="folder-popover-empty-text">This folder is empty</p>
-								<button
-									type="button"
-									class="folder-popover-add-btn"
-									onclick={() => openAdd(folder)}
-								>
-									<Plus class="widget-icon-4" aria-hidden="true" />
-									Add link
-								</button>
-							</div>
-						{/if}
-						{#each folderLinks as link (link.id)}
-							<div
-								class="widget-item"
-							>
-								<div class="widget-circle-wrapper">
-									<button
-										type="button"
-										draggable={false}
-										class="widget-action-btn"
-										aria-label={`Actions for ${labelFor(link)}`}
-										onclick={(e) => toggleMenu(link.id, e)}
-									>
-										<EllipsisVertical class="widget-icon-3-5" />
-									</button>
-
-									{#if menuOpenId === link.id && menuPosition}
-										<div
-											style="top: {menuPosition.top}px; left: {menuPosition.left}px;"
-											class="widget-dropdown"
-											data-quicklink-menu="panel"
-											role="menu"
-										>
-											<button
-												type="button"
-												class="widget-dropdown-item"
-												role="menuitem"
-												onclick={() => openEdit(link)}
-											>
-												Edit
-											</button>
-											<button
-												type="button"
-												class="widget-dropdown-item"
-												role="menuitem"
-												onclick={() => moveLinkToRoot(link.id)}
-											>
-												Move to root
-											</button>
-											<form
-												method="post"
-												action="?/delete"
-												use:enhance={() => {
-													return async ({ result, update }) => {
-														await update();
-														if (result.type === 'redirect') closeModal();
-													};
-												}}
-											>
-												<input type="hidden" name="id" value={link.id} />
-												<button
-													type="submit"
-													class="widget-dropdown-item widget-dropdown-item-destructive"
-													role="menuitem"
-												>
-													Remove
-												</button>
-											</form>
-										</div>
-									{/if}
-
-									<div
-										onclick={() => openLink(link.url)}
-										onkeydown={(e) => handleLinkKeydown(e, link.url)}
-										aria-label={labelFor(link)}
-										role="button"
-										tabindex="0"
-										class="widget-circle"
-									>
-										{#if brokenFavicons.has(link.id)}
-											<Link2 class="widget-icon-6 text-muted-foreground" aria-hidden="true" />
-										{:else if link.faviconUrl || preloadedFavicons.has(link.id)}
-											<img
-												src={faviconForLink(link)}
-												alt=""
-												class="widget-icon-8 rounded-sm object-contain"
-												referrerpolicy="no-referrer"
-												style="image-rendering: crisp-edges"
-											/>
-										{:else}
-											<!-- Show Link2 icon while preloading -->
-											<Link2 class="widget-icon-6 text-muted-foreground" aria-hidden="true" />
-										{/if}
-									</div>
-								</div>
-								<span
-									class="widget-label"
-									title={labelFor(link)}
-								>
-									{labelFor(link)}
-								</span>
-							</div>
-						{/each}
-					</div>
-				</div>
-			</div>
-		{/if}
 	{/each}
 
 	{#each rootLinks as link (link.id)}
 		<div
 			class="widget-item"
+            style="display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer;"
 			draggable={true}
 			ondragstart={(e) => handleDragStart(e, link.id)}
 			ondragenter={(e) => handleDragEnter(e, link.id)}
@@ -935,126 +643,30 @@
 			ondragleave={handleDragLeave}
 			ondrop={(e) => handleDrop(e, link.id)}
 			ondragend={handleDragEnd}
-			class:widget-drop-target={dropTargetId === link.id && (dropIntent === 'reorder' || dropIntent === 'merge')}
-			class:widget-drop-target-reorder={dropTargetId === link.id && dropIntent === 'reorder'}
-			class:widget-drop-target-merge={dropTargetId === link.id && dropIntent === 'merge'}
-			class:widget-dragging={draggingId === link.id}
-			class:widget-insert-indicator={dropInsertIndex !== null && allItems.findIndex((i) => i.id === link.id) === dropInsertIndex}
-			role="button"
-			tabindex="0"
-			aria-label={labelFor(link)}
+            role="button"
+            tabindex="0"
+            onclick={() => openLink(link.url)}
 		>
-			<!-- Circle + ⋮ menu wrapper -->
-			<div class="widget-circle-wrapper">
-				<!-- ⋮ button anchored to the top-right corner of the circle -->
-				<button
-					type="button"
-					draggable={false}
-					class="widget-action-btn"
-					aria-label={`Actions for ${labelFor(link)}`}
-					aria-expanded={menuOpenId === link.id}
-					aria-haspopup="true"
-					data-quicklink-menu="trigger"
-					onclick={(e) => toggleMenu(link.id, e)}
-				>
-					<EllipsisVertical class="widget-icon-3-5" />
-				</button>
-
-				{#if menuOpenId === link.id}
-					<div
-						class="widget-dropdown"
-						data-quicklink-menu="panel"
-						role="menu"
-					>
-						<button
-							type="button"
-							class="widget-dropdown-item"
-							role="menuitem"
-							onclick={() => openEdit(link)}
-						>
-							Edit
-						</button>
-						<form
-							method="post"
-							action="?/delete"
-							use:enhance={() => {
-								return async ({ result, update }) => {
-									await update();
-									if (result.type === 'redirect') closeModal();
-								};
-							}}
-						>
-							<input type="hidden" name="id" value={link.id} />
-							<button
-								type="submit"
-								class="widget-dropdown-item widget-dropdown-item-destructive"
-								role="menuitem"
-							>
-								Remove
-							</button>
-						</form>
-					</div>
-				{/if}
-
-				<!-- Favicon circle is a plain div (no extra padding) -->
-				<div
-					onclick={() => openLink(link.url)}
-					onkeydown={(e) => handleLinkKeydown(e, link.url)}
-					aria-label={labelFor(link)}
-					role="button"
-					tabindex="0"
-					class="widget-circle"
-				>
-					{#if brokenFavicons.has(link.id)}
-						<Link2 class="widget-icon-6 text-muted-foreground" aria-hidden="true" />
-					{:else if link.faviconUrl || preloadedFavicons.has(link.id)}
-						<img
-							src={faviconForLink(link)}
-							alt=""
-							class="widget-icon-8 rounded-sm object-contain"
-							referrerpolicy="no-referrer"
-							draggable={false}
-							style="image-rendering: crisp-edges"
-						/>
-					{:else}
-						<!-- Show Link2 icon while preloading -->
-						<Link2 class="widget-icon-6 text-muted-foreground" aria-hidden="true" />
-					{/if}
-				</div>
+			<div style="width: 48px; height: 48px; background: var(--surface-2); border: 1px solid var(--hairline); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                {#if brokenFavicons.has(link.id) || !(link.faviconUrl || preloadedFavicons.has(link.id))}
+				    <Link2 style="width: 24px; height: 24px; color: var(--ink-3);" />
+                {:else}
+                    <img src={faviconForLink(link)} alt="" style="width: 24px; height: 24px; object-fit: contain;" />
+                {/if}
 			</div>
-
-			<!-- Label: up to 2 lines, then ellipsis -->
-			<span
-				class="widget-label"
-				title={labelFor(link)}
-			>
-				{labelFor(link)}
-			</span>
+			<span style="font-size: 11px; font-weight: 500; text-align: center;">{labelFor(link)}</span>
 		</div>
 	{/each}
 
-	<!-- Add link tile — same structure: circle on top, label below -->
 	<button
 		type="button"
-		class="widget-item text-muted-foreground hover:text-foreground"
+		style="display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; background: none; border: none;"
 		onclick={() => openAdd()}
 	>
-		<span class="widget-circle">
-			<Plus class="widget-icon-6" aria-hidden="true" />
-		</span>
-		<span class="widget-label">Add link</span>
-	</button>
-
-	<!-- Add folder tile -->
-	<button
-		type="button"
-		class="widget-item text-muted-foreground hover:text-foreground"
-		onclick={openAddFolder}
-	>
-		<span class="widget-circle">
-			<Folder class="widget-icon-6" aria-hidden="true" />
-		</span>
-		<span class="widget-label">Add folder</span>
+		<div style="width: 48px; height: 48px; background: var(--surface-3); border: 1px dashed var(--hairline); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+			<Plus style="width: 24px; height: 24px; color: var(--ink-4);" />
+		</div>
+		<span style="font-size: 11px; font-weight: 500; color: var(--ink-3);">Add link</span>
 	</button>
 </div>
 
