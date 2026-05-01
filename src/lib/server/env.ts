@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 const schema = z.object({
 	APP_URL: z.string().url(),
-	PUBLIC_APP_NAME: z.string().default('Private Case Tracker'),
+	PUBLIC_APP_NAME: z.string().default('Monarch'),
 	BETTER_AUTH_SECRET: z.string().min(24),
 	BETTER_AUTH_URL: z.string().url(),
 	ALLOW_OPEN_SIGNUP: z
@@ -45,7 +45,7 @@ let cached: Env | null = null;
 // are provided in production and will fail if these placeholders are detected at runtime.
 const BUILD_PLACEHOLDER: Env = {
 	APP_URL: 'http://localhost:3000',
-	PUBLIC_APP_NAME: 'Private Case Tracker',
+	PUBLIC_APP_NAME: 'Monarch',
 	BETTER_AUTH_SECRET: 'build-placeholder-secret-build-placeholder',
 	BETTER_AUTH_URL: 'http://localhost:3000',
 	ALLOW_OPEN_SIGNUP: false,

@@ -33,51 +33,62 @@
 	<div class="bento-col-left">
 		<!-- Recent Tasks Widget -->
 		<Widget title="Active Tasks" href="/tasks">
-			<div class="task-list">
-				{#each data.tasksPreview as task}
-					<div class="task-item">
-						<CheckSquare size={18} style="color: var(--ink-3);" />
-						<div style="flex: 1;">
-							<div style="font-size: 14px; font-weight: 600;">{task.title}</div>
-							<div class="mono" style="font-size: 11px; color: var(--ink-3);">Due {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No date'}</div>
-						</div>
-						<div class="pill s-active">In progress</div>
-					</div>
-				{/each}
-			</div>
+			{#snippet children()}
+                <div class="task-list">
+                    {#each data.tasksPreview as task}
+                        <div class="task-item">
+                            <CheckSquare size={18} style="color: var(--ink-3);" />
+                            <div style="flex: 1;">
+                                <div style="font-size: 14px; font-weight: 600;">{task.title}</div>
+                                <div class="mono" style="font-size: 11px; color: var(--ink-3);">Due {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No date'}</div>
+                            </div>
+                            <div class="pill s-active">In progress</div>
+                        </div>
+                    {/each}
+                </div>
+            {/snippet}
 		</Widget>
 
 		<!-- Quick Links -->
 		<Widget title="Quick Links" href="/quick-links">
-			<QuickLinksWidget links={data.quickLinks} folders={data.quickLinkFolders} />
+			{#snippet children()}
+                <QuickLinksWidget links={data.quickLinks} folders={data.quickLinkFolders} />
+            {/snippet}
 		</Widget>
 	</div>
 
 	<!-- Right Column -->
 	<div class="bento-col-right">
 		<!-- Countdown / Upcoming -->
-		<Widget title="Upcoming" href="/timeline">
-			<div class="countdown-list">
-				{#each data.countdowns.slice(0, 3) as c}
-					<div class="countdown-item">
-						<div class="eyebrow">{c.label}</div>
-						<div class="display" style="font-size: 20px;">{Math.abs(Math.floor((new Date(c.date).getTime() - Date.now()) / 86400000))} days</div>
-						<div class="mono" style="font-size: 11px; color: var(--ink-3);">{new Date(c.date).toLocaleDateString()}</div>
-					</div>
-				{/each}
-			</div>
+		<Widget title="Milestones" href="/timeline">
+			{#snippet children()}
+                <div class="countdown-list">
+                    {#each data.countdowns.slice(0, 3) as c}
+                        <div class="countdown-item">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                <Clock size={14} style="color: var(--ink-3);" />
+                                <div class="eyebrow" style="margin: 0;">{c.label}</div>
+                            </div>
+                            <div class="display" style="font-size: 20px;">{Math.abs(Math.floor((new Date(c.date).getTime() - Date.now()) / 86400000))} days</div>
+                            <div class="mono" style="font-size: 11px; color: var(--ink-3);">{new Date(c.date).toLocaleDateString()}</div>
+                        </div>
+                    {/each}
+                </div>
+            {/snippet}
 		</Widget>
 
 		<!-- Heads up -->
 		<Widget title="Heads up" class="tinted-blush">
-			<div class="heads-up-list">
-				{#each data.missingCritical as m}
-					<div class="heads-up-item">
-						<AlertTriangle size={16} style="flex-shrink: 0; color: var(--blush-fill);" />
-						<span>{m}</span>
-					</div>
-				{/each}
-			</div>
+			{#snippet children()}
+                <div class="heads-up-list">
+                    {#each data.missingCritical as m}
+                        <div class="heads-up-item">
+                            <AlertTriangle size={16} style="flex-shrink: 0; color: var(--blush-fill);" />
+                            <span>{m}</span>
+                        </div>
+                    {/each}
+                </div>
+            {/snippet}
 		</Widget>
 	</div>
 </div>

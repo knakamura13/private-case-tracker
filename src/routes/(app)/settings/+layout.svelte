@@ -10,27 +10,19 @@
 		{ href: '/settings/tags', label: 'Tags' },
 		{ href: '/settings/dev', label: 'Dev' }
 	];
-
-	const getNavLinkClass = (active: boolean) => {
-		const base = 'settings-layout-block settings-layout-rounded-md settings-layout-px-3 settings-layout-py-2';
-		const activeClass = active
-			? 'settings-layout-bg-primary-10 settings-layout-text-primary'
-			: 'settings-layout-text-muted settings-layout-hover-bg-muted';
-		return `${base} ${activeClass}`;
-	};
 </script>
 
-<div class="settings-layout-flex settings-layout-flex-col settings-layout-gap-6 settings-layout-md-flex-row">
-	<aside class="settings-layout-md-w-48">
+<div style="display: flex; flex-direction: column; gap: 32px; md:flex-direction: row;" class="settings-layout-md-flex-row">
+	<aside style="width: 200px; flex-shrink: 0;">
 		<nav aria-label="Settings sections">
-			<ul class="settings-layout-space-y-1 settings-layout-text-sm">
+			<ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px;">
 				{#each sections as s (s.href)}
 					{@const active = $page.url.pathname === s.href}
 					<li>
 						<a
 							href={s.href}
 							aria-current={active ? 'page' : undefined}
-							class={getNavLinkClass(active)}
+							style="display: block; padding: 10px 16px; border-radius: var(--r-sm); font-size: 14px; font-weight: 500; text-decoration: none; transition: all 120ms ease; background: {active ? 'var(--ink)' : 'transparent'}; color: {active ? 'var(--surface)' : 'var(--ink-2)'};"
 						>
 							{s.label}
 						</a>
@@ -39,5 +31,24 @@
 			</ul>
 		</nav>
 	</aside>
-	<div class="settings-layout-min-w-0 settings-layout-flex-1">{@render children()}</div>
+	<div style="flex: 1; min-width: 0;">{@render children()}</div>
 </div>
+
+<style>
+    @media (max-width: 768px) {
+        .settings-layout-md-flex-row {
+            flex-direction: column !important;
+        }
+        aside {
+            width: 100% !important;
+        }
+        nav ul {
+            flex-direction: row !important;
+            overflow-x: auto;
+            padding-bottom: 8px !important;
+        }
+        nav li {
+            flex-shrink: 0;
+        }
+    }
+</style>

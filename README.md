@@ -1,4 +1,4 @@
-# Private Case Tracker
+# Monarch
 
 A private, secure dashboard for two people managing a marriage-based immigration process.
 Not a legal source of truth. Not affiliated with USCIS or any government agency. No automated submissions.

@@ -50,17 +50,23 @@
 
 	<!-- Footer -->
 	<div style="margin-top: auto;">
-		<!-- Next Step Widget (Hardcoded for now, or use real data if available) -->
-		<div class="card-tight" style="background: var(--peri); border: 1px solid transparent; padding: 14px; border-radius: var(--r-sm); margin-bottom: 12px;">
-			<div class="eyebrow" style="margin-bottom: 6px;">Next step</div>
-			<div style="font-size: 13px; font-weight: 600; margin-bottom: 4px; line-height: 1.3;">
-				USCIS biometrics
+		<!-- Next Step Widget -->
+		{#if $page.data.nextMilestone}
+			<div class="card-tight" style="background: var(--peri); border: 1px solid transparent; padding: 14px; border-radius: var(--r-sm); margin-bottom: 12px;">
+				<div class="eyebrow" style="margin-bottom: 6px;">Next step</div>
+				<div style="font-size: 13px; font-weight: 600; margin-bottom: 4px; line-height: 1.3;">
+					{$page.data.nextMilestone.title}
+				</div>
+				<div class="mono" style="font-size: 11px; color: oklch(0.32 0.13 265);">
+					<Clock size={11} style="vertical-align: -2px; margin-right: 4px;" />
+					{#if $page.data.nextMilestone.dueDate}
+						{new Date($page.data.nextMilestone.dueDate).toLocaleDateString()}
+					{:else}
+						{$page.data.nextMilestone.status.toLowerCase().replace('_', ' ')}
+					{/if}
+				</div>
 			</div>
-			<div class="mono" style="font-size: 11px; color: oklch(0.32 0.13 265);">
-				<Clock size={11} style="vertical-align: -2px; margin-right: 4px;" />
-				Pending schedule
-			</div>
-		</div>
+		{/if}
 
 		<div style="display: flex; align-items: center; gap: 10px; padding: 16px 8px 0; border-top: 1px solid var(--hairline);">
 			<div style="display: flex;">
