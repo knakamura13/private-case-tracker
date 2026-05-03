@@ -92,20 +92,20 @@ Receipt numbers (the only "sensitive" field in the schema) are encrypted at rest
 
 ## Environment variables
 
-| Variable               | Required | Notes                                                                                    |
-| ---------------------- | -------- | ---------------------------------------------------------------------------------------- |
-| `APP_URL`              | yes      | Public origin used in emails (e.g. `https://case.example.com`)                           |
-| `BETTER_AUTH_URL`      | yes      | Same origin as `APP_URL` in production                                                   |
-| `BETTER_AUTH_SECRET`   | yes      | 32+ random bytes (base64). Rotate carefully — invalidates sessions.                      |
-| `FIELD_ENCRYPTION_KEY` | yes      | Base64-encoded 32-byte key for AES-256-GCM. Required to read encrypted fields.           |
-| `AWS_REGION`           | no       | Defaults to `us-east-1`                                                                  |
-| `DYNAMO_TABLE`         | yes\*    | Required in production. Defaults in dev/test.                                            |
-| `DYNAMO_ENDPOINT`      | no       | Set to `http://localhost:8000` when using DynamoDB Local                                 |
-| `PUBLIC_APP_NAME`      | no       | Defaults to "Private Case Tracker"                                                       |
-| `ALLOW_OPEN_SIGNUP`    | no       | Default false. Set true to allow signup without an invite (mostly for first boot).       |
-| `RESEND_API_KEY`       | no       | If unset, invitation emails are logged to the console (good for dev)                     |
-| `EMAIL_FROM`           | no       | "Sender Name <noreply@example.com>"                                                      |
-| `PORT` / `HOST`        | no       | Honored by `adapter-node`. Railway injects `PORT` automatically.                         |
+| Variable               | Required | Notes                                                                              |
+| ---------------------- | -------- | ---------------------------------------------------------------------------------- |
+| `APP_URL`              | yes      | Public origin used in emails (e.g. `https://case.example.com`)                     |
+| `BETTER_AUTH_URL`      | yes      | Same origin as `APP_URL` in production                                             |
+| `BETTER_AUTH_SECRET`   | yes      | 32+ random bytes (base64). Rotate carefully — invalidates sessions.                |
+| `FIELD_ENCRYPTION_KEY` | yes      | Base64-encoded 32-byte key for AES-256-GCM. Required to read encrypted fields.     |
+| `AWS_REGION`           | no       | Defaults to `us-east-1`                                                            |
+| `DYNAMO_TABLE`         | yes\*    | Required in production. Defaults in dev/test.                                      |
+| `DYNAMO_ENDPOINT`      | no       | Set to `http://localhost:8000` when using DynamoDB Local                           |
+| `PUBLIC_APP_NAME`      | no       | Defaults to "Private Case Tracker"                                                 |
+| `ALLOW_OPEN_SIGNUP`    | no       | Default false. Set true to allow signup without an invite (mostly for first boot). |
+| `RESEND_API_KEY`       | no       | If unset, invitation emails are logged to the console (good for dev)               |
+| `EMAIL_FROM`           | no       | "Sender Name <noreply@example.com>"                                                |
+| `PORT` / `HOST`        | no       | Honored by `adapter-node`. Railway injects `PORT` automatically.                   |
 
 Generate secrets:
 
@@ -120,10 +120,10 @@ The repo includes `railway.json` so the deploy is hands-off:
 1. Create a new Railway project from this repo (GitHub auto-deploy).
 2. Provision a DynamoDB table + IAM credentials in AWS and set `AWS_REGION` + `DYNAMO_TABLE` in Railway.
 3. Set the remaining variables (`APP_URL`, `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET`, `FIELD_ENCRYPTION_KEY`, optional `RESEND_API_KEY`, `EMAIL_FROM`).
-5. Push to `main`. Railway runs:
-   - **Build:** `pnpm install --frozen-lockfile && pnpm build`
-   - **Release/Start:** `node build`
-   - **Healthcheck:** `GET /health`
+4. Push to `main`. Railway runs:
+    - **Build:** `pnpm install --frozen-lockfile && pnpm build`
+    - **Release/Start:** `node build`
+    - **Healthcheck:** `GET /health`
 
 The first deploy provisions the DynamoDB table automatically. Sign up at `/signup` — the very first account becomes the workspace owner. From `Settings → Members`, invite the second user.
 

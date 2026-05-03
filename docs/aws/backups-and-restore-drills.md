@@ -36,10 +36,10 @@ The stack enables:
 2. Restore into a **staging table**, e.g. `private-case-tracker-restore-YYYYMMDD`.
 3. In a staging deployment, set `DYNAMO_TABLE=<restored-table>`.
 4. Validate:
-   - `GET /health` returns `200` with `"store":"dynamodb"`.
-   - Log in works.
-   - Each list view loads (tasks, notes, evidence, forms, milestones, questions, documents, quick links).
-   - Dashboard renders without errors.
+    - `GET /health` returns `200` with `"store":"dynamodb"`.
+    - Log in works.
+    - Each list view loads (tasks, notes, evidence, forms, milestones, questions, documents, quick links).
+    - Dashboard renders without errors.
 5. Record in a short log: restore time, any missing data, any surprises in indexes/throughput.
 
 ## S3
