@@ -1,4 +1,5 @@
 <script lang="ts">
+    import type { QuickLink, QuickLinkFolder } from '$lib/types/enums';
     import PageHeader from '$lib/components/shared/PageHeader.svelte';
     import Button from '$lib/components/ui/Button.svelte';
     import Dialog from '$lib/components/ui/Dialog.svelte';
@@ -6,7 +7,7 @@
     import Label from '$lib/components/ui/Label.svelte';
     import Textarea from '$lib/components/ui/Textarea.svelte';
     import ThreeDotsMenu from '$lib/components/ui/ThreeDotsMenu.svelte';
-    import { Plus, Folder, Link2, X, Edit, Trash2 } from 'lucide-svelte';
+    import { Plus, Folder, Link2, Edit, Trash2 } from 'lucide-svelte';
     import { getPageNumber } from '$lib/constants/navigation';
     import { enhance } from '$app/forms';
     import type { PageData } from './$types';
@@ -19,8 +20,8 @@
 
     let modalOpen = $state(false);
     let modalMode = $state<'link' | 'folder'>('link');
-    let editing = $state<any>(null);
-    let editingFolder = $state<any>(null);
+    let editing = $state<QuickLink | null>(null);
+    let editingFolder = $state<QuickLinkFolder | null>(null);
     let draftUrl = $state('');
     let draftTitle = $state('');
     let draftDescription = $state('');
@@ -39,7 +40,7 @@
         modalOpen = true;
     }
 
-    function openEditLink(link: any) {
+    function openEditLink(link: QuickLink) {
         modalMode = 'link';
         editing = link;
         editingFolder = null;
@@ -50,7 +51,7 @@
         modalOpen = true;
     }
 
-    function openEditFolder(folder: any) {
+    function openEditFolder(folder: QuickLinkFolder) {
         modalMode = 'folder';
         editing = null;
         editingFolder = folder;
@@ -180,77 +181,69 @@
     </button>
 </div>
 
-{#if modalOpen}
+{#if modalOpen && modalMode === 'folder'}
     <Dialog
         open={modalOpen}
         onClose={closeModal}
         maxWidth="max-w-md"
+        titleLevel="h3"
+        title={editingFolder ? 'Edit folder' : 'Add folder'}
+        footerFormId="ql-page-folder-form"
+        cancelLabel="Cancel"
+        submitLabel={editingFolder ? 'Save' : 'Create'}
     >
-        {#if modalMode === 'folder'}
-            <form
-                method="post"
-                action="?/updateFolder"
-                class="modal-form"
-                use:enhance={() => {
-                    return async ({ result, update }) => {
-                        await update();
-                        if (result.type === 'redirect') closeModal();
-                    };
-                }}
-            >
-                <input type="hidden" name="id" value={editingFolder?.id} />
-                <div class="modal-header">
-                    <div style="display: flex; align-items: center; gap: 12px; font-size: 20px;">{editingFolder ? 'Edit folder' : 'Add folder'}</div>
-                    <Button type="button" variant="ghost" size="sm" onclick={closeModal}>
-                        <X size={16} />
-                    </Button>
-                </div>
-                <div class="modal-content" style="display: flex; flex-direction: column; gap: 16px;">
-                    <Input name="name" bind:value={draftFolderName} placeholder="Folder name" required />
-                </div>
-                <div class="modal-footer">
-                    <Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
-                    <Button type="submit">{editingFolder ? 'Save' : 'Create'}</Button>
-                </div>
-            </form>
-        {:else}
-            <form
-                method="post"
-                action={editing ? "?/update" : "?/create"}
-                class="modal-form"
-                use:enhance={() => {
-                    return async ({ result, update }) => {
-                        await update();
-                        if (result.type === 'redirect') closeModal();
-                    };
-                }}
-            >
-                {#if editing}
-                    <input type="hidden" name="id" value={editing.id} />
-                {/if}
-                <div class="modal-header">
-                    <div style="display: flex; align-items: center; gap: 12px; font-size: 20px;">{editing ? 'Edit link' : 'Add link'}</div>
-                    <Button type="button" variant="ghost" size="sm" onclick={closeModal}>
-                        <X size={16} />
-                    </Button>
-                </div>
-                <div class="modal-content" style="display: flex; flex-direction: column; gap: 16px;">
-                    <Input name="url" bind:value={draftUrl} placeholder="URL" required />
-                    <div>
-                        <Label for="ql-title">Title (optional)</Label>
-                        <Input id="ql-title" name="title" bind:value={draftTitle} placeholder="Link title" />
-                    </div>
-                    <div>
-                        <Label for="ql-description">Description (optional)</Label>
-                        <Textarea id="ql-description" name="description" rows={2} bind:value={draftDescription} />
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
-                    <Button type="submit">{editing ? 'Save' : 'Add'}</Button>
-                </div>
-            </form>
-        {/if}
+        <form
+            id="ql-page-folder-form"
+            method="post"
+            action="?/updateFolder"
+            class="modal-form"
+            use:enhance={() => {
+                return async ({ result, update }) => {
+                    await update();
+                    if (result.type === 'redirect') closeModal();
+                };
+            }}
+        >
+            <input type="hidden" name="id" value={editingFolder?.id} />
+            <Input name="name" bind:value={draftFolderName} placeholder="Folder name" required />
+        </form>
+    </Dialog>
+{:else if modalOpen}
+    <Dialog
+        open={modalOpen}
+        onClose={closeModal}
+        maxWidth="max-w-md"
+        titleLevel="h3"
+        title={editing ? 'Edit link' : 'Add link'}
+        footerFormId="ql-page-link-form"
+        cancelLabel="Cancel"
+        submitLabel={editing ? 'Save' : 'Add'}
+    >
+        <form
+            id="ql-page-link-form"
+            method="post"
+            action={editing ? '?/update' : '?/create'}
+            class="modal-form"
+            use:enhance={() => {
+                return async ({ result, update }) => {
+                    await update();
+                    if (result.type === 'redirect') closeModal();
+                };
+            }}
+        >
+            {#if editing}
+                <input type="hidden" name="id" value={editing.id} />
+            {/if}
+            <Input name="url" bind:value={draftUrl} placeholder="URL" required />
+            <div>
+                <Label for="ql-title">Title (optional)</Label>
+                <Input id="ql-title" name="title" bind:value={draftTitle} placeholder="Link title" />
+            </div>
+            <div>
+                <Label for="ql-description">Description (optional)</Label>
+                <Textarea id="ql-description" name="description" rows={2} bind:value={draftDescription} />
+            </div>
+        </form>
     </Dialog>
 {/if}
 
@@ -259,8 +252,15 @@
         open={deleteModalOpen}
         onClose={closeDeleteModal}
         maxWidth="max-w-md"
+        titleLevel="h3"
+        title={`Delete ${itemToDelete.type}`}
+        footerFormId="ql-page-delete-form"
+        cancelLabel="Cancel"
+        submitLabel="Delete"
+        submitVariant="destructive"
     >
         <form
+            id="ql-page-delete-form"
             method="post"
             action={itemToDelete.type === 'folder' ? '?/deleteFolder' : '?/delete'}
             class="modal-form"
@@ -272,22 +272,10 @@
             }}
         >
             <input type="hidden" name="id" value={itemToDelete.id} />
-            <div class="modal-header">
-                <div style="display: flex; align-items: center; gap: 12px; font-size: 20px;">Delete {itemToDelete.type}</div>
-                <Button type="button" variant="ghost" size="sm" onclick={closeDeleteModal}>
-                    <X size={16} />
-                </Button>
-            </div>
-            <div class="modal-content" style="display: flex; flex-direction: column; gap: 16px;">
-                <p>Are you sure you want to delete "{itemToDelete.name}"? This action cannot be undone.</p>
-                {#if itemToDelete.type === 'folder' && data.quickLinks.some(link => link.folderId === itemToDelete?.id)}
-                    <p style="color: var(--destructive); font-weight: 500;">Warning: This folder contains links that will also be deleted.</p>
-                {/if}
-            </div>
-            <div class="modal-footer">
-                <Button type="button" variant="outline" onclick={closeDeleteModal}>Cancel</Button>
-                <Button type="submit" variant="destructive">Delete</Button>
-            </div>
+            <p>Are you sure you want to delete "{itemToDelete.name}"? This action cannot be undone.</p>
+            {#if itemToDelete.type === 'folder' && data.quickLinks.some((link) => link.folderId === itemToDelete?.id)}
+                <p style="color: var(--destructive); font-weight: 500;">Warning: This folder contains links that will also be deleted.</p>
+            {/if}
         </form>
     </Dialog>
 {/if}

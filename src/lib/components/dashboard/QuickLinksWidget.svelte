@@ -3,7 +3,7 @@
 	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
-	import { EllipsisVertical, MoreHorizontal, Plus, Link2, Folder, X } from 'lucide-svelte';
+	import { MoreHorizontal, Plus, Link2, Folder } from 'lucide-svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import Label from '$lib/components/ui/Label.svelte';
@@ -623,6 +623,7 @@
 			ondrop={(e) => handleDrop(e, folder.id)}
 			ondragend={handleDragEnd}
             onclick={(e) => toggleFolderPopover(folder.id, e)}
+            onkeydown={(e) => e.key === 'Enter' && toggleFolderPopover(folder.id, e)}
             role="button"
             tabindex="0"
 		>
@@ -652,6 +653,7 @@
             role="button"
             tabindex="0"
             onclick={() => openLink(link.url)}
+            onkeydown={(e) => e.key === 'Enter' && openLink(link.url)}
 		>
 			<div style="width: 48px; height: 48px; background: var(--surface-2); border: 1px solid var(--hairline); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
                 {#if brokenFavicons.has(link.id) || !(link.faviconUrl || preloadedFavicons.has(link.id))}
@@ -677,210 +679,217 @@
 </div>
 
 {#if folderPopoverId}
-    {@const folder = visibleFolders.find(f => f.id === folderPopoverId)}
+    {@const folder = visibleFolders.find((f) => f.id === folderPopoverId)}
     {@const folderLinks = folderLinksMap[folderPopoverId] ?? []}
-    <Dialog open={!!folderPopoverId} onClose={closeFolderDialog} maxWidth="max-w-md">
-        <div class="modal-header">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 32px; height: 32px; background: var(--lilac); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                    <Folder style="width: 16px; height: 16px; color: var(--lilac-d);" />
-                </div>
-                <h3 class="display" style="font-size: 20px; margin: 0;">{folder?.name || 'Untitled Folder'}</h3>
+    {#snippet qlFolderPopoverHeader()}
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div
+                style="width: 32px; height: 32px; background: var(--lilac); border-radius: 8px; display: flex; align-items: center; justify-content: center;"
+            >
+                <Folder style="width: 16px; height: 16px; color: var(--lilac-d);" />
             </div>
-            <div style="display: flex; gap: 8px;">
-                <Button variant="ghost" size="sm" onclick={() => folder && openEditFolder(folder)}>
-                    <MoreHorizontal size={16} />
-                </Button>
-                <Button variant="ghost" size="sm" onclick={closeFolderDialog}>
-                    <X size={16} />
-                </Button>
-            </div>
+            <h3 class="display" style="font-size: 20px; margin: 0;">{folder?.name || 'Untitled Folder'}</h3>
         </div>
-        <div class="modal-content" style="display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto; padding: 4px;">
-            {#each folderLinks as link}
-                <div class="card" style="padding: 12px; display: flex; align-items: center; justify-content: space-between; background: var(--surface-2); border-color: transparent;">
-                    <div 
-                        style="display: flex; align-items: center; gap: 12px; cursor: pointer; flex: 1; min-width: 0;"
-                        onclick={() => openLink(link.url)}
-                        role="button"
-                        tabindex="0"
+    {/snippet}
+    {#snippet qlFolderPopoverActions()}
+        <Button variant="ghost" size="sm" onclick={() => folder && openEditFolder(folder)}>
+            <MoreHorizontal size={16} />
+        </Button>
+    {/snippet}
+    {#snippet qlFolderPopoverFooter()}
+        <Button variant="outline" style="width: 100%;" onclick={() => folder && openAdd(folder)}>
+            <Plus size={16} style="margin-right: 8px;" /> Add link to folder
+        </Button>
+    {/snippet}
+    <Dialog
+        open={!!folderPopoverId}
+        onClose={closeFolderDialog}
+        maxWidth="max-w-md"
+        ariaLabel={folder?.name ? `Folder ${folder.name}` : 'Folder'}
+        titleLevel="h3"
+        header={qlFolderPopoverHeader}
+        headerActions={qlFolderPopoverActions}
+        footer={qlFolderPopoverFooter}
+    >
+        {#each folderLinks as link}
+            <div
+                class="card"
+                style="padding: 12px; display: flex; align-items: center; justify-content: space-between; background: var(--surface-2); border-color: transparent;"
+            >
+                <div
+                    style="display: flex; align-items: center; gap: 12px; cursor: pointer; flex: 1; min-width: 0;"
+                    onclick={() => openLink(link.url)}
+                    onkeydown={(e) => e.key === 'Enter' && openLink(link.url)}
+                    role="button"
+                    tabindex="0"
+                >
+                    <div
+                        style="width: 32px; height: 32px; background: var(--surface); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"
                     >
-                        <div style="width: 32px; height: 32px; background: var(--surface); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            {#if brokenFavicons.has(link.id) || !(link.faviconUrl || preloadedFavicons.has(link.id))}
-                                <Link2 style="width: 16px; height: 16px; color: var(--ink-3);" />
-                            {:else}
-                                <img src={faviconForLink(link)} alt="" style="width: 16px; height: 16px; object-fit: contain;" />
-                            {/if}
-                        </div>
-                        <span style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{labelFor(link)}</span>
+                        {#if brokenFavicons.has(link.id) || !(link.faviconUrl || preloadedFavicons.has(link.id))}
+                            <Link2 style="width: 16px; height: 16px; color: var(--ink-3);" />
+                        {:else}
+                            <img src={faviconForLink(link)} alt="" style="width: 16px; height: 16px; object-fit: contain;" />
+                        {/if}
                     </div>
-                    <div style="display: flex; gap: 4px;">
-                        <Button variant="ghost" size="sm" onclick={() => moveLinkToRoot(link.id)} title="Move to root">
-                            <Plus style="width: 14px; height: 14px; transform: rotate(45deg);" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onclick={() => openEdit(link)}>
-                            <MoreHorizontal size={14} />
-                        </Button>
-                    </div>
+                    <span style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                        >{labelFor(link)}</span
+                    >
                 </div>
-            {/each}
-            {#if folderLinks.length === 0}
-                <div style="padding: 32px; text-align: center; color: var(--ink-3); font-size: 13px;">
-                    This folder is empty.
+                <div style="display: flex; gap: 4px;">
+                    <Button variant="ghost" size="sm" onclick={() => moveLinkToRoot(link.id)} title="Move to root">
+                        <Plus style="width: 14px; height: 14px; transform: rotate(45deg);" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onclick={() => openEdit(link)}>
+                        <MoreHorizontal size={14} />
+                    </Button>
                 </div>
-            {/if}
-        </div>
-        <div class="modal-footer">
-            <Button variant="outline" style="width: 100%;" onclick={() => folder && openAdd(folder)}>
-                <Plus size={16} style="margin-right: 8px;" /> Add link to folder
-            </Button>
-        </div>
+            </div>
+        {/each}
+        {#if folderLinks.length === 0}
+            <div style="text-align: center; color: var(--ink-3); font-size: 13px;">This folder is empty.</div>
+        {/if}
     </Dialog>
 {/if}
 
-{#if modalOpen}
-	<Dialog open={modalOpen} onClose={closeModal} maxWidth="max-w-md">
-		{#if modalMode === 'folder'}
-			<form
-				method="post"
-				action="?/updateFolder"
-				class="modal-form"
-				use:enhance={() => {
-					return async ({ result, update }) => {
-						await update();
-						if (result.type === 'redirect') closeModal();
-					};
-				}}
-			>
-				<input type="hidden" name="id" value={editingFolder?.id} />
-				<div class="modal-header">
-					<div class="widget-flex widget-flex-1 widget-items-start">
-						<Input
-							name="name"
-							bind:value={draftFolderName}
-							class="modal-title-input"
-							placeholder="Folder name (optional)"
-						/>
-					</div>
-					<Button type="button" variant="ghost" size="sm" onclick={closeModal} class="shrink-0">
-						{#snippet children()}<X class="widget-icon-5" />{/snippet}
-					</Button>
-				</div>
-				<div class="modal-content">
-					{#if form?.error}
-						<div class="modal-error">
-							<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
-						</div>
-					{/if}
-				</div>
-				<div class="modal-footer">
-					<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
-					<Button type="submit">Save</Button>
-				</div>
-			</form>
-		{:else}
-			{#if editing}
-				<form
-					method="post"
-					action="?/update"
-					class="modal-form"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							await update();
-							if (result.type === 'redirect') closeModal();
-						};
-					}}
-				>
-					<input type="hidden" name="id" value={editing.id} />
-					<div class="modal-header">
-						<div class="widget-flex widget-flex-1 widget-items-start">
-							<Input
-								name="url"
-								bind:value={draftUrl}
-								class="modal-title-input"
-								placeholder="URL"
-								required
-							/>
-						</div>
-						<Button type="button" variant="ghost" size="sm" onclick={closeModal} class="shrink-0">
-							{#snippet children()}<X class="widget-icon-5" />{/snippet}
-						</Button>
-					</div>
-					<div class="modal-content">
-						<div>
-							<Label for="ql-title">Title (optional)</Label>
-							<Input id="ql-title" name="title" bind:value={draftTitle} placeholder={prettyHostname(draftUrl)} />
-						</div>
-						<div>
-							<Label for="ql-description">Description (optional)</Label>
-							<Textarea id="ql-description" name="description" rows={2} bind:value={draftDescription} />
-						</div>
-						{#if form?.error}
-							<div class="modal-error">
-								<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
-							</div>
-						{/if}
-					</div>
-					<div class="modal-footer">
-						<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
-						<Button type="submit">Save</Button>
-					</div>
-				</form>
-			{:else}
-				<form
-					method="post"
-					action="?/create"
-					class="modal-form"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							await update();
-							if (result.type === 'redirect') closeModal();
-						};
-					}}
-				>
-					{#if addingToFolder}
-						<input type="hidden" name="folderId" value={addingToFolder.id} />
-					{/if}
-					<div class="modal-header">
-						<div class="widget-flex widget-flex-1 widget-items-start">
-							<Input
-								name="url"
-								bind:value={draftUrl}
-								class="modal-title-input"
-								placeholder="URL"
-								required
-							/>
-						</div>
-						<Button type="button" variant="ghost" size="sm" onclick={closeModal} class="shrink-0">
-							{#snippet children()}<X class="widget-icon-5" />{/snippet}
-						</Button>
-					</div>
-					<div class="modal-content">
-						<div>
-							<Label for="ql-title-new">Title (optional)</Label>
-							<Input
-								id="ql-title-new"
-								name="title"
-								bind:value={draftTitle}
-								placeholder={draftUrl ? prettyHostname(draftUrl) : 'Shown under the icon'}
-							/>
-						</div>
-						<div>
-							<Label for="ql-description-new">Description (optional)</Label>
-							<Textarea id="ql-description-new" name="description" rows={2} bind:value={draftDescription} />
-						</div>
-						{#if form?.error}
-							<div class="modal-error">
-								<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
-							</div>
-						{/if}
-					</div>
-					<div class="modal-footer">
-						<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
-						<Button type="submit">Add</Button>
-					</div>
-				</form>
-			{/if}
-		{/if}
-	</Dialog>
+{#snippet qlWidgetFolderModalHeader()}
+    <div class="widget-flex widget-flex-1 widget-items-start">
+        <Input
+            name="name"
+            form="ql-w-folder-form"
+            bind:value={draftFolderName}
+            class="modal-title-input"
+            placeholder="Folder name (optional)"
+        />
+    </div>
+{/snippet}
+
+{#snippet qlWidgetLinkEditHeader()}
+    <div class="widget-flex widget-flex-1 widget-items-start">
+        <Input name="url" form="ql-w-link-update-form" bind:value={draftUrl} class="modal-title-input" placeholder="URL" required />
+    </div>
+{/snippet}
+
+{#snippet qlWidgetLinkCreateHeader()}
+    <div class="widget-flex widget-flex-1 widget-items-start">
+        <Input name="url" form="ql-w-link-create-form" bind:value={draftUrl} class="modal-title-input" placeholder="URL" required />
+    </div>
+{/snippet}
+
+{#if modalOpen && modalMode === 'folder'}
+    <Dialog
+        open={modalOpen}
+        onClose={closeModal}
+        maxWidth="max-w-md"
+        ariaLabel="Folder"
+        header={qlWidgetFolderModalHeader}
+        footerFormId="ql-w-folder-form"
+        cancelLabel="Cancel"
+        submitLabel="Save"
+    >
+        <form
+            id="ql-w-folder-form"
+            method="post"
+            action="?/updateFolder"
+            class="modal-form"
+            use:enhance={() => {
+                return async ({ result, update }) => {
+                    await update();
+                    if (result.type === 'redirect') closeModal();
+                };
+            }}
+        >
+            <input type="hidden" name="id" value={editingFolder?.id} />
+            {#if form?.error}
+                <div class="modal-error">
+                    <ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
+                </div>
+            {/if}
+        </form>
+    </Dialog>
+{:else if modalOpen && editing}
+    <Dialog
+        open={modalOpen}
+        onClose={closeModal}
+        maxWidth="max-w-md"
+        ariaLabel="Edit quick link"
+        header={qlWidgetLinkEditHeader}
+        footerFormId="ql-w-link-update-form"
+        cancelLabel="Cancel"
+        submitLabel="Save"
+    >
+        <form
+            id="ql-w-link-update-form"
+            method="post"
+            action="?/update"
+            class="modal-form"
+            use:enhance={() => {
+                return async ({ result, update }) => {
+                    await update();
+                    if (result.type === 'redirect') closeModal();
+                };
+            }}
+        >
+            <input type="hidden" name="id" value={editing.id} />
+            <div>
+                <Label for="ql-title">Title (optional)</Label>
+                <Input id="ql-title" name="title" bind:value={draftTitle} placeholder={prettyHostname(draftUrl)} />
+            </div>
+            <div>
+                <Label for="ql-description">Description (optional)</Label>
+                <Textarea id="ql-description" name="description" rows={2} bind:value={draftDescription} />
+            </div>
+            {#if form?.error}
+                <div class="modal-error">
+                    <ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
+                </div>
+            {/if}
+        </form>
+    </Dialog>
+{:else if modalOpen}
+    <Dialog
+        open={modalOpen}
+        onClose={closeModal}
+        maxWidth="max-w-md"
+        ariaLabel="Add quick link"
+        header={qlWidgetLinkCreateHeader}
+        footerFormId="ql-w-link-create-form"
+        cancelLabel="Cancel"
+        submitLabel="Add"
+    >
+        <form
+            id="ql-w-link-create-form"
+            method="post"
+            action="?/create"
+            class="modal-form"
+            use:enhance={() => {
+                return async ({ result, update }) => {
+                    await update();
+                    if (result.type === 'redirect') closeModal();
+                };
+            }}
+        >
+            {#if addingToFolder}
+                <input type="hidden" name="folderId" value={addingToFolder.id} />
+            {/if}
+            <div>
+                <Label for="ql-title-new">Title (optional)</Label>
+                <Input
+                    id="ql-title-new"
+                    name="title"
+                    bind:value={draftTitle}
+                    placeholder={draftUrl ? prettyHostname(draftUrl) : 'Shown under the icon'}
+                />
+            </div>
+            <div>
+                <Label for="ql-description-new">Description (optional)</Label>
+                <Textarea id="ql-description-new" name="description" rows={2} bind:value={draftDescription} />
+            </div>
+            {#if form?.error}
+                <div class="modal-error">
+                    <ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
+                </div>
+            {/if}
+        </form>
+    </Dialog>
 {/if}
