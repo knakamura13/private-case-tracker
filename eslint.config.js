@@ -6,42 +6,32 @@ import globals from 'globals';
 import security from 'eslint-plugin-security';
 
 export default ts.config(
-	js.configs.recommended,
-	...ts.configs.recommended,
-	...svelte.configs['flat/recommended'],
-	prettier,
-	...svelte.configs['flat/prettier'],
-	security.configs.recommended,
-	{
-		languageOptions: {
-			globals: {
-				...globals.browser,
-				...globals.node
-			}
-		},
-		rules: {
-			'@typescript-eslint/no-unused-vars': [
-				'warn',
-				{ argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
-			]
-		}
-	},
-	{
-		files: ['**/*.svelte'],
-		languageOptions: {
-			parserOptions: {
-				parser: ts.parser
-			}
-		}
-	},
-	{
-		ignores: [
-			'build/',
-			'.svelte-kit/',
-			'dist/',
-			'node_modules/',
-			'playwright-report/',
-			'test-results/'
-		]
-	}
+    js.configs.recommended,
+    ...ts.configs.recommended,
+    ...svelte.configs['flat/recommended'],
+    prettier,
+    ...svelte.configs['flat/prettier'],
+    security.configs.recommended,
+    {
+        languageOptions: {
+            globals: {
+                ...globals.browser,
+                ...globals.node
+            }
+        },
+        rules: {
+            '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }]
+        }
+    },
+    {
+        files: ['**/*.svelte'],
+        languageOptions: {
+            parserOptions: {
+                parser: ts.parser
+            }
+        }
+    },
+    {
+        ignores: ['build/', '.svelte-kit/', 'dist/', 'node_modules/', 'playwright-report/', 'test-results/']
+    }
 );
