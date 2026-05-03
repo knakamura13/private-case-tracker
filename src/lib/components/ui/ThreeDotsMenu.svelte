@@ -2,34 +2,26 @@
     import type { Component } from 'svelte';
     import { MoreHorizontal } from 'lucide-svelte';
     import DropdownMenu from './DropdownMenu.svelte';
+    import type { DropdownMenuItem } from './menuTypes';
 
-    type MenuItem = {
-        label: string;
-        action: () => void;
-        icon?: Component;
-        variant?: 'default' | 'destructive';
-        disabled?: boolean;
-    };
-
-    let { 
-        items, 
-        menuId: _menuId,
+    let {
+        items,
+        menuId,
         position = 'bottom-right'
-    }: { 
-        items: MenuItem[]; 
+    }: {
+        items: DropdownMenuItem[];
         menuId: string;
         position?: 'bottom-right' | 'bottom-left';
     } = $props();
 
-    // Map position prop to DropdownMenu position
-    const dropdownPosition = $derived({
-        'bottom-right': 'bottom-end',
-        'bottom-left': 'bottom-start'
-    }[position] || 'bottom-end');
+    const dropdownPosition = $derived.by((): 'bottom-end' | 'bottom-start' =>
+        position === 'bottom-left' ? 'bottom-start' : 'bottom-end'
+    );
 </script>
 
-<DropdownMenu 
-    items={items}
+<DropdownMenu
+    {items}
+    {menuId}
     position={dropdownPosition}
     size="sm"
     triggerLabel="More options"
