@@ -1,13 +1,13 @@
 /* eslint-disable security/detect-object-injection */
 import {
-	DeleteCommand,
-	GetCommand,
-	PutCommand,
-	QueryCommand,
-	ScanCommand,
-	UpdateCommand,
-	type QueryCommandInput,
-	type ScanCommandInput
+    DeleteCommand,
+    GetCommand,
+    PutCommand,
+    QueryCommand,
+    ScanCommand,
+    UpdateCommand,
+    type QueryCommandInput,
+    type ScanCommandInput
 } from '@aws-sdk/lib-dynamodb';
 import { ENV } from '$lib/server/env';
 
@@ -19,12 +19,12 @@ type AnyItem = Record<string, unknown> & Key;
 
 const globalForMem = globalThis as unknown as { __ddbMem?: Map<string, AnyItem> };
 function memStore() {
-	if (!globalForMem.__ddbMem) globalForMem.__ddbMem = new Map();
-	return globalForMem.__ddbMem;
+    if (!globalForMem.__ddbMem) globalForMem.__ddbMem = new Map();
+    return globalForMem.__ddbMem;
 }
 
 function keyStr(k: Key) {
-	return `${k.PK}||${k.SK}`;
+    return `${k.PK}||${k.SK}`;
 }
 
 // DynamoDB has no native Date type and the DocumentClient marshaller rejects
@@ -33,137 +33,133 @@ function keyStr(k: Key) {
 // think about it. Plain Date values round-trip back as ISO strings; adapters
 // that expect Date objects are responsible for parsing them on read.
 function normalize<T>(value: T): T {
-	if (value instanceof Date) return value.toISOString() as unknown as T;
-	if (Array.isArray(value)) return value.map(normalize) as unknown as T;
-	if (value && typeof value === 'object') {
-		const out: Record<string, unknown> = {};
-		for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-			if (v === undefined) continue;
-			out[k] = normalize(v);
-		}
-		return out as T;
-	}
-	return value;
+    if (value instanceof Date) return value.toISOString() as unknown as T;
+    if (Array.isArray(value)) return value.map(normalize) as unknown as T;
+    if (value && typeof value === 'object') {
+        const out: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+            if (v === undefined) continue;
+            out[k] = normalize(v);
+        }
+        return out as T;
+    }
+    return value;
 }
 
 async function getLive() {
-	const mod = await import('./client');
-	return { ddb: mod.ddb, tableName: ENV.DYNAMO_TABLE };
+    const mod = await import('./client');
+    return { ddb: mod.ddb, tableName: ENV.DYNAMO_TABLE };
 }
 
 export async function ddbPut(item: Record<string, unknown>) {
-	const normalized = normalize(item) as Record<string, unknown>;
-	if (useMem) {
-		const it = normalized as AnyItem;
-		memStore().set(keyStr({ PK: it.PK, SK: it.SK }), it);
-		return;
-	}
-	const { ddb, tableName } = await getLive();
-	return ddb.send(new PutCommand({ TableName: tableName, Item: normalized }));
+    const normalized = normalize(item) as Record<string, unknown>;
+    if (useMem) {
+        const it = normalized as AnyItem;
+        memStore().set(keyStr({ PK: it.PK, SK: it.SK }), it);
+        return;
+    }
+    const { ddb, tableName } = await getLive();
+    return ddb.send(new PutCommand({ TableName: tableName, Item: normalized }));
 }
 
 export async function ddbGet<T>(key: { PK: string; SK: string }) {
-	if (useMem) {
-		return memStore().get(keyStr(key)) as T | undefined;
-	}
-	const { ddb, tableName } = await getLive();
-	const res = await ddb.send(new GetCommand({ TableName: tableName, Key: key }));
-	return (res.Item as T | undefined) ?? undefined;
+    if (useMem) {
+        return memStore().get(keyStr(key)) as T | undefined;
+    }
+    const { ddb, tableName } = await getLive();
+    const res = await ddb.send(new GetCommand({ TableName: tableName, Key: key }));
+    return (res.Item as T | undefined) ?? undefined;
 }
 
 export async function ddbUpdate<T>(
-	key: { PK: string; SK: string },
-	updateExpression: string,
-	expressionAttributeValues: Record<string, unknown>,
-	expressionAttributeNames?: Record<string, string>
+    key: { PK: string; SK: string },
+    updateExpression: string,
+    expressionAttributeValues: Record<string, unknown>,
+    expressionAttributeNames?: Record<string, string>
 ) {
-	expressionAttributeValues = normalize(expressionAttributeValues) as Record<string, unknown>;
-	if (useMem) {
-		const store = memStore();
-		const cur = store.get(keyStr(key));
-		if (!cur) return undefined;
-		// Minimal parser for `SET a = :x, b = :y` style updates.
-		const setPrefix = updateExpression.trim().startsWith('SET')
-			? updateExpression.trim().slice(3)
-			: '';
-		const assignments = setPrefix
-			.split(',')
-			.map((s) => s.trim())
-			.filter(Boolean);
-		for (const a of assignments) {
-			const [lhsRaw, rhsRaw] = a.split('=').map((s) => s.trim());
-			if (!lhsRaw || !rhsRaw) continue;
-			const field =
-				expressionAttributeNames?.[lhsRaw] ?? (lhsRaw.startsWith('#') ? lhsRaw.slice(1) : lhsRaw);
-			const val = expressionAttributeValues[rhsRaw];
-			(cur as Record<string, unknown>)[field] = val;
-		}
-		store.set(keyStr(key), cur);
-		return cur as unknown as T;
-	}
-	const { ddb, tableName } = await getLive();
-	const res = await ddb.send(
-		new UpdateCommand({
-			TableName: tableName,
-			Key: key,
-			UpdateExpression: updateExpression,
-			ExpressionAttributeValues: expressionAttributeValues,
-			ExpressionAttributeNames: expressionAttributeNames,
-			ReturnValues: 'ALL_NEW'
-		})
-	);
-	return res.Attributes as T | undefined;
+    expressionAttributeValues = normalize(expressionAttributeValues) as Record<string, unknown>;
+    if (useMem) {
+        const store = memStore();
+        const cur = store.get(keyStr(key));
+        if (!cur) return undefined;
+        // Minimal parser for `SET a = :x, b = :y` style updates.
+        const setPrefix = updateExpression.trim().startsWith('SET') ? updateExpression.trim().slice(3) : '';
+        const assignments = setPrefix
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
+        for (const a of assignments) {
+            const [lhsRaw, rhsRaw] = a.split('=').map((s) => s.trim());
+            if (!lhsRaw || !rhsRaw) continue;
+            const field = expressionAttributeNames?.[lhsRaw] ?? (lhsRaw.startsWith('#') ? lhsRaw.slice(1) : lhsRaw);
+            const val = expressionAttributeValues[rhsRaw];
+            (cur as Record<string, unknown>)[field] = val;
+        }
+        store.set(keyStr(key), cur);
+        return cur as unknown as T;
+    }
+    const { ddb, tableName } = await getLive();
+    const res = await ddb.send(
+        new UpdateCommand({
+            TableName: tableName,
+            Key: key,
+            UpdateExpression: updateExpression,
+            ExpressionAttributeValues: expressionAttributeValues,
+            ExpressionAttributeNames: expressionAttributeNames,
+            ReturnValues: 'ALL_NEW'
+        })
+    );
+    return res.Attributes as T | undefined;
 }
 
 export async function ddbDelete(key: { PK: string; SK: string }) {
-	if (useMem) {
-		memStore().delete(keyStr(key));
-		return;
-	}
-	const { ddb, tableName } = await getLive();
-	return ddb.send(new DeleteCommand({ TableName: tableName, Key: key }));
+    if (useMem) {
+        memStore().delete(keyStr(key));
+        return;
+    }
+    const { ddb, tableName } = await getLive();
+    return ddb.send(new DeleteCommand({ TableName: tableName, Key: key }));
 }
 
 export async function ddbQuery<T>(input: Omit<QueryCommandInput, 'TableName'>) {
-	if (useMem) {
-		const items = Array.from(memStore().values());
-		// SUPPORTED QUERY PATTERNS (in-memory test mode):
-		// - PK equality (via :pk)
-		// - SK begins_with prefix (via :prefix)
-		// - SK equality (via :sk)
-		// - GSI1PK equality when IndexName === 'GSI1' (via :pk)
-		// - ScanIndexForward for descending sort
-		// - Limit for result truncation
-		//
-		// NOTE: If you add a new query pattern to production code, you MUST
-		// update this in-memory implementation to match. Otherwise tests may
-		// pass but production will fail.
-		const vals = (input.ExpressionAttributeValues ?? {}) as Record<string, unknown>;
-		if (input.IndexName === 'GSI1') {
-			const pk = vals[':pk'];
-			return items.filter((it) => it.GSI1PK === pk) as unknown as T[];
-		}
-		const pk = vals[':pk'];
-		const prefix = vals[':prefix'];
-		const skEq = vals[':sk'];
-		let out = items.filter((it) => it.PK === pk);
-		if (typeof skEq === 'string') out = out.filter((it) => it.SK === skEq);
-		else if (typeof prefix === 'string') out = out.filter((it) => String(it.SK).startsWith(prefix));
-		if (input.ScanIndexForward === false)
-			out = out.slice().sort((a, b) => String(b.SK).localeCompare(String(a.SK)));
-		if (typeof input.Limit === 'number') out = out.slice(0, input.Limit);
-		return out as unknown as T[];
-	}
-	const { ddb, tableName } = await getLive();
-	const res = await ddb.send(new QueryCommand({ ...input, TableName: tableName }));
-	return (res.Items as T[]) ?? [];
+    if (useMem) {
+        const items = Array.from(memStore().values());
+        // SUPPORTED QUERY PATTERNS (in-memory test mode):
+        // - PK equality (via :pk)
+        // - SK begins_with prefix (via :prefix)
+        // - SK equality (via :sk)
+        // - GSI1PK equality when IndexName === 'GSI1' (via :pk)
+        // - ScanIndexForward for descending sort
+        // - Limit for result truncation
+        //
+        // NOTE: If you add a new query pattern to production code, you MUST
+        // update this in-memory implementation to match. Otherwise tests may
+        // pass but production will fail.
+        const vals = (input.ExpressionAttributeValues ?? {}) as Record<string, unknown>;
+        if (input.IndexName === 'GSI1') {
+            const pk = vals[':pk'];
+            return items.filter((it) => it.GSI1PK === pk) as unknown as T[];
+        }
+        const pk = vals[':pk'];
+        const prefix = vals[':prefix'];
+        const skEq = vals[':sk'];
+        let out = items.filter((it) => it.PK === pk);
+        if (typeof skEq === 'string') out = out.filter((it) => it.SK === skEq);
+        else if (typeof prefix === 'string') out = out.filter((it) => String(it.SK).startsWith(prefix));
+        if (input.ScanIndexForward === false) out = out.slice().sort((a, b) => String(b.SK).localeCompare(String(a.SK)));
+        if (typeof input.Limit === 'number') out = out.slice(0, input.Limit);
+        return out as unknown as T[];
+    }
+    const { ddb, tableName } = await getLive();
+    const res = await ddb.send(new QueryCommand({ ...input, TableName: tableName }));
+    return (res.Items as T[]) ?? [];
 }
 
 export async function ddbScan<T>(input: Omit<ScanCommandInput, 'TableName'>) {
-	if (useMem) {
-		return Array.from(memStore().values()) as unknown as T[];
-	}
-	const { ddb, tableName } = await getLive();
-	const res = await ddb.send(new ScanCommand({ ...input, TableName: tableName }));
-	return (res.Items as T[]) ?? [];
+    if (useMem) {
+        return Array.from(memStore().values()) as unknown as T[];
+    }
+    const { ddb, tableName } = await getLive();
+    const res = await ddb.send(new ScanCommand({ ...input, TableName: tableName }));
+    return (res.Items as T[]) ?? [];
 }

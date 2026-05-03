@@ -8,225 +8,201 @@ import { extractHostname } from '$lib/server/utils/url';
 /* eslint-disable security/detect-object-injection */
 
 export async function listQuickLinkFolders(workspaceId: string, limit?: number) {
-	const rows = await ddbQuery<QuickLinkFolderItem>({
-		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
-		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'QuickLinkFolder#' },
-		Limit: limit ?? 1000
-	});
+    const rows = await ddbQuery<QuickLinkFolderItem>({
+        KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
+        ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'QuickLinkFolder#' },
+        Limit: limit ?? 1000
+    });
 
-	return rows.filter((r) => !r.deletedAt).sort((a, b) => a.order - b.order);
+    return rows.filter((r) => !r.deletedAt).sort((a, b) => a.order - b.order);
 }
 
-export async function createQuickLinkFolder(
-	workspaceId: string,
-	actorId: string,
-	name?: string | null
-) {
-	const existing = await listQuickLinkFolders(workspaceId);
-	const order = (existing.at(-1)?.order ?? -1) + 1;
-	const now = new Date().toISOString();
-	const folder = {
-		id: randomUUID(),
-		workspaceId,
-		name: name ?? null,
-		order,
-		deletedAt: null as string | null,
-		createdAt: now,
-		updatedAt: now
-	};
-	await ddbPut({
-		PK: wsPk(workspaceId),
-		SK: entitySk('QuickLinkFolder', folder.id),
-		...folder
-	});
-	const label = folder.name ?? 'Folder';
-	await logActivity({
-		workspaceId,
-		userId: actorId,
-		action: 'QUICK_LINK_FOLDER_CREATED',
-		entityType: 'QuickLinkFolder',
-		entityId: folder.id,
-		summary: `Quick link folder "${label}" created`
-	});
-	return folder;
+export async function createQuickLinkFolder(workspaceId: string, actorId: string, name?: string | null) {
+    const existing = await listQuickLinkFolders(workspaceId);
+    const order = (existing.at(-1)?.order ?? -1) + 1;
+    const now = new Date().toISOString();
+    const folder = {
+        id: randomUUID(),
+        workspaceId,
+        name: name ?? null,
+        order,
+        deletedAt: null as string | null,
+        createdAt: now,
+        updatedAt: now
+    };
+    await ddbPut({
+        PK: wsPk(workspaceId),
+        SK: entitySk('QuickLinkFolder', folder.id),
+        ...folder
+    });
+    const label = folder.name ?? 'Folder';
+    await logActivity({
+        workspaceId,
+        userId: actorId,
+        action: 'QUICK_LINK_FOLDER_CREATED',
+        entityType: 'QuickLinkFolder',
+        entityId: folder.id,
+        summary: `Quick link folder "${label}" created`
+    });
+    return folder;
 }
 
-export async function updateQuickLinkFolder(
-	workspaceId: string,
-	actorId: string,
-	id: string,
-	name?: string | null
-) {
-	const existing = await ddbGet<QuickLinkFolderItem>({
-		PK: wsPk(workspaceId),
-		SK: entitySk('QuickLinkFolder', id)
-	});
-	if (!existing) throw new Error('Quick link folder not found');
-	if (existing.deletedAt) throw new Error('Quick link folder not found');
+export async function updateQuickLinkFolder(workspaceId: string, actorId: string, id: string, name?: string | null) {
+    const existing = await ddbGet<QuickLinkFolderItem>({
+        PK: wsPk(workspaceId),
+        SK: entitySk('QuickLinkFolder', id)
+    });
+    if (!existing) throw new Error('Quick link folder not found');
+    if (existing.deletedAt) throw new Error('Quick link folder not found');
 
-	const patch: Partial<typeof existing> = {};
-	if (name !== undefined) patch.name = name ?? null;
-	patch.updatedAt = new Date().toISOString();
+    const patch: Partial<typeof existing> = {};
+    if (name !== undefined) patch.name = name ?? null;
+    patch.updatedAt = new Date().toISOString();
 
-	const exprParts: string[] = [];
-	const values: Record<string, unknown> = {};
-	const names: Record<string, string> = {};
-	for (const [k, v] of Object.entries(patch)) {
-		const nk = `#${k}`;
-		const vk = `:${k}`;
-		names[nk] = k;
-		values[vk] = v;
-		exprParts.push(`${nk} = ${vk}`);
-	}
-	const updated =
-		exprParts.length === 0
-			? existing
-			: ((await ddbUpdate<typeof existing>(
-					{ PK: wsPk(workspaceId), SK: entitySk('QuickLinkFolder', id) },
-					`SET ${exprParts.join(', ')}`,
-					values,
-					names
-				)) ?? existing);
-	const folder = updated;
-	const label = folder.name ?? 'Folder';
-	await logActivity({
-		workspaceId,
-		userId: actorId,
-		action: 'QUICK_LINK_FOLDER_UPDATED',
-		entityType: 'QuickLinkFolder',
-		entityId: folder.id,
-		summary: `Quick link folder "${label}" updated`
-	});
-	return folder;
+    const exprParts: string[] = [];
+    const values: Record<string, unknown> = {};
+    const names: Record<string, string> = {};
+    for (const [k, v] of Object.entries(patch)) {
+        const nk = `#${k}`;
+        const vk = `:${k}`;
+        names[nk] = k;
+        values[vk] = v;
+        exprParts.push(`${nk} = ${vk}`);
+    }
+    const updated =
+        exprParts.length === 0
+            ? existing
+            : ((await ddbUpdate<typeof existing>(
+                  { PK: wsPk(workspaceId), SK: entitySk('QuickLinkFolder', id) },
+                  `SET ${exprParts.join(', ')}`,
+                  values,
+                  names
+              )) ?? existing);
+    const folder = updated;
+    const label = folder.name ?? 'Folder';
+    await logActivity({
+        workspaceId,
+        userId: actorId,
+        action: 'QUICK_LINK_FOLDER_UPDATED',
+        entityType: 'QuickLinkFolder',
+        entityId: folder.id,
+        summary: `Quick link folder "${label}" updated`
+    });
+    return folder;
 }
 
 export async function deleteQuickLinkFolder(workspaceId: string, actorId: string, id: string) {
-	const existing = await ddbGet<QuickLinkFolderItem>({
-		PK: wsPk(workspaceId),
-		SK: entitySk('QuickLinkFolder', id)
-	});
-	if (!existing) throw new Error('Quick link folder not found');
-	if (existing.deletedAt) throw new Error('Quick link folder not found');
+    const existing = await ddbGet<QuickLinkFolderItem>({
+        PK: wsPk(workspaceId),
+        SK: entitySk('QuickLinkFolder', id)
+    });
+    if (!existing) throw new Error('Quick link folder not found');
+    if (existing.deletedAt) throw new Error('Quick link folder not found');
 
-	// Un-group all links in this folder
-	const linksInFolder = await ddbQuery<QuickLinkItem>({
-		KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
-		ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'QuickLink#' },
-		Limit: 1000
-	});
+    // Un-group all links in this folder
+    const linksInFolder = await ddbQuery<QuickLinkItem>({
+        KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
+        ExpressionAttributeValues: { ':pk': wsPk(workspaceId), ':prefix': 'QuickLink#' },
+        Limit: 1000
+    });
 
-	const linksToUpdate = linksInFolder.filter(
-		(l) => !l.deletedAt && l.folderId === id
-	);
+    const linksToUpdate = linksInFolder.filter((l) => !l.deletedAt && l.folderId === id);
 
-	for (const link of linksToUpdate) {
-		await ddbUpdate(
-			{ PK: wsPk(workspaceId), SK: entitySk('QuickLink', link.id) },
-			'SET #folderId = :f, #updatedAt = :u',
-			{ ':f': null, ':u': new Date().toISOString() },
-			{ '#folderId': 'folderId', '#updatedAt': 'updatedAt' }
-		);
-	}
+    for (const link of linksToUpdate) {
+        await ddbUpdate(
+            { PK: wsPk(workspaceId), SK: entitySk('QuickLink', link.id) },
+            'SET #folderId = :f, #updatedAt = :u',
+            { ':f': null, ':u': new Date().toISOString() },
+            { '#folderId': 'folderId', '#updatedAt': 'updatedAt' }
+        );
+    }
 
-	// Soft delete the folder
-	await ddbUpdate(
-		{ PK: wsPk(workspaceId), SK: entitySk('QuickLinkFolder', id) },
-		'SET #deletedAt = :d, #updatedAt = :u',
-		{ ':d': new Date().toISOString(), ':u': new Date().toISOString() },
-		{ '#deletedAt': 'deletedAt', '#updatedAt': 'updatedAt' }
-	);
+    // Soft delete the folder
+    await ddbUpdate(
+        { PK: wsPk(workspaceId), SK: entitySk('QuickLinkFolder', id) },
+        'SET #deletedAt = :d, #updatedAt = :u',
+        { ':d': new Date().toISOString(), ':u': new Date().toISOString() },
+        { '#deletedAt': 'deletedAt', '#updatedAt': 'updatedAt' }
+    );
 
-	const label = existing.name ?? 'Folder';
-	await logActivity({
-		workspaceId,
-		userId: actorId,
-		action: 'QUICK_LINK_FOLDER_DELETED',
-		entityType: 'QuickLinkFolder',
-		entityId: id,
-		summary: `Quick link folder "${label}" deleted`
-	});
+    const label = existing.name ?? 'Folder';
+    await logActivity({
+        workspaceId,
+        userId: actorId,
+        action: 'QUICK_LINK_FOLDER_DELETED',
+        entityType: 'QuickLinkFolder',
+        entityId: id,
+        summary: `Quick link folder "${label}" deleted`
+    });
 }
 
-export async function moveLinkToFolder(
-	workspaceId: string,
-	actorId: string,
-	linkId: string,
-	folderId: string | null
-) {
-	const existing = await ddbGet<QuickLinkItem>({
-		PK: wsPk(workspaceId),
-		SK: entitySk('QuickLink', linkId)
-	});
-	if (!existing) throw new Error('Quick link not found');
-	if (existing.deletedAt) throw new Error('Quick link not found');
+export async function moveLinkToFolder(workspaceId: string, actorId: string, linkId: string, folderId: string | null) {
+    const existing = await ddbGet<QuickLinkItem>({
+        PK: wsPk(workspaceId),
+        SK: entitySk('QuickLink', linkId)
+    });
+    if (!existing) throw new Error('Quick link not found');
+    if (existing.deletedAt) throw new Error('Quick link not found');
 
-	await ddbUpdate(
-		{ PK: wsPk(workspaceId), SK: entitySk('QuickLink', linkId) },
-		'SET #folderId = :f, #updatedAt = :u',
-		{ ':f': folderId, ':u': new Date().toISOString() },
-		{ '#folderId': 'folderId', '#updatedAt': 'updatedAt' }
-	);
+    await ddbUpdate(
+        { PK: wsPk(workspaceId), SK: entitySk('QuickLink', linkId) },
+        'SET #folderId = :f, #updatedAt = :u',
+        { ':f': folderId, ':u': new Date().toISOString() },
+        { '#folderId': 'folderId', '#updatedAt': 'updatedAt' }
+    );
 
-	const label = existing.title ?? extractHostname(existing.url);
-	const action = folderId ? 'moved to folder' : 'moved to root';
-	await logActivity({
-		workspaceId,
-		userId: actorId,
-		action: 'QUICK_LINK_MOVED_TO_FOLDER',
-		entityType: 'QuickLink',
-		entityId: linkId,
-		summary: `Quick link "${label}" ${action}`
-	});
+    const label = existing.title ?? extractHostname(existing.url);
+    const action = folderId ? 'moved to folder' : 'moved to root';
+    await logActivity({
+        workspaceId,
+        userId: actorId,
+        action: 'QUICK_LINK_MOVED_TO_FOLDER',
+        entityType: 'QuickLink',
+        entityId: linkId,
+        summary: `Quick link "${label}" ${action}`
+    });
 }
 
-export async function reorderQuickLinks(
-	workspaceId: string,
-	actorId: string,
-	linkIds: string[]
-) {
-	for (const [i, linkId] of linkIds.entries()) {
-		if (!linkId) continue;
-		await ddbUpdate(
-			{ PK: wsPk(workspaceId), SK: entitySk('QuickLink', linkId) },
-			'SET #order = :o, #updatedAt = :u',
-			{ ':o': i, ':u': new Date().toISOString() },
-			{ '#order': 'order', '#updatedAt': 'updatedAt' }
-		);
-	}
+export async function reorderQuickLinks(workspaceId: string, actorId: string, linkIds: string[]) {
+    for (const [i, linkId] of linkIds.entries()) {
+        if (!linkId) continue;
+        await ddbUpdate(
+            { PK: wsPk(workspaceId), SK: entitySk('QuickLink', linkId) },
+            'SET #order = :o, #updatedAt = :u',
+            { ':o': i, ':u': new Date().toISOString() },
+            { '#order': 'order', '#updatedAt': 'updatedAt' }
+        );
+    }
 
-	await logActivity({
-		workspaceId,
-		userId: actorId,
-		action: 'QUICK_LINK_REORDERED',
-		entityType: 'QuickLink',
-		entityId: workspaceId,
-		summary: 'Quick links reordered'
-	});
+    await logActivity({
+        workspaceId,
+        userId: actorId,
+        action: 'QUICK_LINK_REORDERED',
+        entityType: 'QuickLink',
+        entityId: workspaceId,
+        summary: 'Quick links reordered'
+    });
 }
 
-export async function reorderQuickLinkFolders(
-	workspaceId: string,
-	actorId: string,
-	folderIds: string[]
-) {
-	for (const [i, folderId] of folderIds.entries()) {
-		if (!folderId) continue;
-		await ddbUpdate(
-			{ PK: wsPk(workspaceId), SK: entitySk('QuickLinkFolder', folderId) },
-			'SET #order = :o, #updatedAt = :u',
-			{ ':o': i, ':u': new Date().toISOString() },
-			{ '#order': 'order', '#updatedAt': 'updatedAt' }
-		);
-	}
+export async function reorderQuickLinkFolders(workspaceId: string, actorId: string, folderIds: string[]) {
+    for (const [i, folderId] of folderIds.entries()) {
+        if (!folderId) continue;
+        await ddbUpdate(
+            { PK: wsPk(workspaceId), SK: entitySk('QuickLinkFolder', folderId) },
+            'SET #order = :o, #updatedAt = :u',
+            { ':o': i, ':u': new Date().toISOString() },
+            { '#order': 'order', '#updatedAt': 'updatedAt' }
+        );
+    }
 
-	await logActivity({
-		workspaceId,
-		userId: actorId,
-		action: 'QUICK_LINK_FOLDER_REORDERED',
-		entityType: 'QuickLinkFolder',
-		entityId: workspaceId,
-		summary: 'Quick link folders reordered'
-	});
+    await logActivity({
+        workspaceId,
+        userId: actorId,
+        action: 'QUICK_LINK_FOLDER_REORDERED',
+        entityType: 'QuickLinkFolder',
+        entityId: workspaceId,
+        summary: 'Quick link folders reordered'
+    });
 }
 
 /* eslint-enable security/detect-object-injection */

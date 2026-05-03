@@ -5,16 +5,16 @@ const REDACTED = '[redacted]';
 /* eslint-disable security/detect-object-injection */
 
 function isSensitive(key: string): boolean {
-	return SENSITIVE_KEY_RE.test(key);
+    return SENSITIVE_KEY_RE.test(key);
 }
 
 /** Build a redacted plain-object copy of URLSearchParams entries. */
 export function redactSearchParams(params: URLSearchParams): Record<string, string> {
-	const out: Record<string, string> = {};
-	for (const [k, v] of params.entries()) {
-		out[k] = isSensitive(k) ? REDACTED : v;
-	}
-	return out;
+    const out: Record<string, string> = {};
+    for (const [k, v] of params.entries()) {
+        out[k] = isSensitive(k) ? REDACTED : v;
+    }
+    return out;
 }
 
 /**
@@ -24,11 +24,11 @@ export function redactSearchParams(params: URLSearchParams): Record<string, stri
  * payloads in ErrorLog.context.
  */
 export function redactObject<T extends Record<string, unknown>>(input: T): Record<string, unknown> {
-	const out: Record<string, unknown> = {};
-	for (const [k, v] of Object.entries(input)) {
-		out[k] = isSensitive(k) ? REDACTED : v;
-	}
-	return out;
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(input)) {
+        out[k] = isSensitive(k) ? REDACTED : v;
+    }
+    return out;
 }
 
 /**
@@ -36,15 +36,15 @@ export function redactObject<T extends Record<string, unknown>>(input: T): Recor
  * unchanged — callers are storing this for diagnostics, not for routing.
  */
 export function redactUrl(raw: string): string {
-	try {
-		const u = new URL(raw);
-		for (const k of Array.from(u.searchParams.keys())) {
-			if (isSensitive(k)) u.searchParams.set(k, REDACTED);
-		}
-		return u.toString();
-	} catch {
-		return raw;
-	}
+    try {
+        const u = new URL(raw);
+        for (const k of Array.from(u.searchParams.keys())) {
+            if (isSensitive(k)) u.searchParams.set(k, REDACTED);
+        }
+        return u.toString();
+    } catch {
+        return raw;
+    }
 }
 
 /* eslint-enable security/detect-object-injection */

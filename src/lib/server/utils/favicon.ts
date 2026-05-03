@@ -6,17 +6,17 @@ import { isInternalDomain } from './url';
  * Returns null if the URL is invalid or for internal domains.
  */
 export async function fetchFaviconUrl(url: string): Promise<string | null> {
-	try {
-		const hostname = new URL(url).hostname;
-		// Skip localhost and internal domains
-		if (isInternalDomain(hostname)) {
-			return null;
-		}
-		// Try direct favicon from domain first (no placeholders)
-		return `https://${hostname}/favicon.ico`;
-	} catch {
-		return null;
-	}
+    try {
+        const hostname = new URL(url).hostname;
+        // Skip localhost and internal domains
+        if (isInternalDomain(hostname)) {
+            return null;
+        }
+        // Try direct favicon from domain first (no placeholders)
+        return `https://${hostname}/favicon.ico`;
+    } catch {
+        return null;
+    }
 }
 
 /**
@@ -24,13 +24,13 @@ export async function fetchFaviconUrl(url: string): Promise<string | null> {
  * Uses Google's service as a fallback with 128px size.
  */
 export function getFallbackFaviconUrl(url: string): string | null {
-	try {
-		const hostname = new URL(url).hostname;
-		if (isInternalDomain(hostname)) {
-			return null;
-		}
-		return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=128`;
-	} catch {
-		return null;
-	}
+    try {
+        const hostname = new URL(url).hostname;
+        if (isInternalDomain(hostname)) {
+            return null;
+        }
+        return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=128`;
+    } catch {
+        return null;
+    }
 }
