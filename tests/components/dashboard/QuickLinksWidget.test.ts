@@ -5,47 +5,44 @@ import type { QuickLinkFolder } from '$lib/types/enums';
 import { invalidateAll } from '../__mocks__/app-navigation';
 
 describe('QuickLinksWidget', () => {
-	const originalFetch = global.fetch;
+    const originalFetch = global.fetch;
 
-	beforeEach(() => {
-		invalidateAll.mockReset();
-	});
+    beforeEach(() => {
+        invalidateAll.mockReset();
+    });
 
-	afterEach(() => {
-		global.fetch = originalFetch;
-	});
+    afterEach(() => {
+        global.fetch = originalFetch;
+    });
 
-	it('creates a folder inline and focuses its editable name field', async () => {
-		const folder: QuickLinkFolder = {
-			id: 'folder-1',
-			workspaceId: 'ws-1',
-			name: null,
-			order: 0,
-			createdAt: '2026-04-26T00:00:00.000Z',
-			updatedAt: '2026-04-26T00:00:00.000Z'
-		};
+    it('creates a folder inline and focuses its editable name field', async () => {
+        const folder: QuickLinkFolder = {
+            id: 'folder-1',
+            workspaceId: 'ws-1',
+            name: null,
+            order: 0,
+            createdAt: '2026-04-26T00:00:00.000Z',
+            updatedAt: '2026-04-26T00:00:00.000Z'
+        };
 
-		global.fetch = vi.fn(async () => ({
-			ok: true,
-			json: async () => folder
-		})) as unknown as typeof fetch;
+        global.fetch = vi.fn(async () => ({
+            ok: true,
+            json: async () => folder
+        })) as unknown as typeof fetch;
 
-		render(QuickLinksWidget, {
-			links: [],
-			folders: []
-		});
+        render(QuickLinksWidget, {
+            links: [],
+            folders: []
+        });
 
-		await fireEvent.click(screen.getByRole('button', { name: 'Add folder' }));
+        await fireEvent.click(screen.getByRole('button', { name: 'Add folder' }));
 
-		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalledWith(
-				'/dashboard/api/quick-link-folders',
-				expect.objectContaining({ method: 'POST' })
-			);
-		});
+        await waitFor(() => {
+            expect(global.fetch).toHaveBeenCalledWith('/dashboard/api/quick-link-folders', expect.objectContaining({ method: 'POST' }));
+        });
 
-		const input = await screen.findByPlaceholderText('Name this folder');
-		expect(input).toHaveFocus();
-		expect(screen.queryByText('Create')).not.toBeInTheDocument();
-	});
+        const input = await screen.findByPlaceholderText('Name this folder');
+        expect(input).toHaveFocus();
+        expect(screen.queryByText('Create')).not.toBeInTheDocument();
+    });
 });

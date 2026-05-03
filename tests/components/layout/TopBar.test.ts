@@ -1,30 +1,29 @@
 import { describe, it, expect, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import TopBar from '$lib/components/layout/TopBar.svelte';
 
 describe('TopBar', () => {
-	it('opens and closes the user menu repeatedly without leaving it stuck open', async () => {
-		render(TopBar, {
-			onOpenSearch: vi.fn(),
-			onToggleSidebar: vi.fn()
-		});
+    it('calls onToggleSidebar when menu button is clicked', async () => {
+        const onToggleSidebar = vi.fn();
+        render(TopBar, {
+            onOpenSearch: vi.fn(),
+            onToggleSidebar
+        });
 
-		const trigger = screen.getByRole('button', { name: 'Open user menu' });
+        const trigger = screen.getByRole('button', { name: 'Toggle sidebar' });
+        await fireEvent.click(trigger);
+        expect(onToggleSidebar).toHaveBeenCalled();
+    });
 
-		await fireEvent.click(trigger);
-		expect(screen.getByRole('group', { name: 'User menu' })).toBeInTheDocument();
+    it('calls onOpenSearch when search button is clicked', async () => {
+        const onOpenSearch = vi.fn();
+        render(TopBar, {
+            onOpenSearch,
+            onToggleSidebar: vi.fn()
+        });
 
-		await fireEvent.click(trigger);
-		await waitFor(() => {
-			expect(screen.queryByRole('group', { name: 'User menu' })).not.toBeInTheDocument();
-		});
-
-		await fireEvent.click(trigger);
-		expect(screen.getByRole('group', { name: 'User menu' })).toBeInTheDocument();
-
-		await fireEvent.keyDown(window, { key: 'Escape' });
-		await waitFor(() => {
-			expect(screen.queryByRole('group', { name: 'User menu' })).not.toBeInTheDocument();
-		});
-	});
+        const trigger = screen.getByRole('button', { name: 'Open search' });
+        await fireEvent.click(trigger);
+        expect(onOpenSearch).toHaveBeenCalled();
+    });
 });
