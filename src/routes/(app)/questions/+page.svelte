@@ -1,8 +1,7 @@
 <script lang="ts">
     import PageHeader from '$lib/components/shared/PageHeader.svelte';
     import Button from '$lib/components/ui/Button.svelte';
-    import QuestionCreateModal from '$lib/components/questions/QuestionCreateModal.svelte';
-    import QuestionEditModal from '$lib/components/questions/QuestionEditModal.svelte';
+    import QuestionModal from '$lib/components/questions/QuestionModal.svelte';
     import { Plus } from 'lucide-svelte';
     import { page } from '$app/stores';
     import { invalidateAll, goto } from '$app/navigation';
@@ -90,7 +89,8 @@
 {#if editingQuestion}
     {@const question = data.items.find((q) => q.id === editingQuestion?.id)}
     {#if question}
-        <QuestionEditModal
+        <QuestionModal
+            mode="edit"
             open={true}
             onClose={async () => {
                 await updateUrl(null);
@@ -126,7 +126,8 @@
 {/if}
 
 {#if showCreateModal}
-    <QuestionCreateModal
+    <QuestionModal
+        mode="create"
         open={true}
         onClose={() => {
             showCreateModal = false;
