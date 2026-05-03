@@ -7,7 +7,7 @@
     import RichText from '$lib/components/ui/RichText.svelte';
     import ByAvatar from '$lib/components/shared/ByAvatar.svelte';
     import { showSuccessToast, showErrorToast } from '$lib/stores/toast';
-    import { X, Plus, Calendar, CheckSquare, User, MoreHorizontal, Image, Paperclip, Link, FileText } from 'lucide-svelte';
+    import { X, Plus, Calendar, CheckSquare, User, MoreHorizontal, Link, FileText } from 'lucide-svelte';
     import { invalidateAll } from '$app/navigation';
 
     let {
@@ -308,63 +308,85 @@
     }
 </script>
 
-<Dialog {open} onClose={saveBeforeClose}>
-    <form method="post" {action} class="modal-form">
-        <!-- Header -->
-        <div class="modal-header">
-            <div class="modal-header-left">
-                <span class="pill {statusPillClass()}">{statusLabel()}</span>
-            </div>
-            <div class="modal-header-right">
-                <Button type="button" variant="ghost" size="sm" class="modal-icon-btn">
-                    <Image class="modal-icon-sm" />
-                </Button>
-                <Button type="button" variant="ghost" size="sm" class="modal-icon-btn">
-                    <Paperclip class="modal-icon-sm" />
-                </Button>
-                {#if deleteAction}
-                    <div class="modal-dropdown" use:clickOutside={() => (showMenuDropdown = false)}>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onclick={() => (showMenuDropdown = !showMenuDropdown)}
-                            class="modal-icon-btn"
-                        >
-                            <MoreHorizontal class="modal-icon-sm" />
-                        </Button>
-                        {#if showMenuDropdown}
-                            <div class="modal-dropdown-menu">
-                                <button
-                                    type="button"
-                                    class="modal-dropdown-button"
-                                    onclick={async () => {
-                                        if (confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
-                                            const formData = new FormData();
-                                            formData.append('id', val('id'));
-                                            const response = await fetch(deleteAction, { method: 'POST', body: formData });
-                                            if (response.ok) {
-                                                showSuccessToast('Task deleted successfully');
-                                                await invalidateAll();
-                                                onClose();
-                                            } else {
-                                                showErrorToast('Failed to delete task');
-                                            }
-                                        }
-                                    }}
-                                >
-                                    Delete
-                                </button>
-                            </div>
-                        {/if}
-                    </div>
-                {/if}
-                <Button type="button" variant="ghost" size="sm" onclick={saveBeforeClose} class="modal-icon-btn">
-                    <X class="modal-icon-sm" />
-                </Button>
-            </div>
-        </div>
+{#snippet taskEditHeader()}
+    <span class="pill {statusPillClass()}">{statusLabel()}</span>
+{/snippet}
 
+{#snippet taskEditHeaderActions()}
+    {#if deleteAction}
+        <div class="modal-dropdown" use:clickOutside={() => (showMenuDropdown = false)}>
+            <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onclick={() => (showMenuDropdown = !showMenuDropdown)}
+                class="modal-icon-btn"
+            >
+                <MoreHorizontal class="modal-icon-sm" />
+            </Button>
+            {#if showMenuDropdown}
+                <div class="modal-dropdown-menu">
+                    <button
+                        type="button"
+                        class="modal-dropdown-button"
+                        onclick={async () => {
+                            if (confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
+                                const formData = new FormData();
+                                formData.append('id', val('id'));
+                                const response = await fetch(deleteAction!, { method: 'POST', body: formData });
+                                if (response.ok) {
+                                    showSuccessToast('Task deleted successfully');
+                                    await invalidateAll();
+                                    onClose();
+                                } else {
+                                    showErrorToast('Failed to delete task');
+                                }
+                            }
+                        }}
+                    >
+                        Delete
+                    </button>
+                </div>
+            {/if}
+        </div>
+    {/if}
+{/snippet}
+
+{#snippet taskEditFooter()}
+    {#if deleteAction}
+        <Button
+            type="button"
+            variant="ghost"
+            class="modal-footer-delete"
+            onclick={async () => {
+                if (confirm('Are you sure you want to delete this task?')) {
+                    const formData = new FormData();
+                    formData.append('id', val('id'));
+                    const response = await fetch(deleteAction!, { method: 'POST', body: formData });
+                    if (response.ok) {
+                        showSuccessToast('Task deleted');
+                        await invalidateAll();
+                        onClose();
+                    }
+                }
+            }}
+        >
+            Delete
+        </Button>
+    {/if}
+    <Button type="button" variant="ghost" onclick={onClose}>Cancel</Button>
+    <Button type="submit" form="task-edit-form" class="modal-footer-save">Save changes</Button>
+{/snippet}
+
+<Dialog
+    {open}
+    onClose={saveBeforeClose}
+    ariaLabel="Edit task"
+    header={taskEditHeader}
+    headerActions={taskEditHeaderActions}
+    footer={taskEditFooter}
+>
+    <form id="task-edit-form" method="post" {action} class="modal-form">
         <!-- Title Row -->
         <div class="modal-title-row">
             <input
@@ -400,9 +422,6 @@
             </Button>
             <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
                 <CheckSquare class="modal-icon-xs" /> Sub-tasks
-            </Button>
-            <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
-                <Paperclip class="modal-icon-xs" /> Attachment
             </Button>
             <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
                 <Link class="modal-icon-xs" /> Link
@@ -590,33 +609,6 @@
                     >
                 </div>
             {/if}
-        </div>
-
-        <!-- Footer -->
-        <div class="modal-footer">
-            {#if deleteAction}
-                <Button
-                    type="button"
-                    variant="ghost"
-                    class="modal-footer-delete"
-                    onclick={async () => {
-                        if (confirm('Are you sure you want to delete this task?')) {
-                            const formData = new FormData();
-                            formData.append('id', val('id'));
-                            const response = await fetch(deleteAction, { method: 'POST', body: formData });
-                            if (response.ok) {
-                                showSuccessToast('Task deleted');
-                                await invalidateAll();
-                                onClose();
-                            }
-                        }
-                    }}
-                >
-                    Delete
-                </Button>
-            {/if}
-            <Button type="button" variant="ghost" onclick={onClose}>Cancel</Button>
-            <Button type="submit" class="modal-footer-save">Save changes</Button>
         </div>
 
         <!-- Hidden Inputs -->

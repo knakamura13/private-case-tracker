@@ -123,19 +123,25 @@
     }
 </script>
 
-<Dialog {open} {onClose}>
-    <form method="post" {action} use:enhance={onenhance} class="modal-form">
+{#snippet milestoneCreateHeader()}
+    <div class="modal-flex modal-flex-1 modal-items-start">
+        <Input name="title" form="milestone-create-form" bind:value={titleValue} class="modal-title-input" placeholder="Title" required />
+    </div>
+{/snippet}
+
+<Dialog
+    {open}
+    {onClose}
+    ariaLabel="Create milestone"
+    header={milestoneCreateHeader}
+    bodyClass=""
+    footerFormId="milestone-create-form"
+    cancelLabel="Cancel"
+    submitLabel="Create milestone"
+>
+    <form id="milestone-create-form" method="post" {action} use:enhance={onenhance} class="modal-form">
         <input type="hidden" name="subTasks" value={subTasksJson} />
         <input type="hidden" name="location" value={currentLocation} />
-        <!-- Header -->
-        <div class="modal-header">
-            <div class="modal-flex modal-flex-1 modal-items-start">
-                <Input name="title" bind:value={titleValue} class="modal-title-input" placeholder="Title" required />
-            </div>
-            <Button type="button" variant="ghost" size="sm" onclick={onClose} class="modal-shrink-0">
-                {#snippet children()}<X class="modal-icon-md" />{/snippet}
-            </Button>
-        </div>
 
         <!-- Main Content -->
         <div class="modal-content-two-col">
@@ -374,11 +380,5 @@
                 <ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />
             </div>
         {/if}
-
-        <!-- Footer -->
-        <div class="modal-footer">
-            <Button type="button" variant="outline" onclick={onClose}>Cancel</Button>
-            <Button type="submit">Create milestone</Button>
-        </div>
     </form>
 </Dialog>

@@ -8,7 +8,7 @@
     import ByAvatar from '$lib/components/shared/ByAvatar.svelte';
     import { PHASE_LABELS } from '$lib/constants/phases';
     import { showSuccessToast, showErrorToast } from '$lib/stores/toast';
-    import { X, Plus, Calendar, MapPin, CheckSquare, User, MoreHorizontal, Image, Paperclip, Link, FileText } from 'lucide-svelte';
+    import { X, Plus, Calendar, MapPin, CheckSquare, User, MoreHorizontal, Link, FileText } from 'lucide-svelte';
 
     let {
         open,
@@ -249,62 +249,83 @@
     }
 </script>
 
-<Dialog {open} {onClose}>
-    <form method="post" {action} class="modal-form">
-        <!-- Header -->
-        <div class="modal-header">
-            <div class="modal-header-left">
-                <span class="pill s-note">{PHASE_LABELS[phaseValue as keyof typeof PHASE_LABELS]}</span>
-            </div>
-            <div class="modal-header-right">
-                <Button type="button" variant="ghost" size="sm" class="modal-icon-btn">
-                    <Image class="modal-icon-sm" />
-                </Button>
-                <Button type="button" variant="ghost" size="sm" class="modal-icon-btn">
-                    <Paperclip class="modal-icon-sm" />
-                </Button>
-                {#if deleteAction}
-                    <div class="modal-dropdown" use:clickOutside={() => (showMenuDropdown = false)}>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onclick={() => (showMenuDropdown = !showMenuDropdown)}
-                            class="modal-icon-btn"
-                        >
-                            <MoreHorizontal class="modal-icon-sm" />
-                        </Button>
-                        {#if showMenuDropdown}
-                            <div class="modal-dropdown-menu">
-                                <button
-                                    type="button"
-                                    class="modal-dropdown-button"
-                                    onclick={async () => {
-                                        if (confirm('Are you sure you want to delete this milestone? This action cannot be undone.')) {
-                                            const formData = new FormData();
-                                            formData.append('id', val('id'));
-                                            const response = await fetch(deleteAction, { method: 'POST', body: formData });
-                                            if (response.ok) {
-                                                showSuccessToast('Milestone deleted successfully');
-                                                window.location.href = '/timeline';
-                                            } else {
-                                                showErrorToast('Failed to delete milestone');
-                                            }
-                                        }
-                                    }}
-                                >
-                                    Delete
-                                </button>
-                            </div>
-                        {/if}
-                    </div>
-                {/if}
-                <Button type="button" variant="ghost" size="sm" onclick={onClose} class="modal-icon-btn">
-                    <X class="modal-icon-sm" />
-                </Button>
-            </div>
-        </div>
+{#snippet milestoneEditHeader()}
+    <span class="pill s-note">{PHASE_LABELS[phaseValue as keyof typeof PHASE_LABELS]}</span>
+{/snippet}
 
+{#snippet milestoneEditHeaderActions()}
+    {#if deleteAction}
+        <div class="modal-dropdown" use:clickOutside={() => (showMenuDropdown = false)}>
+            <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onclick={() => (showMenuDropdown = !showMenuDropdown)}
+                class="modal-icon-btn"
+            >
+                <MoreHorizontal class="modal-icon-sm" />
+            </Button>
+            {#if showMenuDropdown}
+                <div class="modal-dropdown-menu">
+                    <button
+                        type="button"
+                        class="modal-dropdown-button"
+                        onclick={async () => {
+                            if (confirm('Are you sure you want to delete this milestone? This action cannot be undone.')) {
+                                const formData = new FormData();
+                                formData.append('id', val('id'));
+                                const response = await fetch(deleteAction!, { method: 'POST', body: formData });
+                                if (response.ok) {
+                                    showSuccessToast('Milestone deleted successfully');
+                                    window.location.href = '/timeline';
+                                } else {
+                                    showErrorToast('Failed to delete milestone');
+                                }
+                            }
+                        }}
+                    >
+                        Delete
+                    </button>
+                </div>
+            {/if}
+        </div>
+    {/if}
+{/snippet}
+
+{#snippet milestoneEditFooter()}
+    {#if deleteAction}
+        <Button
+            type="button"
+            variant="ghost"
+            class="modal-footer-delete"
+            onclick={async () => {
+                if (confirm('Are you sure you want to delete this milestone?')) {
+                    const formData = new FormData();
+                    formData.append('id', val('id'));
+                    const response = await fetch(deleteAction!, { method: 'POST', body: formData });
+                    if (response.ok) {
+                        showSuccessToast('Milestone deleted');
+                        window.location.href = '/timeline';
+                    }
+                }
+            }}
+        >
+            Delete
+        </Button>
+    {/if}
+    <Button type="button" variant="ghost" onclick={onClose}>Cancel</Button>
+    <Button type="submit" form="milestone-edit-form" class="modal-footer-save">Save changes</Button>
+{/snippet}
+
+<Dialog
+    {open}
+    {onClose}
+    ariaLabel="Edit milestone"
+    header={milestoneEditHeader}
+    headerActions={milestoneEditHeaderActions}
+    footer={milestoneEditFooter}
+>
+    <form id="milestone-edit-form" method="post" {action} class="modal-form">
         <!-- Title Row -->
         <div class="modal-title-row">
             <MapPin class="modal-icon-sm" />
@@ -327,9 +348,6 @@
             </Button>
             <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
                 <CheckSquare class="modal-icon-xs" /> Sub-tasks
-            </Button>
-            <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
-                <Paperclip class="modal-icon-xs" /> Attachment
             </Button>
             <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
                 <Link class="modal-icon-xs" /> Link
@@ -618,32 +636,6 @@
                     >
                 </div>
             {/if}
-        </div>
-
-        <!-- Footer -->
-        <div class="modal-footer">
-            {#if deleteAction}
-                <Button
-                    type="button"
-                    variant="ghost"
-                    class="modal-footer-delete"
-                    onclick={async () => {
-                        if (confirm('Are you sure you want to delete this milestone?')) {
-                            const formData = new FormData();
-                            formData.append('id', val('id'));
-                            const response = await fetch(deleteAction, { method: 'POST', body: formData });
-                            if (response.ok) {
-                                showSuccessToast('Milestone deleted');
-                                window.location.href = '/timeline';
-                            }
-                        }
-                    }}
-                >
-                    Delete
-                </Button>
-            {/if}
-            <Button type="button" variant="ghost" onclick={onClose}>Cancel</Button>
-            <Button type="submit" class="modal-footer-save">Save changes</Button>
         </div>
 
         <!-- Hidden Inputs -->

@@ -5,7 +5,7 @@
     import Dialog from '$lib/components/ui/Dialog.svelte';
     import ErrorDetails from '$lib/components/ErrorDetails.svelte';
     import RichText from '$lib/components/ui/RichText.svelte';
-    import { X, Calendar, User, CheckSquare, Plus, FileText, Paperclip, Link } from 'lucide-svelte';
+    import { X, Calendar, User, CheckSquare, Plus, FileText, Link } from 'lucide-svelte';
     import { enhance } from '$app/forms';
     import type { SubmitFunction } from '@sveltejs/kit';
 
@@ -87,20 +87,23 @@
     });
 </script>
 
-<Dialog {open} {onClose}>
-    <form method="post" {action} use:enhance={onenhance} class="modal-form">
+{#snippet taskCreateHeader()}
+    <span class="pill {statusPillClass()}">{statusLabel()}</span>
+{/snippet}
+
+<Dialog
+    {open}
+    {onClose}
+    ariaLabel="Create task"
+    header={taskCreateHeader}
+    footerFormId="task-create-form"
+    cancelLabel="Cancel"
+    cancelVariant="ghost"
+    submitLabel="Create task"
+    submitClass="modal-footer-save"
+>
+    <form id="task-create-form" method="post" {action} use:enhance={onenhance} class="modal-form">
         <input type="hidden" name="checklist" value="[]" />
-        <!-- Header -->
-        <div class="modal-header">
-            <div class="modal-header-left">
-                <span class="pill {statusPillClass()}">{statusLabel()}</span>
-            </div>
-            <div class="modal-header-right">
-                <Button type="button" variant="ghost" size="sm" onclick={onClose} class="modal-icon-btn">
-                    <X class="modal-icon-sm" />
-                </Button>
-            </div>
-        </div>
 
         <!-- Title Row -->
         <div class="modal-title-row">
@@ -125,9 +128,6 @@
             </Button>
             <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
                 <CheckSquare class="modal-icon-xs" /> Sub-tasks
-            </Button>
-            <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
-                <Paperclip class="modal-icon-xs" /> Attachment
             </Button>
             <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
                 <Link class="modal-icon-xs" /> Link
@@ -224,11 +224,5 @@
         {#if error}
             <ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />
         {/if}
-
-        <!-- Footer -->
-        <div class="modal-footer">
-            <Button type="button" variant="ghost" onclick={onClose}>Cancel</Button>
-            <Button type="submit" class="modal-footer-save">Create task</Button>
-        </div>
     </form>
 </Dialog>
