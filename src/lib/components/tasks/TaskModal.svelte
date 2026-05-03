@@ -1,0 +1,487 @@
+<script lang="ts">
+    import Input from '$lib/components/ui/Input.svelte';
+    import Textarea from '$lib/components/ui/Textarea.svelte';
+    import Button from '$lib/components/ui/Button.svelte';
+    import Dialog from '$lib/components/ui/Dialog.svelte';
+    import ErrorDetails from '$lib/components/ErrorDetails.svelte';
+    import RichText from '$lib/components/ui/RichText.svelte';
+    import ByAvatar from '$lib/components/shared/ByAvatar.svelte';
+    import TaskChecklistEditor from '$lib/components/tasks/TaskChecklistEditor.svelte';
+    import DropdownMenu from '$lib/components/ui/DropdownMenu.svelte';
+    import { fieldFromInitial } from '$lib/utils/initialFields';
+    import { confirmAndPostFormAction } from '$lib/utils/confirmFormAction';
+    import { taskStatusLabel, taskStatusPillClass } from '$lib/tasks/taskStatusDisplay';
+    import { createTaskAutoSave } from '$lib/tasks/taskAutoSave';
+    import { parseTaskChecklist, type TaskChecklistItem } from '$lib/tasks/taskChecklist';
+    import type { ManualEnhanceHandler } from '$lib/utils/enhanceSubmit';
+    import { X, Plus, Calendar, CheckSquare, User, MoreHorizontal, Link, FileText } from 'lucide-svelte';
+    import { invalidateAll } from '$app/navigation';
+    import { enhance } from '$app/forms';
+    import type { SubmitFunction } from '@sveltejs/kit';
+
+    let {
+        mode,
+        open,
+        onClose,
+        action,
+        defaultStatus,
+        initial = {},
+        deleteAction,
+        members,
+        error,
+        errorId,
+        onenhance
+    }: {
+        mode: 'create' | 'edit';
+        open: boolean;
+        onClose: () => void | Promise<void>;
+        action: string;
+        defaultStatus?: string;
+        initial?: Record<string, unknown>;
+        deleteAction?: string;
+        members: { id: string; name: string | null; email: string }[];
+        error?: string;
+        errorId?: string;
+        onenhance?: SubmitFunction | ManualEnhanceHandler;
+    } = $props();
+
+    const submitEnhance = $derived(mode === 'create' ? (onenhance as SubmitFunction | undefined) : undefined);
+
+    const TASK_ALLOWED = ['id', 'title', 'description', 'status', 'priority', 'ownerId', 'dueDate', 'checklist'] as const;
+
+    function val(name: string, fallback = '') {
+        return fieldFromInitial(initial, TASK_ALLOWED, name, fallback);
+    }
+
+    let editableChecklist = $state<TaskChecklistItem[]>([]);
+    let checklistJson = $derived(JSON.stringify(editableChecklist));
+
+    let showDueDatePicker = $state(false);
+    let isEditingDescription = $state(false);
+    let dueDateInputEl = $state<HTMLInputElement | null>(null);
+
+    let dueDateValue = $state('');
+    let titleValue = $state('');
+    let descriptionValue = $state('');
+    let statusValue = $state('TODO');
+    let priorityValue = $state('MEDIUM');
+    let ownerIdValue = $state('');
+    let selectedOwner = $derived(members.find((m) => m.id === ownerIdValue) ?? null);
+
+    const statusPillClass = $derived(() => taskStatusPillClass(statusValue));
+    const statusLabel = $derived(() => taskStatusLabel(statusValue));
+
+    const isOverdue = $derived(() => {
+        if (!dueDateValue || statusValue === 'DONE') return false;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const due = new Date(dueDateValue);
+        return due < today;
+    });
+
+    const autoSave = createTaskAutoSave({
+        getOpen: () => open,
+        getAction: () => action,
+        getOnEnhance: () => (mode === 'edit' ? (onenhance as ManualEnhanceHandler) : undefined),
+        buildFormData: () => {
+            const formData = new FormData();
+            formData.append('id', val('id'));
+            formData.append('title', titleValue);
+            formData.append('description', descriptionValue);
+            formData.append('status', statusValue);
+            formData.append('priority', priorityValue);
+            formData.append('ownerId', ownerIdValue);
+            formData.append('dueDate', dueDateValue);
+            formData.append('checklist', checklistJson);
+            return formData;
+        }
+    });
+
+    $effect(() => {
+        if (open) {
+            if (mode === 'create') {
+                titleValue = '';
+                descriptionValue = '';
+                statusValue = defaultStatus || 'TODO';
+                priorityValue = 'MEDIUM';
+                ownerIdValue = '';
+                dueDateValue = '';
+                editableChecklist = [];
+                showDueDatePicker = false;
+                isEditingDescription = false;
+            } else {
+                titleValue = val('title');
+                descriptionValue = val('description');
+                statusValue = val('status', 'TODO');
+                priorityValue = val('priority', 'MEDIUM');
+                ownerIdValue = val('ownerId');
+                editableChecklist = parseTaskChecklist(initial.checklist);
+                dueDateValue = val('dueDate');
+                isEditingDescription = false;
+                autoSave.onOpen();
+                showDueDatePicker = false;
+            }
+        } else if (mode === 'edit') {
+            autoSave.reset();
+            showDueDatePicker = false;
+            isEditingDescription = false;
+        }
+    });
+
+    function handleDueDateSave() {
+        if (dueDateInputEl) {
+            dueDateInputEl.value = dueDateValue;
+        }
+        showDueDatePicker = false;
+        if (mode === 'edit') void autoSave.triggerAutoSave();
+    }
+
+    async function onChecklistMutate(immediate = false) {
+        if (mode === 'edit') {
+            await autoSave.triggerAutoSave(immediate, false);
+        }
+    }
+
+    async function saveBeforeCloseWrapper() {
+        await autoSave.saveBeforeClose(onClose);
+    }
+
+    async function deleteTask(confirmMessage: string) {
+        if (!deleteAction) return;
+        await confirmAndPostFormAction({
+            url: deleteAction,
+            id: val('id'),
+            confirmMessage,
+            successMessage: 'Task deleted',
+            errorMessage: 'Failed to delete task',
+            onSuccess: async () => {
+                await invalidateAll();
+                onClose();
+            }
+        });
+    }
+</script>
+
+{#snippet taskEditOverflowTrigger({ toggle }: { toggle: (e?: MouseEvent) => void })}
+    <Button type="button" variant="ghost" size="sm" class="modal-icon-btn" onclick={toggle} aria-label="More options">
+        <MoreHorizontal class="modal-icon-sm" />
+    </Button>
+{/snippet}
+
+{#snippet taskHeader()}
+    <span class="pill {statusPillClass()}">{statusLabel()}</span>
+{/snippet}
+
+{#snippet taskEditHeaderActions()}
+    {#if deleteAction}
+        <DropdownMenu
+            menuId="task-edit-overflow"
+            trigger={taskEditOverflowTrigger}
+            position="bottom-end"
+            size="sm"
+            items={[
+                {
+                    label: 'Delete',
+                    variant: 'destructive',
+                    action: () =>
+                        void deleteTask('Are you sure you want to delete this task? This action cannot be undone.')
+                }
+            ]}
+        />
+    {/if}
+{/snippet}
+
+{#snippet taskEditFooter()}
+    {#if deleteAction}
+        <Button
+            type="button"
+            variant="ghost"
+            class="modal-footer-delete"
+            onclick={() => void deleteTask('Are you sure you want to delete this task?')}
+        >
+            Delete
+        </Button>
+    {/if}
+    <Button type="button" variant="ghost" onclick={onClose}>Cancel</Button>
+    <Button type="submit" form="task-edit-form" class="modal-footer-save">Save changes</Button>
+{/snippet}
+
+{#if mode === 'create'}
+    <Dialog
+        {open}
+        {onClose}
+        ariaLabel="Create task"
+        header={taskHeader}
+        footerFormId="task-create-form"
+        cancelLabel="Cancel"
+        cancelVariant="ghost"
+        submitLabel="Create task"
+        submitClass="modal-footer-save"
+    >
+        <form id="task-create-form" method="post" {action} use:enhance={submitEnhance!} class="modal-form">
+            <input type="hidden" name="checklist" value={checklistJson} />
+
+            <div class="modal-title-row">
+                <input
+                    type="checkbox"
+                    checked={statusValue === 'DONE'}
+                    onchange={() => {
+                        statusValue = statusValue === 'DONE' ? 'TODO' : 'DONE';
+                    }}
+                    class="modal-title-checkbox"
+                />
+                <Input name="title" bind:value={titleValue} class="modal-title-input display" placeholder="Task title" required />
+            </div>
+
+            <div class="modal-action-chips">
+                <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
+                    <Plus class="modal-icon-xs" /> Add
+                </Button>
+                <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
+                    <FileText class="modal-icon-xs" /> Labels
+                </Button>
+                <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
+                    <CheckSquare class="modal-icon-xs" /> Sub-tasks
+                </Button>
+                <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
+                    <Link class="modal-icon-xs" /> Link
+                </Button>
+            </div>
+
+            <div class="modal-metadata-grid">
+                <div class="modal-metadata-item">
+                    <span class="modal-metadata-label">Assigned to</span>
+                    <div class="modal-metadata-value">
+                        <Button type="button" variant="ghost" size="sm" class="modal-metadata-btn">
+                            <User class="modal-icon-xs" /> Assign
+                        </Button>
+                    </div>
+                </div>
+                <div class="modal-metadata-item">
+                    <span class="modal-metadata-label">Due date</span>
+                    <div class="modal-metadata-value">
+                        {#if dueDateValue}
+                            <Calendar class="modal-icon-xs" />
+                            <span>{dueDateValue}</span>
+                            <Button type="button" variant="ghost" size="sm" class="modal-icon-btn-sm" onclick={() => (dueDateValue = '')}>
+                                <X class="modal-icon-xs" />
+                            </Button>
+                        {:else}
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                class="modal-metadata-btn"
+                                onclick={() => (showDueDatePicker = true)}
+                            >
+                                <Calendar class="modal-icon-xs" /> Set due date
+                            </Button>
+                        {/if}
+                    </div>
+                </div>
+            </div>
+
+            {#if showDueDatePicker}
+                <div class="modal-mt-2 modal-flex modal-gap-2">
+                    <Input type="date" bind:value={dueDateValue} class="modal-text-sm" />
+                    <Button type="button" size="sm" onclick={() => (showDueDatePicker = false)}>Done</Button>
+                </div>
+            {/if}
+
+            <div class="modal-description-section">
+                <input type="hidden" name="description" value={descriptionValue} />
+                {#if isEditingDescription}
+                    <Textarea
+                        bind:value={descriptionValue}
+                        onblur={() => (isEditingDescription = false)}
+                        onkeydown={(e) => {
+                            if (e.key === 'Escape') {
+                                e.preventDefault();
+                                isEditingDescription = false;
+                            }
+                        }}
+                        placeholder="Add a more detailed description..."
+                        rows={4}
+                        class="modal-description-textarea"
+                    />
+                {:else}
+                    <button
+                        type="button"
+                        class="modal-description-display"
+                        onclick={() => (isEditingDescription = true)}
+                        onkeydown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                isEditingDescription = true;
+                            }
+                        }}
+                    >
+                        {#if descriptionValue}
+                            <RichText text={descriptionValue} />
+                        {:else}
+                            <span class="modal-description-placeholder">Add a more detailed description...</span>
+                        {/if}
+                    </button>
+                {/if}
+            </div>
+
+            <TaskChecklistEditor bind:items={editableChecklist} />
+
+            <input type="hidden" name="status" value={statusValue} />
+            <input type="hidden" name="priority" value={priorityValue} />
+            <input type="hidden" name="dueDate" value={dueDateValue} />
+            <input type="hidden" name="ownerId" value={ownerIdValue} />
+
+            {#if error}
+                <ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />
+            {/if}
+        </form>
+    </Dialog>
+{:else}
+    <Dialog
+        {open}
+        onClose={saveBeforeCloseWrapper}
+        ariaLabel="Edit task"
+        header={taskHeader}
+        headerActions={taskEditHeaderActions}
+        footer={taskEditFooter}
+    >
+        <form id="task-edit-form" method="post" {action} class="modal-form">
+            <div class="modal-title-row">
+                <input
+                    type="checkbox"
+                    checked={statusValue === 'DONE'}
+                    onchange={() => {
+                        statusValue = statusValue === 'DONE' ? 'TODO' : 'DONE';
+                        void autoSave.triggerAutoSave(true);
+                    }}
+                    class="modal-title-checkbox"
+                />
+                <Input
+                    name="title"
+                    bind:value={titleValue}
+                    oninput={() => void autoSave.triggerAutoSave()}
+                    onfocus={() => autoSave.markFocused('title')}
+                    onblur={() => {
+                        autoSave.markBlurred('title');
+                        void autoSave.triggerAutoSave(true);
+                    }}
+                    class="modal-title-input display"
+                    placeholder="Task title"
+                />
+            </div>
+
+            <div class="modal-action-chips">
+                <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
+                    <Plus class="modal-icon-xs" /> Add
+                </Button>
+                <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
+                    <FileText class="modal-icon-xs" /> Labels
+                </Button>
+                <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
+                    <CheckSquare class="modal-icon-xs" /> Sub-tasks
+                </Button>
+                <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
+                    <Link class="modal-icon-xs" /> Link
+                </Button>
+            </div>
+
+            <div class="modal-metadata-grid">
+                <div class="modal-metadata-item">
+                    <span class="modal-metadata-label">Assigned to</span>
+                    <div class="modal-metadata-value">
+                        {#if selectedOwner}
+                            <ByAvatar owner={selectedOwner} size="sm" />
+                            <span>{selectedOwner.name ?? selectedOwner.email}</span>
+                        {:else}
+                            <Button type="button" variant="ghost" size="sm" class="modal-metadata-btn">
+                                <User class="modal-icon-xs" /> Assign
+                            </Button>
+                        {/if}
+                    </div>
+                </div>
+                <div class="modal-metadata-item">
+                    <span class="modal-metadata-label">Due date</span>
+                    <div class="modal-metadata-value">
+                        {#if dueDateValue}
+                            <Calendar class="modal-icon-xs" />
+                            <span>{dueDateValue}</span>
+                            {#if isOverdue()}
+                                <span class="pill s-urgent">Overdue</span>
+                            {/if}
+                        {:else}
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                class="modal-metadata-btn"
+                                onclick={() => (showDueDatePicker = true)}
+                            >
+                                <Calendar class="modal-icon-xs" /> Set due date
+                            </Button>
+                        {/if}
+                    </div>
+                </div>
+            </div>
+
+            {#if showDueDatePicker}
+                <div class="modal-mt-2 modal-flex modal-gap-2">
+                    <Input bind:value={dueDateValue} type="date" class="modal-text-sm" />
+                    <Button type="button" size="sm" onclick={handleDueDateSave}>Save</Button>
+                    <Button type="button" variant="ghost" size="sm" onclick={() => (showDueDatePicker = false)}>Cancel</Button>
+                </div>
+            {/if}
+
+            <div class="modal-description-section">
+                {#if isEditingDescription}
+                    <Textarea
+                        name="description"
+                        bind:value={descriptionValue}
+                        oninput={() => void autoSave.triggerAutoSave()}
+                        onfocus={() => autoSave.markFocused('description')}
+                        onblur={() => {
+                            autoSave.markBlurred('description');
+                            isEditingDescription = false;
+                            void autoSave.triggerAutoSave(true);
+                        }}
+                        onkeydown={(e) => {
+                            if (e.key === 'Escape') {
+                                e.preventDefault();
+                                isEditingDescription = false;
+                            }
+                        }}
+                        placeholder="Add a more detailed description..."
+                        rows={4}
+                        class="modal-description-textarea"
+                    />
+                {:else}
+                    <button
+                        type="button"
+                        class="modal-description-display"
+                        onclick={() => (isEditingDescription = true)}
+                        onkeydown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                isEditingDescription = true;
+                            }
+                        }}
+                    >
+                        {#if descriptionValue}
+                            <RichText text={descriptionValue} />
+                        {:else}
+                            <span class="modal-description-placeholder">Add a more detailed description...</span>
+                        {/if}
+                    </button>
+                {/if}
+            </div>
+
+            <TaskChecklistEditor bind:items={editableChecklist} onMutate={onChecklistMutate} />
+
+            {#if error}<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />{/if}
+            <input type="hidden" name="checklist" value={checklistJson} />
+            <input type="hidden" name="id" value={val('id')} />
+            <input type="hidden" name="ownerId" value={ownerIdValue} />
+            <input type="hidden" name="dueDate" value={dueDateValue} bind:this={dueDateInputEl} />
+        </form>
+    </Dialog>
+{/if}

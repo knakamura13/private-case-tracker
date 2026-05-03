@@ -519,6 +519,16 @@ body,
     color: var(--ink-3);
 }
 
+button.modal-checklist-text-btn {
+    font: inherit;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: inherit;
+}
+
 .modal-checklist-input {
     flex: 1;
     font-size: 13px;

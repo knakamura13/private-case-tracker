@@ -2,8 +2,7 @@
     import PageHeader from '$lib/components/shared/PageHeader.svelte';
     import Button from '$lib/components/ui/Button.svelte';
     import TaskCard from '$lib/components/tasks/TaskCard.svelte';
-    import TaskCreateModal from '$lib/components/tasks/TaskCreateModal.svelte';
-    import TaskEditModal from '$lib/components/tasks/TaskEditModal.svelte';
+    import TaskModal from '$lib/components/tasks/TaskModal.svelte';
     import { Plus } from 'lucide-svelte';
     import { page } from '$app/stores';
     import { goto, invalidateAll } from '$app/navigation';
@@ -352,7 +351,8 @@
 {#if editingTask}
     {@const task = data.tasks.find((t) => t.id === editingTask?.id)}
     {#if task}
-        <TaskEditModal
+        <TaskModal
+            mode="edit"
             open={true}
             onClose={async () => {
                 await updateUrl(null);
@@ -388,7 +388,8 @@
 {/if}
 
 {#if showCreateModal}
-    <TaskCreateModal
+    <TaskModal
+        mode="create"
         open={true}
         onClose={() => {
             showCreateModal = false;
@@ -396,6 +397,7 @@
         }}
         action="?/create"
         {defaultStatus}
+        members={data.members}
         error={form?.error}
         errorId={form?.errorId}
         onenhance={() => {
