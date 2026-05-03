@@ -147,23 +147,19 @@
         aria-modal="true"
         aria-label="Search"
         tabindex="-1"
+        onclick={(e) => {
+            if (e.target === e.currentTarget) open = false;
+        }}
         onkeydown={(e) => {
             if (e.key === 'Escape') open = false;
             trapTabKey(e);
         }}
     >
         <div
-            class="cmdpal-absolute cmdpal-inset-0 cmdpal-z-0 cmdpal-cursor-default"
-            aria-hidden="true"
-            onclick={() => (open = false)}
-        ></div>
-        <div
             bind:this={dialogContentEl}
             class="dialog-content"
             style="max-width: 640px;"
             role="none"
-            onclick={(e) => e.stopPropagation()}
-            onkeydown={(e) => e.stopPropagation()}
         >
             <div class="cmdpal-container">
                 <div class="cmdpal-search-row">

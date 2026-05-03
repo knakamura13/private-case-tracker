@@ -835,7 +835,6 @@ button.modal-checklist-text-btn {
     display: grid;
     grid-template-columns: repeat(4, minmax(240px, 1fr));
     gap: 24px;
-    margin-top: 32px;
 }
 
 .tasks-column {
@@ -1163,23 +1162,6 @@ button.modal-checklist-text-btn {
     text-align: center;
     color: var(--ink-3);
     font-size: 14px;
-}
-
-/* Command palette backdrop positioning */
-.cmdpal-absolute {
-    position: absolute;
-}
-
-.cmdpal-inset-0 {
-    inset: 0;
-}
-
-.cmdpal-z-0 {
-    z-index: 0;
-}
-
-.cmdpal-cursor-default {
-    cursor: default;
 }
 
 .cmdpal-sr-only {
