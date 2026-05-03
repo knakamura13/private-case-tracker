@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import ErrorDetails from '$lib/components/ErrorDetails.svelte';
 
     const row = (
-        $page.data as unknown as {
+        page.data as unknown as {
             row: {
                 id: string;
                 occurredAt: string | Date;

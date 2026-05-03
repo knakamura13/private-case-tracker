@@ -43,11 +43,11 @@
 >
     {#each folders as folder}
         <div
-            class="widget-item relative group"
-            style="display: flex; flex-direction: column; align-items: center; gap: 12px; cursor: pointer; background: none; border: none; padding: 0; position: relative;"
+            class="widget-item"
+            style="display: flex; flex-direction: column; align-items: center; gap: 12px; cursor: pointer; background: none; border: none; padding: 0;"
         >
-            <div class="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-[1000] pointer-events-none">
-                <div class="pointer-events-auto">
+            <div class="widget-item-menu-wrap">
+                <div class="widget-item-menu-inner">
                     <ThreeDotsMenu
                         menuId="folder-{folder.id}"
                         items={[
@@ -83,11 +83,11 @@
 
     {#each rootLinks as link}
         <div
-            class="widget-item relative group"
-            style="display: flex; flex-direction: column; align-items: center; gap: 12px; cursor: pointer; background: none; border: none; padding: 0; position: relative;"
+            class="widget-item"
+            style="display: flex; flex-direction: column; align-items: center; gap: 12px; cursor: pointer; background: none; border: none; padding: 0;"
         >
-            <div class="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-[1000] pointer-events-none">
-                <div class="pointer-events-auto">
+            <div class="widget-item-menu-wrap">
+                <div class="widget-item-menu-inner">
                     <ThreeDotsMenu
                         menuId="link-{link.id}"
                         items={[

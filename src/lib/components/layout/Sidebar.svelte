@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import { navigation, getPageNumber as _getPageNumber } from '$lib/constants/navigation';
     import { LogOut, Settings, Clock } from 'lucide-svelte';
 
@@ -18,7 +18,7 @@
         <div class="eyebrow" style="padding: 0 16px 10px;">Our case</div>
         <div style="display: flex; flex-direction: column; gap: 2px;">
             {#each navigation as item (item.href)}
-                {@const active = $page.url.pathname === item.href || $page.url.pathname.startsWith(`${item.href}/`)}
+                {@const active = page.url.pathname === item.href || page.url.pathname.startsWith(`${item.href}/`)}
                 <a
                     href={item.href}
                     onclick={() => onNavigate?.()}
@@ -33,7 +33,7 @@
             {/each}
             <!-- Settings nav item -->
             {#if true}
-                {@const active = $page.url.pathname.startsWith('/settings')}
+                {@const active = page.url.pathname.startsWith('/settings')}
                 <a
                     href="/settings"
                     class="nav-item {active ? 'active' : ''}"
@@ -51,21 +51,21 @@
     <!-- Footer -->
     <div style="margin-top: auto;">
         <!-- Next Step Widget -->
-        {#if $page.data.nextMilestone}
+        {#if page.data.nextMilestone}
             <div
                 class="card-tight"
                 style="background: var(--peri); border: 1px solid transparent; padding: 14px; border-radius: var(--r-sm); margin-bottom: 12px;"
             >
                 <div class="eyebrow" style="margin-bottom: 6px;">Next step</div>
                 <div style="font-size: 13px; font-weight: 600; margin-bottom: 4px; line-height: 1.3;">
-                    {$page.data.nextMilestone.title}
+                    {page.data.nextMilestone.title}
                 </div>
                 <div class="mono" style="font-size: 11px; color: oklch(0.32 0.13 265);">
                     <Clock size={11} style="vertical-align: -2px; margin-right: 4px;" />
-                    {#if $page.data.nextMilestone.dueDate}
-                        {new Date($page.data.nextMilestone.dueDate).toLocaleDateString()}
+                    {#if page.data.nextMilestone.dueDate}
+                        {new Date(page.data.nextMilestone.dueDate).toLocaleDateString()}
                     {:else}
-                        {$page.data.nextMilestone.status.toLowerCase().replace('_', ' ')}
+                        {page.data.nextMilestone.status.toLowerCase().replace('_', ' ')}
                     {/if}
                 </div>
             </div>
@@ -74,13 +74,13 @@
         <div style="display: flex; align-items: center; gap: 10px; padding: 16px 8px 0; border-top: 1px solid var(--hairline);">
             <div style="display: flex;">
                 <div
-                    class="avatar sm sage"
+                    class="sidebar-footer-avatar"
                     style="width: 22px; height: 22px; border-radius: 999px; background: var(--sage-fill); color: var(--ink); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; border: 2px solid var(--bg);"
                 >
                     K
                 </div>
                 <div
-                    class="avatar sm blush"
+                    class="sidebar-footer-avatar"
                     style="width: 22px; height: 22px; border-radius: 999px; background: var(--blush-fill); color: var(--ink); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; border: 2px solid var(--bg); margin-left: -8px;"
                 >
                     S
@@ -219,7 +219,7 @@
             padding: 8px 4px 0 !important;
         }
 
-        .sidebar .avatar.sm {
+        .sidebar .sidebar-footer-avatar {
             width: 18px !important;
             height: 18px !important;
             font-size: 9px !important;
@@ -282,7 +282,7 @@
             padding: 4px 2px 0 !important;
         }
 
-        .sidebar .avatar.sm {
+        .sidebar .sidebar-footer-avatar {
             width: 16px !important;
             height: 16px !important;
             font-size: 8px !important;

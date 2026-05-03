@@ -4,7 +4,7 @@
     import TaskCard from '$lib/components/tasks/TaskCard.svelte';
     import TaskModal from '$lib/components/tasks/TaskModal.svelte';
     import { Plus } from 'lucide-svelte';
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import { goto, invalidateAll } from '$app/navigation';
     import { showSuccessToast } from '$lib/stores/toast';
     import { getPageNumber } from '$lib/constants/navigation';
@@ -18,7 +18,7 @@
 
     let showCreateModal = $state(false);
     let defaultStatus = $state<string | undefined>(undefined);
-    const editParam = $derived($page.url.searchParams.get('edit'));
+    const editParam = $derived(page.url.searchParams.get('edit'));
     const editingTask = $derived(editParam && data.tasks.some((t) => t.id === editParam) ? { id: editParam } : null);
 
     // Drag and drop state
@@ -327,10 +327,8 @@
                     />
                 {/each}
                 {#if column.tasks.length === 0}
-                    <div class="tasks-empty-placeholder" role="listitem">
-                        <div class={`tasks-empty-box ${dropTargetId === column.id ? 'tasks-empty-box-drop-target' : ''}`}>
-                            {dropTargetId === column.id ? 'Drop here' : 'No tasks'}
-                        </div>
+                    <div class="tasks-empty-placeholder {dropTargetId === column.id ? 'tasks-empty-box-drop-target' : ''}" role="listitem">
+                        {dropTargetId === column.id ? 'Drop here' : 'No tasks'}
                     </div>
                 {/if}
             </div>

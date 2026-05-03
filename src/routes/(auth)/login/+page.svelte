@@ -5,7 +5,7 @@
     import Label from '$lib/components/ui/Label.svelte';
     import { authClient } from '$lib/client/auth-client';
     import { goto } from '$app/navigation';
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import { KeyRound, Fingerprint } from 'lucide-svelte';
     import type { PageData } from './$types';
 
@@ -32,7 +32,7 @@
             needsTwoFactor = true;
             return;
         }
-        const next = $page.url.searchParams.get('next') ?? '/dashboard';
+        const next = page.url.searchParams.get('next') ?? '/dashboard';
         await goto(next, { invalidateAll: true });
     }
 
@@ -46,7 +46,7 @@
             error = res.error.message ?? 'Invalid code';
             return;
         }
-        const next = $page.url.searchParams.get('next') ?? '/dashboard';
+        const next = page.url.searchParams.get('next') ?? '/dashboard';
         await goto(next, { invalidateAll: true });
     }
 
@@ -59,7 +59,7 @@
             error = res.error.message ?? 'Passkey sign-in failed';
             return;
         }
-        const next = $page.url.searchParams.get('next') ?? '/dashboard';
+        const next = page.url.searchParams.get('next') ?? '/dashboard';
         await goto(next, { invalidateAll: true });
     }
 </script>

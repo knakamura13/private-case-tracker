@@ -1,3 +1,157 @@
+/* App shell (from app.html) */
+.app-html {
+    height: 100%;
+}
+
+.app-body {
+    height: 100%;
+    margin: 0;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Auth routes (login / signup / invite) — markup lives in page files, not AuthShell */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.auth-text-sm {
+    font-size: 13px;
+    margin: 0;
+}
+
+.auth-text-destructive {
+    color: #b91c1c;
+}
+
+.auth-w-full {
+    width: 100%;
+}
+
+.auth-icon-sm {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.auth-divider {
+    position: relative;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.auth-divider-line {
+    position: absolute;
+    inset: 50% 0 0 0;
+    height: 1px;
+    background: var(--hairline);
+}
+
+.auth-divider-line span {
+    display: none;
+}
+
+.auth-divider-text {
+    position: relative;
+    display: inline-block;
+    padding: 0 12px;
+    background: var(--surface);
+    font-size: 12px;
+    color: var(--ink-3);
+}
+
+.auth-footer {
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--ink-2);
+    text-align: center;
+}
+
+.auth-text-primary {
+    color: var(--ink);
+    font-weight: 600;
+}
+
+.auth-underline-offset-4 {
+    text-underline-offset: 4px;
+}
+
+.auth-hover-underline:hover {
+    text-decoration: underline;
+}
+
+.invite-text-sm {
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 0 0 8px;
+    color: var(--ink-2);
+}
+
+.invite-text-muted {
+    color: var(--ink-3);
+}
+
+.invite-text-destructive {
+    color: #b91c1c;
+}
+
+.invite-link {
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.invite-w-full {
+    width: 100%;
+}
+
+.invite-underline {
+    text-decoration: underline;
+    color: var(--ink);
+}
+
+/* Standalone form layouts (evidence / questions / forms) */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 20px;
+    align-items: start;
+}
+
+.form-grid-full {
+    grid-column: 1 / -1;
+}
+
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.form-error {
+    margin: 0;
+    font-size: 13px;
+    color: #b91c1c;
+}
+
+.form-checkbox-wrapper {
+    grid-column: 1 / -1;
+}
+
+.form-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--ink-2);
+}
+
 html,
 body {
     margin: 0;
@@ -191,6 +345,11 @@ body,
     border-color: var(--peri-d);
 }
 
+.card.tinted-lilac {
+    background: var(--lilac);
+    border-color: var(--lilac-d);
+}
+
 /* Kanban Board */
 .kanban-board {
     display: grid;
@@ -287,6 +446,45 @@ body,
     height: 12px;
 }
 
+.task-card-p-4 {
+    padding: 16px;
+}
+
+.task-card-border-none {
+    border: none;
+}
+
+.task-card-shadow-none {
+    box-shadow: none;
+}
+
+.task-card-bg-transparent {
+    background: transparent;
+}
+
+.task-card-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.task-card-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.task-card-drop-indicator {
+    height: 3px;
+    margin: 0 4px 4px;
+    border-radius: 2px;
+    background: var(--peri-d);
+    pointer-events: none;
+}
+
+.task-card-drop-indicator-bottom {
+    margin: 4px 4px 0;
+}
+
 /* Modal - Monarch Design */
 .modal-header {
     display: flex;
@@ -339,13 +537,6 @@ body,
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 24px;
-}
-
-.modal-title-checkbox {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
 }
 
 .modal-title-input {
@@ -411,6 +602,62 @@ body,
     font-size: 12px;
     gap: 4px;
     cursor: pointer;
+}
+
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.modal-error {
+    font-size: 13px;
+    color: #b91c1c;
+}
+
+.modal-flex {
+    display: flex;
+}
+
+.modal-gap-2 {
+    gap: 8px;
+}
+
+.modal-flex-1 {
+    flex: 1;
+    min-width: 0;
+}
+
+.modal-icon-btn-sm {
+    padding: 4px;
+    min-width: auto;
+}
+
+.modal-metadata-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--ink);
+    text-decoration: none;
+}
+
+.modal-metadata-link:hover {
+    text-decoration: underline;
+}
+
+.modal-select-sm {
+    font-size: 13px;
+}
+
+.modal-text-sm {
+    font-size: 13px;
+}
+
+.modal-icon-3-5 {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
 }
 
 .modal-mt-2 {
@@ -653,6 +900,10 @@ button.modal-checklist-text-btn {
     align-items: center;
     justify-content: center;
     padding: 32px;
+    padding-top: max(32px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(32px, env(safe-area-inset-bottom, 0px));
+    padding-left: max(32px, env(safe-area-inset-left, 0px));
+    padding-right: max(32px, env(safe-area-inset-right, 0px));
 }
 
 .dialog-content {
@@ -663,6 +914,33 @@ button.modal-checklist-text-btn {
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    /* Fit within backdrop (vertical padding uses max(32px, safe-area)) */
+    max-height: calc(
+        100dvh - max(32px, env(safe-area-inset-top, 0px)) - max(32px, env(safe-area-inset-bottom, 0px))
+    );
+}
+
+/* Dialog max-width presets (Tailwind-free; matches former max-w-* scale) */
+.dialog-content--sm {
+    max-width: 24rem;
+}
+.dialog-content--md {
+    max-width: 28rem;
+}
+.dialog-content--lg {
+    max-width: 42rem;
+}
+.dialog-content--xl {
+    max-width: 48rem;
+}
+
+/* Explicit min/max width (no Tailwind-style utility names) */
+.error-toast-body {
+    min-width: 320px;
+    max-width: 520px;
 }
 
 /* Improved Dialog Form Styles */
@@ -682,6 +960,15 @@ button.modal-checklist-text-btn {
     padding: 24px 24px 16px 24px;
     border-bottom: 1px solid var(--hairline);
     margin-bottom: 0;
+    flex-shrink: 0;
+}
+
+/* Scrollable dialog main area; header/footer stay pinned */
+.dialog-content .dialog-body-region {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .dialog-content .modal-content {
@@ -699,6 +986,7 @@ button.modal-checklist-text-btn {
     padding: 16px 24px 24px 24px;
     border-top: 1px solid var(--hairline);
     margin-top: 0;
+    flex-shrink: 0;
 }
 
 /* Form field styling */
@@ -715,8 +1003,8 @@ button.modal-checklist-text-btn {
     margin-bottom: 0;
 }
 
-.dialog-content .input,
-.dialog-content .textarea {
+.input,
+.textarea {
     background: var(--surface-2);
     border: 1px solid var(--hairline);
     border-radius: var(--r-sm);
@@ -803,7 +1091,7 @@ button.modal-checklist-text-btn {
     }
     .dialog-content {
         border-radius: var(--r-lg) var(--r-lg) 0 0;
-        max-height: 90vh;
+        max-height: calc(100dvh - env(safe-area-inset-top, 0px));
     }
 }
 
@@ -892,6 +1180,18 @@ button.modal-checklist-text-btn {
 
 .cmdpal-cursor-default {
     cursor: default;
+}
+
+.cmdpal-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 /* Timeline page styles */
@@ -1134,7 +1434,27 @@ button.modal-checklist-text-btn {
 
 /* Quick Links Widget Hover Effects */
 .widget-item {
+    position: relative;
     transition: all 150ms ease;
+}
+
+.widget-item-menu-wrap {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease;
+}
+
+.widget-item:hover .widget-item-menu-wrap,
+.widget-item:focus-within .widget-item-menu-wrap {
+    opacity: 1;
+}
+
+.widget-item-menu-inner {
+    pointer-events: auto;
 }
 
 .widget-item:hover {
@@ -1174,4 +1494,215 @@ button.modal-checklist-text-btn {
 
 .add-link-text {
     transition: color 150ms ease;
+}
+
+/* Tasks board empty state & add button icons */
+.tasks-empty-placeholder {
+    list-style: none;
+    min-height: 120px;
+    margin: 0;
+    padding: 12px;
+    border-radius: var(--r-sm);
+    border: 1px dashed var(--hairline);
+    font-size: 12px;
+    color: var(--ink-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.tasks-empty-box-drop-target {
+    border-color: var(--peri-d);
+    background: var(--peri);
+    color: var(--ink);
+}
+
+.tasks-icon-sm {
+    width: 14px;
+    height: 14px;
+}
+
+.tasks-mr-2 {
+    margin-right: 8px;
+}
+
+/* Settings — activity feed */
+.card.settings-activity-p-0 {
+    padding: 0;
+}
+
+.settings-activity-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.settings-activity-item {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--hairline);
+}
+
+.settings-activity-item:last-child {
+    border-bottom: none;
+}
+
+.settings-activity-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.settings-activity-summary {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+}
+
+.settings-activity-text-xs {
+    font-size: 11px;
+}
+
+.settings-activity-text-muted {
+    color: var(--ink-3);
+}
+
+.settings-activity-meta {
+    margin: 0;
+    font-size: 12px;
+    color: var(--ink-3);
+}
+
+.settings-activity-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--ink-3);
+    font-size: 14px;
+}
+
+/* Settings — dev error detail */
+.error-detail-container {
+    max-width: 880px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.error-detail-header h1 {
+    margin: 0 0 4px;
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+}
+
+.error-detail-header p {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-3);
+}
+
+.settings-dev-text-sm {
+    font-size: 13px;
+}
+
+.settings-dev-font-medium {
+    font-weight: 600;
+}
+
+.settings-dev-text-primary {
+    color: var(--ink);
+}
+
+.settings-dev-hover-underline:hover {
+    text-decoration: underline;
+}
+
+.settings-dev-mt-4 {
+    margin-top: 16px;
+}
+
+.error-detail-context h2 {
+    margin: 0 0 8px;
+    font-size: 14px;
+}
+
+.error-detail-context pre {
+    margin: 0;
+    padding: 16px;
+    border-radius: var(--r-sm);
+    background: var(--surface-2);
+    border: 1px solid var(--hairline);
+    font-size: 12px;
+    overflow: auto;
+    max-height: 50vh;
+}
+
+/* Question detail page */
+.question-detail-card :global(h2) {
+    margin: 0 0 8px;
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    line-height: 1.3;
+}
+
+.question-detail-category {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ink-3);
+}
+
+.question-detail-answer-card :global(h3) {
+    margin: 0 0 12px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.question-detail-answer-text {
+    margin: 0 0 12px;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.qdetail-text-muted {
+    color: var(--ink-3);
+}
+
+.qdetail-italic {
+    font-style: italic;
+}
+
+.qdetail-mt-2 {
+    margin-top: 8px;
+}
+
+.qdetail-text-xs {
+    font-size: 11px;
+}
+
+.question-detail-source-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--ink);
+    text-decoration: none;
+    margin-top: 8px;
+}
+
+.question-detail-source-link:hover {
+    text-decoration: underline;
+}
+
+.qdetail-icon-sm {
+    width: 16px;
+    height: 16px;
+}
+
+.qdetail-icon-xs {
+    width: 14px;
+    height: 14px;
 }

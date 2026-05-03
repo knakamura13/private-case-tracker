@@ -5,7 +5,7 @@
     import Label from '$lib/components/ui/Label.svelte';
     import { authClient } from '$lib/client/auth-client';
     import { goto } from '$app/navigation';
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import type { PageData } from './$types';
 
     let { data }: { data: PageData } = $props();
@@ -29,7 +29,7 @@
         }
         const formData = new FormData();
         formData.set('workspaceName', workspaceName || 'Our case');
-        const inviteToken = $page.url.searchParams.get('invite');
+        const inviteToken = page.url.searchParams.get('invite');
         if (inviteToken) formData.set('inviteToken', inviteToken);
         const setup = await fetch('/api/post-signup', { method: 'POST', body: formData });
         loading = false;

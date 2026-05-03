@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     let { children }: { children: import('svelte').Snippet } = $props();
 
     const sections = [
@@ -10,22 +10,20 @@
         { href: '/settings/tags', label: 'Tags' },
         { href: '/settings/dev', label: 'Dev' }
     ];
+
+    function sectionActive(pathname: string, href: string) {
+        return pathname === href || pathname.startsWith(`${href}/`);
+    }
 </script>
 
-<div style="display: flex; flex-direction: column; gap: 32px; md:flex-direction: row;" class="settings-layout-md-flex-row">
-    <aside style="width: 200px; flex-shrink: 0;">
-        <nav aria-label="Settings sections">
-            <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px;">
+<div class="settings-shell">
+    <aside class="settings-nav" aria-label="Settings sections">
+        <nav>
+            <ul class="settings-nav-list">
                 {#each sections as s (s.href)}
-                    {@const active = $page.url.pathname === s.href}
+                    {@const active = sectionActive(page.url.pathname, s.href)}
                     <li>
-                        <a
-                            href={s.href}
-                            aria-current={active ? 'page' : undefined}
-                            style="display: block; padding: 10px 16px; border-radius: var(--r-sm); font-size: 14px; font-weight: 500; text-decoration: none; transition: all 120ms ease; background: {active
-                                ? 'var(--ink)'
-                                : 'transparent'}; color: {active ? 'var(--surface)' : 'var(--ink-2)'};"
-                        >
+                        <a href={s.href} class="settings-nav-link" class:settings-nav-link-active={active} aria-current={active ? 'page' : undefined}>
                             {s.label}
                         </a>
                     </li>
@@ -33,24 +31,104 @@
             </ul>
         </nav>
     </aside>
-    <div style="flex: 1; min-width: 0;">{@render children()}</div>
+    <div class="settings-panel">
+        {@render children()}
+    </div>
 </div>
 
 <style>
+    .settings-shell {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        gap: 32px;
+        flex: 1;
+        min-height: 0;
+        min-width: 0;
+    }
+
+    .settings-nav {
+        flex-shrink: 0;
+        width: 160px;
+        align-self: flex-start;
+    }
+
+    .settings-nav-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .settings-nav-link {
+        display: block;
+        padding: 10px 16px;
+        border-radius: var(--r-sm);
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: background 120ms ease, color 120ms ease;
+        background: transparent;
+        color: var(--ink-2);
+    }
+
+    .settings-nav-link:hover {
+        color: var(--ink);
+        background: var(--surface-2);
+    }
+
+    .settings-nav-link-active {
+        background: var(--ink);
+        color: var(--surface);
+    }
+
+    .settings-nav-link-active:hover {
+        color: var(--surface);
+        background: var(--ink);
+    }
+
+    .settings-panel {
+        flex: 1;
+        min-width: 0;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        padding-bottom: 8px;
+    }
+
     @media (max-width: 768px) {
-        .settings-layout-md-flex-row {
-            flex-direction: column !important;
+        .settings-shell {
+            flex-direction: column;
+            gap: 20px;
         }
-        aside {
-            width: 100% !important;
+
+        .settings-nav {
+            width: 100%;
+            align-self: stretch;
         }
-        nav ul {
-            flex-direction: row !important;
+
+        .settings-nav-list {
+            flex-direction: row;
+            flex-wrap: nowrap;
             overflow-x: auto;
-            padding-bottom: 8px !important;
+            gap: 6px;
+            padding-bottom: 4px;
+            -webkit-overflow-scrolling: touch;
         }
-        nav li {
+
+        .settings-nav-list li {
             flex-shrink: 0;
+        }
+
+        .settings-nav-link {
+            white-space: nowrap;
+        }
+
+        .settings-panel {
+            flex: 1;
+            min-height: 12rem;
         }
     }
 </style>

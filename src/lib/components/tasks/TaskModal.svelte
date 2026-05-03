@@ -222,14 +222,6 @@
             <input type="hidden" name="checklist" value={checklistJson} />
 
             <div class="modal-title-row">
-                <input
-                    type="checkbox"
-                    checked={statusValue === 'DONE'}
-                    onchange={() => {
-                        statusValue = statusValue === 'DONE' ? 'TODO' : 'DONE';
-                    }}
-                    class="modal-title-checkbox"
-                />
                 <Input name="title" bind:value={titleValue} class="modal-title-input display" placeholder="Task title" required />
             </div>
 
@@ -348,15 +340,6 @@
     >
         <form id="task-edit-form" method="post" {action} class="modal-form">
             <div class="modal-title-row">
-                <input
-                    type="checkbox"
-                    checked={statusValue === 'DONE'}
-                    onchange={() => {
-                        statusValue = statusValue === 'DONE' ? 'TODO' : 'DONE';
-                        void autoSave.triggerAutoSave(true);
-                    }}
-                    class="modal-title-checkbox"
-                />
                 <Input
                     name="title"
                     bind:value={titleValue}

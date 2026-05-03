@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { fade, fly } from 'svelte/transition';
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import Sidebar from '$lib/components/layout/Sidebar.svelte';
     import TopBar from '$lib/components/layout/TopBar.svelte';
     import CommandPalette from '$lib/components/shared/CommandPalette.svelte';
@@ -95,7 +95,7 @@
             }}
         />
         <main id="main" tabindex="-1" class="main-content">
-            {#key $page.url.pathname}
+            {#key page.url.pathname}
                 {@render children()}
             {/key}
         </main>
@@ -162,8 +162,11 @@
         flex: 1;
         min-height: 0;
         overflow-y: auto;
+        overflow-x: hidden;
         padding: 32px 32px 48px;
         background: var(--bg);
+        display: flex;
+        flex-direction: column;
     }
 
     /* Responsive main content for shorter screens */

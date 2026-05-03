@@ -376,7 +376,7 @@
                             trigger={milestoneOwnerTrigger}
                             items={ownerMenuItems}
                             position="bottom-start"
-                            menuClass="min-w-[12rem]"
+                            menuClass="dropdown-menu--min-12rem"
                         />
                     </div>
                 </div>

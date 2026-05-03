@@ -3,7 +3,7 @@
     import Button from '$lib/components/ui/Button.svelte';
     import QuestionModal from '$lib/components/questions/QuestionModal.svelte';
     import { Plus } from 'lucide-svelte';
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import { invalidateAll, goto } from '$app/navigation';
     import { showSuccessToast } from '$lib/stores/toast';
     import { getPageNumber } from '$lib/constants/navigation';
@@ -16,7 +16,7 @@
     let { data, form }: { data: QuestionsPageData; form: { error?: string; errorId?: string } } = $props();
 
     let showCreateModal = $state(false);
-    const editParam = $derived($page.url.searchParams.get('edit'));
+    const editParam = $derived(page.url.searchParams.get('edit'));
     const editingQuestion = $derived(editParam && data.items.some((q) => q.id === editParam) ? { id: editParam } : null);
 
     async function updateUrl(id: string | null) {

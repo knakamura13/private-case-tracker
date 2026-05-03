@@ -6,7 +6,7 @@
     let {
         open,
         onClose,
-        maxWidth = 'max-w-3xl',
+        contentWidth = 'xl',
         children,
         showHeader = true,
         showFooter = true,
@@ -24,11 +24,11 @@
         footerFormId,
         submitVariant = 'default',
         submitClass = '',
-        bodyClass = 'modal-content dialog-body'
+        bodyClass = 'modal-content'
     }: {
         open: boolean;
         onClose: () => void | Promise<void>;
-        maxWidth?: string;
+        contentWidth?: 'sm' | 'md' | 'lg' | 'xl';
         children: import('svelte').Snippet;
         showHeader?: boolean;
         showFooter?: boolean;
@@ -86,7 +86,7 @@
     >
         <div
             bind:this={panelEl}
-            class="dialog-content {maxWidth}"
+            class="dialog-content dialog-content--{contentWidth}"
             role="dialog"
             aria-modal="true"
             aria-labelledby={labeledBy}
@@ -123,7 +123,7 @@
             {/if}
 
             {#if bodyClass}
-                <div class={bodyClass}>
+                <div class="dialog-body-region {bodyClass}">
                     {@render children()}
                 </div>
             {:else}

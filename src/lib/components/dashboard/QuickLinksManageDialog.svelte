@@ -111,7 +111,7 @@
     <Dialog
         open={modalOpen}
         onClose={closeModal}
-        maxWidth="max-w-md"
+        contentWidth="md"
         titleLevel="h3"
         title={editingFolder ? 'Edit folder' : 'Add folder'}
         footerFormId="ql-mgr-folder-form"
@@ -145,7 +145,7 @@
     <Dialog
         open={modalOpen}
         onClose={closeModal}
-        maxWidth="max-w-md"
+        contentWidth="md"
         titleLevel="h3"
         title={editing ? 'Edit link' : 'Add link'}
         footerFormId="ql-mgr-link-form"
@@ -197,7 +197,7 @@
     <Dialog
         open={deleteModalOpen}
         onClose={closeDeleteModal}
-        maxWidth="max-w-md"
+        contentWidth="md"
         titleLevel="h3"
         title={`Delete ${itemToDelete.type}`}
         footerFormId="ql-mgr-delete-form"

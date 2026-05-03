@@ -6,10 +6,10 @@
     import { enhance } from '$app/forms';
     import { getPageNumber } from '$lib/constants/navigation';
     import type { ActionData, PageData } from './$types';
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
 
     let { data, form }: { data: PageData; form: ActionData } = $props();
-    const isOwner = $derived($page.data.workspace?.role === 'OWNER');
+    const isOwner = $derived(page.data.workspace?.role === 'OWNER');
 
     async function copyToClipboard(url: string) {
         await navigator.clipboard.writeText(url);
@@ -35,7 +35,7 @@
                     </div>
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <span class="pill {m.role === 'OWNER' ? 's-active' : 's-note'}" style="font-size: 10px;">{m.role}</span>
-                        {#if isOwner && m.user.id !== $page.data.user?.id}
+                        {#if isOwner && m.user.id !== page.data.user?.id}
                             <form method="post" action="?/removeMember" use:enhance>
                                 <input type="hidden" name="userId" value={m.user.id} />
                                 <button type="submit" style="background: none; border: none; cursor: pointer; color: var(--blush-d);">

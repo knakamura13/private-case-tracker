@@ -60,10 +60,7 @@
 
 {#if open}
     <div
-        class="quickadd-fixed quickadd-inset-0 quickadd-z-50 quickadd-bg-background-60 quickadd-p-4 quickadd-backdrop-blur-sm quickadd-flex {window.innerWidth <
-        768
-            ? 'quickadd-items-end quickadd-justify-center'
-            : 'quickadd-items-start quickadd-justify-center quickadd-pt-24'}"
+        class="quickadd-backdrop"
         role="dialog"
         aria-modal="true"
         aria-labelledby="quick-add-title"
@@ -73,30 +70,15 @@
             trapTabKey(e);
         }}
     >
-        <div
-            class="quickadd-absolute quickadd-inset-0 quickadd-z-0 quickadd-cursor-default"
-            aria-hidden="true"
-            onclick={() => (open = false)}
-        ></div>
-        <div
-            bind:this={dialogEl}
-            class="quickadd-relative quickadd-z-10 quickadd-w-full {window.innerWidth < 768
-                ? 'quickadd-max-h-85vh quickadd-rounded-t-lg'
-                : 'quickadd-max-w-sm'} quickadd-overflow-hidden quickadd-rounded-lg quickadd-border quickadd-bg-card quickadd-shadow-xl"
-            style="padding-bottom: env(safe-area-inset-bottom)"
-        >
-            <div class="quickadd-flex quickadd-justify-between quickadd-px-4 quickadd-py-3 quickadd-border-b quickadd-border">
-                <h2 id="quick-add-title" class="quickadd-text-sm quickadd-font-semibold">Quick create</h2>
-                <button
-                    type="button"
-                    class="quickadd-rounded-md quickadd-p-1 quickadd-hover-bg-muted"
-                    aria-label="Close"
-                    onclick={() => (open = false)}
-                >
-                    <X class="quickadd-icon-sm" />
+        <div class="quickadd-backdrop-hit" aria-hidden="true" onclick={() => (open = false)}></div>
+        <div bind:this={dialogEl} class="quickadd-panel" style="padding-bottom: env(safe-area-inset-bottom)">
+            <div class="quickadd-panel__header">
+                <h2 id="quick-add-title" class="quickadd-panel__title">Quick create</h2>
+                <button type="button" class="quickadd-panel__close" aria-label="Close" onclick={() => (open = false)}>
+                    <X />
                 </button>
             </div>
-            <ul class="quickadd-p-2">
+            <ul class="quickadd-panel__list">
                 {#each actions as a (a.href)}
                     <li>
                         <button
@@ -104,7 +86,7 @@
                                 open = false;
                                 goto(a.href);
                             }}
-                            class="quickadd-w-full quickadd-rounded-md quickadd-px-3 quickadd-py-2 quickadd-text-left quickadd-text-sm quickadd-hover-bg-muted"
+                            class="quickadd-panel__action"
                         >
                             {a.label}
                         </button>
@@ -114,3 +96,112 @@
         </div>
     </div>
 {/if}
+
+<style>
+    .quickadd-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 96px 16px 16px;
+        background: rgba(26, 26, 24, 0.45);
+        backdrop-filter: blur(4px);
+        box-sizing: border-box;
+    }
+
+    @media (max-width: 767px) {
+        .quickadd-backdrop {
+            align-items: flex-end;
+            padding: 0;
+        }
+    }
+
+    .quickadd-backdrop-hit {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        cursor: default;
+    }
+
+    .quickadd-panel {
+        position: relative;
+        z-index: 10;
+        width: 100%;
+        max-width: 24rem;
+        overflow: hidden;
+        border-radius: var(--r-md);
+        border: 1px solid var(--hairline);
+        background: var(--surface);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    }
+
+    @media (max-width: 767px) {
+        .quickadd-panel {
+            max-width: none;
+            border-radius: var(--r-md) var(--r-md) 0 0;
+            max-height: 85vh;
+        }
+    }
+
+    .quickadd-panel__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--hairline);
+    }
+
+    .quickadd-panel__title {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink);
+        font-family: var(--font-ui);
+    }
+
+    .quickadd-panel__close {
+        border: none;
+        background: transparent;
+        border-radius: var(--r-sm);
+        padding: 4px;
+        cursor: pointer;
+        color: var(--ink-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .quickadd-panel__close:hover {
+        background: var(--surface-2);
+    }
+
+    .quickadd-panel__close :global(svg) {
+        width: 16px;
+        height: 16px;
+    }
+
+    .quickadd-panel__list {
+        list-style: none;
+        margin: 0;
+        padding: 8px;
+    }
+
+    .quickadd-panel__action {
+        width: 100%;
+        text-align: left;
+        border: none;
+        border-radius: var(--r-sm);
+        padding: 8px 12px;
+        font-size: 13px;
+        background: transparent;
+        color: var(--ink);
+        cursor: pointer;
+        font-family: var(--font-ui);
+    }
+
+    .quickadd-panel__action:hover {
+        background: var(--surface-2);
+    }
+</style>

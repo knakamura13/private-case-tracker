@@ -618,7 +618,7 @@
     <Dialog
         open={!!folderPopoverId}
         onClose={closeFolderDialog}
-        maxWidth="max-w-md"
+        contentWidth="md"
         ariaLabel={folder?.name ? `Folder ${folder.name}` : 'Folder'}
         titleLevel="h3"
         header={qlFolderPopoverHeader}

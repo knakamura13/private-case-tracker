@@ -2,7 +2,7 @@
     import Input from '$lib/components/ui/Input.svelte';
     import Select from '$lib/components/ui/Select.svelte';
     import { goto } from '$app/navigation';
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
 
     interface FilterDef {
         name: string;
@@ -20,18 +20,18 @@
 
     let q = $state('');
     $effect(() => {
-        q = $page.url.searchParams.get(searchParam) ?? '';
+        q = page.url.searchParams.get(searchParam) ?? '';
     });
 
     function apply() {
-        const url = new URL($page.url);
+        const url = new URL(page.url);
         if (q) url.searchParams.set(searchParam, q);
         else url.searchParams.delete(searchParam);
         goto(url.toString(), { keepFocus: true, noScroll: true, replaceState: true });
     }
 
     function onFilterChange(name: string, value: string) {
-        const url = new URL($page.url);
+        const url = new URL(page.url);
         if (value) url.searchParams.set(name, value);
         else url.searchParams.delete(name);
         goto(url.toString(), { keepFocus: true, noScroll: true });
@@ -40,7 +40,7 @@
 
 <div class="filter-bar">
     <form
-        class="filter-bar-search"
+        class="filter-bar__search"
         onsubmit={(e) => {
             e.preventDefault();
             apply();
@@ -50,9 +50,8 @@
     </form>
     {#each filters as f (f.name)}
         <Select
-            value={$page.url.searchParams.get(f.name) ?? ''}
+            value={page.url.searchParams.get(f.name) ?? ''}
             onchange={(e) => onFilterChange(f.name, (e.currentTarget as HTMLSelectElement).value)}
-            class="filter-bar-select"
             aria-label={f.label}
         >
             <option value="">{f.label}: all</option>
@@ -62,3 +61,22 @@
         </Select>
     {/each}
 </div>
+
+<style>
+    .filter-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .filter-bar__search {
+        flex: 1;
+        min-width: 160px;
+        margin: 0;
+    }
+
+    .filter-bar :global(select.select) {
+        min-width: 140px;
+    }
+</style>

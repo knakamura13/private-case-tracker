@@ -1,6 +1,6 @@
 <script lang="ts">
     import PageHeader from '$lib/components/shared/PageHeader.svelte';
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import { Activity, Cpu, Database, GitBranch, ExternalLink } from 'lucide-svelte';
 
     type Row = {
@@ -14,7 +14,7 @@
         requestId: string | null;
     };
 
-    const data = $page.data as unknown as {
+    const data = page.data as unknown as {
         errors: Row[];
         errorsLoadFailed: boolean;
         railwayProjectUrl: string;

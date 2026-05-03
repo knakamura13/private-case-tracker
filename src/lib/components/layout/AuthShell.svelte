@@ -11,6 +11,7 @@
 </script>
 
 <main
+    class="auth-shell"
     id="main"
     style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); padding: 32px;"
 >
@@ -29,3 +30,9 @@
         </p>
     </div>
 </main>
+
+<style>
+    .auth-shell {
+        box-sizing: border-box;
+    }
+</style>

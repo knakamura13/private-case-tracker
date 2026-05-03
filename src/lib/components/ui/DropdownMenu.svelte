@@ -81,25 +81,29 @@
         return () => document.removeEventListener('keydown', onKey, true);
     });
 
-    const sizeClasses = $derived(
-        {
-            default: 'min-w-[160px]',
-            sm: 'min-w-[120px]',
-            lg: 'min-w-[200px]'
-        }[size] || 'min-w-[160px]'
+    const sizeClass = $derived(
+        (
+            {
+                default: 'dropdown-menu--size-default',
+                sm: 'dropdown-menu--size-sm',
+                lg: 'dropdown-menu--size-lg'
+            } as const
+        )[size] ?? 'dropdown-menu--size-default'
     );
 
-    const positionClasses = $derived(
-        {
-            'top-start': 'bottom-full left-0 mb-1',
-            'top-end': 'bottom-full right-0 mb-1',
-            'bottom-start': 'top-full left-0 mt-1',
-            'bottom-end': 'top-full right-0 mt-1'
-        }[position] || 'top-full right-0 mt-1'
+    const positionClass = $derived(
+        (
+            {
+                'top-start': 'dropdown-menu--pos-top-start',
+                'top-end': 'dropdown-menu--pos-top-end',
+                'bottom-start': 'dropdown-menu--pos-bottom-start',
+                'bottom-end': 'dropdown-menu--pos-bottom-end'
+            } as const
+        )[position] ?? 'dropdown-menu--pos-bottom-end'
     );
 </script>
 
-<div data-dropdown class="relative inline-block">
+<div data-dropdown class="dropdown-root">
     {#if trigger}
         {@render trigger({ toggle, isOpen })}
     {:else}
@@ -124,7 +128,7 @@
         <div
             bind:this={menuEl}
             id={listId}
-            class="dropdown-menu {sizeClasses} {positionClasses} {menuClass}"
+            class="dropdown-menu {sizeClass} {positionClass} {menuClass}"
             role="menu"
             aria-orientation="vertical"
         >
@@ -156,6 +160,11 @@
 </div>
 
 <style>
+    .dropdown-root {
+        position: relative;
+        display: inline-block;
+    }
+
     .dropdown-menu {
         position: absolute;
         background: var(--surface);
@@ -166,6 +175,47 @@
         z-index: 9999;
         outline: none;
         min-width: fit-content;
+    }
+
+    .dropdown-menu--size-sm {
+        min-width: 120px;
+    }
+
+    .dropdown-menu--size-default {
+        min-width: 160px;
+    }
+
+    .dropdown-menu--size-lg {
+        min-width: 200px;
+    }
+
+    /* Passed via menuClass from parents; :global so dynamic class names still match */
+    .dropdown-root :global(.dropdown-menu--min-12rem) {
+        min-width: 12rem;
+    }
+
+    .dropdown-menu--pos-bottom-start {
+        top: 100%;
+        left: 0;
+        margin-top: 4px;
+    }
+
+    .dropdown-menu--pos-bottom-end {
+        top: 100%;
+        right: 0;
+        margin-top: 4px;
+    }
+
+    .dropdown-menu--pos-top-start {
+        bottom: 100%;
+        left: 0;
+        margin-bottom: 4px;
+    }
+
+    .dropdown-menu--pos-top-end {
+        bottom: 100%;
+        right: 0;
+        margin-bottom: 4px;
     }
 
     .dropdown-item {

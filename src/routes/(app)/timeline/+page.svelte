@@ -7,7 +7,7 @@
     import { Plus, MapPin, Check, Clock } from 'lucide-svelte';
     import { fmtDate } from '$lib/utils/dates';
     import { PHASE_ORDER, PHASE_LABELS, PHASE_DESCRIPTIONS } from '$lib/constants/phases';
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import { getPageNumber } from '$lib/constants/navigation';
     import { invalidateAll, goto } from '$app/navigation';
     import { showSuccessToast } from '$lib/stores/toast';
@@ -23,7 +23,7 @@
     let showCreateModal = $state(false);
     let defaultPhase = $state<string | undefined>(undefined);
 
-    const editParam = $derived($page.url.searchParams.get('edit'));
+    const editParam = $derived(page.url.searchParams.get('edit'));
     const editingMilestone = $derived(editParam && data.milestones.some((m) => m.id === editParam) ? { id: editParam } : null);
 
     async function updateUrl(id: string | null) {
@@ -144,7 +144,6 @@
                                         e.currentTarget.blur();
                                         await updateUrl(m.id);
                                     }}
-                                    class="timeline-w-full timeline-text-left"
                                     style="background: none; border: none; cursor: pointer; width: 100%; text-align: left;"
                                 >
                                     <div class="timeline-milestone-card {nodeStatus === 'active' ? 'timeline-milestone-card-active' : ''}">
