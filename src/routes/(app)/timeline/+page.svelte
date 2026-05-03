@@ -2,8 +2,7 @@
     import PageHeader from '$lib/components/shared/PageHeader.svelte';
     import Button from '$lib/components/ui/Button.svelte';
     import MarkdownRenderer from '$lib/components/shared/MarkdownRenderer.svelte';
-    import MilestoneCreateModal from '$lib/components/timeline/MilestoneCreateModal.svelte';
-    import MilestoneEditModal from '$lib/components/timeline/MilestoneEditModal.svelte';
+    import MilestoneModal from '$lib/components/timeline/MilestoneModal.svelte';
     import ByAvatar from '$lib/components/shared/ByAvatar.svelte';
     import { Plus, MapPin, Check, Clock } from 'lucide-svelte';
     import { fmtDate } from '$lib/utils/dates';
@@ -243,7 +242,8 @@
 {#if editingMilestone}
     {@const milestone = data.milestones.find((m) => m.id === editingMilestone?.id)}
     {#if milestone}
-        <MilestoneEditModal
+        <MilestoneModal
+            mode="edit"
             open={true}
             onClose={async () => {
                 await updateUrl(null);
@@ -268,8 +268,10 @@
                 phase: milestone.phase,
                 status: milestone.status,
                 priority: milestone.priority,
+                ownerId: milestone.ownerId,
                 owner: milestone.owner,
                 dueDate: milestone.dueDate,
+                scheduledAt: milestone.scheduledAt,
                 notes: (milestone as { notes?: string }).notes,
                 subTasks: milestone.subTasks,
                 location: (milestone as MilestoneItem).location
@@ -281,7 +283,8 @@
 {/if}
 
 {#if showCreateModal}
-    <MilestoneCreateModal
+    <MilestoneModal
+        mode="create"
         open={true}
         onClose={() => {
             showCreateModal = false;

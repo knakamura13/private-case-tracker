@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
-import MilestoneEditModal from '$lib/components/timeline/MilestoneEditModal.svelte';
+import MilestoneModal from '$lib/components/timeline/MilestoneModal.svelte';
 
-describe('MilestoneEditModal', () => {
+describe('MilestoneModal (edit)', () => {
     const mockOnClose = vi.fn();
     const mockOnEnhance = vi.fn();
     const mockMembers = [
@@ -11,6 +11,7 @@ describe('MilestoneEditModal', () => {
     ];
 
     const defaultProps = {
+        mode: 'edit' as const,
         open: true,
         onClose: mockOnClose,
         action: '/timeline/update',
@@ -36,36 +37,36 @@ describe('MilestoneEditModal', () => {
     });
 
     it('should render the modal', () => {
-        render(MilestoneEditModal, defaultProps);
+        render(MilestoneModal, { props: defaultProps });
         expect(screen.getByPlaceholderText('Milestone title')).toBeInTheDocument();
     });
 
     it('should NOT call onenhance when modal is closed', () => {
         const props = { ...defaultProps, open: false };
-        render(MilestoneEditModal, props);
+        render(MilestoneModal, { props });
         expect(mockOnEnhance).not.toHaveBeenCalled();
     });
 
     it('should render with initial values', () => {
-        render(MilestoneEditModal, defaultProps);
+        render(MilestoneModal, { props: defaultProps });
         expect(screen.getByDisplayValue('Test Milestone')).toBeInTheDocument();
         // Description is now shown as RichText preview, not a textarea
         expect(screen.getByText('Test description')).toBeInTheDocument();
     });
 
     it('should render form with correct action', () => {
-        render(MilestoneEditModal, defaultProps);
+        render(MilestoneModal, { props: defaultProps });
         const form = screen.getByRole('dialog').querySelector('form');
         expect(form).toHaveAttribute('method', 'post');
     });
 
     it('should render all input fields', () => {
-        render(MilestoneEditModal, defaultProps);
+        render(MilestoneModal, { props: defaultProps });
         expect(screen.getByPlaceholderText('Milestone title')).toBeInTheDocument();
     });
 
     it('should render member options in owner dropdown', () => {
-        render(MilestoneEditModal, defaultProps);
+        render(MilestoneModal, { props: defaultProps });
         // Verify members are passed and used in the component
         expect(mockMembers.length).toBeGreaterThan(0);
     });
