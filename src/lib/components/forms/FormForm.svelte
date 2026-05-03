@@ -29,6 +29,23 @@
         return String(v);
     }
     /* eslint-enable security/detect-object-injection */
+
+    const filingStatusOptions = [
+        { value: 'NOT_STARTED', label: 'Not started' },
+        { value: 'IN_PROGRESS', label: 'In progress' },
+        { value: 'READY_FOR_REVIEW', label: 'Ready for review' },
+        { value: 'FILED', label: 'Filed' },
+        { value: 'RECEIVED', label: 'Received' },
+        { value: 'REPLACED', label: 'Replaced' },
+        { value: 'NOT_NEEDED', label: 'Not needed' }
+    ];
+
+    let filingStatusField = $state(val('filingStatus', 'NOT_STARTED'));
+
+    $effect(() => {
+        void initial;
+        filingStatusField = val('filingStatus', 'NOT_STARTED');
+    });
 </script>
 
 <form method="post" {action} use:enhance={onenhance} class="form-grid">
@@ -46,15 +63,7 @@
     </div>
     <div>
         <Label for="filingStatus">Filing status</Label>
-        <Select id="filingStatus" name="filingStatus" value={val('filingStatus', 'NOT_STARTED')}>
-            <option value="NOT_STARTED">Not started</option>
-            <option value="IN_PROGRESS">In progress</option>
-            <option value="READY_FOR_REVIEW">Ready for review</option>
-            <option value="FILED">Filed</option>
-            <option value="RECEIVED">Received</option>
-            <option value="REPLACED">Replaced</option>
-            <option value="NOT_NEEDED">Not needed</option>
-        </Select>
+        <Select id="filingStatus" name="filingStatus" bind:value={filingStatusField} options={filingStatusOptions} />
     </div>
     <div>
         <Label for="plannedFilingDate">Planned filing date</Label>

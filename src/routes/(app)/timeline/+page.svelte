@@ -124,7 +124,7 @@
                         <div class="timeline-rail-line"></div>
                         {#each g.items as m, _mi (m.id)}
                             {@const nodeStatus = milestoneNodeStatus(m.status)}
-                            <div style="position: relative; margin-bottom: 16px;">
+                            <div style="position: relative; margin-bottom: 8px;">
                                 <div
                                     class="timeline-milestone-node {nodeStatus === 'done'
                                         ? 'timeline-milestone-node-done'
@@ -144,7 +144,7 @@
                                         e.currentTarget.blur();
                                         await updateUrl(m.id);
                                     }}
-                                    style="background: none; border: none; cursor: pointer; width: 100%; text-align: left;"
+                                    style="background: none; border: none; cursor: pointer; width: 100%; text-align: left; padding: 0;"
                                 >
                                     <div class="timeline-milestone-card {nodeStatus === 'active' ? 'timeline-milestone-card-active' : ''}">
                                         {#if m.dueDate}

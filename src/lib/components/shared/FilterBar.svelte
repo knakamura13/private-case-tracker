@@ -51,14 +51,12 @@
     {#each filters as f (f.name)}
         <Select
             value={page.url.searchParams.get(f.name) ?? ''}
-            onchange={(e) => onFilterChange(f.name, (e.currentTarget as HTMLSelectElement).value)}
-            aria-label={f.label}
-        >
-            <option value="">{f.label}: all</option>
-            {#each f.options as o (o.value)}
-                <option value={o.value}>{o.label}</option>
-            {/each}
-        </Select>
+            ariaLabel={f.label}
+            position="bottom-end"
+            size="sm"
+            options={[{ value: '', label: `${f.label}: all` }, ...f.options]}
+            onValueChange={(v) => onFilterChange(f.name, v)}
+        />
     {/each}
 </div>
 
@@ -76,7 +74,7 @@
         margin: 0;
     }
 
-    .filter-bar :global(select.select) {
+    .filter-bar :global(.select-root) {
         min-width: 140px;
     }
 </style>

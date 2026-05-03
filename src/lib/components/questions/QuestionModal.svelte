@@ -53,6 +53,27 @@
         'answeredAt'
     ] as const;
 
+    const questionPriorityOptions = [
+        { value: 'LOW', label: 'Low' },
+        { value: 'MEDIUM', label: 'Medium' },
+        { value: 'HIGH', label: 'High' },
+        { value: 'CRITICAL', label: 'Critical' }
+    ];
+    const questionStatusOptions = [
+        { value: 'OPEN', label: 'Open' },
+        { value: 'RESEARCHING', label: 'Researching' },
+        { value: 'ANSWERED', label: 'Answered' },
+        { value: 'WONT_FIX', label: "Won't pursue" }
+    ];
+    const questionSourceTypeOptions = [
+        { value: 'ATTORNEY', label: 'Attorney' },
+        { value: 'NONPROFIT', label: 'Nonprofit' },
+        { value: 'USCIS_SITE', label: 'USCIS site' },
+        { value: 'COUNTY_SITE', label: 'County site' },
+        { value: 'COMMUNITY', label: 'Community' },
+        { value: 'OTHER', label: 'Other' }
+    ];
+
     function val(name: string, fallback = '') {
         return fieldFromInitial(initial, QUESTION_ALLOWED, name, fallback);
     }
@@ -177,32 +198,25 @@
                 </div>
                 <div>
                     <label for="priority" class="modal-label">Priority</label>
-                    <Select id="priority" name="priority" bind:value={priorityValue}>
-                        <option value="LOW">Low</option>
-                        <option value="MEDIUM">Medium</option>
-                        <option value="HIGH">High</option>
-                        <option value="CRITICAL">Critical</option>
-                    </Select>
+                    <Select
+                        id="priority"
+                        name="priority"
+                        bind:value={priorityValue}
+                        options={questionPriorityOptions}
+                    />
                 </div>
                 <div>
                     <label for="status" class="modal-label">Status</label>
-                    <Select id="status" name="status" bind:value={statusValue}>
-                        <option value="OPEN">Open</option>
-                        <option value="RESEARCHING">Researching</option>
-                        <option value="ANSWERED">Answered</option>
-                        <option value="WONT_FIX">Won't pursue</option>
-                    </Select>
+                    <Select id="status" name="status" bind:value={statusValue} options={questionStatusOptions} />
                 </div>
                 <div>
                     <label for="sourceType" class="modal-label">Source type</label>
-                    <Select id="sourceType" name="sourceType" bind:value={sourceTypeValue}>
-                        <option value="ATTORNEY">Attorney</option>
-                        <option value="NONPROFIT">Nonprofit</option>
-                        <option value="USCIS_SITE">USCIS site</option>
-                        <option value="COUNTY_SITE">County site</option>
-                        <option value="COMMUNITY">Community</option>
-                        <option value="OTHER">Other</option>
-                    </Select>
+                    <Select
+                        id="sourceType"
+                        name="sourceType"
+                        bind:value={sourceTypeValue}
+                        options={questionSourceTypeOptions}
+                    />
                 </div>
             </div>
             <div>
@@ -264,36 +278,34 @@
                 <div class="modal-metadata-item">
                     <span class="modal-metadata-label">Priority</span>
                     <div class="modal-metadata-value">
-                        <select name="priority" bind:value={priorityValue} class="modal-select-sm">
-                            <option value="LOW">Low</option>
-                            <option value="MEDIUM">Medium</option>
-                            <option value="HIGH">High</option>
-                            <option value="CRITICAL">Critical</option>
-                        </select>
+                        <Select
+                            name="priority"
+                            bind:value={priorityValue}
+                            options={questionPriorityOptions}
+                            triggerClass="modal-metadata-btn"
+                        />
                     </div>
                 </div>
                 <div class="modal-metadata-item">
                     <span class="modal-metadata-label">Status</span>
                     <div class="modal-metadata-value">
-                        <select name="status" bind:value={statusValue} class="modal-select-sm">
-                            <option value="OPEN">Open</option>
-                            <option value="RESEARCHING">Researching</option>
-                            <option value="ANSWERED">Answered</option>
-                            <option value="WONT_FIX">Won't pursue</option>
-                        </select>
+                        <Select
+                            name="status"
+                            bind:value={statusValue}
+                            options={questionStatusOptions}
+                            triggerClass="modal-metadata-btn"
+                        />
                     </div>
                 </div>
                 <div class="modal-metadata-item">
                     <span class="modal-metadata-label">Source type</span>
                     <div class="modal-metadata-value">
-                        <select name="sourceType" bind:value={sourceTypeValue} class="modal-select-sm">
-                            <option value="ATTORNEY">Attorney</option>
-                            <option value="NONPROFIT">Nonprofit</option>
-                            <option value="USCIS_SITE">USCIS site</option>
-                            <option value="COUNTY_SITE">County site</option>
-                            <option value="COMMUNITY">Community</option>
-                            <option value="OTHER">Other</option>
-                        </select>
+                        <Select
+                            name="sourceType"
+                            bind:value={sourceTypeValue}
+                            options={questionSourceTypeOptions}
+                            triggerClass="modal-metadata-btn"
+                        />
                     </div>
                 </div>
             </div>

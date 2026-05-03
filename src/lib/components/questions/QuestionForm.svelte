@@ -29,6 +29,38 @@
         return String(v);
     }
     /* eslint-enable security/detect-object-injection */
+
+    const questionPriorityOptions = [
+        { value: 'LOW', label: 'Low' },
+        { value: 'MEDIUM', label: 'Medium' },
+        { value: 'HIGH', label: 'High' },
+        { value: 'CRITICAL', label: 'Critical' }
+    ];
+    const questionStatusOptions = [
+        { value: 'OPEN', label: 'Open' },
+        { value: 'RESEARCHING', label: 'Researching' },
+        { value: 'ANSWERED', label: 'Answered' },
+        { value: 'WONT_FIX', label: "Won't pursue" }
+    ];
+    const questionSourceTypeOptions = [
+        { value: 'ATTORNEY', label: 'Attorney' },
+        { value: 'NONPROFIT', label: 'Nonprofit' },
+        { value: 'USCIS_SITE', label: 'USCIS site' },
+        { value: 'COUNTY_SITE', label: 'County site' },
+        { value: 'COMMUNITY', label: 'Community' },
+        { value: 'OTHER', label: 'Other' }
+    ];
+
+    let priorityField = $state(val('priority', 'MEDIUM'));
+    let statusField = $state(val('status', 'OPEN'));
+    let sourceTypeField = $state(val('sourceType', 'OTHER'));
+
+    $effect(() => {
+        void initial;
+        priorityField = val('priority', 'MEDIUM');
+        statusField = val('status', 'OPEN');
+        sourceTypeField = val('sourceType', 'OTHER');
+    });
 </script>
 
 <form method="post" {action} use:enhance={onenhance} class="form-grid">
@@ -42,32 +74,15 @@
     </div>
     <div>
         <Label for="priority">Priority</Label>
-        <Select id="priority" name="priority" value={val('priority', 'MEDIUM')}>
-            <option value="LOW">Low</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="HIGH">High</option>
-            <option value="CRITICAL">Critical</option>
-        </Select>
+        <Select id="priority" name="priority" bind:value={priorityField} options={questionPriorityOptions} />
     </div>
     <div>
         <Label for="status">Status</Label>
-        <Select id="status" name="status" value={val('status', 'OPEN')}>
-            <option value="OPEN">Open</option>
-            <option value="RESEARCHING">Researching</option>
-            <option value="ANSWERED">Answered</option>
-            <option value="WONT_FIX">Won't pursue</option>
-        </Select>
+        <Select id="status" name="status" bind:value={statusField} options={questionStatusOptions} />
     </div>
     <div>
         <Label for="sourceType">Source type</Label>
-        <Select id="sourceType" name="sourceType" value={val('sourceType', 'OTHER')}>
-            <option value="ATTORNEY">Attorney</option>
-            <option value="NONPROFIT">Nonprofit</option>
-            <option value="USCIS_SITE">USCIS site</option>
-            <option value="COUNTY_SITE">County site</option>
-            <option value="COMMUNITY">Community</option>
-            <option value="OTHER">Other</option>
-        </Select>
+        <Select id="sourceType" name="sourceType" bind:value={sourceTypeField} options={questionSourceTypeOptions} />
     </div>
     <div class="form-grid-full">
         <Label for="citationUrl">Citation URL</Label>

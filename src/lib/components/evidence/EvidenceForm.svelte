@@ -32,6 +32,24 @@
     }
     /* eslint-enable security/detect-object-injection */
     const includedInPacket = $derived(Boolean(initial.includedInPacket));
+
+    const evidenceTypeOptions = $derived(EVIDENCE_CATEGORIES.map((c) => ({ value: c, label: c })));
+    const evidenceStatusOptions = [
+        { value: 'COLLECTED', label: 'Collected' },
+        { value: 'NEEDS_SCAN', label: 'Needs scan' },
+        { value: 'NEEDS_TRANSLATION', label: 'Needs translation' },
+        { value: 'NEEDS_BETTER_COPY', label: 'Needs better copy' },
+        { value: 'READY', label: 'Ready' }
+    ];
+
+    let typeField = $state(val('type', 'Other'));
+    let statusField = $state(val('status', 'COLLECTED'));
+
+    $effect(() => {
+        void initial;
+        typeField = val('type', 'Other');
+        statusField = val('status', 'COLLECTED');
+    });
 </script>
 
 <form method="post" {action} use:enhance={onenhance} class="form-grid">
@@ -41,19 +59,11 @@
     </div>
     <div>
         <Label for="type">Category</Label>
-        <Select id="type" name="type" value={val('type', 'Other')}>
-            {#each EVIDENCE_CATEGORIES as c}<option value={c}>{c}</option>{/each}
-        </Select>
+        <Select id="type" name="type" bind:value={typeField} options={evidenceTypeOptions} />
     </div>
     <div>
         <Label for="status">Status</Label>
-        <Select id="status" name="status" value={val('status', 'COLLECTED')}>
-            <option value="COLLECTED">Collected</option>
-            <option value="NEEDS_SCAN">Needs scan</option>
-            <option value="NEEDS_TRANSLATION">Needs translation</option>
-            <option value="NEEDS_BETTER_COPY">Needs better copy</option>
-            <option value="READY">Ready</option>
-        </Select>
+        <Select id="status" name="status" bind:value={statusField} options={evidenceStatusOptions} />
     </div>
     <div>
         <Label for="dateStart">Date start</Label>

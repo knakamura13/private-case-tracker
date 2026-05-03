@@ -91,6 +91,23 @@
     let dueDateInputEl = $state<HTMLInputElement | null>(null);
     let scheduledAtInputEl = $state<HTMLInputElement | null>(null);
 
+    const phaseSelectOptions = $derived(
+        PHASE_ORDER.map((p) => ({ value: p, label: PHASE_LABELS[p as keyof typeof PHASE_LABELS] }))
+    );
+    const milestoneStatusOptions = [
+        { value: 'PLANNED', label: 'Planned' },
+        { value: 'IN_PROGRESS', label: 'In progress' },
+        { value: 'DONE', label: 'Done' },
+        { value: 'BLOCKED', label: 'Blocked' },
+        { value: 'SKIPPED', label: 'Skipped' }
+    ] as const;
+    const milestonePriorityOptions = [
+        { value: 'LOW', label: 'Low' },
+        { value: 'MEDIUM', label: 'Medium' },
+        { value: 'HIGH', label: 'High' },
+        { value: 'CRITICAL', label: 'Critical' }
+    ] as const;
+
     const autoSave = createMilestoneAutoSave({
         getOpen: () => open,
         getAction: () => action,
@@ -477,32 +494,37 @@
                 <div class="modal-metadata-item">
                     <span class="modal-metadata-label">Phase</span>
                     <div class="modal-metadata-value">
-                        <Select id="milestone-create-phase" name="phase" bind:value={phaseValue}>
-                            {#each PHASE_ORDER as p}<option value={p}>{PHASE_LABELS[p]}</option>{/each}
-                        </Select>
+                        <Select
+                            id="milestone-create-phase"
+                            name="phase"
+                            bind:value={phaseValue}
+                            options={phaseSelectOptions}
+                            triggerClass="modal-metadata-btn"
+                        />
                     </div>
                 </div>
                 <div class="modal-metadata-item">
                     <span class="modal-metadata-label">Status</span>
                     <div class="modal-metadata-value">
-                        <Select id="milestone-create-status" name="status" bind:value={statusValue}>
-                            <option value="PLANNED">Planned</option>
-                            <option value="IN_PROGRESS">In progress</option>
-                            <option value="DONE">Done</option>
-                            <option value="BLOCKED">Blocked</option>
-                            <option value="SKIPPED">Skipped</option>
-                        </Select>
+                        <Select
+                            id="milestone-create-status"
+                            name="status"
+                            bind:value={statusValue}
+                            options={[...milestoneStatusOptions]}
+                            triggerClass="modal-metadata-btn"
+                        />
                     </div>
                 </div>
                 <div class="modal-metadata-item">
                     <span class="modal-metadata-label">Priority</span>
                     <div class="modal-metadata-value">
-                        <Select id="milestone-create-priority" name="priority" bind:value={priorityValue}>
-                            <option value="LOW">Low</option>
-                            <option value="MEDIUM">Medium</option>
-                            <option value="HIGH">High</option>
-                            <option value="CRITICAL">Critical</option>
-                        </Select>
+                        <Select
+                            id="milestone-create-priority"
+                            name="priority"
+                            bind:value={priorityValue}
+                            options={[...milestonePriorityOptions]}
+                            triggerClass="modal-metadata-btn"
+                        />
                     </div>
                 </div>
             </div>

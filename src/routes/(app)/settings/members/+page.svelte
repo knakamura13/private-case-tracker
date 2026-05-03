@@ -1,6 +1,7 @@
 <script lang="ts">
     import PageHeader from '$lib/components/shared/PageHeader.svelte';
     import Button from '$lib/components/ui/Button.svelte';
+    import Select from '$lib/components/ui/Select.svelte';
     import ByAvatar from '$lib/components/shared/ByAvatar.svelte';
     import { Trash2, Copy, Shield, UserPlus } from 'lucide-svelte';
     import { enhance } from '$app/forms';
@@ -10,6 +11,12 @@
 
     let { data, form }: { data: PageData; form: ActionData } = $props();
     const isOwner = $derived(page.data.workspace?.role === 'OWNER');
+
+    const inviteRoleOptions = [
+        { value: 'COLLABORATOR', label: 'Collaborator' },
+        { value: 'OWNER', label: 'Owner' }
+    ];
+    let inviteRole = $state('COLLABORATOR');
 
     async function copyToClipboard(url: string) {
         await navigator.clipboard.writeText(url);
@@ -70,10 +77,14 @@
                 </div>
                 <div>
                     <label for="invite-role" style="display: block; font-size: 13px; margin-bottom: 4px;">Role</label>
-                    <select id="invite-role" name="role" class="input" style="width: 100%;">
-                        <option value="COLLABORATOR">Collaborator</option>
-                        <option value="OWNER">Owner</option>
-                    </select>
+                    <Select
+                        id="invite-role"
+                        name="role"
+                        bind:value={inviteRole}
+                        options={inviteRoleOptions}
+                        fluid
+                        position="bottom-end"
+                    />
                 </div>
                 <Button type="submit"><UserPlus style="width: 14px; height: 14px; margin-right: 4px;" /> Create link</Button>
             </form>

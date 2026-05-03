@@ -656,10 +656,6 @@ body,
     text-decoration: underline;
 }
 
-.modal-select-sm {
-    font-size: 13px;
-}
-
 .modal-text-sm {
     font-size: 13px;
 }
@@ -1203,11 +1199,7 @@ button.modal-checklist-text-btn {
     background: var(--surface-2);
     border-radius: var(--r-md);
     padding: 16px 24px;
-}
-
-.timeline-phase-header-done,
-.timeline-phase-header-active {
-    margin-bottom: 20px;
+    margin-bottom: 8px;
 }
 
 .timeline-phase-header-done {
@@ -1289,7 +1281,6 @@ button.modal-checklist-text-btn {
     border: 1px solid var(--hairline);
     border-radius: var(--r-md);
     padding: 16px;
-    margin-bottom: 16px;
     transition: box-shadow 120ms;
 }
 
