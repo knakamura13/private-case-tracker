@@ -2,78 +2,33 @@
     import type { QuickLink, QuickLinkFolder } from '$lib/types/enums';
     import PageHeader from '$lib/components/shared/PageHeader.svelte';
     import Button from '$lib/components/ui/Button.svelte';
-    import Dialog from '$lib/components/ui/Dialog.svelte';
-    import Input from '$lib/components/ui/Input.svelte';
-    import Label from '$lib/components/ui/Label.svelte';
-    import Textarea from '$lib/components/ui/Textarea.svelte';
+    import QuickLinksManageDialog from '$lib/components/dashboard/QuickLinksManageDialog.svelte';
     import ThreeDotsMenu from '$lib/components/ui/ThreeDotsMenu.svelte';
     import { Plus, Folder, Link2, Edit, Trash2 } from 'lucide-svelte';
     import { getPageNumber } from '$lib/constants/navigation';
-    import { enhance } from '$app/forms';
     import type { PageData } from './$types';
 
-    let { data }: { data: PageData } = $props();
+    let { data, form }: { data: PageData; form?: { error?: string; errorId?: string | null } } = $props();
 
-    // Replicating logic from QuickLinksWidget to display structure
+    let qlDialog = $state<QuickLinksManageDialog | null>(null);
+
     const rootLinks = $derived(data.quickLinks.filter((l) => !l.folderId));
     const folders = $derived(data.quickLinkFolders.sort((a, b) => a.order - b.order));
 
-    let modalOpen = $state(false);
-    let modalMode = $state<'link' | 'folder'>('link');
-    let editing = $state<QuickLink | null>(null);
-    let editingFolder = $state<QuickLinkFolder | null>(null);
-    let draftUrl = $state('');
-    let draftTitle = $state('');
-    let draftDescription = $state('');
-    let draftFolderName = $state('');
-    let deleteModalOpen = $state(false);
-    let itemToDelete = $state<{ type: 'link' | 'folder'; id: string; name: string } | null>(null);
-
     function openAdd() {
-        modalMode = 'link';
-        editing = null;
-        editingFolder = null;
-        draftUrl = '';
-        draftTitle = '';
-        draftDescription = '';
-        draftFolderName = '';
-        modalOpen = true;
+        qlDialog?.openAddLink();
     }
 
     function openEditLink(link: QuickLink) {
-        modalMode = 'link';
-        editing = link;
-        editingFolder = null;
-        draftUrl = link.url;
-        draftTitle = link.title ?? '';
-        draftDescription = link.description ?? '';
-        draftFolderName = '';
-        modalOpen = true;
+        qlDialog?.openEditLink(link);
     }
 
     function openEditFolder(folder: QuickLinkFolder) {
-        modalMode = 'folder';
-        editing = null;
-        editingFolder = folder;
-        draftUrl = '';
-        draftTitle = '';
-        draftDescription = '';
-        draftFolderName = folder.name ?? '';
-        modalOpen = true;
+        qlDialog?.openEditFolder(folder);
     }
 
     function openDelete(type: 'link' | 'folder', id: string, name: string) {
-        itemToDelete = { type, id, name };
-        deleteModalOpen = true;
-    }
-
-    function closeModal() {
-        modalOpen = false;
-    }
-
-    function closeDeleteModal() {
-        deleteModalOpen = false;
-        itemToDelete = null;
+        qlDialog?.openDelete(type, id, name);
     }
 </script>
 
@@ -181,101 +136,4 @@
     </button>
 </div>
 
-{#if modalOpen && modalMode === 'folder'}
-    <Dialog
-        open={modalOpen}
-        onClose={closeModal}
-        maxWidth="max-w-md"
-        titleLevel="h3"
-        title={editingFolder ? 'Edit folder' : 'Add folder'}
-        footerFormId="ql-page-folder-form"
-        cancelLabel="Cancel"
-        submitLabel={editingFolder ? 'Save' : 'Create'}
-    >
-        <form
-            id="ql-page-folder-form"
-            method="post"
-            action="?/updateFolder"
-            class="modal-form"
-            use:enhance={() => {
-                return async ({ result, update }) => {
-                    await update();
-                    if (result.type === 'redirect') closeModal();
-                };
-            }}
-        >
-            <input type="hidden" name="id" value={editingFolder?.id} />
-            <Input name="name" bind:value={draftFolderName} placeholder="Folder name" required />
-        </form>
-    </Dialog>
-{:else if modalOpen}
-    <Dialog
-        open={modalOpen}
-        onClose={closeModal}
-        maxWidth="max-w-md"
-        titleLevel="h3"
-        title={editing ? 'Edit link' : 'Add link'}
-        footerFormId="ql-page-link-form"
-        cancelLabel="Cancel"
-        submitLabel={editing ? 'Save' : 'Add'}
-    >
-        <form
-            id="ql-page-link-form"
-            method="post"
-            action={editing ? '?/update' : '?/create'}
-            class="modal-form"
-            use:enhance={() => {
-                return async ({ result, update }) => {
-                    await update();
-                    if (result.type === 'redirect') closeModal();
-                };
-            }}
-        >
-            {#if editing}
-                <input type="hidden" name="id" value={editing.id} />
-            {/if}
-            <Input name="url" bind:value={draftUrl} placeholder="URL" required />
-            <div>
-                <Label for="ql-title">Title (optional)</Label>
-                <Input id="ql-title" name="title" bind:value={draftTitle} placeholder="Link title" />
-            </div>
-            <div>
-                <Label for="ql-description">Description (optional)</Label>
-                <Textarea id="ql-description" name="description" rows={2} bind:value={draftDescription} />
-            </div>
-        </form>
-    </Dialog>
-{/if}
-
-{#if deleteModalOpen && itemToDelete}
-    <Dialog
-        open={deleteModalOpen}
-        onClose={closeDeleteModal}
-        maxWidth="max-w-md"
-        titleLevel="h3"
-        title={`Delete ${itemToDelete.type}`}
-        footerFormId="ql-page-delete-form"
-        cancelLabel="Cancel"
-        submitLabel="Delete"
-        submitVariant="destructive"
-    >
-        <form
-            id="ql-page-delete-form"
-            method="post"
-            action={itemToDelete.type === 'folder' ? '?/deleteFolder' : '?/delete'}
-            class="modal-form"
-            use:enhance={() => {
-                return async ({ result, update }) => {
-                    await update();
-                    if (result.type === 'redirect') closeDeleteModal();
-                };
-            }}
-        >
-            <input type="hidden" name="id" value={itemToDelete.id} />
-            <p>Are you sure you want to delete "{itemToDelete.name}"? This action cannot be undone.</p>
-            {#if itemToDelete.type === 'folder' && data.quickLinks.some((link) => link.folderId === itemToDelete?.id)}
-                <p style="color: var(--destructive); font-weight: 500;">Warning: This folder contains links that will also be deleted.</p>
-            {/if}
-        </form>
-    </Dialog>
-{/if}
+<QuickLinksManageDialog bind:this={qlDialog} links={data.quickLinks} {form} />

@@ -1,31 +1,19 @@
 <script lang="ts">
 	import type { QuickLink, QuickLinkFolder } from '$lib/types/enums';
 	import { tick } from 'svelte';
-	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
-	import { MoreHorizontal, Plus, Link2, Folder } from 'lucide-svelte';
-	import Input from '$lib/components/ui/Input.svelte';
-	import Textarea from '$lib/components/ui/Textarea.svelte';
-	import Label from '$lib/components/ui/Label.svelte';
+	import { Plus, Link2, Folder, Edit, Trash2, CornerUpLeft } from 'lucide-svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
+	import QuickLinksManageDialog from '$lib/components/dashboard/QuickLinksManageDialog.svelte';
+	import ThreeDotsMenu from '$lib/components/ui/ThreeDotsMenu.svelte';
 
 	type ActionForm = { error?: string; errorId?: string | null } | undefined;
 	type DropIntent = 'reorder' | 'merge' | 'move-into';
 
 	let { links, folders = [], form }: { links: QuickLink[]; folders: QuickLinkFolder[]; form?: ActionForm } = $props();
 
-	let modalOpen = $state(false);
-	let modalMode = $state<'link' | 'folder'>('link');
-	let editing = $state<QuickLink | null>(null);
-	let editingFolder = $state<QuickLinkFolder | null>(null);
-	let addingToFolder = $state<QuickLinkFolder | null>(null);
-	let draftUrl = $state('');
-	let draftTitle = $state('');
-	let draftDescription = $state('');
-	let draftFolderName = $state('');
-	let menuOpenId = $state<string | null>(null);
+	let qlDialog = $state<QuickLinksManageDialog | null>(null);
 	let folderPopoverId = $state<string | null>(null);
 	let brokenFavicons = $state<Set<string>>(new Set());
 	let preloadedFavicons = $state<Set<string>>(new Set());
@@ -35,13 +23,11 @@
 	let dragEnterCount = $state(0);
 	let dropInsertIndex = $state<number | null>(null);
 	let isDragging = $state(false);
-	let menuPosition = $state<{ top: number; left: number } | null>(null);
 	let optimisticFolders = $state<QuickLinkFolder[]>([]);
 	let inlineEditingFolderId = $state<string | null>(null);
 	let inlineFolderName = $state('');
 	let inlineFolderInputEl = $state<HTMLInputElement | null>(null);
 	let creatingFolder = $state(false);
-	let folderDialogMenuOpen = $state(false);
 	let folderDialogName = $state('');
 	let folderDialogInputEl = $state<HTMLInputElement | null>(null);
 
@@ -201,27 +187,11 @@
 	}
 
 	function openAdd(folder?: QuickLinkFolder) {
-		modalMode = 'link';
-		editing = null;
-		editingFolder = null;
-		addingToFolder = folder ?? null;
-		draftUrl = '';
-		draftTitle = '';
-		draftDescription = '';
-		draftFolderName = '';
-		modalOpen = true;
+		qlDialog?.openAddLink(folder ?? null);
 	}
 
 	function openEdit(link: QuickLink) {
-		modalMode = 'link';
-		editing = link;
-		editingFolder = null;
-		draftUrl = link.url;
-		draftTitle = link.title ?? '';
-		draftDescription = link.description ?? '';
-		draftFolderName = '';
-		modalOpen = true;
-		menuOpenId = null;
+		qlDialog?.openEditLink(link);
 	}
 
 	function openAddFolder() {
@@ -229,24 +199,11 @@
 	}
 
 	function openEditFolder(folder: QuickLinkFolder) {
-		modalMode = 'folder';
-		editing = null;
-		editingFolder = folder;
-		draftUrl = '';
-		draftTitle = '';
-		draftDescription = '';
-		draftFolderName = folder.name ?? '';
-		modalOpen = true;
-		menuOpenId = null;
-	}
-
-	function closeModal() {
-		modalOpen = false;
+		qlDialog?.openEditFolder(folder);
 	}
 
 	function closeFolderDialog() {
 		folderPopoverId = null;
-		folderDialogMenuOpen = false;
 	}
 
 	$effect(() => {
@@ -318,29 +275,6 @@
 		inlineFolderName = '';
 	}
 
-	function toggleMenu(id: string, e: MouseEvent) {
-		e.preventDefault();
-		e.stopPropagation();
-		if (menuOpenId === id) {
-			menuOpenId = null;
-			menuPosition = null;
-		} else {
-			menuOpenId = id;
-			const target = e.currentTarget as HTMLElement;
-			const rect = target.getBoundingClientRect();
-			const dropdownHeight = 150; // Estimated dropdown height in pixels
-			const spaceBelow = window.innerHeight - rect.bottom;
-			
-			// Flip dropdown to appear above if there's not enough space below
-			const top = spaceBelow < dropdownHeight ? rect.top - dropdownHeight - 4 : rect.bottom + 4;
-			
-			menuPosition = {
-				top,
-				left: rect.left + rect.width / 2
-			};
-		}
-	}
-
 	function toggleFolderPopover(folderId: string, e: Event) {
 		e.preventDefault();
 		e.stopPropagation();
@@ -350,44 +284,8 @@
 			const folder = visibleFolders.find((f) => f.id === folderId);
 			folderPopoverId = folderId;
 			folderDialogName = folder?.name ?? '';
-			folderDialogMenuOpen = false;
 		}
-		menuOpenId = null;
-		menuPosition = null;
 	}
-
-	$effect(() => {
-		if (menuOpenId === null && folderPopoverId === null) return;
-		const onDoc = (e: MouseEvent) => {
-			const t = e.target;
-			if (!(t instanceof HTMLElement)) return;
-			if (t.closest('[data-quicklink-menu]')) return;
-			if (t.closest('[data-folder-popover="trigger"]')) return;
-			if (t.closest('[data-folder-popover="panel"]') && !t.closest('[data-quicklink-menu="panel"]')) {
-				menuOpenId = null;
-				menuPosition = null;
-				return;
-			}
-			menuOpenId = null;
-			menuPosition = null;
-			folderPopoverId = null;
-		};
-		document.addEventListener('click', onDoc, true);
-		return () => document.removeEventListener('click', onDoc, true);
-	});
-
-	$effect(() => {
-		if (menuOpenId === null && folderPopoverId === null) return;
-		const onKey = (e: KeyboardEvent) => {
-			if (e.key === 'Escape') {
-				menuOpenId = null;
-				menuPosition = null;
-				folderPopoverId = null;
-			}
-		};
-		document.addEventListener('keydown', onKey, true);
-		return () => document.removeEventListener('keydown', onKey, true);
-	});
 
 	function handleDragStart(event: DragEvent, id: string) {
 		if (isDragging) return; // Prevent concurrent drag operations
@@ -692,9 +590,25 @@
         </div>
     {/snippet}
     {#snippet qlFolderPopoverActions()}
-        <Button variant="ghost" size="sm" onclick={() => folder && openEditFolder(folder)}>
-            <MoreHorizontal size={16} />
-        </Button>
+        {#if folder}
+            <ThreeDotsMenu
+                menuId={`qlw-folder-${folder.id}`}
+                items={[
+                    {
+                        label: 'Edit',
+                        icon: Edit,
+                        action: () => openEditFolder(folder)
+                    },
+                    {
+                        label: 'Delete',
+                        icon: Trash2,
+                        variant: 'destructive',
+                        action: () =>
+                            qlDialog?.openDelete('folder', folder.id, folder.name || 'Untitled folder')
+                    }
+                ]}
+            />
+        {/if}
     {/snippet}
     {#snippet qlFolderPopoverFooter()}
         <Button variant="outline" style="width: 100%;" onclick={() => folder && openAdd(folder)}>
@@ -736,14 +650,21 @@
                         >{labelFor(link)}</span
                     >
                 </div>
-                <div style="display: flex; gap: 4px;">
-                    <Button variant="ghost" size="sm" onclick={() => moveLinkToRoot(link.id)} title="Move to root">
-                        <Plus style="width: 14px; height: 14px; transform: rotate(45deg);" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onclick={() => openEdit(link)}>
-                        <MoreHorizontal size={14} />
-                    </Button>
-                </div>
+                <ThreeDotsMenu
+                    menuId={`qlw-folder-link-${link.id}`}
+                    items={[
+                        {
+                            label: 'Move to root',
+                            icon: CornerUpLeft,
+                            action: () => moveLinkToRoot(link.id)
+                        },
+                        {
+                            label: 'Edit',
+                            icon: Edit,
+                            action: () => openEdit(link)
+                        }
+                    ]}
+                />
             </div>
         {/each}
         {#if folderLinks.length === 0}
@@ -752,144 +673,4 @@
     </Dialog>
 {/if}
 
-{#snippet qlWidgetFolderModalHeader()}
-    <div class="widget-flex widget-flex-1 widget-items-start">
-        <Input
-            name="name"
-            form="ql-w-folder-form"
-            bind:value={draftFolderName}
-            class="modal-title-input"
-            placeholder="Folder name (optional)"
-        />
-    </div>
-{/snippet}
-
-{#snippet qlWidgetLinkEditHeader()}
-    <div class="widget-flex widget-flex-1 widget-items-start">
-        <Input name="url" form="ql-w-link-update-form" bind:value={draftUrl} class="modal-title-input" placeholder="URL" required />
-    </div>
-{/snippet}
-
-{#snippet qlWidgetLinkCreateHeader()}
-    <div class="widget-flex widget-flex-1 widget-items-start">
-        <Input name="url" form="ql-w-link-create-form" bind:value={draftUrl} class="modal-title-input" placeholder="URL" required />
-    </div>
-{/snippet}
-
-{#if modalOpen && modalMode === 'folder'}
-    <Dialog
-        open={modalOpen}
-        onClose={closeModal}
-        maxWidth="max-w-md"
-        ariaLabel="Folder"
-        header={qlWidgetFolderModalHeader}
-        footerFormId="ql-w-folder-form"
-        cancelLabel="Cancel"
-        submitLabel="Save"
-    >
-        <form
-            id="ql-w-folder-form"
-            method="post"
-            action="?/updateFolder"
-            class="modal-form"
-            use:enhance={() => {
-                return async ({ result, update }) => {
-                    await update();
-                    if (result.type === 'redirect') closeModal();
-                };
-            }}
-        >
-            <input type="hidden" name="id" value={editingFolder?.id} />
-            {#if form?.error}
-                <div class="modal-error">
-                    <ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
-                </div>
-            {/if}
-        </form>
-    </Dialog>
-{:else if modalOpen && editing}
-    <Dialog
-        open={modalOpen}
-        onClose={closeModal}
-        maxWidth="max-w-md"
-        ariaLabel="Edit quick link"
-        header={qlWidgetLinkEditHeader}
-        footerFormId="ql-w-link-update-form"
-        cancelLabel="Cancel"
-        submitLabel="Save"
-    >
-        <form
-            id="ql-w-link-update-form"
-            method="post"
-            action="?/update"
-            class="modal-form"
-            use:enhance={() => {
-                return async ({ result, update }) => {
-                    await update();
-                    if (result.type === 'redirect') closeModal();
-                };
-            }}
-        >
-            <input type="hidden" name="id" value={editing.id} />
-            <div>
-                <Label for="ql-title">Title (optional)</Label>
-                <Input id="ql-title" name="title" bind:value={draftTitle} placeholder={prettyHostname(draftUrl)} />
-            </div>
-            <div>
-                <Label for="ql-description">Description (optional)</Label>
-                <Textarea id="ql-description" name="description" rows={2} bind:value={draftDescription} />
-            </div>
-            {#if form?.error}
-                <div class="modal-error">
-                    <ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
-                </div>
-            {/if}
-        </form>
-    </Dialog>
-{:else if modalOpen}
-    <Dialog
-        open={modalOpen}
-        onClose={closeModal}
-        maxWidth="max-w-md"
-        ariaLabel="Add quick link"
-        header={qlWidgetLinkCreateHeader}
-        footerFormId="ql-w-link-create-form"
-        cancelLabel="Cancel"
-        submitLabel="Add"
-    >
-        <form
-            id="ql-w-link-create-form"
-            method="post"
-            action="?/create"
-            class="modal-form"
-            use:enhance={() => {
-                return async ({ result, update }) => {
-                    await update();
-                    if (result.type === 'redirect') closeModal();
-                };
-            }}
-        >
-            {#if addingToFolder}
-                <input type="hidden" name="folderId" value={addingToFolder.id} />
-            {/if}
-            <div>
-                <Label for="ql-title-new">Title (optional)</Label>
-                <Input
-                    id="ql-title-new"
-                    name="title"
-                    bind:value={draftTitle}
-                    placeholder={draftUrl ? prettyHostname(draftUrl) : 'Shown under the icon'}
-                />
-            </div>
-            <div>
-                <Label for="ql-description-new">Description (optional)</Label>
-                <Textarea id="ql-description-new" name="description" rows={2} bind:value={draftDescription} />
-            </div>
-            {#if form?.error}
-                <div class="modal-error">
-                    <ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
-                </div>
-            {/if}
-        </form>
-    </Dialog>
-{/if}
+<QuickLinksManageDialog bind:this={qlDialog} {links} {form} enableDeleteDialog={true} />
