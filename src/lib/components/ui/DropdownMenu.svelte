@@ -1,17 +1,16 @@
 <script lang="ts">
+    import type { Component } from 'svelte';
     import Button from './Button.svelte';
     import { MoreHorizontal } from 'lucide-svelte';
 
     type MenuItem = {
         label: string;
         action?: () => void;
-        icon?: any;
+        icon?: Component;
         variant?: 'default' | 'destructive';
         disabled?: boolean;
         href?: string;
     };
-
-    type MenuSeparator = 'separator';
 
     let { 
         items = [],
@@ -22,7 +21,7 @@
     }: { 
         items?: MenuItem[]; 
         triggerLabel?: string;
-        triggerIcon?: any;
+        triggerIcon?: Component;
         position?: 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end';
         size?: 'default' | 'sm' | 'lg';
     } = $props();
@@ -96,7 +95,10 @@
         onclick={toggle}
         aria-label={triggerLabel}
     >
-        <svelte:component this={triggerIcon} size={16} />
+        {#if triggerIcon}
+            {@const Icon = triggerIcon}
+            <Icon size={16} />
+        {/if}
     </Button>
 
     {#if isOpen}
@@ -108,18 +110,21 @@
         >
             {#each items as menuItem (menuItem.label)}
                 {#if menuItem === 'separator'}
-                    <div class="dropdown-separator" role="separator" />
+                    <div class="dropdown-separator" role="separator"></div>
                 {:else}
                     <div 
                         class="dropdown-item"
                         class:destructive={menuItem.variant === 'destructive'}
                         class:disabled={menuItem.disabled}
                         role="menuitem"
+                        tabindex="0"
                         onclick={() => handleItemClick(menuItem)}
+                        onkeydown={(e) => e.key === 'Enter' && handleItemClick(menuItem)}
                     >
                         {#if menuItem.icon}
+                            {@const Icon = menuItem.icon}
                             <span class="dropdown-item-icon">
-                                <svelte:component this={menuItem.icon} size={14} />
+                                <Icon size={14} />
                             </span>
                         {/if}
                         <span class="dropdown-item-label">{menuItem.label}</span>
@@ -202,45 +207,4 @@
         margin: 4px 0;
     }
 
-    /* Data attributes for Melt UI */
-    [data-melt-dropdown-menu] {
-        animation: fadeIn 0.15s ease;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: scale(0.95);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1);
-        }
-    }
-
-    [data-melt-dropdown-menu][data-state="closed"] {
-        animation: fadeOut 0.1s ease;
-    }
-
-    @keyframes fadeOut {
-        from {
-            opacity: 1;
-            transform: scale(1);
-        }
-        to {
-            opacity: 0;
-            transform: scale(0.95);
-        }
-    }
-
-    [data-melt-dropdown-menu-item][data-highlighted] {
-        background: var(--accent);
-        color: var(--accent-foreground);
-    }
-
-    [data-melt-dropdown-menu-item][data-disabled] {
-        opacity: 0.5;
-        cursor: not-allowed;
-        pointer-events: none;
-    }
 </style>

@@ -1,18 +1,19 @@
 <script lang="ts">
+    import type { Component } from 'svelte';
     import { MoreHorizontal } from 'lucide-svelte';
     import DropdownMenu from './DropdownMenu.svelte';
 
     type MenuItem = {
         label: string;
         action: () => void;
-        icon?: any;
+        icon?: Component;
         variant?: 'default' | 'destructive';
         disabled?: boolean;
     };
 
     let { 
         items, 
-        menuId,
+        menuId: _menuId,
         position = 'bottom-right'
     }: { 
         items: MenuItem[]; 
