@@ -2,7 +2,7 @@
     import PageHeader from '$lib/components/shared/PageHeader.svelte';
     import Button from '$lib/components/ui/Button.svelte';
     import { enhance } from '$app/forms';
-    import { Plus, FileText, Image as ImageIcon } from 'lucide-svelte';
+    import { Plus, FileText } from 'lucide-svelte';
     import { getPageNumber } from '$lib/constants/navigation';
     import type { PageData } from './$types';
 
@@ -90,43 +90,6 @@
                         <Plus style="width: 14px; height: 14px; margin-right: 4px;" /> Add item
                     </Button>
                 </div>
-            </div>
-
-            <div style="padding: 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; background: var(--surface-2);">
-                {#if cat.currentCount === 0}
-                    <div style="grid-column: span 3; padding: 32px; text-align: center; color: var(--ink-3); font-size: 13px;">
-                        No items collected yet for this category.
-                    </div>
-                {:else}
-                    {#each Array(Math.min(cat.currentCount, 6)) as _, i}
-                        <div class="card" style="padding: 12px; display: flex; align-items: center; gap: 12px; background: var(--surface);">
-                            <div
-                                style="width: 44px; height: 44px; border-radius: var(--r-sm); background: var(--lilac); color: var(--lilac-d); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"
-                            >
-                                {#if i % 2 === 0}
-                                    <ImageIcon style="width: 20px; height: 20px;" />
-                                {:else}
-                                    <FileText style="width: 20px; height: 20px;" />
-                                {/if}
-                            </div>
-                            <div style="min-width: 0;">
-                                <div
-                                    style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
-                                >
-                                    Item {i + 1}
-                                </div>
-                                <div class="mono" style="font-size: 10px; color: var(--ink-3);">
-                                    {i % 2 === 0 ? 'IMAGE' : 'PDF'} · APR 30
-                                </div>
-                            </div>
-                        </div>
-                    {/each}
-                    {#if cat.currentCount > 6}
-                        <div style="grid-column: span 3; text-align: center; font-size: 11px; color: var(--ink-3); margin-top: 8px;">
-                            + {cat.currentCount - 6} more items
-                        </div>
-                    {/if}
-                {/if}
             </div>
         </div>
     {/each}
