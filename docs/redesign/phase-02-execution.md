@@ -45,7 +45,7 @@ Replace the entire contents with this simplified, Monarch-compliant structure:
 
 ```svelte
 <script lang="ts">
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import { navigation, getPageNumber } from '$lib/constants/navigation';
     import { LogOut, Settings, Clock } from 'lucide-svelte';
 
@@ -67,7 +67,7 @@ Replace the entire contents with this simplified, Monarch-compliant structure:
         <div class="eyebrow" style="padding: 0 16px 10px;">Our case</div>
         <div style="display: flex; flex-direction: column; gap: 2px;">
             {#each navigation as item (item.href)}
-                {@const active = $page.url.pathname === item.href || $page.url.pathname.startsWith(`${item.href}/`)}
+                {@const active = page.url.pathname === item.href || page.url.pathname.startsWith(`${item.href}/`)}
                 <a
                     href={item.href}
                     onclick={() => onNavigate?.()}

@@ -21,7 +21,7 @@ Update the main application layout structure to match Monarch's spacing and card
 3.  **Update Main Content Padding:** Change the `<main>` tag (line 94) to match Monarch's exact padding:
     ```html
     <main id="main" tabindex="-1" style="flex: 1; min-width: 0; overflow-y: auto; padding: 32px 32px 48px; background: var(--bg);">
-        {#key $page.url.pathname} {@render children()} {/key}
+        {#key page.url.pathname} {@render children()} {/key}
     </main>
     ```
 
