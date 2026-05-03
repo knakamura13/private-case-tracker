@@ -44,8 +44,9 @@
     }
     .search-container {
         position: relative;
-        flex: 1;
-        max-width: 500px;
+        width: 33%;
+        min-width: 250px;
+        max-width: 100%;
     }
     :global(.search-icon) {
         position: absolute;

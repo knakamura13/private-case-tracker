@@ -321,6 +321,16 @@ body,
     font-size: 12px;
 }
 
+/* Icon-only triggers (e.g. ⋮ menus): equal width/height, no horizontal stretch */
+.btn.icon {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    padding: 0;
+    gap: 0;
+    flex-shrink: 0;
+}
+
 /* Monarch Cards */
 .card {
     background: var(--surface);
@@ -1437,6 +1447,14 @@ button.modal-checklist-text-btn {
 
 .widget-item-menu-inner {
     pointer-events: auto;
+}
+
+/* Dashboard quick-links tiles: float ⋮ above the icon; align to top-right of centered 48px square */
+.widget-item.widget-item--dash-ql .widget-item-menu-wrap {
+    top: -20px;
+    left: auto;
+    right: calc(-8px);
+    transform: none;
 }
 
 .widget-item:hover {

@@ -503,44 +503,71 @@
 </script>
 
 <!--
-  Each tile: fixed width, flex-col, circle on top, label below.
-  The ⋮ button is positioned relative to the circle span itself,
-  so it doesn't push the circle down or affect alignment.
+  Each tile: flex-col, icon on top, label below. ⋮ uses .widget-item-menu-wrap (see app.css)
+  so edit/delete matches the quick-links page without shifting the icon.
 -->
 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 16px; padding: 12px;">
 	{#each visibleFolders as folder (folder.id)}
 		{@const folderLinks = folderLinksMap[folder.id] ?? []}
 		<div
-			class="widget-item"
-			style="display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer;"
-            draggable={true}
+			class="widget-item widget-item--dash-ql"
+			role="group"
+			aria-label={folder.name ? `Folder: ${folder.name}` : 'Folder'}
+			style="display: flex; flex-direction: column; align-items: center; gap: 8px;"
+			draggable={true}
 			ondragstart={(e) => handleDragStart(e, folder.id)}
 			ondragenter={(e) => handleDragEnter(e, folder.id)}
 			ondragover={(e) => handleDragOver(e, folder.id)}
 			ondragleave={handleDragLeave}
 			ondrop={(e) => handleDrop(e, folder.id)}
 			ondragend={handleDragEnd}
-            onclick={(e) => toggleFolderPopover(folder.id, e)}
-            onkeydown={(e) => e.key === 'Enter' && toggleFolderPopover(folder.id, e)}
-            role="button"
-            tabindex="0"
 		>
-			<div style="width: 48px; height: 48px; background: var(--lilac); border: 1px solid var(--lilac-d); border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative;">
-				<Folder style="width: 24px; height: 24px; color: var(--lilac-d);" />
-                {#if folderLinks.length > 0}
-                    <div style="position: absolute; top: -4px; right: -4px; background: var(--lilac-d); color: white; font-size: 10px; font-weight: 700; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--surface);">
-                        {folderLinks.length}
-                    </div>
-                {/if}
+			<div class="widget-item-menu-wrap" onclick={(e) => e.stopPropagation()} role="presentation">
+				<div class="widget-item-menu-inner">
+					<ThreeDotsMenu
+						menuId={`qlw-grid-folder-${folder.id}`}
+						items={[
+							{
+								label: 'Edit',
+								icon: Edit,
+								action: () => openEditFolder(folder)
+							},
+							{
+								label: 'Delete',
+								icon: Trash2,
+								variant: 'destructive',
+								action: () =>
+									qlDialog?.openDelete('folder', folder.id, folder.name || 'Untitled folder')
+							}
+						]}
+					/>
+				</div>
 			</div>
-			<span style="font-size: 11px; font-weight: 500; text-align: center;">{folder.name || 'Untitled'}</span>
+			<button
+				type="button"
+				style="display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; background: none; border: none; padding: 0;"
+				onclick={(e) => toggleFolderPopover(folder.id, e)}
+				onkeydown={(e) => e.key === 'Enter' && toggleFolderPopover(folder.id, e)}
+			>
+				<div style="width: 48px; height: 48px; background: var(--lilac); border: 1px solid var(--lilac-d); border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative;">
+					<Folder style="width: 24px; height: 24px; color: var(--lilac-d);" />
+					{#if folderLinks.length > 0}
+						<div style="position: absolute; top: -4px; right: -4px; background: var(--lilac-d); color: white; font-size: 10px; font-weight: 700; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--surface);">
+							{folderLinks.length}
+						</div>
+					{/if}
+				</div>
+				<span style="font-size: 11px; font-weight: 500; text-align: center;">{folder.name || 'Untitled'}</span>
+			</button>
 		</div>
 	{/each}
 
 	{#each rootLinks as link (link.id)}
 		<div
-			class="widget-item"
-            style="display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer;"
+			class="widget-item widget-item--dash-ql"
+			role="group"
+			aria-label={`Link: ${labelFor(link)}`}
+			style="display: flex; flex-direction: column; align-items: center; gap: 8px;"
 			draggable={true}
 			ondragstart={(e) => handleDragStart(e, link.id)}
 			ondragenter={(e) => handleDragEnter(e, link.id)}
@@ -548,19 +575,41 @@
 			ondragleave={handleDragLeave}
 			ondrop={(e) => handleDrop(e, link.id)}
 			ondragend={handleDragEnd}
-            role="button"
-            tabindex="0"
-            onclick={() => openLink(link.url)}
-            onkeydown={(e) => e.key === 'Enter' && openLink(link.url)}
 		>
-			<div style="width: 48px; height: 48px; background: var(--surface-2); border: 1px solid var(--hairline); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                {#if brokenFavicons.has(link.id) || !(link.faviconUrl || preloadedFavicons.has(link.id))}
-				    <Link2 style="width: 24px; height: 24px; color: var(--ink-3);" />
-                {:else}
-                    <img src={faviconForLink(link)} alt="" style="width: 24px; height: 24px; object-fit: contain;" />
-                {/if}
+			<div class="widget-item-menu-wrap" onclick={(e) => e.stopPropagation()} role="presentation">
+				<div class="widget-item-menu-inner">
+					<ThreeDotsMenu
+						menuId={`qlw-grid-link-${link.id}`}
+						items={[
+							{
+								label: 'Edit',
+								icon: Edit,
+								action: () => openEdit(link)
+							},
+							{
+								label: 'Delete',
+								icon: Trash2,
+								variant: 'destructive',
+								action: () => qlDialog?.openDelete('link', link.id, labelFor(link))
+							}
+						]}
+					/>
+				</div>
 			</div>
-			<span style="font-size: 11px; font-weight: 500; text-align: center;">{labelFor(link)}</span>
+			<button
+				type="button"
+				style="display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; background: none; border: none; padding: 0;"
+				onclick={() => openLink(link.url)}
+			>
+				<div style="width: 48px; height: 48px; background: var(--surface-2); border: 1px solid var(--hairline); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+					{#if brokenFavicons.has(link.id) || !(link.faviconUrl || preloadedFavicons.has(link.id))}
+						<Link2 style="width: 24px; height: 24px; color: var(--ink-3);" />
+					{:else}
+						<img src={faviconForLink(link)} alt="" style="width: 24px; height: 24px; object-fit: contain;" />
+					{/if}
+				</div>
+				<span style="font-size: 11px; font-weight: 500; text-align: center;">{labelFor(link)}</span>
+			</button>
 		</div>
 	{/each}
 
@@ -662,6 +711,12 @@
                             label: 'Edit',
                             icon: Edit,
                             action: () => openEdit(link)
+                        },
+                        {
+                            label: 'Delete',
+                            icon: Trash2,
+                            variant: 'destructive',
+                            action: () => qlDialog?.openDelete('link', link.id, labelFor(link))
                         }
                     ]}
                 />

@@ -110,7 +110,7 @@
         <Button
             id={triggerId}
             variant="ghost"
-            size="sm"
+            size="icon"
             onclick={toggle}
             aria-label={triggerLabel}
             aria-haspopup="menu"
