@@ -1,43 +1,20 @@
 <script lang="ts">
-	import PageHeader from '$lib/components/shared/PageHeader.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import { enhance } from '$app/forms';
-	import { Plus, MoreHorizontal, Pencil, Trash2, Check, X, FileText, Image as ImageIcon } from 'lucide-svelte';
-	import { getPageNumber } from '$lib/constants/navigation';
-	import type { PageData } from './$types';
+    import PageHeader from '$lib/components/shared/PageHeader.svelte';
+    import Button from '$lib/components/ui/Button.svelte';
+    import { enhance } from '$app/forms';
+    import { Plus, FileText, Image as ImageIcon } from 'lucide-svelte';
+    import { getPageNumber } from '$lib/constants/navigation';
+    import type { PageData } from './$types';
 
-	let { data, form }: { data: PageData; form: { error?: string } } = $props();
+    let { data, form }: { data: PageData; form: { error?: string } } = $props();
 
-	let showAddModal = $state(false);
-	let showRenameModal = $state(false);
-	let showDeleteModal = $state(false);
-	let dropdownOpen = $state<string | null>(null);
-	let newCategoryName = $state('');
-	let renameOldName = $state('');
-	let renameNewName = $state('');
-	let deleteCategoryName = $state('');
+    let showAddModal = $state(false);
+    let newCategoryName = $state('');
 
-	function openAddModal() {
-		newCategoryName = '';
-		showAddModal = true;
-	}
-
-	function openRenameModal(category: string) {
-		renameOldName = category;
-		renameNewName = category;
-		showRenameModal = true;
-		dropdownOpen = null;
-	}
-
-	function openDeleteModal(category: string) {
-		deleteCategoryName = category;
-		showDeleteModal = true;
-		dropdownOpen = null;
-	}
-
-	function toggleDropdown(category: string) {
-		dropdownOpen = dropdownOpen === category ? null : category;
-	}
+    function openAddModal() {
+        newCategoryName = '';
+        showAddModal = true;
+    }
 
     const totalCollected = $derived(data.categories.reduce((acc, cat) => acc + cat.currentCount, 0));
     const totalTarget = $derived(data.categories.reduce((acc, cat) => acc + cat.targetCount, 0));
@@ -49,60 +26,55 @@
     sub="Track evidence collection progress by category."
     number={getPageNumber('/evidence')}
 >
-	{#snippet actions()}
-		{#if data.isOwner}
-			<Button onclick={openAddModal}>
-				{#snippet children()}<Plus style="width: 14px; height: 14px;" /> Add category{/snippet}
-			</Button>
-		{/if}
-	{/snippet}
+    {#snippet actions()}
+        {#if data.isOwner}
+            <Button onclick={openAddModal}>
+                {#snippet children()}<Plus style="width: 14px; height: 14px;" /> Add category{/snippet}
+            </Button>
+        {/if}
+    {/snippet}
 </PageHeader>
 
 {#if form?.error}
-	<div class="card" style="border: 1px solid var(--blush-d); background: var(--blush); padding: 16px; margin-bottom: 16px; color: var(--blush-d);">
-		{form.error}
-	</div>
+    <div
+        class="card"
+        style="border: 1px solid var(--blush-d); background: var(--blush); padding: 16px; margin-bottom: 16px; color: var(--blush-d);"
+    >
+        {form.error}
+    </div>
 {/if}
 
 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 48px;">
-	{#each data.categories as cat (cat.category)}
-		<div class="card tinted-lilac" style="padding: 20px;">
-			<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-				<div style="display: flex; align-items: center; gap: 8px; color: var(--ink-3);">
+    {#each data.categories as cat (cat.category)}
+        <div class="card tinted-lilac" style="padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px; color: var(--ink-3);">
                     <FileText style="width: 16px; height: 16px;" />
-                    <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;">{cat.category}</span>
+                    <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;">{cat.category}</span
+                    >
                 </div>
-				{#if data.isOwner}
-                    <button type="button" style="background: none; border: none; cursor: pointer; color: var(--ink-3);" onclick={() => toggleDropdown(cat.category)}>
-                        <MoreHorizontal style="width: 16px; height: 16px;" />
-                    </button>
-                    {#if dropdownOpen === cat.category}
-                        <div class="card" style="position: absolute; right: 20px; top: 40px; padding: 4px; z-index: 10;">
-                            <button type="button" onclick={() => openRenameModal(cat.category)} style="display: block; width: 100%; text-align: left; padding: 8px;">Rename</button>
-                            <button type="button" onclick={() => openDeleteModal(cat.category)} style="display: block; width: 100%; text-align: left; padding: 8px; color: var(--blush-d);">Delete</button>
-                        </div>
-                    {/if}
-				{/if}
-			</div>
+            </div>
             <div style="font-family: var(--font-display); font-size: 44px; font-weight: 500; line-height: 1; margin-bottom: 4px;">
                 {cat.currentCount}
                 <span style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-3);">/ {cat.targetCount}</span>
             </div>
             <div style="height: 6px; background: var(--surface-3); border-radius: 3px; overflow: hidden; margin-top: 12px;">
-				<div
-					style:width={`${Math.min(100, cat.targetCount > 0 ? (cat.currentCount / cat.targetCount) * 100 : 0)}%`}
+                <div
+                    style:width={`${Math.min(100, cat.targetCount > 0 ? (cat.currentCount / cat.targetCount) * 100 : 0)}%`}
                     style="height: 100%; background: var(--lilac-d);"
-				></div>
-			</div>
-		</div>
-	{/each}
+                ></div>
+            </div>
+        </div>
+    {/each}
 </div>
 
 <!-- Per-category item list -->
 <div style="display: flex; flex-direction: column; gap: 32px;">
     {#each data.categories as cat (cat.category)}
         <div class="card" style="padding: 0; overflow: hidden;">
-            <div style="padding: 16px 20px; border-bottom: 1px solid var(--hairline); display: flex; align-items: center; justify-content: space-between; background: var(--surface);">
+            <div
+                style="padding: 16px 20px; border-bottom: 1px solid var(--hairline); display: flex; align-items: center; justify-content: space-between; background: var(--surface);"
+            >
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--lilac-fill);"></div>
                     <h3 class="display" style="font-size: 20px; margin: 0;">{cat.category}</h3>
@@ -119,7 +91,7 @@
                     </Button>
                 </div>
             </div>
-            
+
             <div style="padding: 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; background: var(--surface-2);">
                 {#if cat.currentCount === 0}
                     <div style="grid-column: span 3; padding: 32px; text-align: center; color: var(--ink-3); font-size: 13px;">
@@ -128,7 +100,9 @@
                 {:else}
                     {#each Array(Math.min(cat.currentCount, 6)) as _, i}
                         <div class="card" style="padding: 12px; display: flex; align-items: center; gap: 12px; background: var(--surface);">
-                            <div style="width: 44px; height: 44px; border-radius: var(--r-sm); background: var(--lilac); color: var(--lilac-d); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <div
+                                style="width: 44px; height: 44px; border-radius: var(--r-sm); background: var(--lilac); color: var(--lilac-d); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"
+                            >
                                 {#if i % 2 === 0}
                                     <ImageIcon style="width: 20px; height: 20px;" />
                                 {:else}
@@ -136,7 +110,9 @@
                                 {/if}
                             </div>
                             <div style="min-width: 0;">
-                                <div style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                <div
+                                    style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                                >
                                     Item {i + 1}
                                 </div>
                                 <div class="mono" style="font-size: 10px; color: var(--ink-3);">
@@ -158,26 +134,45 @@
 
 <!-- Add Category Modal -->
 {#if showAddModal}
-	<div 
-    role="button" 
-    tabindex="0" 
-    class="backdrop-blur-sm" 
-    style="position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 100;" 
-    onclick={() => showAddModal = false}
-    onkeydown={(e) => { if (e.key === 'Escape') showAddModal = false; }}
->
-    <div class="card" style="width: 400px; padding: 24px;" onclick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
-			<h2 style="font-family: var(--font-display); font-size: 24px; margin-bottom: 16px;">Add Category</h2>
-			<form method="post" action="?/addCategory" use:enhance>
-				<label for="newCategory" style="display: block; font-size: 13px; margin-bottom: 4px;">Category name</label>
-				<input id="newCategory" name="category" type="text" bind:value={newCategoryName} maxlength="80" class="input" style="width: 100%; margin-bottom: 16px;" placeholder="e.g., Passport" />
-				<div style="display: flex; justify-content: flex-end; gap: 8px;">
-					<Button type="button" variant="ghost" onclick={() => showAddModal = false}>Cancel</Button>
-					<Button type="submit">Add</Button>
-				</div>
-			</form>
-		</div>
-	</div>
+    <div
+        role="button"
+        tabindex="0"
+        class="backdrop-blur-sm"
+        style="position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 100;"
+        onclick={() => (showAddModal = false)}
+        onkeydown={(e) => {
+            if (e.key === 'Escape') showAddModal = false;
+        }}
+    >
+        <div
+            class="card"
+            style="width: 400px; padding: 24px;"
+            onclick={(e) => e.stopPropagation()}
+            onkeydown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
+            }}
+            role="dialog"
+            aria-modal="true"
+            tabindex="-1"
+        >
+            <h2 style="font-family: var(--font-display); font-size: 24px; margin-bottom: 16px;">Add Category</h2>
+            <form method="post" action="?/addCategory" use:enhance>
+                <label for="newCategory" style="display: block; font-size: 13px; margin-bottom: 4px;">Category name</label>
+                <input
+                    id="newCategory"
+                    name="category"
+                    type="text"
+                    bind:value={newCategoryName}
+                    maxlength="80"
+                    class="input"
+                    style="width: 100%; margin-bottom: 16px;"
+                    placeholder="e.g., Passport"
+                />
+                <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                    <Button type="button" variant="ghost" onclick={() => (showAddModal = false)}>Cancel</Button>
+                    <Button type="submit">Add</Button>
+                </div>
+            </form>
+        </div>
+    </div>
 {/if}
-
-<!-- Modals for Rename and Delete would follow similar pattern using Monarch classes -->

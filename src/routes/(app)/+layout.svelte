@@ -1,217 +1,217 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { fade, fly } from 'svelte/transition';
-	import { page } from '$app/stores';
-	import Sidebar from '$lib/components/layout/Sidebar.svelte';
-	import TopBar from '$lib/components/layout/TopBar.svelte';
-	import CommandPalette from '$lib/components/shared/CommandPalette.svelte';
-	import { initTruncateTitles } from '$lib/utils/truncate-titles';
-	import type { LayoutData } from './$types';
+    import { onMount } from 'svelte';
+    import { fade, fly } from 'svelte/transition';
+    import { page } from '$app/stores';
+    import Sidebar from '$lib/components/layout/Sidebar.svelte';
+    import TopBar from '$lib/components/layout/TopBar.svelte';
+    import CommandPalette from '$lib/components/shared/CommandPalette.svelte';
+    import { initTruncateTitles } from '$lib/utils/truncate-titles';
+    import type { LayoutData } from './$types';
 
-	let { data, children }: { data: LayoutData; children: import('svelte').Snippet } = $props();
+    let { data, children }: { data: LayoutData; children: import('svelte').Snippet } = $props();
 
-	let sidebarOpen = $state(false);
-	let paletteOpen = $state(false);
+    let sidebarOpen = $state(false);
+    let paletteOpen = $state(false);
 
-	let sidebarDialogEl = $state<HTMLDivElement | null>(null);
-	let sidebarOpenerEl = $state<HTMLElement | null>(null);
+    let sidebarDialogEl = $state<HTMLDivElement | null>(null);
+    let sidebarOpenerEl = $state<HTMLElement | null>(null);
 
-	function getFocusable(container: HTMLElement): HTMLElement[] {
-		const nodes = container.querySelectorAll<HTMLElement>(
-			'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
-		);
-		return Array.from(nodes).filter((el) => {
-			const style = window.getComputedStyle(el);
-			return style.display != 'none' && style.visibility != 'hidden';
-		});
-	}
+    function getFocusable(container: HTMLElement): HTMLElement[] {
+        const nodes = container.querySelectorAll<HTMLElement>(
+            'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        return Array.from(nodes).filter((el) => {
+            const style = window.getComputedStyle(el);
+            return style.display != 'none' && style.visibility != 'hidden';
+        });
+    }
 
-	function trapTabKey(e: KeyboardEvent, container: HTMLElement) {
-		if (e.key !== 'Tab') return;
-		const focusable = getFocusable(container);
-		if (focusable.length === 0) return;
-		const active = document.activeElement as HTMLElement | null;
-		const first = focusable[0]!;
-		const last = focusable[focusable.length - 1]!;
-		if (e.shiftKey) {
-			if (!active || active === first || !container.contains(active)) {
-				e.preventDefault();
-				last.focus();
-			}
-		} else {
-			if (!active || active === last || !container.contains(active)) {
-				e.preventDefault();
-				first.focus();
-			}
-		}
-	}
+    function trapTabKey(e: KeyboardEvent, container: HTMLElement) {
+        if (e.key !== 'Tab') return;
+        const focusable = getFocusable(container);
+        if (focusable.length === 0) return;
+        const active = document.activeElement as HTMLElement | null;
+        const first = focusable[0]!;
+        const last = focusable[focusable.length - 1]!;
+        if (e.shiftKey) {
+            if (!active || active === first || !container.contains(active)) {
+                e.preventDefault();
+                last.focus();
+            }
+        } else {
+            if (!active || active === last || !container.contains(active)) {
+                e.preventDefault();
+                first.focus();
+            }
+        }
+    }
 
-	onMount(initTruncateTitles);
+    onMount(initTruncateTitles);
 </script>
 
 <div class="app-layout">
-	<!-- Desktop Sidebar -->
-	<div class="sidebar-wrapper">
-		<Sidebar workspaceName={data.workspace.name} />
-	</div>
+    <!-- Desktop Sidebar -->
+    <div class="sidebar-wrapper">
+        <Sidebar workspaceName={data.workspace.name} />
+    </div>
 
-	<!-- Mobile Sidebar Dialog -->
-	{#if sidebarOpen}
-		<div
-			class="mobile-sidebar-container"
-			role="dialog"
-			aria-modal="true"
-			aria-label="Sidebar"
-			tabindex="-1"
-			onkeydown={(e) => {
-				if (e.key === 'Escape') sidebarOpen = false;
-				if (sidebarDialogEl) trapTabKey(e, sidebarDialogEl);
-			}}
-		>
-			<div
-				transition:fade={{ duration: 200 }}
-				class="mobile-sidebar-overlay"
-				aria-hidden="true"
-				onclick={() => (sidebarOpen = false)}
-			></div>
-			<div
-				bind:this={sidebarDialogEl}
-				tabindex="-1"
-				class="mobile-sidebar-panel"
-				transition:fly={{ x: -280, duration: 220, opacity: 1 }}
-			>
-				<Sidebar workspaceName={data.workspace.name} onNavigate={() => (sidebarOpen = false)} />
-			</div>
-		</div>
-	{/if}
+    <!-- Mobile Sidebar Dialog -->
+    {#if sidebarOpen}
+        <div
+            class="mobile-sidebar-container"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Sidebar"
+            tabindex="-1"
+            onkeydown={(e) => {
+                if (e.key === 'Escape') sidebarOpen = false;
+                if (sidebarDialogEl) trapTabKey(e, sidebarDialogEl);
+            }}
+        >
+            <div
+                transition:fade={{ duration: 200 }}
+                class="mobile-sidebar-overlay"
+                aria-hidden="true"
+                onclick={() => (sidebarOpen = false)}
+            ></div>
+            <div
+                bind:this={sidebarDialogEl}
+                tabindex="-1"
+                class="mobile-sidebar-panel"
+                transition:fly={{ x: -280, duration: 220, opacity: 1 }}
+            >
+                <Sidebar workspaceName={data.workspace.name} onNavigate={() => (sidebarOpen = false)} />
+            </div>
+        </div>
+    {/if}
 
-	<!-- Main Area -->
-	<div class="main-area">
-		<TopBar
-			onOpenSearch={() => (paletteOpen = true)}
-			onToggleSidebar={() => {
-				if (!sidebarOpen) sidebarOpenerEl = document.activeElement as HTMLElement | null;
-				sidebarOpen = !sidebarOpen;
-			}}
-		/>
-		<main id="main" tabindex="-1" class="main-content">
-			{#key $page.url.pathname}
-				{@render children()}
-			{/key}
-		</main>
-	</div>
+    <!-- Main Area -->
+    <div class="main-area">
+        <TopBar
+            onOpenSearch={() => (paletteOpen = true)}
+            onToggleSidebar={() => {
+                if (!sidebarOpen) sidebarOpenerEl = document.activeElement as HTMLElement | null;
+                sidebarOpen = !sidebarOpen;
+            }}
+        />
+        <main id="main" tabindex="-1" class="main-content">
+            {#key $page.url.pathname}
+                {@render children()}
+            {/key}
+        </main>
+    </div>
 </div>
-
-<style>
-	.app-layout {
-		display: flex;
-		height: 100vh;
-		max-height: 100vh;
-		width: 100vw;
-		max-width: 100vw;
-		background: var(--bg);
-		overflow: hidden;
-		position: relative;
-	}
-	.sidebar-wrapper {
-		display: none;
-		flex-shrink: 0;
-		width: 200px;
-		height: 100%;
-		max-height: 100vh;
-		min-height: 0;
-		overflow-y: auto;
-	}
-	@media (min-width: 768px) {
-		.sidebar-wrapper {
-			display: block;
-		}
-	}
-	.main-area {
-		display: flex;
-		flex-direction: column;
-		flex-grow: 1;
-		min-width: 0;
-		min-height: 0;
-		height: 100%;
-		max-height: 100vh;
-		overflow: hidden;
-	}
-	.main-content {
-		flex: 1;
-		min-height: 0;
-		overflow-y: auto;
-		padding: 32px 32px 48px;
-		background: var(--bg);
-	}
-
-	/* Responsive main content for shorter screens */
-	@media (max-height: 800px) {
-		.main-content {
-			padding: 24px 24px 32px;
-		}
-	}
-
-	@media (max-height: 700px) {
-		.main-content {
-			padding: 20px 20px 24px;
-		}
-	}
-
-	@media (max-height: 600px) {
-		.main-content {
-			padding: 16px 16px 20px;
-		}
-	}
-
-	/* Mobile Sidebar Styles */
-	.mobile-sidebar-container {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		z-index: 1000;
-		display: flex;
-		overflow: hidden;
-	}
-	.mobile-sidebar-overlay {
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: rgba(26, 26, 24, 0.4);
-		backdrop-filter: blur(4px);
-	}
-	.mobile-sidebar-panel {
-		position: relative;
-		width: 200px;
-		height: 100%;
-		background: var(--bg);
-		border-right: 1px solid var(--hairline);
-		overflow-y: auto;
-		flex-shrink: 0;
-	}
-</style>
 
 <CommandPalette bind:open={paletteOpen} />
 
 {#if sidebarOpen && sidebarDialogEl}
-	{@const _focus = (() => {
-		queueMicrotask(() => {
-			if (!sidebarDialogEl) return;
-			const focusable = getFocusable(sidebarDialogEl);
-			(focusable[0] ?? sidebarDialogEl)?.focus();
-		});
-		return null;
-	})()}
+    {@const _focus = (() => {
+        queueMicrotask(() => {
+            if (!sidebarDialogEl) return;
+            const focusable = getFocusable(sidebarDialogEl);
+            (focusable[0] ?? sidebarDialogEl)?.focus();
+        });
+        return null;
+    })()}
 {/if}
 
 {#if !sidebarOpen && sidebarOpenerEl}
-	{@const _restore = (() => {
-		queueMicrotask(() => sidebarOpenerEl?.focus());
-		sidebarOpenerEl = null;
-		return null;
-	})()}
+    {@const _restore = (() => {
+        queueMicrotask(() => sidebarOpenerEl?.focus());
+        sidebarOpenerEl = null;
+        return null;
+    })()}
 {/if}
+
+<style>
+    .app-layout {
+        display: flex;
+        height: 100vh;
+        max-height: 100vh;
+        width: 100vw;
+        max-width: 100vw;
+        background: var(--bg);
+        overflow: hidden;
+        position: relative;
+    }
+    .sidebar-wrapper {
+        display: none;
+        flex-shrink: 0;
+        width: 200px;
+        height: 100%;
+        max-height: 100vh;
+        min-height: 0;
+        overflow-y: auto;
+    }
+    @media (min-width: 768px) {
+        .sidebar-wrapper {
+            display: block;
+        }
+    }
+    .main-area {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        min-width: 0;
+        min-height: 0;
+        height: 100%;
+        max-height: 100vh;
+        overflow: hidden;
+    }
+    .main-content {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 32px 32px 48px;
+        background: var(--bg);
+    }
+
+    /* Responsive main content for shorter screens */
+    @media (max-height: 800px) {
+        .main-content {
+            padding: 24px 24px 32px;
+        }
+    }
+
+    @media (max-height: 700px) {
+        .main-content {
+            padding: 20px 20px 24px;
+        }
+    }
+
+    @media (max-height: 600px) {
+        .main-content {
+            padding: 16px 16px 20px;
+        }
+    }
+
+    /* Mobile Sidebar Styles */
+    .mobile-sidebar-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1000;
+        display: flex;
+        overflow: hidden;
+    }
+    .mobile-sidebar-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(26, 26, 24, 0.4);
+        backdrop-filter: blur(4px);
+    }
+    .mobile-sidebar-panel {
+        position: relative;
+        width: 200px;
+        height: 100%;
+        background: var(--bg);
+        border-right: 1px solid var(--hairline);
+        overflow-y: auto;
+        flex-shrink: 0;
+    }
+</style>

@@ -1,37 +1,38 @@
 <script lang="ts" module>
-	const badgeVariants = {
-		variant: {
-			default: 'badge-default',
-			secondary: 'badge-secondary',
-			success: 'badge-success',
-			warning: 'badge-warning',
-			destructive: 'badge-destructive',
-			outline: 'badge-outline'
-		}
-	} as const;
+    const badgeVariants = {
+        variant: {
+            default: 'badge-default',
+            secondary: 'badge-secondary',
+            success: 'badge-success',
+            warning: 'badge-warning',
+            destructive: 'badge-destructive',
+            outline: 'badge-outline'
+        }
+    } as const;
 
-	export type BadgeVariant = keyof typeof badgeVariants.variant;
+    export type BadgeVariant = keyof typeof badgeVariants.variant;
 </script>
 
 <script lang="ts">
-	/* eslint-disable svelte/valid-compile */
-	import type { HTMLAttributes } from 'svelte/elements';
+    /* eslint-disable svelte/valid-compile */
+    import type { HTMLAttributes } from 'svelte/elements';
 
-	let {
-		class: klass = '',
-		variant = 'default',
-		children,
-		...rest
-	}: HTMLAttributes<HTMLSpanElement> & {
-		class?: string;
-		variant?: BadgeVariant;
-		children?: import('svelte').Snippet;
-	} = $props();
-	/* eslint-enable svelte/valid-compile */
+    let {
+        class: klass = '',
+        variant = 'default',
+        children,
+        ...rest
+    }: HTMLAttributes<HTMLSpanElement> & {
+        class?: string;
+        variant?: BadgeVariant;
+        children?: import('svelte').Snippet;
+    } = $props();
+    /* eslint-enable svelte/valid-compile */
 
-	const badgeClass = $derived(`badge ${badgeVariants.variant[variant]} ${klass}`.trim());
+    // eslint-disable-next-line security/detect-object-injection
+    const badgeClass = $derived(`badge ${badgeVariants.variant[variant]} ${klass}`.trim());
 </script>
 
 <span class={badgeClass} {...rest}>
-	{#if children}{@render children()}{/if}
+    {#if children}{@render children()}{/if}
 </span>

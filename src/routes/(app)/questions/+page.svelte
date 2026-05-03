@@ -1,51 +1,41 @@
 <script lang="ts">
-	import PageHeader from '$lib/components/shared/PageHeader.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import QuestionCreateModal from '$lib/components/questions/QuestionCreateModal.svelte';
-	import QuestionEditModal from '$lib/components/questions/QuestionEditModal.svelte';
-	import { Plus } from 'lucide-svelte';
-	import { page } from '$app/stores';
-	import { invalidateAll, goto } from '$app/navigation';
-	import { showSuccessToast } from '$lib/stores/toast';
-	import { getPageNumber } from '$lib/constants/navigation';
-	import type { PageData } from './$types';
+    import PageHeader from '$lib/components/shared/PageHeader.svelte';
+    import Button from '$lib/components/ui/Button.svelte';
+    import QuestionCreateModal from '$lib/components/questions/QuestionCreateModal.svelte';
+    import QuestionEditModal from '$lib/components/questions/QuestionEditModal.svelte';
+    import { Plus } from 'lucide-svelte';
+    import { page } from '$app/stores';
+    import { invalidateAll, goto } from '$app/navigation';
+    import { showSuccessToast } from '$lib/stores/toast';
+    import { getPageNumber } from '$lib/constants/navigation';
+    import type { PageData } from './$types';
 
-	interface QuestionsPageData extends PageData {
-		members: { id: string; name: string | null; email: string }[];
-	}
+    interface QuestionsPageData extends PageData {
+        members: { id: string; name: string | null; email: string }[];
+    }
 
-	let { data, form }: { data: QuestionsPageData; form: { error?: string; errorId?: string } } = $props();
+    let { data, form }: { data: QuestionsPageData; form: { error?: string; errorId?: string } } = $props();
 
-	let showCreateModal = $state(false);
-	const editParam = $derived($page.url.searchParams.get('edit'));
-	const editingQuestion = $derived(
-		editParam && data.items.some((q) => q.id === editParam)
-			? { id: editParam }
-			: null
-	);
+    let showCreateModal = $state(false);
+    const editParam = $derived($page.url.searchParams.get('edit'));
+    const editingQuestion = $derived(editParam && data.items.some((q) => q.id === editParam) ? { id: editParam } : null);
 
-	async function updateUrl(id: string | null) {
-		const url = new URL(window.location.href);
-		if (id) {
-			url.searchParams.set('edit', id);
-		} else {
-			url.searchParams.delete('edit');
-		}
-		await goto(url.toString(), { replaceState: true, noScroll: true });
-	}
+    async function updateUrl(id: string | null) {
+        const url = new URL(window.location.href);
+        if (id) {
+            url.searchParams.set('edit', id);
+        } else {
+            url.searchParams.delete('edit');
+        }
+        await goto(url.toString(), { replaceState: true, noScroll: true });
+    }
 
-	function getThreadClass(source: string) {
-		if (['ATTORNEY', 'NONPROFIT', 'USCIS_SITE', 'COUNTY_SITE'].includes(source)) return 's-waiting';
-		if (source === 'COMMUNITY') return 's-active';
-		return 's-note';
-	}
+    const sections = $derived([
+        { label: 'Official sources', items: data.official, class: 's-waiting' },
+        { label: 'Community / anecdotal', items: data.community, class: 's-active' },
+        { label: 'Other', items: data.other, class: 's-note' }
+    ]);
 
-	const sections = $derived([
-		{ label: 'Official sources', items: data.official, class: 's-waiting' },
-		{ label: 'Community / anecdotal', items: data.community, class: 's-active' },
-		{ label: 'Other', items: data.other, class: 's-note' }
-	]);
-    
     const totalThreads = $derived(sections.length);
     const totalQuestions = $derived(data.items.length);
 </script>
@@ -56,11 +46,11 @@
     sub="Track unresolved questions, their sources, and answers."
     number={getPageNumber('/questions')}
 >
-	{#snippet actions()}
-		<Button onclick={() => showCreateModal = true}>
-			{#snippet children()}<Plus style="width: 14px; height: 14px;" /> New question{/snippet}
-		</Button>
-	{/snippet}
+    {#snippet actions()}
+        <Button onclick={() => (showCreateModal = true)}>
+            {#snippet children()}<Plus style="width: 14px; height: 14px;" /> New question{/snippet}
+        </Button>
+    {/snippet}
 </PageHeader>
 
 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
@@ -70,7 +60,7 @@
                 <span class="pill {section.class}">{section.label}</span>
                 <span style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-3);">{section.items.length}</span>
             </div>
-            
+
             {#each section.items as q (q.id)}
                 <button
                     type="button"
@@ -80,12 +70,17 @@
                 >
                     <p style="font-size: 13px; margin-bottom: 8px;">{q.question}</p>
                     <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-                         {#if q.category}<span class="pill s-note" style="font-size: 10px;">{q.category}</span>{/if}
+                        {#if q.category}<span class="pill s-note" style="font-size: 10px;">{q.category}</span>{/if}
                     </div>
                 </button>
             {/each}
 
-            <Button variant="ghost" size="sm" onclick={() => showCreateModal = true} style="justify-content: flex-start; margin-top: auto;">
+            <Button
+                variant="ghost"
+                size="sm"
+                onclick={() => (showCreateModal = true)}
+                style="justify-content: flex-start; margin-top: auto;"
+            >
                 <Plus style="width: 14px; height: 14px;" /> Ask a question
             </Button>
         </div>
@@ -93,61 +88,61 @@
 </div>
 
 {#if editingQuestion}
-	{@const question = data.items.find((q) => q.id === editingQuestion?.id)}
-	{#if question}
-		<QuestionEditModal
-			open={true}
-			onClose={async () => {
-				await updateUrl(null);
-			}}
-			action="?/update"
-			deleteAction="?/delete"
-			onenhance={({ formData, cancel }: { formData: FormData; cancel: () => void }) => {
-				return async () => {
-					const response = await fetch('?/update', { method: 'POST', body: formData });
-					if (response.ok) {
-						await invalidateAll();
-						showSuccessToast('Question updated successfully');
-					} else {
-						cancel();
-					}
-				};
-			}}
-			initial={{
-				id: question.id,
-				question: question.question,
-				category: question.category,
-				priority: question.priority,
-				status: question.status,
-				sourceType: question.sourceType,
-				citationUrl: question.citationUrl,
-				answer: question.answer,
-				answeredAt: question.answeredAt
-			}}
-			error={form?.error}
-			errorId={form?.errorId}
-		/>
-	{/if}
+    {@const question = data.items.find((q) => q.id === editingQuestion?.id)}
+    {#if question}
+        <QuestionEditModal
+            open={true}
+            onClose={async () => {
+                await updateUrl(null);
+            }}
+            action="?/update"
+            deleteAction="?/delete"
+            onenhance={({ formData, cancel }: { formData: FormData; cancel: () => void }) => {
+                return async () => {
+                    const response = await fetch('?/update', { method: 'POST', body: formData });
+                    if (response.ok) {
+                        await invalidateAll();
+                        showSuccessToast('Question updated successfully');
+                    } else {
+                        cancel();
+                    }
+                };
+            }}
+            initial={{
+                id: question.id,
+                question: question.question,
+                category: question.category,
+                priority: question.priority,
+                status: question.status,
+                sourceType: question.sourceType,
+                citationUrl: question.citationUrl,
+                answer: question.answer,
+                answeredAt: question.answeredAt
+            }}
+            error={form?.error}
+            errorId={form?.errorId}
+        />
+    {/if}
 {/if}
 
 {#if showCreateModal}
-	<QuestionCreateModal
-		open={true}
-		onClose={() => {
-			showCreateModal = false;
-		}}
-		action="?/create"
-		members={data.members}
-		error={form?.error}
-		errorId={form?.errorId}
-		onenhance={() => {
-			return async ({ result }: { result: { type: string } }) => {
-				if (result.type === 'success') {
-					showCreateModal = false;
-					await invalidateAll();
-					showSuccessToast('Question created successfully');
-				}
-			};
-		}}
-	/>
+    <QuestionCreateModal
+        open={true}
+        onClose={() => {
+            showCreateModal = false;
+        }}
+        action="?/create"
+        members={data.members}
+        error={form?.error}
+        errorId={form?.errorId}
+        onenhance={() => {
+            return async ({ result }: { result: { type: string } }) => {
+                if (result.type === 'success') {
+                    showCreateModal = false;
+                    await invalidateAll();
+                    showSuccessToast('Question created successfully');
+                }
+            };
+        }}
+    />
 {/if}

@@ -1,63 +1,63 @@
 <script lang="ts">
-	import PageHeader from '$lib/components/shared/PageHeader.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import { authClient } from '$lib/client/auth-client';
-	import { Fingerprint, ShieldCheck, Trash2, Plus } from 'lucide-svelte';
+    import PageHeader from '$lib/components/shared/PageHeader.svelte';
+    import Button from '$lib/components/ui/Button.svelte';
+    import { authClient } from '$lib/client/auth-client';
+    import { Fingerprint, ShieldCheck, Trash2, Plus } from 'lucide-svelte';
 
-	let passkeyMsg = $state<string | null>(null);
-	let passkeys = $state<Array<{ id: string; name?: string }>>([]);
-	let totpMsg = $state<string | null>(null);
-	let totpSecret = $state<{ totpURI?: string; backupCodes?: string[] } | null>(null);
-	let totpCode = $state('');
+    let passkeyMsg = $state<string | null>(null);
+    let passkeys = $state<Array<{ id: string; name?: string }>>([]);
+    let totpMsg = $state<string | null>(null);
+    let totpSecret = $state<{ totpURI?: string; backupCodes?: string[] } | null>(null);
+    let totpCode = $state('');
 
-	async function addPasskey() {
-		passkeyMsg = 'Launching passkey ceremony…';
-		try {
-			const res = await authClient.passkey.addPasskey();
-			if (res?.error) {
-				passkeyMsg = res.error.message ?? 'Failed';
-			} else {
-				passkeyMsg = 'Passkey added.';
-				await loadPasskeys();
-			}
-		} catch (err) {
-			passkeyMsg = (err as Error).message;
-		}
-	}
+    async function addPasskey() {
+        passkeyMsg = 'Launching passkey ceremony…';
+        try {
+            const res = await authClient.passkey.addPasskey();
+            if (res?.error) {
+                passkeyMsg = res.error.message ?? 'Failed';
+            } else {
+                passkeyMsg = 'Passkey added.';
+                await loadPasskeys();
+            }
+        } catch (err) {
+            passkeyMsg = (err as Error).message;
+        }
+    }
 
-	async function loadPasskeys() {
-		const res = await authClient.passkey.listUserPasskeys();
-		if (res.data) {
-			passkeys = res.data;
-		}
-	}
+    async function loadPasskeys() {
+        const res = await authClient.passkey.listUserPasskeys();
+        if (res.data) {
+            passkeys = res.data;
+        }
+    }
 
-	async function deletePasskey(id: string) {
-		const res = await authClient.passkey.deletePasskey({ id });
-		if (res.error) {
-			passkeyMsg = res.error.message ?? 'Failed to delete passkey';
-		} else {
-			passkeyMsg = 'Passkey deleted.';
-			await loadPasskeys();
-		}
-	}
+    async function deletePasskey(id: string) {
+        const res = await authClient.passkey.deletePasskey({ id });
+        if (res.error) {
+            passkeyMsg = res.error.message ?? 'Failed to delete passkey';
+        } else {
+            passkeyMsg = 'Passkey deleted.';
+            await loadPasskeys();
+        }
+    }
 
-	$effect(() => {
-		loadPasskeys();
-	});
+    $effect(() => {
+        loadPasskeys();
+    });
 
-	async function enableTotp() {
-		totpMsg = null;
-		const res = await authClient.twoFactor.enable({ password: prompt('Confirm your password') ?? '' });
-		if (res.error) totpMsg = res.error.message ?? 'Failed';
-		else totpSecret = res.data ?? null;
-	}
+    async function enableTotp() {
+        totpMsg = null;
+        const res = await authClient.twoFactor.enable({ password: prompt('Confirm your password') ?? '' });
+        if (res.error) totpMsg = res.error.message ?? 'Failed';
+        else totpSecret = res.data ?? null;
+    }
 
-	async function verifyTotp() {
-		const res = await authClient.twoFactor.verifyTotp({ code: totpCode });
-		if (res.error) totpMsg = res.error.message ?? 'Invalid code';
-		else totpMsg = 'Two-factor enabled.';
-	}
+    async function verifyTotp() {
+        const res = await authClient.twoFactor.verifyTotp({ code: totpCode });
+        if (res.error) totpMsg = res.error.message ?? 'Invalid code';
+        else totpMsg = 'Two-factor enabled.';
+    }
 </script>
 
 <PageHeader title="Security" sub="Protect your case with passkeys and multi-factor authentication." />
@@ -66,19 +66,25 @@
     <!-- Passkeys Card -->
     <div class="card" style="padding: 24px;">
         <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px;">
-            <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--peri); color: var(--peri-d); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <div
+                style="width: 44px; height: 44px; border-radius: 50%; background: var(--peri); color: var(--peri-d); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"
+            >
                 <Fingerprint style="width: 24px; height: 24px;" />
             </div>
             <div>
                 <h2 class="display" style="font-size: 24px; margin: 0 0 4px 0;">Passkeys</h2>
-                <p style="font-size: 13px; color: var(--ink-2); margin: 0;">Use Face ID, Touch ID, or a hardware key for secure, passwordless sign-in.</p>
+                <p style="font-size: 13px; color: var(--ink-2); margin: 0;">
+                    Use Face ID, Touch ID, or a hardware key for secure, passwordless sign-in.
+                </p>
             </div>
         </div>
 
         {#if passkeys.length > 0}
             <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
                 {#each passkeys as pk (pk.id)}
-                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--surface-2); border-radius: var(--r-md);">
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--surface-2); border-radius: var(--r-md);"
+                    >
                         <span style="font-size: 14px; font-weight: 500;">{pk.name || 'Unnamed passkey'}</span>
                         <button
                             onclick={() => deletePasskey(pk.id)}
@@ -95,7 +101,7 @@
         <Button onclick={addPasskey}>
             <Plus style="width: 14px; height: 14px; margin-right: 6px;" /> Add a passkey
         </Button>
-        
+
         {#if passkeyMsg}
             <p style="margin-top: 16px; font-size: 13px; color: var(--ink-3);">{passkeyMsg}</p>
         {/if}
@@ -104,12 +110,16 @@
     <!-- 2FA Card -->
     <div class="card" style="padding: 24px;">
         <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px;">
-            <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--sage); color: var(--sage-d); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <div
+                style="width: 44px; height: 44px; border-radius: 50%; background: var(--sage); color: var(--sage-d); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"
+            >
                 <ShieldCheck style="width: 24px; height: 24px;" />
             </div>
             <div>
                 <h2 class="display" style="font-size: 24px; margin: 0 0 4px 0;">Two-factor auth</h2>
-                <p style="font-size: 13px; color: var(--ink-2); margin: 0;">Add an extra layer of security with a TOTP app like 1Password, Authy, or Google Authenticator.</p>
+                <p style="font-size: 13px; color: var(--ink-2); margin: 0;">
+                    Add an extra layer of security with a TOTP app like 1Password, Authy, or Google Authenticator.
+                </p>
             </div>
         </div>
 
@@ -118,7 +128,9 @@
         {:else}
             <div style="padding: 20px; background: var(--surface-2); border-radius: var(--r-md); border: 1px dashed var(--hairline);">
                 <p style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">1. Scan this URI in your app</p>
-                <code style="display: block; font-family: var(--font-mono); font-size: 11px; padding: 12px; background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--r-sm); overflow-x: auto; margin-bottom: 20px;">
+                <code
+                    style="display: block; font-family: var(--font-mono); font-size: 11px; padding: 12px; background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--r-sm); overflow-x: auto; margin-bottom: 20px;"
+                >
                     {totpSecret.totpURI}
                 </code>
 
@@ -126,25 +138,22 @@
                     <p style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">2. Save your backup codes</p>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px;">
                         {#each totpSecret.backupCodes as c (c)}
-                            <code style="font-family: var(--font-mono); font-size: 12px; padding: 4px 8px; background: var(--surface); border-radius: 4px;">{c}</code>
+                            <code
+                                style="font-family: var(--font-mono); font-size: 12px; padding: 4px 8px; background: var(--surface); border-radius: 4px;"
+                                >{c}</code
+                            >
                         {/each}
                     </div>
                 {/if}
 
                 <p style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">3. Verify the setup</p>
                 <div style="display: flex; gap: 12px;">
-                    <input 
-                        bind:value={totpCode} 
-                        placeholder="6-digit code" 
-                        class="input" 
-                        style="width: 140px;"
-                        maxlength="6"
-                    />
+                    <input bind:value={totpCode} placeholder="6-digit code" class="input" style="width: 140px;" maxlength="6" />
                     <Button onclick={verifyTotp}>Verify & Enable</Button>
                 </div>
             </div>
         {/if}
-        
+
         {#if totpMsg}
             <p style="margin-top: 16px; font-size: 13px; color: var(--ink-3);">{totpMsg}</p>
         {/if}
