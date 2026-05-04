@@ -32,10 +32,10 @@
                 <div
                     style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--surface-2); border-radius: var(--r-md);"
                 >
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div>
-                            <p style="font-size: 14px; font-weight: 500;">{m.user.name ?? m.user.email}</p>
-                            <p style="font-size: 12px; color: var(--ink-3);">{m.user.email}</p>
+                    <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                        <div style="min-width: 0;">
+                            <p class="text-ellipsis" style="font-size: 14px; font-weight: 500;">{m.user.name ?? m.user.email}</p>
+                            <p class="text-ellipsis" style="font-size: 12px; color: var(--ink-3);">{m.user.email}</p>
                         </div>
                     </div>
                     <div style="display: flex; align-items: center; gap: 12px;">
@@ -63,12 +63,7 @@
     {#if isOwner}
         <div class="card" style="padding: 24px;">
             <h2 class="display" style="font-size: 24px; margin-top: 0; margin-bottom: 20px;">Invite a user</h2>
-            <form
-                method="post"
-                action="?/invite"
-                use:enhance
-                style="display: grid; grid-template-columns: 1fr 160px auto; gap: 16px; align-items: end;"
-            >
+            <form method="post" action="?/invite" use:enhance class="invite-form">
                 <div>
                     <label for="invite-email" style="display: block; font-size: 13px; margin-bottom: 4px;">Email</label>
                     <input id="invite-email" name="email" type="email" class="input" style="width: 100%;" required />
@@ -87,7 +82,7 @@
                     <p style="font-size: 13px; margin-bottom: 8px;">Invite link created</p>
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <code
-                            style="font-family: var(--font-mono); font-size: 12px; padding: 6px; background: var(--surface); border: 1px solid var(--hairline); flex: 1;"
+                            style="font-family: var(--font-mono); font-size: 12px; padding: 6px; background: var(--surface); border: 1px solid var(--hairline); flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap;"
                             >{form.inviteUrl}</code
                         >
                         <Button onclick={() => copyToClipboard(form.inviteUrl)} size="sm" variant="outline"
@@ -99,3 +94,25 @@
         </div>
     {/if}
 </div>
+
+<style>
+    .invite-form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    @media (min-width: 640px) {
+        .invite-form {
+            display: grid;
+            grid-template-columns: 1fr 160px auto;
+            align-items: end;
+        }
+    }
+
+    .text-ellipsis {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>

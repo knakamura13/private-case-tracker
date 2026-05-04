@@ -19,7 +19,7 @@
         items?: DropdownMenuEntry[];
         triggerLabel?: string;
         triggerIcon?: DropdownMenuIcon;
-        position?: 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end';
+        position?: 'top-start' | 'top-end' | 'top-center' | 'bottom-start' | 'bottom-end' | 'bottom-center';
         size?: 'default' | 'sm' | 'lg';
         menuId?: string;
         menuClass?: string;
@@ -94,10 +94,49 @@
         const positionMap = {
             'top-start': 'dropdown-menu--pos-top-start',
             'top-end': 'dropdown-menu--pos-top-end',
+            'top-center': 'dropdown-menu--pos-top-center',
             'bottom-start': 'dropdown-menu--pos-bottom-start',
-            'bottom-end': 'dropdown-menu--pos-bottom-end'
+            'bottom-end': 'dropdown-menu--pos-bottom-end',
+            'bottom-center': 'dropdown-menu--pos-bottom-center'
         } as const;
         return positionMap[position as keyof typeof positionMap] ?? 'dropdown-menu--pos-bottom-end';
+    });
+
+    let horizontalShift = $state(0);
+
+    // Prevent horizontal overflow
+    $effect(() => {
+        if (!isOpen) {
+            horizontalShift = 0;
+            return;
+        }
+
+        const updatePosition = () => {
+            if (!menuEl) return;
+
+            // Reset shift to get natural position
+            horizontalShift = 0;
+
+            // Wait for DOM to update with reset shift
+            requestAnimationFrame(() => {
+                if (!menuEl) return;
+                const rect = menuEl.getBoundingClientRect();
+                const padding = 12;
+                let shift = 0;
+
+                if (rect.right > window.innerWidth - padding) {
+                    shift = window.innerWidth - padding - rect.right;
+                } else if (rect.left < padding) {
+                    shift = padding - rect.left;
+                }
+
+                horizontalShift = shift;
+            });
+        };
+
+        updatePosition();
+        window.addEventListener('resize', updatePosition);
+        return () => window.removeEventListener('resize', updatePosition);
     });
 </script>
 
@@ -127,6 +166,7 @@
             bind:this={menuEl}
             id={listId}
             class="dropdown-menu {sizeClass} {positionClass} {menuClass}"
+            style="--horizontal-shift: {horizontalShift}px"
             role="menu"
             aria-orientation="vertical"
         >
@@ -175,6 +215,7 @@
         z-index: 99999;
         outline: none;
         min-width: fit-content;
+        transform: translateX(var(--horizontal-shift, 0px));
     }
 
     .dropdown-menu--size-sm {
@@ -206,6 +247,13 @@
         margin-top: 4px;
     }
 
+    .dropdown-menu--pos-bottom-center {
+        top: 100%;
+        left: 50%;
+        transform: translateX(calc(-50% + var(--horizontal-shift, 0px)));
+        margin-top: 4px;
+    }
+
     .dropdown-menu--pos-top-start {
         bottom: 100%;
         left: 0;
@@ -215,6 +263,13 @@
     .dropdown-menu--pos-top-end {
         bottom: 100%;
         right: 0;
+        margin-bottom: 4px;
+    }
+
+    .dropdown-menu--pos-top-center {
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(calc(-50% + var(--horizontal-shift, 0px)));
         margin-bottom: 4px;
     }
 
@@ -232,6 +287,7 @@
         outline: none;
         text-decoration: none;
         user-select: none;
+        white-space: nowrap;
         width: 100%;
         text-align: left;
         border: none;
