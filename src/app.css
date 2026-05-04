@@ -1033,6 +1033,12 @@ button.modal-checklist-text-btn {
     width: 100%;
 }
 
+/* Add cursor pointer to select elements */
+select.input,
+select {
+    cursor: pointer;
+}
+
 @media (min-width: 768px) {
     .input,
     .textarea {
