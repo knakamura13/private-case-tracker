@@ -23,6 +23,7 @@
     let inlineEditingFolderId = $state<string | null>(null);
     let inlineFolderInputEl = $state<HTMLInputElement | null>(null);
     let folderDialogInputEl = $state<HTMLInputElement | null>(null);
+    let liveRegionMessage = $state<string>('');
 
     let visibleFolders = $derived([...folders, ...optimisticFolders].sort((a, b) => a.order - b.order));
 
@@ -353,7 +354,84 @@
             console.error('Failed to move link to root:', error);
         }
     }
+
+    async function handleItemKeydown(event: KeyboardEvent, itemId: string) {
+        if (!event.altKey) return;
+
+        const currentIndex = itemIds.indexOf(itemId);
+        if (currentIndex === -1) return;
+
+        const itemsPerRow = Math.max(1, Math.floor(window.innerWidth / 96)); // 80px + 16px gap
+        const maxIndex = itemIds.length - 1;
+        let newIndex = currentIndex;
+
+        switch (event.key) {
+            case 'ArrowRight': {
+                event.preventDefault();
+                newIndex = Math.min(currentIndex + 1, maxIndex);
+                break;
+            }
+            case 'ArrowLeft': {
+                event.preventDefault();
+                newIndex = Math.max(currentIndex - 1, 0);
+                break;
+            }
+            case 'ArrowDown': {
+                event.preventDefault();
+                newIndex = Math.min(currentIndex + itemsPerRow, maxIndex);
+                break;
+            }
+            case 'ArrowUp': {
+                event.preventDefault();
+                newIndex = Math.max(currentIndex - itemsPerRow, 0);
+                break;
+            }
+            default:
+                return;
+        }
+
+        if (newIndex === currentIndex) return;
+
+        const targetId = itemIds[newIndex];
+        const isFolder = visibleFolders.some((f) => f.id === itemId);
+        const targetFolder = visibleFolders.find((f) => f.id === targetId);
+        const itemLabel = isFolder
+            ? visibleFolders.find((f) => f.id === itemId)?.name || 'Folder'
+            : labelFor(links.find((l) => l.id === itemId)!) || 'Link';
+
+        try {
+            const oldIndex = itemIds.indexOf(itemId);
+            const newOrder = [...itemIds];
+            newOrder.splice(oldIndex, 1);
+            newOrder.splice(newIndex, 0, itemId);
+
+            const isFolderDrag = visibleFolders.some((f) => f.id === itemId);
+            const formData = new FormData();
+            if (isFolderDrag) {
+                newOrder.filter((id) => visibleFolders.some((f) => f.id === id)).forEach((id) => formData.append('folderIds', id));
+                const response = await fetch('?/reorderFolders', { method: 'POST', body: formData });
+                if (!response.ok) {
+                    console.error('Failed to reorder folders:', response.statusText);
+                    return;
+                }
+            } else {
+                newOrder.filter((id) => rootLinks.some((l) => l.id === id)).forEach((id) => formData.append('linkIds', id));
+                const response = await fetch('?/reorderLinks', { method: 'POST', body: formData });
+                if (!response.ok) {
+                    console.error('Failed to reorder links:', response.statusText);
+                    return;
+                }
+            }
+
+            liveRegionMessage = `Moved "${itemLabel}" to new position`;
+            await invalidateAll();
+        } catch (error) {
+            console.error('Keyboard operation failed:', error);
+        }
+    }
 </script>
+
+<div aria-live="polite" aria-atomic="true" class="sr-only">{liveRegionMessage}</div>
 
 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 16px; padding: 12px 0;">
     {#each visibleFolders as folder (folder.id)}
@@ -370,6 +448,8 @@
             ondragleave={handleDragLeave}
             ondrop={(e) => handleDrop(e, folder.id)}
             ondragend={handleDragEnd}
+            onkeydown={(e) => handleItemKeydown(e, folder.id)}
+            tabindex="0"
         >
             <div class="widget-item-menu-wrap" onclick={(e) => e.stopPropagation()} role="presentation">
                 <div class="widget-item-menu-inner">
@@ -427,6 +507,8 @@
             ondragleave={handleDragLeave}
             ondrop={(e) => handleDrop(e, link.id)}
             ondragend={handleDragEnd}
+            onkeydown={(e) => handleItemKeydown(e, link.id)}
+            tabindex="0"
         >
             <div class="widget-item-menu-wrap" onclick={(e) => e.stopPropagation()} role="presentation">
                 <div class="widget-item-menu-inner">

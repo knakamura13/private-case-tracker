@@ -11,6 +11,19 @@
     -moz-osx-font-smoothing: grayscale;
 }
 
+/* Screen reader only content */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
 /* Auth routes (login / signup / invite) — markup lives in page files, not AuthShell */
 .auth-form {
     display: flex;
@@ -188,8 +201,8 @@ body,
     /* === Ink (text) === */
     --ink: #1a1a18;
     --ink-2: #4a4540;
-    --ink-3: #8a8278;
-    --ink-4: #b8b0a4;
+    --ink-3: #706860;
+    --ink-4: #9a8f84;
 
     /* === Accent tints (oklch) === */
     --sage: oklch(0.92 0.06 150);

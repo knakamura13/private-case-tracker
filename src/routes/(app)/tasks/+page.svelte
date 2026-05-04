@@ -27,6 +27,7 @@
     let dropPosition = $state<'before' | 'after' | null>(null);
     let dragEnterCount = $state(0);
     let isDragging = $state(false);
+    let liveRegionMessage = $state<string>('');
 
     async function updateUrl(id: string | null) {
         const url = new URL(window.location.href);
@@ -282,7 +283,104 @@
             console.error('Drag operation failed:', error);
         }
     }
+
+    async function handleTaskKeydown(event: KeyboardEvent, taskId: string) {
+        if (!event.altKey) return;
+
+        const activeTask = data.tasks.find((t) => t.id === taskId);
+        if (!activeTask) return;
+
+        const currentColumnIdx = COLUMNS.findIndex((c) => c.id === activeTask.status);
+        const currentColumn = grouped[currentColumnIdx];
+        if (!currentColumn) return;
+
+        const allTasks = [...data.tasks];
+        const currentTaskIdx = currentColumn.tasks.findIndex((t) => t.id === taskId);
+        const updates: Array<{ id: string; status: string; order: number }> = [];
+
+        switch (event.key) {
+            case 'ArrowRight': {
+                event.preventDefault();
+                if (currentColumnIdx >= COLUMNS.length - 1) return;
+                const targetStatus = COLUMNS[currentColumnIdx + 1].id;
+                const sourceColumnTasks = allTasks.filter((t) => t.status === activeTask.status).sort((a, b) => a.order - b.order);
+                sourceColumnTasks.forEach((t, idx) => {
+                    if (t.id !== taskId) {
+                        updates.push({ id: t.id, status: t.status, order: idx });
+                    }
+                });
+                const targetColumnTasks = allTasks.filter((t) => t.status === targetStatus).sort((a, b) => a.order - b.order);
+                targetColumnTasks.push({ ...activeTask, status: targetStatus as import('$lib/types/enums').TaskStatus });
+                targetColumnTasks.forEach((t, idx) => {
+                    updates.push({ id: t.id, status: t.status, order: idx });
+                });
+                liveRegionMessage = `Moved "${activeTask.title}" to ${COLUMNS[currentColumnIdx + 1].label}`;
+                break;
+            }
+            case 'ArrowLeft': {
+                event.preventDefault();
+                if (currentColumnIdx <= 0) return;
+                const targetStatus = COLUMNS[currentColumnIdx - 1].id;
+                const sourceColumnTasks = allTasks.filter((t) => t.status === activeTask.status).sort((a, b) => a.order - b.order);
+                sourceColumnTasks.forEach((t, idx) => {
+                    if (t.id !== taskId) {
+                        updates.push({ id: t.id, status: t.status, order: idx });
+                    }
+                });
+                const targetColumnTasks = allTasks.filter((t) => t.status === targetStatus).sort((a, b) => a.order - b.order);
+                targetColumnTasks.push({ ...activeTask, status: targetStatus as import('$lib/types/enums').TaskStatus });
+                targetColumnTasks.forEach((t, idx) => {
+                    updates.push({ id: t.id, status: t.status, order: idx });
+                });
+                liveRegionMessage = `Moved "${activeTask.title}" to ${COLUMNS[currentColumnIdx - 1].label}`;
+                break;
+            }
+            case 'ArrowDown': {
+                event.preventDefault();
+                if (currentTaskIdx >= currentColumn.tasks.length - 1) return;
+                const columnTasks = allTasks.filter((t) => t.status === activeTask.status).sort((a, b) => a.order - b.order);
+                const newOrder = columnTasks.filter((t) => t.id !== taskId);
+                newOrder.splice(currentTaskIdx + 1, 0, activeTask);
+                newOrder.forEach((t, idx) => {
+                    updates.push({ id: t.id, status: t.status, order: idx });
+                });
+                liveRegionMessage = `Moved "${activeTask.title}" down in ${currentColumn.label}`;
+                break;
+            }
+            case 'ArrowUp': {
+                event.preventDefault();
+                if (currentTaskIdx <= 0) return;
+                const columnTasks = allTasks.filter((t) => t.status === activeTask.status).sort((a, b) => a.order - b.order);
+                const newOrder = columnTasks.filter((t) => t.id !== taskId);
+                newOrder.splice(currentTaskIdx - 1, 0, activeTask);
+                newOrder.forEach((t, idx) => {
+                    updates.push({ id: t.id, status: t.status, order: idx });
+                });
+                liveRegionMessage = `Moved "${activeTask.title}" up in ${currentColumn.label}`;
+                break;
+            }
+            default:
+                return;
+        }
+
+        if (updates.length === 0) return;
+
+        try {
+            const formData = new FormData();
+            formData.append('updates', JSON.stringify(updates));
+            const response = await fetch('?/reorder', { method: 'POST', body: formData });
+            if (response.ok) {
+                await invalidateAll();
+            } else {
+                console.error('Reorder failed:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Keyboard operation failed:', error);
+        }
+    }
 </script>
+
+<div aria-live="polite" aria-atomic="true" class="sr-only">{liveRegionMessage}</div>
 
 <PageHeader title="Tasks" sub="Personal todos and errands (not legal proceedings)." number={getPageNumber('/tasks')} />
 
@@ -304,23 +402,27 @@
                 aria-dropeffect="move"
             >
                 {#each column.tasks as task (task.id)}
-                    <TaskCard
-                        {task}
-                        onEdit={async (id: string) => {
-                            await updateUrl(id);
-                        }}
-                        draggable={true}
-                        onDragStart={handleDragStart}
-                        onDragEnter={handleDragEnter}
-                        onDragOver={handleDragOver}
-                        onDragLeave={handleDragLeave}
-                        onDrop={(e: DragEvent, id: string) => handleDrop(e, id, column.id)}
-                        onDragEnd={handleDragEnd}
-                        isDragging={draggingId === task.id}
-                        isDropTarget={dropTargetId === task.id}
-                        isAnyDragging={draggingId !== null}
-                        dropPosition={dropTargetId === task.id ? dropPosition : null}
-                    />
+                    <div
+                        onkeydown={(e) => handleTaskKeydown(e, task.id)}
+                    >
+                        <TaskCard
+                            {task}
+                            onEdit={async (id: string) => {
+                                await updateUrl(id);
+                            }}
+                            draggable={true}
+                            onDragStart={handleDragStart}
+                            onDragEnter={handleDragEnter}
+                            onDragOver={handleDragOver}
+                            onDragLeave={handleDragLeave}
+                            onDrop={(e: DragEvent, id: string) => handleDrop(e, id, column.id)}
+                            onDragEnd={handleDragEnd}
+                            isDragging={draggingId === task.id}
+                            isDropTarget={dropTargetId === task.id}
+                            isAnyDragging={draggingId !== null}
+                            dropPosition={dropTargetId === task.id ? dropPosition : null}
+                        />
+                    </div>
                 {/each}
                 {#if column.tasks.length === 0}
                     <div class="tasks-empty-placeholder {dropTargetId === column.id ? 'tasks-empty-box-drop-target' : ''}" role="listitem">

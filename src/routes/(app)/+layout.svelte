@@ -49,11 +49,14 @@
     onMount(initTruncateTitles);
 </script>
 
+<!-- Skip link for keyboard navigation (accessibility) -->
+<a href="#main" class="skip-link">Skip to main content</a>
+
 <div class="app-layout">
     <!-- Desktop Sidebar -->
-    <div class="sidebar-wrapper">
+    <nav class="sidebar-wrapper" aria-label="Main navigation">
         <Sidebar workspaceName={data.workspace.name} />
-    </div>
+    </nav>
 
     <!-- Mobile Sidebar Dialog -->
     {#if sidebarOpen}
@@ -186,6 +189,36 @@
         .main-content {
             padding: 16px 16px 20px;
         }
+    }
+
+    /* Skip Link (Accessibility) */
+    .skip-link {
+        position: absolute;
+        top: -40px;
+        left: 0;
+        background: var(--ink);
+        color: var(--surface);
+        padding: 8px 16px;
+        z-index: 9999;
+        border-radius: 0 0 4px 0;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .skip-link:focus {
+        top: 0;
+        outline: none;
+    }
+
+    /* Improve focus indicators */
+    :global(button:focus-visible),
+    :global(a:focus-visible),
+    :global(input:focus-visible),
+    :global(select:focus-visible),
+    :global(textarea:focus-visible) {
+        outline: 3px solid var(--ink);
+        outline-offset: 2px;
+        border-radius: 4px;
     }
 
     /* Mobile Sidebar Styles */

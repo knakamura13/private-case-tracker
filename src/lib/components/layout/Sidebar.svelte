@@ -94,6 +94,14 @@
         padding: 0;
     }
 
+    .nav-item {
+        transition: background 0.2s ease;
+    }
+
+    .nav-item:not(.active):hover {
+        background: var(--surface-2) !important;
+    }
+
     /* Compact layout for shorter screens */
     @media (max-height: 800px) {
         .sidebar {
@@ -114,15 +122,10 @@
             padding: 8px 12px !important;
             font-size: 13px !important;
             gap: 10px !important;
-            transition: background 0.2s ease;
-        }
-
-        .sidebar .nav-item:hover {
-            background: var(--ink-2) !important;
         }
 
         .sidebar .nav-item:not(.active):hover {
-            background: var(--surface) !important;
+            background: var(--surface-2) !important;
         }
 
         .sidebar .nav-item span {
