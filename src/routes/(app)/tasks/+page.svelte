@@ -60,7 +60,7 @@
 
     let scrollContainer = $state<HTMLElement | null>(null);
 
-    function handleTouchMove(event: TouchEvent) {
+    function handleTouchMove(_event: TouchEvent) {
         if (isDragging) {
             // Prevent scrolling while dragging on mobile if we decide to implement touch drag
             // event.preventDefault();
