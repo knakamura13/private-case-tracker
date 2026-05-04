@@ -1,6 +1,5 @@
 <script lang="ts">
     import type { QuickLink, QuickLinkFolder } from '$lib/types/enums';
-    import { tick } from 'svelte';
     import { invalidateAll } from '$app/navigation';
     import { Plus, Link2, Folder, Edit, Trash2, CornerUpLeft } from 'lucide-svelte';
     import Button from '$lib/components/ui/Button.svelte';
@@ -20,9 +19,6 @@
     let dragEnterCount = $state(0);
     let isDragging = $state(false);
     let optimisticFolders = $state<QuickLinkFolder[]>([]);
-    let inlineEditingFolderId = $state<string | null>(null);
-    let inlineFolderInputEl = $state<HTMLInputElement | null>(null);
-    let folderDialogInputEl = $state<HTMLInputElement | null>(null);
     let liveRegionMessage = $state<string>('');
 
     let visibleFolders = $derived([...folders, ...optimisticFolders].sort((a, b) => a.order - b.order));
@@ -190,22 +186,6 @@
         folderPopoverId = null;
     }
 
-    $effect(() => {
-        if (!inlineEditingFolderId || !inlineFolderInputEl) return;
-        void tick().then(() => {
-            inlineFolderInputEl?.focus();
-            inlineFolderInputEl?.select();
-        });
-    });
-
-    $effect(() => {
-        if (!folderPopoverId || !folderDialogInputEl) return;
-        void tick().then(() => {
-            folderDialogInputEl?.focus();
-            folderDialogInputEl?.select();
-        });
-    });
-
     function toggleFolderPopover(folderId: string, e: Event) {
         e.preventDefault();
         e.stopPropagation();
@@ -363,38 +343,36 @@
 
         const itemsPerRow = Math.max(1, Math.floor(window.innerWidth / 96)); // 80px + 16px gap
         const maxIndex = itemIds.length - 1;
-        let newIndex = currentIndex;
+        let nextIndex = currentIndex;
 
         switch (event.key) {
             case 'ArrowRight': {
                 event.preventDefault();
-                newIndex = Math.min(currentIndex + 1, maxIndex);
+                nextIndex = Math.min(currentIndex + 1, maxIndex);
                 break;
             }
             case 'ArrowLeft': {
                 event.preventDefault();
-                newIndex = Math.max(currentIndex - 1, 0);
+                nextIndex = Math.max(currentIndex - 1, 0);
                 break;
             }
             case 'ArrowDown': {
                 event.preventDefault();
-                newIndex = Math.min(currentIndex + itemsPerRow, maxIndex);
+                nextIndex = Math.min(currentIndex + itemsPerRow, maxIndex);
                 break;
             }
             case 'ArrowUp': {
                 event.preventDefault();
-                newIndex = Math.max(currentIndex - itemsPerRow, 0);
+                nextIndex = Math.max(currentIndex - itemsPerRow, 0);
                 break;
             }
             default:
                 return;
         }
 
-        if (newIndex === currentIndex) return;
+        if (nextIndex === currentIndex) return;
 
-        const targetId = itemIds[newIndex];
         const isFolder = visibleFolders.some((f) => f.id === itemId);
-        const targetFolder = visibleFolders.find((f) => f.id === targetId);
         const itemLabel = isFolder
             ? visibleFolders.find((f) => f.id === itemId)?.name || 'Folder'
             : labelFor(links.find((l) => l.id === itemId)!) || 'Link';
@@ -403,7 +381,7 @@
             const oldIndex = itemIds.indexOf(itemId);
             const newOrder = [...itemIds];
             newOrder.splice(oldIndex, 1);
-            newOrder.splice(newIndex, 0, itemId);
+            newOrder.splice(nextIndex, 0, itemId);
 
             const isFolderDrag = visibleFolders.some((f) => f.id === itemId);
             const formData = new FormData();
