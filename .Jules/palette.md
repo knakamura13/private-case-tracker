@@ -1,3 +1,4 @@
 ## 2026-05-04 - Standardized Loading & Accessible Icon Buttons
+
 **Learning:** Fragmented loading states (e.g., manually changing button text) lead to inconsistent UI. Standardizing a `loading` prop in the core `Button` component ensures visual consistency and prevents double-submissions automatically. Additionally, icon-only buttons often lack tooltips, making them less discoverable for mouse users; automatically deriving `title` from `aria-label` provides a low-effort accessibility and UX win.
 **Action:** Use the `loading` prop for all async actions and always provide `aria-label` to icon-only buttons to benefit from automatic tooltip generation.

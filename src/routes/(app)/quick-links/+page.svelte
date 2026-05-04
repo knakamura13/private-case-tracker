@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { QuickLink, QuickLinkFolder } from '$lib/types/enums';
     import PageHeader from '$lib/components/shared/PageHeader.svelte';
-        import QuickLinksManageDialog from '$lib/components/dashboard/QuickLinksManageDialog.svelte';
+    import QuickLinksManageDialog from '$lib/components/dashboard/QuickLinksManageDialog.svelte';
     import ThreeDotsMenu from '$lib/components/ui/ThreeDotsMenu.svelte';
     import { Plus, Folder, Link2, Edit, Trash2 } from 'lucide-svelte';
     import { getPageNumber } from '$lib/constants/navigation';
@@ -56,10 +56,7 @@
                     />
                 </div>
             </div>
-            <button
-                class="widget-item-btn"
-                onclick={() => console.log('Open folder:', folder.id)}
-            >
+            <button class="widget-item-btn" onclick={() => console.log('Open folder:', folder.id)}>
                 <div class="folder-icon">
                     <Folder style="width: 32px; height: 32px; color: var(--lilac-d);" />
                 </div>
@@ -90,10 +87,7 @@
                     />
                 </div>
             </div>
-            <button
-                class="widget-item-btn"
-                onclick={() => window.open(link.url, '_blank')}
-            >
+            <button class="widget-item-btn" onclick={() => window.open(link.url, '_blank')}>
                 <div class="link-icon">
                     <Link2 style="width: 32px; height: 32px; color: var(--ink-3);" />
                 </div>
@@ -102,20 +96,14 @@
         </div>
     {/each}
 
-    <button
-        class="widget-item widget-item-btn"
-        onclick={() => openAdd()}
-    >
+    <button class="widget-item widget-item-btn" onclick={() => openAdd()}>
         <div class="add-link-icon">
             <Plus style="width: 32px; height: 32px; color: var(--ink-4);" />
         </div>
         <span class="add-link-text">Add link</span>
     </button>
 
-    <button
-        class="widget-item widget-item-btn"
-        onclick={() => qlDialog?.openAddFolder()}
-    >
+    <button class="widget-item widget-item-btn" onclick={() => qlDialog?.openAddFolder()}>
         <div class="add-folder-icon">
             <Folder style="width: 32px; height: 32px; color: var(--lilac-d);" />
         </div>

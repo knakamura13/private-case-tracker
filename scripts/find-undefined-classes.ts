@@ -35,30 +35,29 @@ function validateDirectoryName(name: string): boolean {
     return ALLOWED_DIR_NAMES.test(name) && name !== '.' && name !== '..' && !name.includes('..');
 }
 
-
 function walkFiles(dir: string, match: (p: string) => boolean, out: string[] = []): string[] {
     // Validate directory path
     if (!dir.startsWith(ROOT) || !validatePath(dir)) {
         throw new Error(`Invalid directory path: ${dir}`);
     }
-    
+
     const entries = safeReaddirSync(dir, { withFileTypes: true });
-    
+
     for (const ent of entries) {
         const name = ent.name;
-        
+
         // Validate directory/file name
         if (!validateDirectoryName(name)) {
             continue;
         }
-        
+
         const p = join(dir, name);
-        
+
         // Additional path validation
         if (!validatePath(p)) {
             continue;
         }
-        
+
         if (ent.isDirectory()) {
             if (SKIP_DIRS.has(name)) continue;
             walkFiles(p, match, out);
@@ -79,7 +78,7 @@ function safeReaddirSync(dirPath: string, options: { withFileTypes: true }) {
     if (!dirPath.startsWith(ROOT) || !validatePath(dirPath)) {
         throw new Error(`Invalid directory path: ${dirPath}`);
     }
-    
+
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     return readdirSync(dirPath, options);
 }
@@ -89,14 +88,14 @@ function safeReadFileSync(filePath: string, encoding: BufferEncoding): string {
     if (!filePath.startsWith(ROOT) || !validatePath(filePath)) {
         throw new Error(`Invalid file path for reading: ${filePath}`);
     }
-    
+
     // Additional validation for file extensions
     const allowedExtensions = ['.css', '.svelte', '.html'];
-    const hasAllowedExtension = allowedExtensions.some(ext => filePath.endsWith(ext));
+    const hasAllowedExtension = allowedExtensions.some((ext) => filePath.endsWith(ext));
     if (!hasAllowedExtension) {
         throw new Error(`File extension not allowed: ${filePath}`);
     }
-    
+
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     return readFileSync(filePath, encoding);
 }
@@ -106,12 +105,12 @@ function safeMkdirSync(dirPath: string, options: { recursive?: boolean }): void 
     if (!dirPath.startsWith(ROOT) || !validatePath(dirPath)) {
         throw new Error(`Invalid directory path: ${dirPath}`);
     }
-    
+
     // Only allow creating directories under ROOT
     if (!dirPath.startsWith(ROOT)) {
         throw new Error(`Directory creation only allowed under project root: ${dirPath}`);
     }
-    
+
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     mkdirSync(dirPath, options);
 }
@@ -121,12 +120,12 @@ function safeWriteFileSync(filePath: string, data: string, encoding: BufferEncod
     if (!filePath.startsWith(ROOT) || !validatePath(filePath)) {
         throw new Error(`Invalid file path for writing: ${filePath}`);
     }
-    
+
     // Only allow writing to reports directory
     if (!filePath.includes('/reports/')) {
         throw new Error(`Writing only allowed to reports directory: ${filePath}`);
     }
-    
+
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     writeFileSync(filePath, data, encoding);
 }

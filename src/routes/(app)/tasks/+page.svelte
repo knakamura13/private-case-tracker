@@ -411,9 +411,7 @@
                 aria-dropeffect="move"
             >
                 {#each column.tasks as task (task.id)}
-                    <div
-                        onkeydown={(e) => handleTaskKeydown(e, task.id)}
-                    >
+                    <div onkeydown={(e) => handleTaskKeydown(e, task.id)}>
                         <TaskCard
                             {task}
                             onEdit={async (id: string) => {
