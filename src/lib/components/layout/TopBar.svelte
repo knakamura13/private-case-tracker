@@ -25,9 +25,15 @@
         display: flex;
         align-items: center;
         gap: 16px;
-        padding: 32px 32px;
+        padding: 12px 16px;
         border-bottom: 1px solid var(--hairline);
         background: var(--bg);
+    }
+
+    @media (min-width: 768px) {
+        .topbar {
+            padding: 32px 32px;
+        }
     }
 
     /* Responsive topbar for shorter screens */

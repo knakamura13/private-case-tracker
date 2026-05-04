@@ -44,7 +44,7 @@
     {/snippet}
 </PageHeader>
 
-<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+<div class="questions-grid">
     {#each sections as section (section.label)}
         <div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 16px; background: var(--surface);">
             <div style="display: flex; align-items: center; justify-content: space-between;">
@@ -138,3 +138,16 @@
         }}
     />
 {/if}
+
+<style>
+    .questions-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    @media (min-width: 768px) {
+        .questions-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+</style>

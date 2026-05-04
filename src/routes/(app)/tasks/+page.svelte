@@ -58,6 +58,15 @@
         }))
     );
 
+    let scrollContainer = $state<HTMLElement | null>(null);
+
+    function handleTouchMove(event: TouchEvent) {
+        if (isDragging) {
+            // Prevent scrolling while dragging on mobile if we decide to implement touch drag
+            // event.preventDefault();
+        }
+    }
+
     // Drag and drop handlers
     function handleDragStart(event: DragEvent, id: string) {
         if (isDragging) return;
@@ -384,7 +393,7 @@
 
 <PageHeader title="Tasks" sub="Personal todos and errands (not legal proceedings)." number={getPageNumber('/tasks')} />
 
-<div class="tasks-board">
+<div class="tasks-board" bind:this={scrollContainer} ontouchmove={handleTouchMove}>
     {#each grouped as column (column.id)}
         <div class="tasks-column">
             <div class="tasks-column-header">
