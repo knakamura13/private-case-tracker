@@ -108,7 +108,14 @@
                             {@render headerActions()}
                         {/if}
                         {#if showCloseButton}
-                            <Button type="button" variant="ghost" size="sm" onclick={() => void onClose()} class="modal-shrink-0">
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onclick={() => void onClose()}
+                                class="modal-shrink-0"
+                                aria-label="Close dialog"
+                            >
                                 {#snippet children()}<X class="modal-icon-sm" />{/snippet}
                             </Button>
                         {/if}

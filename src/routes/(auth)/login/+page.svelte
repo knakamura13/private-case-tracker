@@ -72,8 +72,8 @@
                 <Input id="totp" inputmode="numeric" autocomplete="one-time-code" bind:value={totpCode} required />
             </div>
             {#if error}<p class="auth-text-sm auth-text-destructive">{error}</p>{/if}
-            <Button type="submit" disabled={loading} class="auth-w-full">
-                {loading ? 'Verifying…' : 'Verify'}
+            <Button type="submit" {loading} class="auth-w-full">
+                Verify
             </Button>
         </form>
     {:else}
@@ -87,8 +87,8 @@
                 <Input id="password" type="password" autocomplete="current-password" bind:value={password} required />
             </div>
             {#if error}<p class="auth-text-sm auth-text-destructive">{error}</p>{/if}
-            <Button type="submit" disabled={loading} class="auth-w-full">
-                {#snippet children()}<KeyRound class="auth-icon-sm" /> {loading ? 'Signing in…' : 'Sign in'}{/snippet}
+            <Button type="submit" {loading} class="auth-w-full">
+                {#snippet children()}<KeyRound class="auth-icon-sm" /> Sign in{/snippet}
             </Button>
         </form>
         <div class="auth-divider">
