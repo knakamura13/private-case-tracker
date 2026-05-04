@@ -46,7 +46,6 @@
     let checklistJson = $derived(JSON.stringify(editableChecklist));
 
     let showDueDatePicker = $state(false);
-    let isEditingDescription = $state(false);
     let dueDateInputEl = $state<HTMLInputElement | null>(null);
 
     let dueDateValue = $state('');
@@ -69,7 +68,6 @@
                 dueDateValue = '';
                 editableChecklist = [];
                 showDueDatePicker = false;
-                isEditingDescription = false;
             } else {
                 titleValue = val('title');
                 descriptionValue = val('description');
@@ -77,12 +75,10 @@
                 priorityValue = val('priority', 'MEDIUM');
                 editableChecklist = parseTaskChecklist(initial.checklist);
                 dueDateValue = val('dueDate');
-                isEditingDescription = false;
                 showDueDatePicker = false;
             }
         } else if (mode === 'edit') {
             showDueDatePicker = false;
-            isEditingDescription = false;
         }
     });
 
@@ -132,39 +128,13 @@
 
             <div class="modal-description-section">
                 <input type="hidden" name="description" value={descriptionValue} />
-                {#if isEditingDescription}
-                    <Textarea
-                        bind:value={descriptionValue}
-                        onblur={() => (isEditingDescription = false)}
-                        onkeydown={(e) => {
-                            if (e.key === 'Escape') {
-                                e.preventDefault();
-                                isEditingDescription = false;
-                            }
-                        }}
-                        placeholder="Add a more detailed description..."
-                        rows={4}
-                        class="modal-description-textarea"
-                    />
-                {:else}
-                    <button
-                        type="button"
-                        class="modal-description-display"
-                        onclick={() => (isEditingDescription = true)}
-                        onkeydown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                isEditingDescription = true;
-                            }
-                        }}
-                    >
-                        {#if descriptionValue}
-                            <div class="modal-description-text">{descriptionValue}</div>
-                        {:else}
-                            <span class="modal-description-placeholder">Add a more detailed description...</span>
-                        {/if}
-                    </button>
-                {/if}
+                <Textarea
+                    name="description"
+                    bind:value={descriptionValue}
+                    placeholder="Add a more detailed description..."
+                    rows={4}
+                    class="modal-description-textarea"
+                />
             </div>
 
             <TaskChecklistEditor bind:items={editableChecklist} />
@@ -199,42 +169,13 @@
             {/if}
 
             <div class="modal-description-section">
-                {#if isEditingDescription}
-                    <Textarea
-                        name="description"
-                        bind:value={descriptionValue}
-                        onblur={() => {
-                            isEditingDescription = false;
-                        }}
-                        onkeydown={(e) => {
-                            if (e.key === 'Escape') {
-                                e.preventDefault();
-                                isEditingDescription = false;
-                            }
-                        }}
-                        placeholder="Add a more detailed description..."
-                        rows={4}
-                        class="modal-description-textarea"
-                    />
-                {:else}
-                    <button
-                        type="button"
-                        class="modal-description-display"
-                        onclick={() => (isEditingDescription = true)}
-                        onkeydown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                isEditingDescription = true;
-                            }
-                        }}
-                    >
-                        {#if descriptionValue}
-                            <div class="modal-description-text">{descriptionValue}</div>
-                        {:else}
-                            <span class="modal-description-placeholder">Add a more detailed description...</span>
-                        {/if}
-                    </button>
-                {/if}
+                <Textarea
+                    name="description"
+                    bind:value={descriptionValue}
+                    placeholder="Add a more detailed description..."
+                    rows={4}
+                    class="modal-description-textarea"
+                />
             </div>
 
             <TaskChecklistEditor bind:items={editableChecklist} />
