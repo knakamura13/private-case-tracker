@@ -21,10 +21,6 @@ export const taskCreateSchema = z.object({
     dueDate: optionalDateLoose,
     priority: priorityEnum.default('MEDIUM'),
     status: taskStatusEnum.default('TODO'),
-    ownerId: z
-        .string()
-        .optional()
-        .transform((v) => (v && v.length ? v : null)),
     checklist: z.array(checklistItemSchema).default([])
 });
 

@@ -10,8 +10,6 @@ export type EntityType =
     | 'FormSupportingItem'
     | 'QuestionItem'
     | 'Note'
-    | 'NoteTag'
-    | 'Tag'
     | 'QuickLink'
     | 'QuickLinkFolder'
     | 'DocumentFile'

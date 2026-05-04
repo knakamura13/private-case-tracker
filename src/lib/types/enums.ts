@@ -3,7 +3,6 @@
 
 export type MemberRole = 'OWNER' | 'COLLABORATOR';
 
-export type TagScope = 'TASK' | 'EVIDENCE' | 'NOTE' | 'QUESTION';
 
 export type MilestonePhase =
     | 'PREPARATION'

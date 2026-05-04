@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { optionalDateLoose, optionalId, priorityEnum, stringOrEmpty } from './common';
+import { optionalDateLoose, priorityEnum, stringOrEmpty } from './common';
 
 export const milestonePhaseEnum = z.enum([
     'PREPARATION',
@@ -29,7 +29,6 @@ export const milestoneCreateSchema = z.object({
     dueDate: optionalDateLoose,
     scheduledAt: optionalDateLoose,
     status: milestoneStatusEnum.default('PLANNED'),
-    ownerId: optionalId,
     priority: priorityEnum.default('MEDIUM'),
     subTasks: z.array(subTaskSchema).default([]),
     location: stringOrEmpty(500)

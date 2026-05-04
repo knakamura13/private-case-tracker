@@ -23,7 +23,6 @@ export async function listMilestones(
         .filter((m) => (filter.status ? (m.status as MilestoneStatus) === filter.status : true))
         .map((m) => ({
             ...m,
-            owner: m.ownerId ? { id: m.ownerId, name: null, email: '' } : null,
             subTasks: m.subTasks ?? []
         }));
     filtered.sort(
@@ -47,7 +46,6 @@ export async function getMilestone(workspaceId: string, id: string) {
         ...milestone,
         phase,
         status,
-        owner: milestone.ownerId ? { id: milestone.ownerId, name: null, email: '' } : null,
         subTasks: milestone.subTasks ?? []
     };
 }

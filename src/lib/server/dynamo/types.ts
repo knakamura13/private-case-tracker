@@ -25,10 +25,8 @@ export type TaskItem = DynamoBaseItem & {
     dueDate: string | null;
     priority: string;
     status: string; // Stored as string, validated as TaskStatus at service layer
-    ownerId: string | null;
     order: number;
     checklist?: Array<{ id: string; taskId: string; text: string; done: boolean; order: number }>;
-    tags?: unknown[];
 };
 
 export type QuestionItem = DynamoBaseItem & {
@@ -61,8 +59,6 @@ export type MilestoneItem = DynamoBaseItem & {
     scheduledAt: string | null;
     completedAt: string | null;
     order: number;
-    ownerId: string | null;
-    owner: { id: string; name: string | null; email: string } | null;
     subTasks?: Array<{ id: string; text: string; done: boolean }>;
     location?: string | null;
 };

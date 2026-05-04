@@ -27,12 +27,3 @@ export function stringOrEmpty(max = 2000) {
         .transform((v) => (v === undefined || v === '' ? null : v));
 }
 
-export const tagIdList = z
-    .array(z.string())
-    .default([])
-    .or(
-        z
-            .string()
-            .optional()
-            .transform((v) => (v ? v.split(',').filter(Boolean) : []))
-    );

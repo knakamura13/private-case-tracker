@@ -22,7 +22,6 @@ export async function getTask(workspaceId: string, id: string) {
     if (!task || task.deletedAt) return null;
     return {
         ...task,
-        owner: task.ownerId ? { id: task.ownerId, name: null, email: '' } : null,
         checklist: task.checklist ?? []
     };
 }
@@ -41,8 +40,7 @@ export async function createTask(workspaceId: string, actorId: string, input: Ta
         deletedAt: null as string | null,
         createdAt: now,
         updatedAt: now,
-        checklist: [],
-        tags: []
+        checklist: []
     };
 
     // Extract checklist from input to handle separately
