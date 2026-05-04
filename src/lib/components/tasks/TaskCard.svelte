@@ -2,7 +2,6 @@
     import Card from '$lib/components/ui/Card.svelte';
     import Badge from '$lib/components/ui/Badge.svelte';
     import RichText from '$lib/components/ui/RichText.svelte';
-    import ByAvatar from '$lib/components/shared/ByAvatar.svelte';
     import { titleCase } from '$lib/utils/format';
     import { fmtDate } from '$lib/utils/dates';
     import { Calendar } from 'lucide-svelte';
@@ -29,7 +28,6 @@
             status: string;
             priority: string;
             dueDate: string | null;
-            owner: { id: string; name: string | null; email: string } | null;
             checklist?: Array<{ id: string; text: string; done: boolean }>;
         };
         onEdit?: (id: string) => void;
@@ -129,9 +127,6 @@
                             <span class="task-card-subtask-count mono"
                                 >{task.checklist.filter((ci) => ci.done).length}/{task.checklist.length}</span
                             >
-                        {/if}
-                        {#if task.owner}
-                            <ByAvatar owner={task.owner} size="sm" color="sage" />
                         {/if}
                     </div>
                 </div>

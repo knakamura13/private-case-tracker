@@ -9,7 +9,6 @@
 	import ThreeDotsMenu from '$lib/components/ui/ThreeDotsMenu.svelte';
 
 	type ActionForm = { error?: string; errorId?: string | null } | undefined;
-	type DropIntent = 'reorder' | 'merge' | 'move-into';
 
 	let { links, folders = [], form }: { links: QuickLink[]; folders: QuickLinkFolder[]; form?: ActionForm } = $props();
 
@@ -18,17 +17,11 @@
 	let brokenFavicons = $state<Set<string>>(new Set());
 	let preloadedFavicons = $state<Set<string>>(new Set());
 	let draggingId = $state<string | null>(null);
-	let dropTargetId = $state<string | null>(null);
-	let dropIntent = $state<DropIntent | null>(null);
 	let dragEnterCount = $state(0);
-	let dropInsertIndex = $state<number | null>(null);
 	let isDragging = $state(false);
 	let optimisticFolders = $state<QuickLinkFolder[]>([]);
 	let inlineEditingFolderId = $state<string | null>(null);
-	let inlineFolderName = $state('');
 	let inlineFolderInputEl = $state<HTMLInputElement | null>(null);
-	let creatingFolder = $state(false);
-	let folderDialogName = $state('');
 	let folderDialogInputEl = $state<HTMLInputElement | null>(null);
 
 	let visibleFolders = $derived(
@@ -179,23 +172,12 @@
 		window.open(url, '_blank', 'noopener,noreferrer');
 	}
 
-	function handleLinkKeydown(event: KeyboardEvent, url: string) {
-		if (event.key === 'Enter' || event.key === ' ') {
-			event.preventDefault();
-			openLink(url);
-		}
-	}
-
 	function openAdd(folder?: QuickLinkFolder) {
 		qlDialog?.openAddLink(folder ?? null);
 	}
 
 	function openEdit(link: QuickLink) {
 		qlDialog?.openEditLink(link);
-	}
-
-	function openAddFolder() {
-		void createFolderInline();
 	}
 
 	function openEditFolder(folder: QuickLinkFolder) {
@@ -222,76 +204,19 @@
 		});
 	});
 
-	async function createFolderInline() {
-		if (creatingFolder) return;
-		creatingFolder = true;
-		try {
-			const response = await fetch('/dashboard/api/quick-link-folders', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ name: '' })
-			});
-			if (!response.ok) {
-				console.error('Failed to create folder:', response.statusText);
-				return;
-			}
-
-			const folder = (await response.json()) as QuickLinkFolder;
-			optimisticFolders = [...optimisticFolders, folder];
-			inlineEditingFolderId = folder.id;
-			inlineFolderName = '';
-		} catch (error) {
-			console.error('Failed to create folder:', error);
-		} finally {
-			creatingFolder = false;
-		}
-	}
-
-	async function saveInlineFolderName(folderId: string) {
-		const formData = new FormData();
-		formData.append('id', folderId);
-		formData.append('name', inlineFolderName);
-
-		try {
-			const response = await fetch('?/updateFolder', {
-				method: 'POST',
-				body: formData
-			});
-			if (!response.ok) {
-				console.error('Failed to update folder:', response.statusText);
-				return;
-			}
-			optimisticFolders = optimisticFolders.filter((folder) => folder.id !== folderId);
-			inlineEditingFolderId = null;
-			inlineFolderName = '';
-			await invalidateAll();
-		} catch (error) {
-			console.error('Failed to update folder:', error);
-		}
-	}
-
-	function cancelInlineFolderName() {
-		inlineEditingFolderId = null;
-		inlineFolderName = '';
-	}
-
 	function toggleFolderPopover(folderId: string, e: Event) {
 		e.preventDefault();
 		e.stopPropagation();
 		if (folderPopoverId === folderId) {
 			closeFolderDialog();
 		} else {
-			const folder = visibleFolders.find((f) => f.id === folderId);
 			folderPopoverId = folderId;
-			folderDialogName = folder?.name ?? '';
 		}
 	}
 
 	function handleDragStart(event: DragEvent, id: string) {
 		if (isDragging) return; // Prevent concurrent drag operations
 		isDragging = true; // Set immediately to prevent race condition
-		dropTargetId = null;
-		dropIntent = null;
 		dragEnterCount = 0;
 		if (event.dataTransfer) {
 			event.dataTransfer.effectAllowed = 'move';
@@ -306,44 +231,19 @@
 
 	function handleDragEnd() {
 		draggingId = null;
-		dropTargetId = null;
-		dropIntent = null;
 		dragEnterCount = 0;
-		dropInsertIndex = null;
 		isDragging = false;
 	}
 
-	function handleDragEnter(event: DragEvent, id: string) {
+	function handleDragEnter(event: DragEvent, _id: string) {
 		event.preventDefault();
 		dragEnterCount++;
-		if (draggingId && draggingId !== id) {
-			dropTargetId = id;
-			// Determine drop intent based on what's being dragged and what it's over
-			const activeLink = links.find((l) => l.id === draggingId);
-			const targetLink = links.find((l) => l.id === id);
-				const targetFolder = visibleFolders.find((f) => f.id === id);
-
-			if (activeLink && targetLink && !activeLink.folderId && !targetLink.folderId) {
-				dropIntent = 'merge';
-			} else if (activeLink && targetFolder && !activeLink.folderId) {
-				dropIntent = 'move-into';
-			} else {
-				dropIntent = 'reorder';
-				// Calculate insert index for visual feedback
-				const oldIndex = itemIds.indexOf(draggingId);
-				const newIndex = itemIds.indexOf(id);
-				dropInsertIndex = newIndex > oldIndex ? newIndex + 1 : newIndex;
-			}
-		}
 	}
 
 	function handleDragLeave() {
 		dragEnterCount--;
 		if (dragEnterCount <= 0) {
 			dragEnterCount = 0;
-			dropTargetId = null;
-			dropIntent = null;
-			dropInsertIndex = null;
 		}
 	}
 
@@ -359,10 +259,7 @@
 		const activeId = draggingId;
 		// Reset immediately so UI clears
 		draggingId = null;
-		dropTargetId = null;
-		dropIntent = null;
 		dragEnterCount = 0;
-		dropInsertIndex = null;
 		isDragging = false;
 		if (!activeId || activeId === targetId) return;
 
@@ -462,51 +359,9 @@
 			console.error('Failed to move link to root:', error);
 		}
 	}
-
-	async function deleteFolder(folderId: string) {
-		if (!confirm('Delete this folder? Links will be moved to the root level.')) return;
-		try {
-			const formData = new FormData();
-			formData.append('id', folderId);
-			const response = await fetch('?/deleteFolder', { method: 'POST', body: formData });
-			if (!response.ok) {
-				console.error('Failed to delete folder:', response.statusText);
-				return;
-			}
-			closeFolderDialog();
-			await invalidateAll();
-		} catch (error) {
-			console.error('Failed to delete folder:', error);
-		}
-	}
-
-	async function saveFolderDialogName(folder: QuickLinkFolder) {
-		if (folderDialogName === (folder.name ?? '')) return;
-		const formData = new FormData();
-		formData.append('id', folder.id);
-		formData.append('name', folderDialogName);
-
-		try {
-			const response = await fetch('?/updateFolder', {
-				method: 'POST',
-				body: formData
-			});
-			if (!response.ok) {
-				console.error('Failed to update folder:', response.statusText);
-				return;
-			}
-			await invalidateAll();
-		} catch (error) {
-			console.error('Failed to update folder:', error);
-		}
-	}
 </script>
 
-<!--
-  Each tile: flex-col, icon on top, label below. ⋮ uses .widget-item-menu-wrap (see app.css)
-  so edit/delete matches the quick-links page without shifting the icon.
--->
-<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 16px; padding: 12px;">
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 16px; padding: 12px 0;">
 	{#each visibleFolders as folder (folder.id)}
 		{@const folderLinks = folderLinksMap[folder.id] ?? []}
 		<div
@@ -615,10 +470,11 @@
 
 	<button
 		type="button"
+		class="add-link-button"
 		style="display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; background: none; border: none;"
 		onclick={() => openAdd()}
 	>
-		<div style="width: 48px; height: 48px; background: var(--surface-3); border: 1px dashed var(--hairline); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+		<div class="add-link-icon" style="width: 48px; height: 48px; background: var(--surface-3); border: 1px dashed var(--hairline); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
 			<Plus style="width: 24px; height: 24px; color: var(--ink-4);" />
 		</div>
 		<span style="font-size: 11px; font-weight: 500; color: var(--ink-3);">Add link</span>
@@ -729,3 +585,27 @@
 {/if}
 
 <QuickLinksManageDialog bind:this={qlDialog} {links} {form} enableDeleteDialog={true} />
+
+<style>
+    .add-link-button {
+        transition: transform 0.2s ease;
+		padding: 0;
+    }
+    
+    .add-link-button:hover {
+        transform: scale(1.05);
+    }
+    
+    .add-link-icon {
+        transition: background 0.2s ease, border-color 0.2s ease;
+    }
+    
+    .add-link-button:hover .add-link-icon {
+        background: var(--surface-2);
+        border-color: var(--ink-2);
+    }
+    
+    .add-link-button:hover .add-link-icon :global(svg) {
+        color: var(--ink-3);
+    }
+</style>

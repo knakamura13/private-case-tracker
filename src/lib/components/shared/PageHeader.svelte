@@ -5,7 +5,7 @@
         $props();
 </script>
 
-<div style="display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px; gap: 24px; flex-wrap: wrap;">
+<div style="display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 12px; gap: 24px; flex-wrap: wrap;">
     <div>
         {#if eyebrow || number}
             <div class="eyebrow" style="margin-bottom: 12px;">{eyebrow || `PAGE ${number}`}</div>

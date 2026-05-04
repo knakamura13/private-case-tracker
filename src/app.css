@@ -817,15 +817,6 @@ button.modal-checklist-text-btn {
     border-top: 1px solid var(--hairline);
 }
 
-.modal-footer-delete {
-    color: var(--blush-d);
-}
-
-.modal-footer-delete:hover {
-    background: var(--blush);
-    color: var(--blush-d);
-}
-
 .modal-footer-save {
     background: var(--ink-1);
     color: var(--surface-1);
@@ -853,7 +844,6 @@ button.modal-checklist-text-btn {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 0;
 }
 
 .tasks-column-count {
@@ -1255,7 +1245,8 @@ button.modal-checklist-text-btn {
 
 .timeline-milestone-node {
     position: absolute;
-    left: 0;
+    top: -4px;
+    left: -4px;
     width: 24px;
     height: 24px;
     border-radius: 50%;

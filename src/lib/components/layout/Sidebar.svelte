@@ -1,7 +1,7 @@
 <script lang="ts">
     import { page } from '$app/state';
     import { navigation, getPageNumber as _getPageNumber } from '$lib/constants/navigation';
-    import { LogOut, Settings, Clock } from 'lucide-svelte';
+    import { Settings, Clock } from 'lucide-svelte';
 
     let { workspaceName: _workspaceName, onNavigate }: { workspaceName: string; onNavigate?: () => void } = $props();
 </script>
@@ -15,8 +15,8 @@
 
     <!-- Navigation Section -->
     <div>
-        <div class="eyebrow" style="padding: 0 16px 10px;">Our case</div>
-        <div style="display: flex; flex-direction: column; gap: 2px;">
+        <div class="eyebrow" style="padding: 0 12px 8px;">Our case</div>
+        <div style="display: flex; flex-direction: column; gap: 4px;">
             {#each navigation as item (item.href)}
                 {@const active = page.url.pathname === item.href || page.url.pathname.startsWith(`${item.href}/`)}
                 <a
@@ -70,32 +70,6 @@
                 </div>
             </div>
         {/if}
-
-        <div style="display: flex; align-items: center; gap: 10px; padding: 16px 8px 0; border-top: 1px solid var(--hairline);">
-            <div style="display: flex;">
-                <div
-                    class="sidebar-footer-avatar"
-                    style="width: 22px; height: 22px; border-radius: 999px; background: var(--sage-fill); color: var(--ink); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; border: 2px solid var(--bg);"
-                >
-                    K
-                </div>
-                <div
-                    class="sidebar-footer-avatar"
-                    style="width: 22px; height: 22px; border-radius: 999px; background: var(--blush-fill); color: var(--ink); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; border: 2px solid var(--bg); margin-left: -8px;"
-                >
-                    S
-                </div>
-            </div>
-            <div style="flex: 1; min-width: 0;">
-                <div style="font-size: 12px; font-weight: 600;">Kyle & Sally</div>
-                <div class="mono" style="font-size: 10px; color: var(--ink-3);">private · 2 members</div>
-            </div>
-            <form method="post" action="/auth/sign-out">
-                <button type="submit" style="background: none; border: none; padding: 0; color: var(--ink-3); cursor: pointer;">
-                    <LogOut size={14} />
-                </button>
-            </form>
-        </div>
     </div>
 </aside>
 
@@ -213,25 +187,6 @@
         .sidebar .card-tight .mono {
             font-size: 9px !important;
         }
-
-        /* Avatar section */
-        .sidebar div[style*='padding: 16px 8px 0'] {
-            padding: 8px 4px 0 !important;
-        }
-
-        .sidebar .sidebar-footer-avatar {
-            width: 18px !important;
-            height: 18px !important;
-            font-size: 9px !important;
-        }
-
-        .sidebar div[style*='font-size: 12px'] {
-            font-size: 11px !important;
-        }
-
-        .sidebar div[style*='font-size: 10px'] {
-            font-size: 9px !important;
-        }
     }
 
     /* Reduce gap beneath Settings route */
@@ -276,16 +231,6 @@
 
         .sidebar .card-tight .eyebrow {
             display: none;
-        }
-
-        .sidebar div[style*='padding: 16px 8px 0'] {
-            padding: 4px 2px 0 !important;
-        }
-
-        .sidebar .sidebar-footer-avatar {
-            width: 16px !important;
-            height: 16px !important;
-            font-size: 8px !important;
         }
 
         /* Further reduce Settings gap on ultra short screens */

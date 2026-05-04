@@ -6,17 +6,13 @@
     import Dialog from '$lib/components/ui/Dialog.svelte';
     import ErrorDetails from '$lib/components/ErrorDetails.svelte';
     import RichText from '$lib/components/ui/RichText.svelte';
-    import ByAvatar from '$lib/components/shared/ByAvatar.svelte';
     import TaskChecklistEditor from '$lib/components/tasks/TaskChecklistEditor.svelte';
-    import DropdownMenu from '$lib/components/ui/DropdownMenu.svelte';
     import { fieldFromInitial } from '$lib/utils/initialFields';
-    import { confirmAndPostFormAction } from '$lib/utils/confirmFormAction';
-    import type { DropdownMenuEntry } from '$lib/components/ui/menuTypes';
     import { createMilestoneAutoSave } from '$lib/timeline/milestoneAutoSave';
     import type { ManualEnhanceHandler } from '$lib/utils/enhanceSubmit';
     import type { TaskChecklistItem } from '$lib/tasks/taskChecklist';
     import { PHASE_LABELS, PHASE_ORDER } from '$lib/constants/phases';
-    import { Plus, Calendar, MapPin, User, CheckSquare, MoreHorizontal, Link, FileText } from 'lucide-svelte';
+    import { Calendar, MapPin, MoreHorizontal } from 'lucide-svelte';
     import { enhance } from '$app/forms';
     import type { SubmitFunction } from '@sveltejs/kit';
 
@@ -25,10 +21,8 @@
         open,
         onClose,
         action,
-        members = [],
         defaultPhase,
         initial = {},
-        deleteAction,
         error,
         errorId,
         onenhance
@@ -37,10 +31,8 @@
         open: boolean;
         onClose: () => void | Promise<void>;
         action: string;
-        members?: { id: string; name: string | null; email: string }[];
         defaultPhase?: string;
         initial?: Record<string, unknown>;
-        deleteAction?: string;
         error?: string;
         errorId?: string;
         onenhance?: SubmitFunction | ManualEnhanceHandler;
@@ -55,11 +47,9 @@
         'phase',
         'status',
         'priority',
-        'ownerId',
         'dueDate',
         'scheduledAt',
         'subTasks',
-        'owner',
         'location'
     ] as const;
 
@@ -86,7 +76,6 @@
     let phaseValue = $state('PREPARATION');
     let statusValue = $state('PLANNED');
     let priorityValue = $state('MEDIUM');
-    let ownerIdValue = $state('');
 
     let dueDateInputEl = $state<HTMLInputElement | null>(null);
     let scheduledAtInputEl = $state<HTMLInputElement | null>(null);
@@ -120,7 +109,6 @@
             formData.append('phase', phaseValue);
             formData.append('status', statusValue);
             formData.append('priority', priorityValue);
-            formData.append('ownerId', ownerIdValue);
             formData.append('dueDate', dueDateValue);
             formData.append('scheduledAt', appointmentDateValue);
             formData.append('subTasks', subTasksJson);
@@ -137,7 +125,6 @@
                 phaseValue = defaultPhase || 'PREPARATION';
                 statusValue = 'PLANNED';
                 priorityValue = 'MEDIUM';
-                ownerIdValue = '';
                 editableSubTasks = [];
                 dueDateValue = '';
                 appointmentDateValue = '';
@@ -153,7 +140,6 @@
                 phaseValue = val('phase', 'PREPARATION');
                 statusValue = val('status', 'PLANNED');
                 priorityValue = val('priority', 'MEDIUM');
-                ownerIdValue = val('ownerId');
                 editableSubTasks = (initial.subTasks as TaskChecklistItem[]) || [];
                 dueDateValue = val('dueDate');
                 appointmentDateValue = val('scheduledAt');
@@ -174,42 +160,6 @@
             isEditingLocation = false;
         }
     });
-
-    const ownerMenuItems = $derived.by((): DropdownMenuEntry[] => {
-        const rows: DropdownMenuEntry[] = [
-            {
-                label: 'Unassigned',
-                id: 'owner-unassigned',
-                action: () => {
-                    ownerIdValue = '';
-                }
-            }
-        ];
-        for (const m of members) {
-            rows.push({
-                id: `owner-${m.id}`,
-                label: m.name ?? m.email,
-                action: () => {
-                    ownerIdValue = m.id;
-                }
-            });
-        }
-        return rows;
-    });
-
-    async function deleteMilestone(confirmMessage: string) {
-        if (!deleteAction) return;
-        await confirmAndPostFormAction({
-            url: deleteAction,
-            id: val('id'),
-            confirmMessage,
-            successMessage: 'Milestone deleted',
-            errorMessage: 'Failed to delete milestone',
-            onSuccess: () => {
-                window.location.href = '/timeline';
-            }
-        });
-    }
 
     function handleLocationSave() {
         if (!locationAddress.trim()) return;
@@ -248,35 +198,6 @@
         }
     }
 </script>
-
-{#snippet milestoneOwnerTrigger({ toggle }: { toggle: (e?: MouseEvent) => void })}
-    <Button type="button" variant="outline" size="sm" onclick={toggle}>
-        {#snippet children()}<User class="modal-icon-3-5" /> Owner{/snippet}
-    </Button>
-{/snippet}
-
-{#snippet milestoneEditOverflowTrigger({ toggle }: { toggle: (e?: MouseEvent) => void })}
-    <Button type="button" variant="ghost" size="sm" class="modal-icon-btn" onclick={toggle} aria-label="More options">
-        <MoreHorizontal class="modal-icon-sm" />
-    </Button>
-{/snippet}
-
-{#snippet milestoneActionChips()}
-    <div class="modal-action-chips">
-        <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
-            <Plus class="modal-icon-xs" /> Add
-        </Button>
-        <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
-            <FileText class="modal-icon-xs" /> Labels
-        </Button>
-        <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
-            <CheckSquare class="modal-icon-xs" /> Sub-tasks
-        </Button>
-        <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
-            <Link class="modal-icon-xs" /> Link
-        </Button>
-    </div>
-{/snippet}
 
 {#snippet milestoneInlinePickers()}
     {#if showDueDatePicker}
@@ -324,38 +245,7 @@
     <span class="pill s-note">{PHASE_LABELS[phaseValue as keyof typeof PHASE_LABELS]}</span>
 {/snippet}
 
-{#snippet milestoneEditHeaderActions()}
-    {#if deleteAction}
-        <DropdownMenu
-            menuId="milestone-edit-overflow"
-            trigger={milestoneEditOverflowTrigger}
-            position="bottom-end"
-            size="sm"
-            items={[
-                {
-                    label: 'Delete',
-                    variant: 'destructive',
-                    action: () =>
-                        void deleteMilestone(
-                            'Are you sure you want to delete this milestone? This action cannot be undone.'
-                        )
-                }
-            ]}
-        />
-    {/if}
-{/snippet}
-
 {#snippet milestoneEditFooter()}
-    {#if deleteAction}
-        <Button
-            type="button"
-            variant="ghost"
-            class="modal-footer-delete"
-            onclick={() => void deleteMilestone('Are you sure you want to delete this milestone?')}
-        >
-            Delete
-        </Button>
-    {/if}
     <Button type="button" variant="ghost" onclick={onClose}>Cancel</Button>
     <Button type="submit" form="milestone-edit-form" class="modal-footer-save">Save changes</Button>
 {/snippet}
@@ -372,7 +262,6 @@
     >
         <form id="milestone-create-form" method="post" {action} use:enhance={submitEnhance!} class="modal-form">
             <div class="modal-title-row">
-                <MapPin class="modal-icon-sm" />
                 <Input
                     name="title"
                     bind:value={titleValue}
@@ -382,21 +271,7 @@
                 />
             </div>
 
-            {@render milestoneActionChips()}
-
             <div class="modal-metadata-grid">
-                <div class="modal-metadata-item">
-                    <span class="modal-metadata-label">Assigned to</span>
-                    <div class="modal-metadata-value">
-                        <DropdownMenu
-                            menuId="milestone-create-owner"
-                            trigger={milestoneOwnerTrigger}
-                            items={ownerMenuItems}
-                            position="bottom-start"
-                            menuClass="dropdown-menu--min-12rem"
-                        />
-                    </div>
-                </div>
                 <div class="modal-metadata-item">
                     <span class="modal-metadata-label">Due date</span>
                     <div class="modal-metadata-value">
@@ -580,7 +455,6 @@
             <input type="hidden" name="subTasks" value={subTasksJson} />
             <input type="hidden" name="location" value={currentLocation} />
             <input type="hidden" name="dueDate" value={dueDateValue} />
-            <input type="hidden" name="ownerId" value={ownerIdValue} />
             <input type="hidden" name="scheduledAt" value={appointmentDateValue} />
         </form>
     </Dialog>
@@ -590,12 +464,10 @@
         {onClose}
         ariaLabel="Edit milestone"
         header={milestoneEditHeader}
-        headerActions={milestoneEditHeaderActions}
         footer={milestoneEditFooter}
     >
         <form id="milestone-edit-form" method="post" {action} class="modal-form">
             <div class="modal-title-row">
-                <MapPin class="modal-icon-sm" />
                 <Input
                     name="title"
                     bind:value={titleValue}
@@ -605,25 +477,7 @@
                 />
             </div>
 
-            {@render milestoneActionChips()}
-
             <div class="modal-metadata-grid">
-                <div class="modal-metadata-item">
-                    <span class="modal-metadata-label">Assigned to</span>
-                    <div class="modal-metadata-value">
-                        {#if initial.owner}
-                            <ByAvatar owner={initial.owner as { id: string; name: string | null; email: string }} size="sm" />
-                            <span
-                                >{(initial.owner as { name?: string; email?: string }).name ??
-                                    (initial.owner as { email?: string }).email}</span
-                            >
-                        {:else}
-                            <Button type="button" variant="ghost" size="sm" class="modal-metadata-btn">
-                                <User class="modal-icon-xs" /> Assign
-                            </Button>
-                        {/if}
-                    </div>
-                </div>
                 <div class="modal-metadata-item">
                     <span class="modal-metadata-label">Due date</span>
                     <div class="modal-metadata-value">
@@ -769,7 +623,6 @@
             {#if error}<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />{/if}
             <input type="hidden" name="subTasks" value={subTasksJson} />
             <input type="hidden" name="id" value={val('id')} />
-            <input type="hidden" name="ownerId" value={ownerIdValue} />
             <input type="hidden" name="dueDate" value={dueDateValue} bind:this={dueDateInputEl} />
             <input type="hidden" name="scheduledAt" value={appointmentDateValue} bind:this={scheduledAtInputEl} />
             <input type="hidden" name="location" value={currentLocation} />

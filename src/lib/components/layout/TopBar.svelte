@@ -25,9 +25,28 @@
         display: flex;
         align-items: center;
         gap: 16px;
-        padding: 20px 32px;
+        padding: 32px 32px;
         border-bottom: 1px solid var(--hairline);
         background: var(--bg);
+    }
+
+    /* Responsive topbar for shorter screens */
+    @media (max-height: 800px) {
+        .topbar {
+            padding: 24px 24px;
+        }
+    }
+
+    @media (max-height: 700px) {
+        .topbar {
+            padding: 20px 20px;
+        }
+    }
+
+    @media (max-height: 600px) {
+        .topbar {
+            padding: 16px 16px;
+        }
     }
     .topbar-menu-btn {
         display: none;

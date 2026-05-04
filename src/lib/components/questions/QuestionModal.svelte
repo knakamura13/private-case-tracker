@@ -4,14 +4,11 @@
     import Select from '$lib/components/ui/Select.svelte';
     import Button from '$lib/components/ui/Button.svelte';
     import Dialog from '$lib/components/ui/Dialog.svelte';
-    import DropdownMenu from '$lib/components/ui/DropdownMenu.svelte';
     import ErrorDetails from '$lib/components/ErrorDetails.svelte';
     import { fieldFromInitial } from '$lib/utils/initialFields';
-    import { confirmAndPostFormAction } from '$lib/utils/confirmFormAction';
     import { questionStatusLabel, questionStatusPillClass } from '$lib/questions/questionStatusDisplay';
     import type { ManualEnhanceHandler } from '$lib/utils/enhanceSubmit';
-    import { MoreHorizontal, HelpCircle, Plus, FileText, Link, CheckSquare } from 'lucide-svelte';
-    import { invalidateAll } from '$app/navigation';
+    import { HelpCircle } from 'lucide-svelte';
     import { enhance } from '$app/forms';
     import type { SubmitFunction } from '@sveltejs/kit';
 
@@ -22,7 +19,6 @@
         action,
         members: _members,
         initial = {},
-        deleteAction,
         error,
         errorId,
         onenhance
@@ -33,7 +29,6 @@
         action: string;
         members?: { id: string; name: string | null; email: string }[];
         initial?: Record<string, unknown>;
-        deleteAction?: string;
         error?: string;
         errorId?: string;
         onenhance?: SubmitFunction | ManualEnhanceHandler;
@@ -113,66 +108,14 @@
             }
         }
     });
-
-    async function deleteQuestion(confirmMessage: string) {
-        if (!deleteAction) return;
-        await confirmAndPostFormAction({
-            url: deleteAction,
-            id: val('id'),
-            confirmMessage,
-            successMessage: 'Question deleted',
-            errorMessage: 'Failed to delete question',
-            onSuccess: async () => {
-                await invalidateAll();
-                onClose();
-            }
-        });
-    }
 </script>
-
-{#snippet questionEditOverflowTrigger({ toggle }: { toggle: (e?: MouseEvent) => void })}
-    <Button type="button" variant="ghost" size="sm" class="modal-icon-btn" onclick={toggle} aria-label="More options">
-        <MoreHorizontal class="modal-icon-sm" />
-    </Button>
-{/snippet}
 
 {#snippet questionEditHeader()}
     <span class="pill {statusPillClass()}">{statusLabel()}</span>
 {/snippet}
 
-{#snippet questionEditHeaderActions()}
-    {#if deleteAction}
-        <DropdownMenu
-            menuId="question-edit-overflow"
-            trigger={questionEditOverflowTrigger}
-            position="bottom-end"
-            size="sm"
-            items={[
-                {
-                    label: 'Delete',
-                    variant: 'destructive',
-                    action: () =>
-                        void deleteQuestion(
-                            'Are you sure you want to delete this question? This action cannot be undone.'
-                        )
-                }
-            ]}
-        />
-    {/if}
-{/snippet}
-
 {#snippet questionEditFooter()}
     <input type="hidden" name="id" value={val('id')} form="question-edit-form" />
-    {#if deleteAction}
-        <Button
-            type="button"
-            variant="ghost"
-            class="modal-footer-delete"
-            onclick={() => void deleteQuestion('Are you sure you want to delete this question?')}
-        >
-            Delete
-        </Button>
-    {/if}
     <Button type="button" variant="ghost" onclick={onClose}>Cancel</Button>
     <Button type="submit" form="question-edit-form" class="modal-footer-save">Save changes</Button>
 {/snippet}
@@ -244,28 +187,12 @@
         {onClose}
         ariaLabel="Edit question"
         header={questionEditHeader}
-        headerActions={questionEditHeaderActions}
         footer={questionEditFooter}
     >
         <form id="question-edit-form" method="post" {action} use:enhance={onenhance as SubmitFunction} class="modal-form">
             <div class="modal-title-row">
                 <HelpCircle class="modal-icon-sm" />
                 <Input name="question" bind:value={questionValue} class="modal-title-input display" placeholder="Question" required />
-            </div>
-
-            <div class="modal-action-chips">
-                <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
-                    <Plus class="modal-icon-xs" /> Add
-                </Button>
-                <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
-                    <FileText class="modal-icon-xs" /> Labels
-                </Button>
-                <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
-                    <CheckSquare class="modal-icon-xs" /> Sub-tasks
-                </Button>
-                <Button type="button" variant="ghost" size="sm" class="modal-action-chip">
-                    <Link class="modal-icon-xs" /> Link
-                </Button>
             </div>
 
             <div class="modal-metadata-grid">
