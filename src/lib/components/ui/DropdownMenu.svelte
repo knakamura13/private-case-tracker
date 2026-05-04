@@ -81,26 +81,24 @@
         return () => document.removeEventListener('keydown', onKey, true);
     });
 
-    const sizeClass = $derived(
-        (
-            {
-                default: 'dropdown-menu--size-default',
-                sm: 'dropdown-menu--size-sm',
-                lg: 'dropdown-menu--size-lg'
-            } as const
-        )[size] ?? 'dropdown-menu--size-default'
-    );
+    const sizeClass = $derived(() => {
+        const sizeMap = {
+            default: 'dropdown-menu--size-default',
+            sm: 'dropdown-menu--size-sm',
+            lg: 'dropdown-menu--size-lg'
+        } as const;
+        return sizeMap[size as keyof typeof sizeMap] ?? 'dropdown-menu--size-default';
+    });
 
-    const positionClass = $derived(
-        (
-            {
-                'top-start': 'dropdown-menu--pos-top-start',
-                'top-end': 'dropdown-menu--pos-top-end',
-                'bottom-start': 'dropdown-menu--pos-bottom-start',
-                'bottom-end': 'dropdown-menu--pos-bottom-end'
-            } as const
-        )[position] ?? 'dropdown-menu--pos-bottom-end'
-    );
+    const positionClass = $derived(() => {
+        const positionMap = {
+            'top-start': 'dropdown-menu--pos-top-start',
+            'top-end': 'dropdown-menu--pos-top-end',
+            'bottom-start': 'dropdown-menu--pos-bottom-start',
+            'bottom-end': 'dropdown-menu--pos-bottom-end'
+        } as const;
+        return positionMap[position as keyof typeof positionMap] ?? 'dropdown-menu--pos-bottom-end';
+    });
 </script>
 
 <div data-dropdown class="dropdown-root">

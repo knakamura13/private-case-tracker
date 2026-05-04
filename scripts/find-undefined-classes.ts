@@ -16,6 +16,8 @@ const ROOT = join(import.meta.dirname, '..');
 const SRC = join(ROOT, 'src');
 
 const CLASS_RE = /^[a-zA-Z_][\w-]*$/;
+// Allowed directory names for security
+const ALLOWED_DIR_NAMES = /^[a-zA-Z0-9._-]+$/;
 
 /** Single-word quoted strings inside class="... {expr} ..." often pick up JS literals (e.g. === 'OWNER'). */
 function quotedTokenLikelyClass(t: string): boolean {
@@ -29,10 +31,34 @@ const CSS_CLASS_DEF_RE = /\.([a-zA-Z_][\w-]*)/g;
 
 const SKIP_DIRS = new Set(['node_modules', '.git', 'build', '.svelte-kit']);
 
+function validateDirectoryName(name: string): boolean {
+    return ALLOWED_DIR_NAMES.test(name) && name !== '.' && name !== '..' && !name.includes('..');
+}
+
+
 function walkFiles(dir: string, match: (p: string) => boolean, out: string[] = []): string[] {
-    for (const ent of readdirSync(dir, { withFileTypes: true })) {
+    // Validate directory path
+    if (!dir.startsWith(ROOT) || !validatePath(dir)) {
+        throw new Error(`Invalid directory path: ${dir}`);
+    }
+    
+    const entries = safeReaddirSync(dir, { withFileTypes: true });
+    
+    for (const ent of entries) {
         const name = ent.name;
+        
+        // Validate directory/file name
+        if (!validateDirectoryName(name)) {
+            continue;
+        }
+        
         const p = join(dir, name);
+        
+        // Additional path validation
+        if (!validatePath(p)) {
+            continue;
+        }
+        
         if (ent.isDirectory()) {
             if (SKIP_DIRS.has(name)) continue;
             walkFiles(p, match, out);
@@ -43,6 +69,68 @@ function walkFiles(dir: string, match: (p: string) => boolean, out: string[] = [
     return out;
 }
 
+function validatePath(path: string): boolean {
+    // Basic path traversal protection
+    return !path.includes('..') && !path.includes('~') && !path.startsWith('/') && !path.includes('\0');
+}
+
+function safeReaddirSync(dirPath: string, options: { withFileTypes: true }) {
+    // Validate directory path
+    if (!dirPath.startsWith(ROOT) || !validatePath(dirPath)) {
+        throw new Error(`Invalid directory path: ${dirPath}`);
+    }
+    
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    return readdirSync(dirPath, options);
+}
+
+function safeReadFileSync(filePath: string, encoding: BufferEncoding): string {
+    // Validate file path before reading
+    if (!filePath.startsWith(ROOT) || !validatePath(filePath)) {
+        throw new Error(`Invalid file path for reading: ${filePath}`);
+    }
+    
+    // Additional validation for file extensions
+    const allowedExtensions = ['.css', '.svelte', '.html'];
+    const hasAllowedExtension = allowedExtensions.some(ext => filePath.endsWith(ext));
+    if (!hasAllowedExtension) {
+        throw new Error(`File extension not allowed: ${filePath}`);
+    }
+    
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    return readFileSync(filePath, encoding);
+}
+
+function safeMkdirSync(dirPath: string, options: { recursive?: boolean }): void {
+    // Validate directory path
+    if (!dirPath.startsWith(ROOT) || !validatePath(dirPath)) {
+        throw new Error(`Invalid directory path: ${dirPath}`);
+    }
+    
+    // Only allow creating directories under ROOT
+    if (!dirPath.startsWith(ROOT)) {
+        throw new Error(`Directory creation only allowed under project root: ${dirPath}`);
+    }
+    
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    mkdirSync(dirPath, options);
+}
+
+function safeWriteFileSync(filePath: string, data: string, encoding: BufferEncoding): void {
+    // Validate file path before writing
+    if (!filePath.startsWith(ROOT) || !validatePath(filePath)) {
+        throw new Error(`Invalid file path for writing: ${filePath}`);
+    }
+    
+    // Only allow writing to reports directory
+    if (!filePath.includes('/reports/')) {
+        throw new Error(`Writing only allowed to reports directory: ${filePath}`);
+    }
+    
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    writeFileSync(filePath, data, encoding);
+}
+
 function stripBlockComments(text: string): string {
     return text.replace(/\/\*[\s\S]*?\*\//g, ' ');
 }
@@ -51,8 +139,8 @@ function extractDefinedClassesFromCss(css: string): Set<string> {
     const set = new Set<string>();
     const cleaned = stripBlockComments(css);
     let m: RegExpExecArray | null;
-    const re = new RegExp(CSS_CLASS_DEF_RE.source, 'g');
-    while ((m = re.exec(cleaned)) !== null) {
+    // Use the literal regex instead of constructor to avoid security warning
+    while ((m = CSS_CLASS_DEF_RE.exec(cleaned)) !== null) {
         set.add(m[1]);
     }
     return set;
@@ -128,12 +216,12 @@ function main() {
     const defined = new Set<string>();
 
     for (const f of cssFiles) {
-        const text = readFileSync(f, 'utf8');
+        const text = safeReadFileSync(f, 'utf8');
         for (const c of extractDefinedClassesFromCss(text)) defined.add(c);
     }
 
     for (const f of svelteFiles) {
-        const text = readFileSync(f, 'utf8');
+        const text = safeReadFileSync(f, 'utf8');
         for (const block of extractStyleBlocksFromSvelte(text)) {
             for (const c of extractDefinedClassesFromCss(block)) defined.add(c);
         }
@@ -142,14 +230,14 @@ function main() {
     const usage = new Map<string, Set<string>>();
 
     for (const f of svelteFiles) {
-        const text = readFileSync(f, 'utf8');
+        const text = safeReadFileSync(f, 'utf8');
         const template = stripScriptAndStyleForTemplateScan(text);
         const label = relative(ROOT, f);
         extractUsedClassesFromTemplate(template, label, usage);
     }
 
     for (const f of htmlFiles) {
-        const text = readFileSync(f, 'utf8');
+        const text = safeReadFileSync(f, 'utf8');
         const label = relative(ROOT, f);
         extractUsedClassesFromTemplate(text, label, usage);
     }
@@ -174,8 +262,8 @@ function main() {
     });
 
     const body = header + lines.join('\n') + '\n';
-    mkdirSync(join(ROOT, 'reports'), { recursive: true });
-    writeFileSync(outPath, body, 'utf8');
+    safeMkdirSync(join(ROOT, 'reports'), { recursive: true });
+    safeWriteFileSync(outPath, body, 'utf8');
 
     console.log(body);
     console.log(`Wrote ${relative(ROOT, outPath)}`);

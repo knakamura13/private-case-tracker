@@ -407,17 +407,10 @@ body,
 
 .task-card-title {
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 600;
     line-height: 1.4;
     color: var(--ink);
     margin: 0 0 8px 0;
-}
-
-.task-card-badge {
-    height: 20px;
-    font-size: 10px;
-    padding: 0 8px;
-    margin-bottom: 8px;
 }
 
 .task-card-description {
@@ -464,10 +457,6 @@ body,
     height: 12px;
 }
 
-.task-card-p-4 {
-    padding: 16px;
-}
-
 .task-card-border-none {
     border: none;
 }
@@ -480,15 +469,12 @@ body,
     background: transparent;
 }
 
-.task-card-content {
+.task-card-body {
     display: flex;
     flex-direction: column;
-    min-width: 0;
-}
-
-.task-card-body {
     flex: 1;
     min-width: 0;
+    padding: 0;
 }
 
 .task-card-drop-indicator {
@@ -1027,7 +1013,6 @@ button.modal-checklist-text-btn {
     font-weight: 600;
     background: transparent;
     border: none;
-    padding: 8px 12px;
     border-radius: var(--r-sm);
     color: var(--ink);
     transition: background-color 150ms ease;
@@ -1179,7 +1164,7 @@ button.modal-checklist-text-btn {
     background: var(--surface-2);
     border-radius: var(--r-md);
     padding: 16px 24px;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
 }
 
 .timeline-phase-header-done {

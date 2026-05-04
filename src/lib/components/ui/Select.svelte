@@ -41,26 +41,24 @@
 
     const displayLabel = $derived(options.find((o) => o.value === value)?.label ?? value ?? '');
 
-    const sizeClass = $derived(
-        (
-            {
-                default: 'select-menu--size-default',
-                sm: 'select-menu--size-sm',
-                lg: 'select-menu--size-lg'
-            } as const
-        )[size] ?? 'select-menu--size-default'
-    );
+    const sizeClass = $derived(() => {
+        const sizeMap = {
+            default: 'select-menu--size-default',
+            sm: 'select-menu--size-sm',
+            lg: 'select-menu--size-lg'
+        } as const;
+        return sizeMap[size as keyof typeof sizeMap] ?? 'select-menu--size-default';
+    });
 
-    const positionClass = $derived(
-        (
-            {
-                'top-start': 'select-menu--pos-top-start',
-                'top-end': 'select-menu--pos-top-end',
-                'bottom-start': 'select-menu--pos-bottom-start',
-                'bottom-end': 'select-menu--pos-bottom-end'
-            } as const
-        )[position] ?? 'select-menu--pos-bottom-start'
-    );
+    const positionClass = $derived(() => {
+        const positionMap = {
+            'top-start': 'select-menu--pos-top-start',
+            'top-end': 'select-menu--pos-top-end',
+            'bottom-start': 'select-menu--pos-bottom-start',
+            'bottom-end': 'select-menu--pos-bottom-end'
+        } as const;
+        return positionMap[position as keyof typeof positionMap] ?? 'select-menu--pos-bottom-start';
+    });
 
     function toggle(e?: MouseEvent) {
         e?.stopPropagation();

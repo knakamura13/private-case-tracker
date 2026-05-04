@@ -1,7 +1,5 @@
 <script lang="ts">
     import Card from '$lib/components/ui/Card.svelte';
-    import Badge from '$lib/components/ui/Badge.svelte';
-    import { titleCase } from '$lib/utils/format';
     import { fmtDate } from '$lib/utils/dates';
     import { Calendar } from 'lucide-svelte';
 
@@ -95,40 +93,33 @@
         tabindex="0"
         aria-label={task.title}
     >
-        <Card class="task-card-p-4 task-card-border-none task-card-shadow-none task-card-bg-transparent">
-            <div class="task-card-content">
-                <div class="task-card-body">
-                    {#if isOverdue}
-                        <div class="task-card-overdue">● overdue</div>
-                    {/if}
-                    <p class="task-card-title">{task.title}</p>
-                    {#if task.priority !== 'MEDIUM'}
-                        <Badge variant="outline" class="task-card-badge">{titleCase(task.priority)}</Badge>
-                    {/if}
-                    {#if hasMeaningfulDescription(task.description)}
-                        <div class="task-card-description task-card-description--clamped">{task.description}</div>
-                    {/if}
-                    {#if task.checklist && task.checklist.length > 0}
-                        <div class="task-card-checklist">
-                            <div class="task-card-checklist-summary">
-                                {task.checklist.filter((ci) => ci.done).length}/{task.checklist.length}
-                            </div>
-                        </div>
-                    {/if}
-                    <div class="task-card-footer">
-                        {#if task.dueDate}
-                            <div class="task-card-due mono">
-                                <Calendar class="task-card-icon-xs" />
-                                {fmtDate(task.dueDate)}
-                            </div>
-                        {/if}
-                        {#if task.checklist && task.checklist.length > 0}
-                            <span class="task-card-subtask-count mono"
-                                >{task.checklist.filter((ci) => ci.done).length}/{task.checklist.length}</span
-                            >
-                        {/if}
+        <Card class="task-card-body task-card-border-none task-card-shadow-none task-card-bg-transparent">
+            {#if isOverdue}
+                <div class="task-card-overdue">● overdue</div>
+            {/if}
+            <p class="task-card-title">{task.title}</p>
+            {#if hasMeaningfulDescription(task.description)}
+                <div class="task-card-description task-card-description--clamped">{task.description}</div>
+            {/if}
+            {#if task.checklist && task.checklist.length > 0}
+                <div class="task-card-checklist">
+                    <div class="task-card-checklist-summary">
+                        {task.checklist.filter((ci) => ci.done).length}/{task.checklist.length}
                     </div>
                 </div>
+            {/if}
+            <div class="task-card-footer">
+                {#if task.dueDate}
+                    <div class="task-card-due mono">
+                        <Calendar class="task-card-icon-xs" />
+                        {fmtDate(task.dueDate)}
+                    </div>
+                {/if}
+                {#if task.checklist && task.checklist.length > 0}
+                    <span class="task-card-subtask-count mono"
+                        >{task.checklist.filter((ci) => ci.done).length}/{task.checklist.length}</span
+                    >
+                {/if}
             </div>
         </Card>
     </div>

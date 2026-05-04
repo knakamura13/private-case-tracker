@@ -6,7 +6,7 @@ export function fieldFromInitial<T extends string>(
     fallback = ''
 ): string {
     if (!allowed.includes(name as T)) return fallback;
-    const v = initial[name];
+    const v = initial[name as keyof typeof initial];
     if (v == null) return fallback;
     if (v instanceof Date) return v.toISOString().slice(0, 10);
     return String(v);

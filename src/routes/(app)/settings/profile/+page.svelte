@@ -9,7 +9,7 @@
 <PageHeader title="Settings" sub="Manage members, case access, and security." number={getPageNumber('/settings')} />
 
 <div class="card" style="max-width: 480px; padding: 24px;">
-    <h2 class="display" style="font-size: 24px; margin-bottom: 20px;">Profile</h2>
+    <h2 class="display" style="font-size: 24px; margin-top: 0; margin-bottom: 20px;">Profile</h2>
     <div style="display: flex; flex-direction: column; gap: 16px;">
         <div style="display: flex; justify-content: space-between; font-size: 13px;">
             <span style="color: var(--ink-3);">Name</span>

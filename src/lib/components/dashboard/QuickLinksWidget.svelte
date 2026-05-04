@@ -485,7 +485,7 @@
 
 {#if folderPopoverId}
     {@const folder = visibleFolders.find((f) => f.id === folderPopoverId)}
-    {@const folderLinks = folderLinksMap[folderPopoverId] ?? []}
+    {@const folderLinks = folderLinksMap[folderPopoverId as keyof typeof folderLinksMap] ?? []}
     {#snippet qlFolderPopoverHeader()}
         <div style="display: flex; align-items: center; gap: 12px;">
             <div

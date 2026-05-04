@@ -137,7 +137,7 @@
                         <div class="timeline-rail-line"></div>
                         {#each g.items as m, _mi (m.id)}
                             {@const nodeStatus = milestoneNodeStatus(m.status)}
-                            <div style="position: relative; margin-bottom: 8px;">
+                            <div style="position: relative; margin-bottom: 12px;">
                                 <div
                                     class="timeline-milestone-node {nodeStatus === 'done'
                                         ? 'timeline-milestone-node-done'
