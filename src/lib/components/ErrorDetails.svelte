@@ -35,9 +35,7 @@
         </div>
 
         {#if errorId}
-            <button type="button" class="error-details__copy" onclick={() => copy(errorId)}>
-                Copy error ID
-            </button>
+            <button type="button" class="error-details__copy" onclick={() => copy(errorId)}> Copy error ID </button>
         {/if}
     </div>
 

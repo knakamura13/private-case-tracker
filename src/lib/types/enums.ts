@@ -3,7 +3,6 @@
 
 export type MemberRole = 'OWNER' | 'COLLABORATOR';
 
-
 export type MilestonePhase =
     | 'PREPARATION'
     | 'RELATIONSHIP_EVIDENCE'

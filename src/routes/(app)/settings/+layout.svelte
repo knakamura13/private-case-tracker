@@ -22,7 +22,12 @@
                 {#each sections as s (s.href)}
                     {@const active = sectionActive(page.url.pathname, s.href)}
                     <li>
-                        <a href={s.href} class="settings-nav-link" class:settings-nav-link-active={active} aria-current={active ? 'page' : undefined}>
+                        <a
+                            href={s.href}
+                            class="settings-nav-link"
+                            class:settings-nav-link-active={active}
+                            aria-current={active ? 'page' : undefined}
+                        >
                             {s.label}
                         </a>
                     </li>
@@ -68,7 +73,9 @@
         font-size: 14px;
         font-weight: 500;
         text-decoration: none;
-        transition: background 120ms ease, color 120ms ease;
+        transition:
+            background 120ms ease,
+            color 120ms ease;
         background: transparent;
         color: var(--ink-2);
     }

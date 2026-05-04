@@ -75,14 +75,7 @@
                 </div>
                 <div>
                     <label for="invite-role" style="display: block; font-size: 13px; margin-bottom: 4px;">Role</label>
-                    <Select
-                        id="invite-role"
-                        name="role"
-                        bind:value={inviteRole}
-                        options={inviteRoleOptions}
-                        fluid
-                        position="bottom-end"
-                    />
+                    <Select id="invite-role" name="role" bind:value={inviteRole} options={inviteRoleOptions} fluid position="bottom-end" />
                 </div>
                 <Button type="submit"><UserPlus style="width: 14px; height: 14px; margin-right: 4px;" /> Create link</Button>
             </form>

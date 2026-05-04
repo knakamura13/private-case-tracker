@@ -1,7 +1,6 @@
 <script lang="ts">
     import Input from '$lib/components/ui/Input.svelte';
     import Textarea from '$lib/components/ui/Textarea.svelte';
-    import Select from '$lib/components/ui/Select.svelte';
     import Button from '$lib/components/ui/Button.svelte';
     import Dialog from '$lib/components/ui/Dialog.svelte';
     import ErrorDetails from '$lib/components/ErrorDetails.svelte';
@@ -11,8 +10,7 @@
     import { createMilestoneAutoSave } from '$lib/timeline/milestoneAutoSave';
     import type { ManualEnhanceHandler } from '$lib/utils/enhanceSubmit';
     import type { TaskChecklistItem } from '$lib/tasks/taskChecklist';
-    import { PHASE_LABELS, PHASE_ORDER } from '$lib/constants/phases';
-    import { Calendar, MapPin, MoreHorizontal } from 'lucide-svelte';
+    import { PHASE_LABELS } from '$lib/constants/phases';
     import { enhance } from '$app/forms';
     import type { SubmitFunction } from '@sveltejs/kit';
 
@@ -79,23 +77,6 @@
 
     let dueDateInputEl = $state<HTMLInputElement | null>(null);
     let scheduledAtInputEl = $state<HTMLInputElement | null>(null);
-
-    const phaseSelectOptions = $derived(
-        PHASE_ORDER.map((p) => ({ value: p, label: PHASE_LABELS[p as keyof typeof PHASE_LABELS] }))
-    );
-    const milestoneStatusOptions = [
-        { value: 'PLANNED', label: 'Planned' },
-        { value: 'IN_PROGRESS', label: 'In progress' },
-        { value: 'DONE', label: 'Done' },
-        { value: 'BLOCKED', label: 'Blocked' },
-        { value: 'SKIPPED', label: 'Skipped' }
-    ] as const;
-    const milestonePriorityOptions = [
-        { value: 'LOW', label: 'Low' },
-        { value: 'MEDIUM', label: 'Medium' },
-        { value: 'HIGH', label: 'High' },
-        { value: 'CRITICAL', label: 'Critical' }
-    ] as const;
 
     const autoSave = createMilestoneAutoSave({
         getOpen: () => open,
@@ -170,12 +151,6 @@
         if (mode === 'edit') void autoSave.triggerAutoSave();
     }
 
-    function generateGoogleMapsUrl(address: string | null | undefined) {
-        if (!address?.trim()) return '#';
-        const query = encodeURIComponent(address.trim());
-        return `https://www.google.com/maps/search/?api=1&query=${query}`;
-    }
-
     function handleDueDateSave() {
         if (dueDateInputEl) {
             dueDateInputEl.value = dueDateValue;
@@ -236,7 +211,8 @@
                     showLocationInput = false;
                     isEditingLocation = false;
                     locationAddress = '';
-                }}>Cancel</Button>
+                }}>Cancel</Button
+            >
         </div>
     {/if}
 {/snippet}
@@ -262,146 +238,7 @@
     >
         <form id="milestone-create-form" method="post" {action} use:enhance={submitEnhance!} class="modal-form">
             <div class="modal-title-row">
-                <Input
-                    name="title"
-                    bind:value={titleValue}
-                    class="modal-title-input display"
-                    placeholder="Milestone title"
-                    required
-                />
-            </div>
-
-            <div class="modal-metadata-grid">
-                <div class="modal-metadata-item">
-                    <span class="modal-metadata-label">Due date</span>
-                    <div class="modal-metadata-value">
-                        {#if dueDateValue}
-                            <Calendar class="modal-icon-xs" />
-                            <span>{dueDateValue}</span>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                class="modal-icon-btn-sm"
-                                onclick={() => (showDueDatePicker = true)}
-                            >
-                                <MoreHorizontal class="modal-icon-xs" />
-                            </Button>
-                        {:else}
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                class="modal-metadata-btn"
-                                onclick={() => (showDueDatePicker = true)}
-                            >
-                                <Calendar class="modal-icon-xs" /> Set due date
-                            </Button>
-                        {/if}
-                    </div>
-                </div>
-                <div class="modal-metadata-item">
-                    <span class="modal-metadata-label">Appointment date</span>
-                    <div class="modal-metadata-value">
-                        {#if appointmentDateValue}
-                            <Calendar class="modal-icon-xs" />
-                            <span>{appointmentDateValue}</span>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                class="modal-icon-btn-sm"
-                                onclick={() => (showAppointmentDatePicker = true)}
-                            >
-                                <MoreHorizontal class="modal-icon-xs" />
-                            </Button>
-                        {:else}
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                class="modal-metadata-btn"
-                                onclick={() => (showAppointmentDatePicker = true)}
-                            >
-                                <Calendar class="modal-icon-xs" /> Set appointment
-                            </Button>
-                        {/if}
-                    </div>
-                </div>
-                <div class="modal-metadata-item">
-                    <span class="modal-metadata-label">Location</span>
-                    <div class="modal-metadata-value">
-                        {#if currentLocation}
-                            <a
-                                href={generateGoogleMapsUrl(currentLocation)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="modal-metadata-link"
-                            >
-                                <MapPin class="modal-icon-xs" />
-                                <span>{currentLocation}</span>
-                            </a>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                class="modal-icon-btn-sm"
-                                onclick={() => {
-                                    locationAddress = currentLocation;
-                                    isEditingLocation = true;
-                                }}
-                            >
-                                <MoreHorizontal class="modal-icon-xs" />
-                            </Button>
-                        {:else}
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                class="modal-metadata-btn"
-                                onclick={() => (showLocationInput = true)}
-                            >
-                                <MapPin class="modal-icon-xs" /> Set location
-                            </Button>
-                        {/if}
-                    </div>
-                </div>
-                <div class="modal-metadata-item">
-                    <span class="modal-metadata-label">Phase</span>
-                    <div class="modal-metadata-value">
-                        <Select
-                            id="milestone-create-phase"
-                            name="phase"
-                            bind:value={phaseValue}
-                            options={phaseSelectOptions}
-                            triggerClass="modal-metadata-btn"
-                        />
-                    </div>
-                </div>
-                <div class="modal-metadata-item">
-                    <span class="modal-metadata-label">Status</span>
-                    <div class="modal-metadata-value">
-                        <Select
-                            id="milestone-create-status"
-                            name="status"
-                            bind:value={statusValue}
-                            options={[...milestoneStatusOptions]}
-                            triggerClass="modal-metadata-btn"
-                        />
-                    </div>
-                </div>
-                <div class="modal-metadata-item">
-                    <span class="modal-metadata-label">Priority</span>
-                    <div class="modal-metadata-value">
-                        <Select
-                            id="milestone-create-priority"
-                            name="priority"
-                            bind:value={priorityValue}
-                            options={[...milestonePriorityOptions]}
-                            triggerClass="modal-metadata-btn"
-                        />
-                    </div>
-                </div>
+                <Input name="title" bind:value={titleValue} class="modal-title-input display" placeholder="Milestone title" required />
             </div>
 
             {@render milestoneInlinePickers()}
@@ -459,13 +296,7 @@
         </form>
     </Dialog>
 {:else}
-    <Dialog
-        {open}
-        {onClose}
-        ariaLabel="Edit milestone"
-        header={milestoneEditHeader}
-        footer={milestoneEditFooter}
-    >
+    <Dialog {open} {onClose} ariaLabel="Edit milestone" header={milestoneEditHeader} footer={milestoneEditFooter}>
         <form id="milestone-edit-form" method="post" {action} class="modal-form">
             <div class="modal-title-row">
                 <Input
@@ -475,103 +306,6 @@
                     class="modal-title-input display"
                     placeholder="Milestone title"
                 />
-            </div>
-
-            <div class="modal-metadata-grid">
-                <div class="modal-metadata-item">
-                    <span class="modal-metadata-label">Due date</span>
-                    <div class="modal-metadata-value">
-                        {#if dueDateValue}
-                            <Calendar class="modal-icon-xs" />
-                            <span>{dueDateValue}</span>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                class="modal-icon-btn-sm"
-                                onclick={() => (showDueDatePicker = true)}
-                            >
-                                <MoreHorizontal class="modal-icon-xs" />
-                            </Button>
-                        {:else}
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                class="modal-metadata-btn"
-                                onclick={() => (showDueDatePicker = true)}
-                            >
-                                <Calendar class="modal-icon-xs" /> Set due date
-                            </Button>
-                        {/if}
-                    </div>
-                </div>
-                <div class="modal-metadata-item">
-                    <span class="modal-metadata-label">Appointment date</span>
-                    <div class="modal-metadata-value">
-                        {#if appointmentDateValue}
-                            <Calendar class="modal-icon-xs" />
-                            <span>{appointmentDateValue}</span>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                class="modal-icon-btn-sm"
-                                onclick={() => (showAppointmentDatePicker = true)}
-                            >
-                                <MoreHorizontal class="modal-icon-xs" />
-                            </Button>
-                        {:else}
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                class="modal-metadata-btn"
-                                onclick={() => (showAppointmentDatePicker = true)}
-                            >
-                                <Calendar class="modal-icon-xs" /> Set appointment
-                            </Button>
-                        {/if}
-                    </div>
-                </div>
-                <div class="modal-metadata-item">
-                    <span class="modal-metadata-label">Location</span>
-                    <div class="modal-metadata-value">
-                        {#if currentLocation}
-                            <a
-                                href={generateGoogleMapsUrl(currentLocation)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="modal-metadata-link"
-                            >
-                                <MapPin class="modal-icon-xs" />
-                                <span>{currentLocation}</span>
-                            </a>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                class="modal-icon-btn-sm"
-                                onclick={() => {
-                                    locationAddress = currentLocation;
-                                    isEditingLocation = true;
-                                }}
-                            >
-                                <MoreHorizontal class="modal-icon-xs" />
-                            </Button>
-                        {:else}
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                class="modal-metadata-btn"
-                                onclick={() => (showLocationInput = true)}
-                            >
-                                <MapPin class="modal-icon-xs" /> Set location
-                            </Button>
-                        {/if}
-                    </div>
-                </div>
             </div>
 
             {@render milestoneInlinePickers()}

@@ -29,10 +29,7 @@
 
     async function addChecklistItem() {
         if (!newChecklistText.trim()) return;
-        items = [
-            ...items,
-            { id: crypto.randomUUID(), text: newChecklistText.trim(), done: false, order: items.length }
-        ];
+        items = [...items, { id: crypto.randomUUID(), text: newChecklistText.trim(), done: false, order: items.length }];
         newChecklistText = '';
         await notify();
     }
@@ -70,12 +67,7 @@
         <div class="modal-checklist-items">
             {#each items as ci (ci.id)}
                 <div class="modal-checklist-item">
-                    <input
-                        type="checkbox"
-                        checked={ci.done}
-                        onchange={() => toggleChecklistItem(ci.id)}
-                        class="modal-checklist-checkbox"
-                    />
+                    <input type="checkbox" checked={ci.done} onchange={() => toggleChecklistItem(ci.id)} class="modal-checklist-checkbox" />
                     {#if editingChecklistId === ci.id}
                         <Input
                             bind:value={editingChecklistText}
@@ -99,7 +91,9 @@
                     {:else}
                         <button
                             type="button"
-                            class={ci.done ? 'modal-checklist-text-done modal-checklist-text-btn' : 'modal-checklist-text modal-checklist-text-btn'}
+                            class={ci.done
+                                ? 'modal-checklist-text-done modal-checklist-text-btn'
+                                : 'modal-checklist-text modal-checklist-text-btn'}
                             onclick={() => {
                                 editingChecklistId = ci.id;
                                 editingChecklistText = ci.text;
@@ -108,13 +102,7 @@
                             {ci.text}
                         </button>
                     {/if}
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        class="modal-icon-btn-sm"
-                        onclick={() => removeChecklistItem(ci.id)}
-                    >
+                    <Button type="button" variant="ghost" size="sm" class="modal-icon-btn-sm" onclick={() => removeChecklistItem(ci.id)}>
                         <X class="modal-icon-xs" />
                     </Button>
                 </div>

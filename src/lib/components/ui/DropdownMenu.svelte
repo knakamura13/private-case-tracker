@@ -171,7 +171,9 @@
         border: 1px solid var(--hairline);
         border-radius: 6px;
         padding: 4px;
-        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        box-shadow:
+            0 4px 6px -1px rgb(0 0 0 / 0.1),
+            0 2px 4px -2px rgb(0 0 0 / 0.1);
         z-index: 9999;
         outline: none;
         min-width: fit-content;
@@ -226,7 +228,9 @@
         cursor: pointer;
         font-size: 14px;
         color: var(--ink-1);
-        transition: background-color 0.15s ease, color 0.15s ease;
+        transition:
+            background-color 0.15s ease,
+            color 0.15s ease;
         outline: none;
         text-decoration: none;
         user-select: none;

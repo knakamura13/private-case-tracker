@@ -45,7 +45,6 @@
         { id: 'DONE', label: 'Done', pillClass: 's-done' }
     ] as const;
 
-    
     const grouped = $derived(
         COLUMNS.map((col) => ({
             ...col,
@@ -293,7 +292,6 @@
             <div class="tasks-column-header">
                 <span class="pill {column.pillClass}">{column.label}</span>
                 <span class="tasks-column-count mono">{column.tasks.length}</span>
-                <button class="tasks-column-menu" aria-label="Column options"> ⋯ </button>
             </div>
             <div
                 class="tasks-column-content"

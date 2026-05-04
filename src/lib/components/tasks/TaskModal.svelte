@@ -11,7 +11,6 @@
     import { createTaskAutoSave } from '$lib/tasks/taskAutoSave';
     import { parseTaskChecklist, type TaskChecklistItem } from '$lib/tasks/taskChecklist';
     import type { ManualEnhanceHandler } from '$lib/utils/enhanceSubmit';
-    import { X, Calendar } from 'lucide-svelte';
     import { enhance } from '$app/forms';
     import type { SubmitFunction } from '@sveltejs/kit';
 
@@ -60,14 +59,6 @@
 
     const statusPillClass = $derived(() => taskStatusPillClass(statusValue));
     const statusLabel = $derived(() => taskStatusLabel(statusValue));
-
-    const isOverdue = $derived(() => {
-        if (!dueDateValue || statusValue === 'DONE') return false;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const due = new Date(dueDateValue);
-        return due < today;
-    });
 
     const autoSave = createTaskAutoSave({
         getOpen: () => open,
@@ -162,31 +153,6 @@
                 <Input name="title" bind:value={titleValue} class="modal-title-input display" placeholder="Task title" required />
             </div>
 
-            <div class="modal-metadata-grid">
-                <div class="modal-metadata-item">
-                    <span class="modal-metadata-label">Due date</span>
-                    <div class="modal-metadata-value">
-                        {#if dueDateValue}
-                            <Calendar class="modal-icon-xs" />
-                            <span>{dueDateValue}</span>
-                            <Button type="button" variant="ghost" size="sm" class="modal-icon-btn-sm" onclick={() => (dueDateValue = '')}>
-                                <X class="modal-icon-xs" />
-                            </Button>
-                        {:else}
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                class="modal-metadata-btn"
-                                onclick={() => (showDueDatePicker = true)}
-                            >
-                                <Calendar class="modal-icon-xs" /> Set due date
-                            </Button>
-                        {/if}
-                    </div>
-                </div>
-            </div>
-
             {#if showDueDatePicker}
                 <div class="modal-mt-2 modal-flex modal-gap-2">
                     <Input type="date" bind:value={dueDateValue} class="modal-text-sm" />
@@ -243,13 +209,7 @@
         </form>
     </Dialog>
 {:else}
-    <Dialog
-        {open}
-        onClose={saveBeforeCloseWrapper}
-        ariaLabel="Edit task"
-        header={taskHeader}
-        footer={taskEditFooter}
-    >
+    <Dialog {open} onClose={saveBeforeCloseWrapper} ariaLabel="Edit task" header={taskHeader} footer={taskEditFooter}>
         <form id="task-edit-form" method="post" {action} class="modal-form">
             <div class="modal-title-row">
                 <Input
@@ -264,31 +224,6 @@
                     class="modal-title-input display"
                     placeholder="Task title"
                 />
-            </div>
-
-            <div class="modal-metadata-grid">
-                <div class="modal-metadata-item">
-                    <span class="modal-metadata-label">Due date</span>
-                    <div class="modal-metadata-value">
-                        {#if dueDateValue}
-                            <Calendar class="modal-icon-xs" />
-                            <span>{dueDateValue}</span>
-                            {#if isOverdue()}
-                                <span class="pill s-urgent">Overdue</span>
-                            {/if}
-                        {:else}
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                class="modal-metadata-btn"
-                                onclick={() => (showDueDatePicker = true)}
-                            >
-                                <Calendar class="modal-icon-xs" /> Set due date
-                            </Button>
-                        {/if}
-                    </div>
-                </div>
             </div>
 
             {#if showDueDatePicker}

@@ -582,13 +582,6 @@ body,
     gap: 6px;
 }
 
-.modal-metadata-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    margin-bottom: 24px;
-}
-
 .modal-metadata-item {
     display: flex;
     flex-direction: column;
@@ -851,24 +844,6 @@ button.modal-checklist-text-btn {
     color: var(--ink-3);
 }
 
-.tasks-column-menu {
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    background: transparent;
-    color: var(--ink-3);
-    cursor: pointer;
-    border-radius: 4px;
-    margin-left: auto;
-}
-
-.tasks-column-menu:hover {
-    background: var(--surface-2);
-}
-
 .tasks-column-content {
     min-height: 100px;
     padding: 4px 0;
@@ -913,9 +888,7 @@ button.modal-checklist-text-btn {
     flex-direction: column;
     min-height: 0;
     /* Fit within backdrop (vertical padding uses max(32px, safe-area)) */
-    max-height: calc(
-        100dvh - max(32px, env(safe-area-inset-top, 0px)) - max(32px, env(safe-area-inset-bottom, 0px))
-    );
+    max-height: calc(100dvh - max(32px, env(safe-area-inset-top, 0px)) - max(32px, env(safe-area-inset-bottom, 0px)));
 }
 
 /* Dialog max-width presets (Tailwind-free; matches former max-w-* scale) */
@@ -1481,7 +1454,7 @@ button.modal-checklist-text-btn {
 /* Tasks board empty state & add button icons */
 .tasks-empty-placeholder {
     list-style: none;
-    min-height: 120px;
+    min-height: 100px;
     margin: 0;
     padding: 12px;
     border-radius: var(--r-sm);

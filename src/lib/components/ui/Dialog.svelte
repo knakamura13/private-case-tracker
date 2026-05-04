@@ -77,13 +77,7 @@
 </script>
 
 {#if open}
-    <div
-        class="dialog-backdrop"
-        role="presentation"
-        tabindex="-1"
-        onclick={handleBackdropClick}
-        onkeydown={handleEscape}
-    >
+    <div class="dialog-backdrop" role="presentation" tabindex="-1" onclick={handleBackdropClick} onkeydown={handleEscape}>
         <div
             bind:this={panelEl}
             class="dialog-content dialog-content--{contentWidth}"

@@ -121,14 +121,7 @@
 {/snippet}
 
 {#if mode === 'create'}
-    <Dialog
-        {open}
-        {onClose}
-        title="New question"
-        footerFormId="question-create-form"
-        cancelLabel="Cancel"
-        submitLabel="Add question"
-    >
+    <Dialog {open} {onClose} title="New question" footerFormId="question-create-form" cancelLabel="Cancel" submitLabel="Add question">
         <form id="question-create-form" method="post" {action} use:enhance={submitEnhance!} class="modal-form">
             <div>
                 <label for="question" class="modal-label">Question</label>
@@ -141,12 +134,7 @@
                 </div>
                 <div>
                     <label for="priority" class="modal-label">Priority</label>
-                    <Select
-                        id="priority"
-                        name="priority"
-                        bind:value={priorityValue}
-                        options={questionPriorityOptions}
-                    />
+                    <Select id="priority" name="priority" bind:value={priorityValue} options={questionPriorityOptions} />
                 </div>
                 <div>
                     <label for="status" class="modal-label">Status</label>
@@ -154,12 +142,7 @@
                 </div>
                 <div>
                     <label for="sourceType" class="modal-label">Source type</label>
-                    <Select
-                        id="sourceType"
-                        name="sourceType"
-                        bind:value={sourceTypeValue}
-                        options={questionSourceTypeOptions}
-                    />
+                    <Select id="sourceType" name="sourceType" bind:value={sourceTypeValue} options={questionSourceTypeOptions} />
                 </div>
             </div>
             <div>
@@ -182,59 +165,11 @@
         </form>
     </Dialog>
 {:else}
-    <Dialog
-        {open}
-        {onClose}
-        ariaLabel="Edit question"
-        header={questionEditHeader}
-        footer={questionEditFooter}
-    >
+    <Dialog {open} {onClose} ariaLabel="Edit question" header={questionEditHeader} footer={questionEditFooter}>
         <form id="question-edit-form" method="post" {action} use:enhance={onenhance as SubmitFunction} class="modal-form">
             <div class="modal-title-row">
                 <HelpCircle class="modal-icon-sm" />
                 <Input name="question" bind:value={questionValue} class="modal-title-input display" placeholder="Question" required />
-            </div>
-
-            <div class="modal-metadata-grid">
-                <div class="modal-metadata-item">
-                    <span class="modal-metadata-label">Category</span>
-                    <div class="modal-metadata-value">
-                        <Input name="category" bind:value={categoryValue} class="modal-text-sm" placeholder="Category" />
-                    </div>
-                </div>
-                <div class="modal-metadata-item">
-                    <span class="modal-metadata-label">Priority</span>
-                    <div class="modal-metadata-value">
-                        <Select
-                            name="priority"
-                            bind:value={priorityValue}
-                            options={questionPriorityOptions}
-                            triggerClass="modal-metadata-btn"
-                        />
-                    </div>
-                </div>
-                <div class="modal-metadata-item">
-                    <span class="modal-metadata-label">Status</span>
-                    <div class="modal-metadata-value">
-                        <Select
-                            name="status"
-                            bind:value={statusValue}
-                            options={questionStatusOptions}
-                            triggerClass="modal-metadata-btn"
-                        />
-                    </div>
-                </div>
-                <div class="modal-metadata-item">
-                    <span class="modal-metadata-label">Source type</span>
-                    <div class="modal-metadata-value">
-                        <Select
-                            name="sourceType"
-                            bind:value={sourceTypeValue}
-                            options={questionSourceTypeOptions}
-                            triggerClass="modal-metadata-btn"
-                        />
-                    </div>
-                </div>
             </div>
 
             <div class="modal-mt-2">
@@ -246,7 +181,13 @@
 
             <div class="modal-description-section">
                 <span class="modal-metadata-label">Answer</span>
-                <Textarea name="answer" bind:value={answerValue} placeholder="Enter answer..." rows={5} class="modal-description-textarea" />
+                <Textarea
+                    name="answer"
+                    bind:value={answerValue}
+                    placeholder="Enter answer..."
+                    rows={5}
+                    class="modal-description-textarea"
+                />
             </div>
 
             <div class="modal-mt-2">

@@ -18,14 +18,16 @@
             class:md-editor__tab--active={tab === 'write'}
             onclick={() => (tab = 'write')}
             role="tab"
-            aria-selected={tab === 'write'}>Write</button>
+            aria-selected={tab === 'write'}>Write</button
+        >
         <button
             type="button"
             class="md-editor__tab"
             class:md-editor__tab--active={tab === 'preview'}
             onclick={() => (tab = 'preview')}
             role="tab"
-            aria-selected={tab === 'preview'}>Preview</button>
+            aria-selected={tab === 'preview'}>Preview</button
+        >
     </div>
     {#if tab === 'write'}
         <div class="md-editor__write">

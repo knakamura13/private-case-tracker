@@ -104,11 +104,7 @@
     });
 </script>
 
-<div
-    data-dropdown
-    class="select-root {klass}"
-    class:select-root--fluid={fluid}
->
+<div data-dropdown class="select-root {klass}" class:select-root--fluid={fluid}>
     {#if name}<input type="hidden" {name} {value} />{/if}
 
     <Button
@@ -129,12 +125,7 @@
     </Button>
 
     {#if isOpen}
-        <div
-            id={listId}
-            class="select-menu {sizeClass} {positionClass} {menuClass}"
-            role="listbox"
-            aria-orientation="vertical"
-        >
+        <div id={listId} class="select-menu {sizeClass} {positionClass} {menuClass}" role="listbox" aria-orientation="vertical">
             {#each options as o (o.value)}
                 <div
                     class="select-item"
@@ -197,7 +188,9 @@
         border: 1px solid var(--hairline);
         border-radius: 6px;
         padding: 4px;
-        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        box-shadow:
+            0 4px 6px -1px rgb(0 0 0 / 0.1),
+            0 2px 4px -2px rgb(0 0 0 / 0.1);
         z-index: 9999;
         outline: none;
         min-width: fit-content;
@@ -247,7 +240,9 @@
         cursor: pointer;
         font-size: 14px;
         color: var(--ink-1);
-        transition: background-color 0.15s ease, color 0.15s ease;
+        transition:
+            background-color 0.15s ease,
+            color 0.15s ease;
         outline: none;
         user-select: none;
         width: 100%;

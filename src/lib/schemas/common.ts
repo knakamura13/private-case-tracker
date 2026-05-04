@@ -26,4 +26,3 @@ export function stringOrEmpty(max = 2000) {
         .optional()
         .transform((v) => (v === undefined || v === '' ? null : v));
 }
-

@@ -155,12 +155,7 @@
             trapTabKey(e);
         }}
     >
-        <div
-            bind:this={dialogContentEl}
-            class="dialog-content"
-            style="max-width: 640px;"
-            role="none"
-        >
+        <div bind:this={dialogContentEl} class="dialog-content" style="max-width: 640px;" role="none">
             <div class="cmdpal-container">
                 <div class="cmdpal-search-row">
                     <Search size={20} style="color: var(--ink-3);" />
