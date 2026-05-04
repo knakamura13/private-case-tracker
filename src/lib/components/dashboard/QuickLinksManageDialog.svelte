@@ -105,6 +105,20 @@
 
     const folderFormAction = $derived(editingFolder ? '?/updateFolder' : '?/createFolder');
     const folderSubmitLabel = $derived(editingFolder ? 'Save' : 'Create');
+
+    // Focus URL input when link modal opens
+    $effect(() => {
+        if (modalOpen && modalMode === 'link') {
+            // Use setTimeout to ensure the DOM is updated after modal opens
+            setTimeout(() => {
+                const urlInput = document.querySelector('input[name="url"]') as HTMLInputElement;
+                if (urlInput) {
+                    urlInput.focus();
+                    urlInput.select();
+                }
+            }, 0);
+        }
+    });
 </script>
 
 {#if modalOpen && modalMode === 'folder'}
