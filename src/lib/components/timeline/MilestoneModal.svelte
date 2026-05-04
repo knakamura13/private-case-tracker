@@ -4,8 +4,7 @@
     import Button from '$lib/components/ui/Button.svelte';
     import Dialog from '$lib/components/ui/Dialog.svelte';
     import ErrorDetails from '$lib/components/ErrorDetails.svelte';
-    import RichText from '$lib/components/ui/RichText.svelte';
-    import TaskChecklistEditor from '$lib/components/tasks/TaskChecklistEditor.svelte';
+        import TaskChecklistEditor from '$lib/components/tasks/TaskChecklistEditor.svelte';
     import { fieldFromInitial } from '$lib/utils/initialFields';
     import type { ManualEnhanceHandler } from '$lib/utils/enhanceSubmit';
     import type { TaskChecklistItem } from '$lib/tasks/taskChecklist';
@@ -244,7 +243,7 @@
                         }}
                     >
                         {#if descriptionValue}
-                            <RichText text={descriptionValue} />
+                            <div class="modal-description-text">{descriptionValue}</div>
                         {:else}
                             <span class="modal-description-placeholder">Add a more detailed description...</span>
                         {/if}
@@ -310,7 +309,7 @@
                         }}
                     >
                         {#if descriptionValue}
-                            <RichText text={descriptionValue} />
+                            <div class="modal-description-text">{descriptionValue}</div>
                         {:else}
                             <span class="modal-description-placeholder">Add a more detailed description...</span>
                         {/if}

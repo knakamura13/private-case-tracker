@@ -1,8 +1,7 @@
 <script lang="ts">
     import PageHeader from '$lib/components/shared/PageHeader.svelte';
     import Button from '$lib/components/ui/Button.svelte';
-    import MarkdownRenderer from '$lib/components/shared/MarkdownRenderer.svelte';
-    import MilestoneModal from '$lib/components/timeline/MilestoneModal.svelte';
+        import MilestoneModal from '$lib/components/timeline/MilestoneModal.svelte';
     import { Plus, MapPin, Check, Clock } from 'lucide-svelte';
     import { fmtDate } from '$lib/utils/dates';
     import { PHASE_ORDER, PHASE_LABELS, PHASE_DESCRIPTIONS } from '$lib/constants/phases';
@@ -168,7 +167,7 @@
                                         <h3 class="timeline-milestone-title">{m.title}</h3>
                                         {#if m.description}
                                             <div class="timeline-milestone-body">
-                                                <MarkdownRenderer content={m.description} />
+                                                <div class="timeline-milestone-description">{m.description}</div>
                                             </div>
                                         {/if}
                                         <div class="timeline-milestone-footer">

@@ -1,7 +1,6 @@
 <script lang="ts">
     import Card from '$lib/components/ui/Card.svelte';
     import Badge from '$lib/components/ui/Badge.svelte';
-    import RichText from '$lib/components/ui/RichText.svelte';
     import { titleCase } from '$lib/utils/format';
     import { fmtDate } from '$lib/utils/dates';
     import { Calendar } from 'lucide-svelte';
@@ -107,7 +106,7 @@
                         <Badge variant="outline" class="task-card-badge">{titleCase(task.priority)}</Badge>
                     {/if}
                     {#if hasMeaningfulDescription(task.description)}
-                        <RichText text={task.description} lineClamp={true} class="task-card-description" />
+                        <div class="task-card-description task-card-description--clamped">{task.description}</div>
                     {/if}
                     {#if task.checklist && task.checklist.length > 0}
                         <div class="task-card-checklist">

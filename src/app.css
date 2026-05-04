@@ -427,6 +427,14 @@ body,
     margin-bottom: 8px;
 }
 
+.task-card-description--clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
 .task-card-checklist {
     margin-bottom: 8px;
 }
@@ -696,6 +704,15 @@ body,
 
 .modal-description-placeholder {
     color: var(--ink-3);
+}
+
+.modal-description-text {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink);
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 .modal-checklist-section {
@@ -1276,6 +1293,12 @@ button.modal-checklist-text-btn {
     color: var(--ink-2);
     line-height: 1.5;
     margin-bottom: 12px;
+}
+
+.timeline-milestone-description {
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 .timeline-milestone-footer {
