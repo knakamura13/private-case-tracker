@@ -563,13 +563,19 @@ body,
 
 .modal-title-input {
     flex: 1;
-    font-size: 32px;
+    font-size: 24px;
     font-weight: 400;
     font-family: var(--font-display);
     border: none;
     background: none;
     padding: 0;
     color: var(--ink-1);
+}
+
+@media (min-width: 768px) {
+    .modal-title-input {
+        font-size: 32px;
+    }
 }
 
 .modal-title-input::placeholder {
@@ -592,6 +598,12 @@ body,
     font-size: 12px;
     padding: 6px 12px;
     gap: 6px;
+}
+
+.modal-metadata-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
 }
 
 .modal-metadata-item {
@@ -844,8 +856,25 @@ button.modal-checklist-text-btn {
 /* Tasks Page */
 .tasks-board {
     display: grid;
-    grid-template-columns: repeat(4, minmax(240px, 1fr));
+    grid-template-columns: repeat(4, minmax(280px, 1fr));
     gap: 24px;
+    overflow-x: auto;
+    padding-bottom: 16px;
+    /* Hide scrollbar for cleaner look, but keep functionality */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+.tasks-board::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+@media (min-width: 1024px) {
+    .tasks-board {
+        grid-template-columns: repeat(4, 1fr);
+        overflow-x: visible;
+        padding-bottom: 0;
+    }
 }
 
 .tasks-column {
@@ -998,10 +1027,17 @@ button.modal-checklist-text-btn {
     border: 1px solid var(--hairline);
     border-radius: var(--r-sm);
     padding: 12px 16px;
-    font-size: 14px;
+    font-size: 16px;
     color: var(--ink);
     transition: all 150ms ease;
     width: 100%;
+}
+
+@media (min-width: 768px) {
+    .input,
+    .textarea {
+        font-size: 14px;
+    }
 }
 
 .dialog-content .input:hover,
@@ -1168,8 +1204,14 @@ button.modal-checklist-text-btn {
 /* Timeline page styles */
 .timeline-page {
     display: grid;
-    grid-template-columns: 1fr 320px;
+    grid-template-columns: 1fr;
     gap: 32px;
+}
+
+@media (min-width: 1024px) {
+    .timeline-page {
+        grid-template-columns: 1fr 320px;
+    }
 }
 
 .timeline-phase-rail {
@@ -1312,11 +1354,16 @@ button.modal-checklist-text-btn {
 }
 
 .timeline-sidebar {
-    position: sticky;
-    top: 32px;
     display: flex;
     flex-direction: column;
     gap: 16px;
+}
+
+@media (min-width: 1024px) {
+    .timeline-sidebar {
+        position: sticky;
+        top: 32px;
+    }
 }
 
 .timeline-sidebar-card {

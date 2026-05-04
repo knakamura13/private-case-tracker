@@ -150,6 +150,9 @@
         .sidebar-wrapper {
             display: block;
         }
+        .main-content {
+            padding: 32px 32px 48px;
+        }
     }
     .main-area {
         display: flex;
@@ -166,7 +169,7 @@
         min-height: 0;
         overflow-y: auto;
         overflow-x: hidden;
-        padding: 32px 32px 48px;
+        padding: 16px 16px 32px;
         background: var(--bg);
         display: flex;
         flex-direction: column;

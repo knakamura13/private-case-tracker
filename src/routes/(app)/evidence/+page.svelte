@@ -57,7 +57,7 @@
     </div>
 {/if}
 
-<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 48px;">
+<div class="evidence-grid">
     {#each data.categories as cat (cat.category)}
         <div class="card" style="padding: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
@@ -238,3 +238,22 @@
         </form>
     </Dialog>
 {/if}
+
+<style>
+    .evidence-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-bottom: 48px;
+    }
+    @media (min-width: 640px) {
+        .evidence-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @media (min-width: 1024px) {
+        .evidence-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+</style>

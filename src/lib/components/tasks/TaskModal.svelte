@@ -45,9 +45,6 @@
     let editableChecklist = $state<TaskChecklistItem[]>([]);
     let checklistJson = $derived(JSON.stringify(editableChecklist));
 
-    let showDueDatePicker = $state(false);
-    let dueDateInputEl = $state<HTMLInputElement | null>(null);
-
     let dueDateValue = $state('');
     let titleValue = $state('');
     let descriptionValue = $state('');
@@ -67,7 +64,6 @@
                 priorityValue = 'MEDIUM';
                 dueDateValue = '';
                 editableChecklist = [];
-                showDueDatePicker = false;
             } else {
                 titleValue = val('title');
                 descriptionValue = val('description');
@@ -75,19 +71,9 @@
                 priorityValue = val('priority', 'MEDIUM');
                 editableChecklist = parseTaskChecklist(initial.checklist);
                 dueDateValue = val('dueDate');
-                showDueDatePicker = false;
             }
-        } else if (mode === 'edit') {
-            showDueDatePicker = false;
         }
     });
-
-    function handleDueDateSave() {
-        if (dueDateInputEl) {
-            dueDateInputEl.value = dueDateValue;
-        }
-        showDueDatePicker = false;
-    }
 
     </script>
 
@@ -119,13 +105,6 @@
                 <Input name="title" bind:value={titleValue} class="modal-title-input display" placeholder="Task title" required />
             </div>
 
-            {#if showDueDatePicker}
-                <div class="modal-mt-2 modal-flex modal-gap-2">
-                    <Input type="date" bind:value={dueDateValue} class="modal-text-sm" />
-                    <Button type="button" size="sm" onclick={() => (showDueDatePicker = false)}>Done</Button>
-                </div>
-            {/if}
-
             <div class="modal-description-section">
                 <input type="hidden" name="description" value={descriptionValue} />
                 <Textarea
@@ -139,9 +118,31 @@
 
             <TaskChecklistEditor bind:items={editableChecklist} />
 
-            <input type="hidden" name="status" value={statusValue} />
-            <input type="hidden" name="priority" value={priorityValue} />
-            <input type="hidden" name="dueDate" value={dueDateValue} />
+            <div class="modal-metadata-grid">
+                <div class="modal-metadata-item">
+                    <label class="modal-metadata-label" for="status">Status</label>
+                    <select name="status" id="status" bind:value={statusValue} class="input">
+                        <option value="TODO">This week</option>
+                        <option value="IN_PROGRESS">Soon</option>
+                        <option value="WAITING">Waiting</option>
+                        <option value="DONE">Done</option>
+                    </select>
+                </div>
+                <div class="modal-metadata-item">
+                    <label class="modal-metadata-label" for="priority">Priority</label>
+                    <select name="priority" id="priority" bind:value={priorityValue} class="input">
+                        <option value="LOW">Low</option>
+                        <option value="MEDIUM">Medium</option>
+                        <option value="HIGH">High</option>
+                        <option value="URGENT">Urgent</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-metadata-item">
+                <label class="modal-metadata-label" for="dueDate">Due Date</label>
+                <Input name="dueDate" id="dueDate" type="date" bind:value={dueDateValue} />
+            </div>
 
             {#if error}
                 <ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />
@@ -160,14 +161,6 @@
                 />
             </div>
 
-            {#if showDueDatePicker}
-                <div class="modal-mt-2 modal-flex modal-gap-2">
-                    <Input bind:value={dueDateValue} type="date" class="modal-text-sm" />
-                    <Button type="button" size="sm" onclick={handleDueDateSave}>Save</Button>
-                    <Button type="button" variant="ghost" size="sm" onclick={() => (showDueDatePicker = false)}>Cancel</Button>
-                </div>
-            {/if}
-
             <div class="modal-description-section">
                 <Textarea
                     name="description"
@@ -180,11 +173,36 @@
 
             <TaskChecklistEditor bind:items={editableChecklist} />
 
+            <div class="modal-metadata-grid">
+                <div class="modal-metadata-item">
+                    <label class="modal-metadata-label" for="edit-status">Status</label>
+                    <select name="status" id="edit-status" bind:value={statusValue} class="input">
+                        <option value="TODO">This week</option>
+                        <option value="IN_PROGRESS">Soon</option>
+                        <option value="WAITING">Waiting</option>
+                        <option value="DONE">Done</option>
+                    </select>
+                </div>
+                <div class="modal-metadata-item">
+                    <label class="modal-metadata-label" for="edit-priority">Priority</label>
+                    <select name="priority" id="edit-priority" bind:value={priorityValue} class="input">
+                        <option value="LOW">Low</option>
+                        <option value="MEDIUM">Medium</option>
+                        <option value="HIGH">High</option>
+                        <option value="URGENT">Urgent</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-metadata-item">
+                <label class="modal-metadata-label" for="edit-dueDate">Due Date</label>
+                <Input name="dueDate" id="edit-dueDate" type="date" bind:value={dueDateValue} />
+            </div>
+
             {#if error}<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />{/if}
             <input type="hidden" name="description" value={descriptionValue} />
             <input type="hidden" name="checklist" value={checklistJson} />
             <input type="hidden" name="id" value={val('id')} />
-            <input type="hidden" name="dueDate" value={dueDateValue} bind:this={dueDateInputEl} />
         </form>
     </Dialog>
 {/if}
