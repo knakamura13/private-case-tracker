@@ -48,7 +48,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
             id: m.id,
             title: m.title,
             description: m.description ? truncate(m.description, 80) : undefined,
-            href: `/timeline/${m.id}`
+            href: `/timeline#${m.id}`
         })),
         Evidence: filteredEvidence.slice(0, LIMIT_PER_GROUP).map((e) => ({
             type: 'evidence',

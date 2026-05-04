@@ -8,6 +8,7 @@
     import { fmtDate } from '$lib/utils/dates';
     import { PHASE_ORDER, PHASE_LABELS, PHASE_DESCRIPTIONS } from '$lib/constants/phases';
     import { page } from '$app/state';
+    import { onMount } from 'svelte';
     import { getPageNumber } from '$lib/constants/navigation';
     import { invalidateAll, goto } from '$app/navigation';
     import { showSuccessToast } from '$lib/stores/toast';
@@ -90,6 +91,20 @@
     const completedPhases = $derived(grouped.filter((g) => phaseStatus(g.items) === 'done').length);
     const currentPhaseIndex = $derived(grouped.findIndex((g) => phaseStatus(g.items) === 'active'));
     const currentPhase = $derived(grouped.at(currentPhaseIndex) ?? null);
+
+    onMount(() => {
+        // Handle scrolling to milestone when URL contains hash fragment
+        if (window.location.hash) {
+            const milestoneId = window.location.hash.slice(1); // Remove #
+            const element = document.getElementById(milestoneId);
+            if (element) {
+                // Small delay to ensure page is fully rendered
+                setTimeout(() => {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+            }
+        }
+    });
 </script>
 
 <PageHeader title="Timeline" sub="Case phases from preparation through final outcome." number={getPageNumber('/timeline')} />
@@ -140,6 +155,7 @@
                                 </div>
                                 <button
                                     type="button"
+                                    id={m.id}
                                     onclick={async (e) => {
                                         e.currentTarget.blur();
                                         await updateUrl(m.id);
