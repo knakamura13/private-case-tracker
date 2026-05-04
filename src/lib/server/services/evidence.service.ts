@@ -162,8 +162,8 @@ export async function addEvidenceCategory(workspaceId: string, actorId: string, 
 
     await ddbUpdate<WorkspaceItem>(
         { PK: wsPk(workspaceId), SK: entitySk('Workspace', workspaceId) },
-        'SET #evidenceCategories = list_append(if_not_exists(#evidenceCategories, :empty), :newCat), #evidenceTargets.#category = if_not_exists(#evidenceTargets, :empty), #evidenceTargets.#category = :zero, #evidenceCounts.#category = if_not_exists(#evidenceCounts, :empty), #evidenceCounts.#category = :zero, #updatedAt = :u',
-        { ':empty': {}, ':newCat': [category], ':zero': 0, ':u': new Date().toISOString() },
+        'SET #evidenceCategories = list_append(if_not_exists(#evidenceCategories, :emptyList), :newCat), #evidenceTargets.#category = :zero, #evidenceCounts.#category = :zero, #updatedAt = :u',
+        { ':emptyList': [], ':newCat': [category], ':zero': 0, ':u': new Date().toISOString() },
         {
             '#evidenceCategories': 'evidenceCategories',
             '#evidenceTargets': 'evidenceTargets',

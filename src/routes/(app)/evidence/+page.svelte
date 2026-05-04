@@ -90,7 +90,20 @@
             tabindex="-1"
         >
             <h2 style="font-family: var(--font-display); font-size: 24px; margin-bottom: 16px;">Add Category</h2>
-            <form method="post" action="?/addCategory" use:enhance>
+            <form 
+                method="post" 
+                action="?/addCategory" 
+                use:enhance={({ formElement: _formElement, formData: _formData, action: _action, cancel: _cancel, submitter: _submitter }) => {
+                    // Let the form submit normally
+                    return async ({ result, update }) => {
+                        await update();
+                        // Close modal on successful submission
+                        if (result.type === 'success') {
+                            showAddModal = false;
+                        }
+                    };
+                }}
+            >
                 <label for="newCategory" style="display: block; font-size: 13px; margin-bottom: 4px;">Category name</label>
                 <Input id="newCategory" name="category" type="text" bind:value={newCategoryName} placeholder="e.g., Passport" />
                 <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
