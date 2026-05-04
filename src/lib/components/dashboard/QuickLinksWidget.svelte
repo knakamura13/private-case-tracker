@@ -481,6 +481,21 @@
         </div>
         <span style="font-size: 11px; font-weight: 500; color: var(--ink-3);">Add link</span>
     </button>
+
+    <button
+        type="button"
+        class="add-folder-button"
+        style="display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; background: none; border: none;"
+        onclick={() => qlDialog?.openAddFolder()}
+    >
+        <div
+            class="add-folder-icon"
+            style="width: 48px; height: 48px; background: var(--lilac); border: 1px dashed var(--lilac-d); border-radius: 12px; display: flex; align-items: center; justify-content: center;"
+        >
+            <Folder style="width: 24px; height: 24px; color: var(--lilac-d);" />
+        </div>
+        <span style="font-size: 11px; font-weight: 500; color: var(--lilac-d);">Add folder</span>
+    </button>
 </div>
 
 {#if folderPopoverId}
@@ -610,5 +625,29 @@
 
     .add-link-button:hover .add-link-icon :global(svg) {
         color: var(--ink-3);
+    }
+
+    .add-folder-button {
+        transition: transform 0.2s ease;
+        padding: 0;
+    }
+
+    .add-folder-button:hover {
+        transform: scale(1.05);
+    }
+
+    .add-folder-icon {
+        transition:
+            background 0.2s ease,
+            border-color 0.2s ease;
+    }
+
+    .add-folder-button:hover .add-folder-icon {
+        background: var(--lilac-d);
+        border-color: var(--lilac);
+    }
+
+    .add-folder-button:hover .add-folder-icon :global(svg) {
+        color: white;
     }
 </style>

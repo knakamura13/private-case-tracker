@@ -2,19 +2,39 @@
     import PageHeader from '$lib/components/shared/PageHeader.svelte';
     import Button from '$lib/components/ui/Button.svelte';
     import { enhance } from '$app/forms';
-    import { Plus } from 'lucide-svelte';
+    import { Plus, Check, Trash2, Edit2 } from 'lucide-svelte';
     import { getPageNumber } from '$lib/constants/navigation';
     import type { PageData } from './$types';
     import Input from '$lib/components/ui/Input.svelte';
+    import ThreeDotsMenu from '$lib/components/ui/ThreeDotsMenu.svelte';
+    import Dialog from '$lib/components/ui/Dialog.svelte';
+    import type { DropdownMenuItem } from '$lib/components/ui/menuTypes';
 
     let { data, form }: { data: PageData; form: { error?: string } } = $props();
 
     let showAddModal = $state(false);
     let newCategoryName = $state('');
+    let editingCategory = $state<string | null>(null);
+    let editCategoryName = $state('');
+    let deleteConfirmCategory = $state<string | null>(null);
 
     function openAddModal() {
         newCategoryName = '';
         showAddModal = true;
+    }
+
+    function startEdit(category: string) {
+        editingCategory = category;
+        editCategoryName = category;
+    }
+
+    function cancelEdit() {
+        editingCategory = null;
+        editCategoryName = '';
+    }
+
+    function openDeleteConfirm(category: string) {
+        deleteConfirmCategory = category;
     }
 </script>
 
@@ -41,10 +61,71 @@
     {#each data.categories as cat (cat.category)}
         <div class="card" style="padding: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                <div style="display: flex; align-items: center; gap: 8px; color: var(--ink-3);">
-                    <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;">{cat.category}</span
-                    >
+                <div style="display: flex; align-items: center; gap: 8px; color: var(--ink-3); flex: 1; min-width: 0;">
+                    {#if editingCategory === cat.category}
+                        <div style="display: flex; align-items: center; gap: 4px; flex: 1;">
+                            <Input
+                                type="text"
+                                bind:value={editCategoryName}
+                                style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 8px; height: 24px;"
+                                onkeydown={(e) => {
+                                    if (e.key === 'Escape') cancelEdit();
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        (e.target as HTMLFormElement).closest('form')?.requestSubmit();
+                                    }
+                                }}
+                            />
+                            <form
+                                method="post"
+                                action="?/renameCategory"
+                                use:enhance={({ formElement: _formElement, formData: _formData, action: _action, cancel: _cancel, submitter: _submitter }) => {
+                                    return async ({ result, update }) => {
+                                        await update();
+                                        if (result.type === 'success') {
+                                            editingCategory = null;
+                                            editCategoryName = '';
+                                        }
+                                    };
+                                }}
+                                style="display: contents;"
+                            >
+                                <input type="hidden" name="oldName" value={cat.category} />
+                                <input type="hidden" name="newName" value={editCategoryName} />
+                                <Button type="submit" variant="ghost" size="icon" class="modal-icon-btn-sm">
+                                    <Check style="width: 14px; height: 14px;" />
+                                </Button>
+                            </form>
+                            <Button type="button" variant="ghost" size="icon" class="modal-icon-btn-sm" onclick={cancelEdit}>
+                                <span style="font-size: 16px; line-height: 1;">×</span>
+                            </Button>
+                        </div>
+                    {:else}
+                        <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;">{cat.category}</span>
+                    {/if}
                 </div>
+                {#if data.isOwner}
+                    <ThreeDotsMenu
+                        menuId={`evidence-menu-${cat.category}`}
+                        position="bottom-left"
+                        items={[
+                            {
+                                id: 'rename',
+                                label: 'Rename',
+                                icon: Edit2,
+                                action: () => startEdit(cat.category)
+                            },
+                            {
+                                id: 'delete',
+                                label: 'Delete',
+                                icon: Trash2,
+                                variant: 'destructive',
+                                action: () => openDeleteConfirm(cat.category),
+                                disabled: cat.currentCount > 0
+                            }
+                        ] satisfies DropdownMenuItem[]}
+                    />
+                {/if}
             </div>
             <div style="display: flex; align-items: baseline; gap: 4px; justify-content: space-between;">
                 <div style="font-family: var(--font-display); font-size: 44px; font-weight: 500; line-height: 1; margin-bottom: 4px;">
@@ -90,9 +171,9 @@
             tabindex="-1"
         >
             <h2 style="font-family: var(--font-display); font-size: 24px; margin-bottom: 16px;">Add Category</h2>
-            <form 
-                method="post" 
-                action="?/addCategory" 
+            <form
+                method="post"
+                action="?/addCategory"
                 use:enhance={({ formElement: _formElement, formData: _formData, action: _action, cancel: _cancel, submitter: _submitter }) => {
                     // Let the form submit normally
                     return async ({ result, update }) => {
@@ -113,4 +194,47 @@
             </form>
         </div>
     </div>
+{/if}
+
+<!-- Delete Confirmation Dialog -->
+{#if deleteConfirmCategory}
+    {@const categoryToDelete = data.categories.find((c) => c.category === deleteConfirmCategory)}
+    <Dialog
+        open={true}
+        onClose={() => {
+            deleteConfirmCategory = null;
+        }}
+        title="Delete Category"
+        contentWidth="sm"
+        cancelLabel="Cancel"
+        submitLabel="Delete"
+        submitVariant="destructive"
+        footerFormId="delete-category-form"
+    >
+        <form
+            id="delete-category-form"
+            method="post"
+            action="?/deleteCategory"
+            use:enhance={({ formElement: _formElement, formData: _formData, action: _action, cancel: _cancel, submitter: _submitter }) => {
+                return async ({ result, update }) => {
+                    await update();
+                    if (result.type === 'success') {
+                        deleteConfirmCategory = null;
+                    }
+                };
+            }}
+        >
+            <input type="hidden" name="category" value={deleteConfirmCategory} />
+            <p style="font-size: 14px; line-height: 1.5; color: var(--ink-2); margin: 0;">
+                Are you sure you want to delete <strong>"{deleteConfirmCategory}"</strong>?
+                {#if categoryToDelete && categoryToDelete.currentCount > 0}
+                    <br /><br />
+                    <span style="color: var(--blush-d);">This category has {categoryToDelete.currentCount} items and cannot be deleted.</span>
+                {:else}
+                    <br /><br />
+                    This action cannot be undone.
+                {/if}
+            </p>
+        </form>
+    </Dialog>
 {/if}

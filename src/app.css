@@ -320,6 +320,11 @@ body,
     padding: 0 10px;
     font-size: 12px;
 }
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
 
 /* Icon-only triggers (e.g. ⋮ menus): equal width/height, no horizontal stretch */
 .btn.icon {

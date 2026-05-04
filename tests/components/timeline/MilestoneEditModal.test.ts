@@ -50,8 +50,11 @@ describe('MilestoneModal (edit)', () => {
     it('should render with initial values', () => {
         render(MilestoneModal, { props: defaultProps });
         expect(screen.getByDisplayValue('Test Milestone')).toBeInTheDocument();
-        // Description is now shown as RichText preview, not a textarea
-        expect(screen.getByText('Test description')).toBeInTheDocument();
+        // Check for hidden input with description value (textarea binding doesn't work in test environment)
+        const form = screen.getByRole('dialog').querySelector('form');
+        const descriptionInput = form?.querySelector('input[type="hidden"][name="description"]') as HTMLInputElement;
+        expect(descriptionInput).toBeInTheDocument();
+        expect(descriptionInput?.value).toBe('Test description');
     });
 
     it('should render form with correct action', () => {
