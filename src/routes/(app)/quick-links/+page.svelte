@@ -1,8 +1,7 @@
 <script lang="ts">
     import type { QuickLink, QuickLinkFolder } from '$lib/types/enums';
     import PageHeader from '$lib/components/shared/PageHeader.svelte';
-    import Button from '$lib/components/ui/Button.svelte';
-    import QuickLinksManageDialog from '$lib/components/dashboard/QuickLinksManageDialog.svelte';
+        import QuickLinksManageDialog from '$lib/components/dashboard/QuickLinksManageDialog.svelte';
     import ThreeDotsMenu from '$lib/components/ui/ThreeDotsMenu.svelte';
     import { Plus, Folder, Link2, Edit, Trash2 } from 'lucide-svelte';
     import { getPageNumber } from '$lib/constants/navigation';
@@ -32,11 +31,7 @@
     }
 </script>
 
-<PageHeader title="Quick links" sub="Access your most-used resources and documents." number={getPageNumber('/quick-links')}>
-    {#snippet actions()}
-        <Button variant="ghost" onclick={() => openAdd()}><Plus style="width: 14px; height: 14px;" /> Add link</Button>
-    {/snippet}
-</PageHeader>
+<PageHeader title="Quick links" sub="Access your most-used resources and documents." number={getPageNumber('/quick-links')} />
 
 <div
     style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 24px; padding: 24px; background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--r-lg);"
@@ -133,6 +128,20 @@
             <Plus style="width: 32px; height: 32px; color: var(--ink-4);" />
         </div>
         <span class="add-link-text" style="font-size: 13px; font-weight: 500; color: var(--ink-3);">Add link</span>
+    </button>
+
+    <button
+        class="widget-item"
+        style="display: flex; flex-direction: column; align-items: center; gap: 12px; cursor: pointer; background: none; border: none; padding: 0;"
+        onclick={() => qlDialog?.openAddFolder()}
+    >
+        <div
+            class="add-folder-icon"
+            style="width: 64px; height: 64px; background: var(--lilac); border: 1px dashed var(--lilac-d); border-radius: 16px; display: flex; align-items: center; justify-content: center;"
+        >
+            <Folder style="width: 32px; height: 32px; color: var(--lilac-d);" />
+        </div>
+        <span class="add-folder-text" style="font-size: 13px; font-weight: 500; color: var(--lilac-d);">Add folder</span>
     </button>
 </div>
 
