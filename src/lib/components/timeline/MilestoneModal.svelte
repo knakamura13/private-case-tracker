@@ -321,6 +321,7 @@
             <TaskChecklistEditor bind:items={editableSubTasks} />
 
             {#if error}<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />{/if}
+            <input type="hidden" name="description" value={descriptionValue} />
             <input type="hidden" name="subTasks" value={subTasksJson} />
             <input type="hidden" name="id" value={val('id')} />
             <input type="hidden" name="dueDate" value={dueDateValue} bind:this={dueDateInputEl} />
