@@ -182,6 +182,8 @@
 
             {#if error}<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />{/if}
             <input type="hidden" name="description" value={descriptionValue} />
+            <input type="hidden" name="status" value={statusValue} />
+            <input type="hidden" name="priority" value={priorityValue} />
             <input type="hidden" name="checklist" value={checklistJson} />
             <input type="hidden" name="id" value={val('id')} />
             <input type="hidden" name="dueDate" value={dueDateValue} bind:this={dueDateInputEl} />

@@ -202,6 +202,10 @@
                     <ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />
                 </div>
             {/if}
+            <input type="hidden" name="category" value={categoryValue} />
+            <input type="hidden" name="priority" value={priorityValue} />
+            <input type="hidden" name="status" value={statusValue} />
+            <input type="hidden" name="sourceType" value={sourceTypeValue} />
         </form>
     </Dialog>
 {/if}
