@@ -116,8 +116,7 @@
                     </div>
                 {/if}
                 {#if task.checklist && task.checklist.length > 0}
-                    <span class="task-card-subtask-count mono"
-                        >{task.checklist.filter((ci) => ci.done).length}/{task.checklist.length}</span
+                    <span class="task-card-subtask-count mono">{task.checklist.filter((ci) => ci.done).length}/{task.checklist.length}</span
                     >
                 {/if}
             </div>

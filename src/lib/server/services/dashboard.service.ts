@@ -1,7 +1,7 @@
 /* eslint-disable security/detect-object-injection */
 import { PHASE_ORDER, PHASE_LABELS } from '$lib/constants/phases';
 import { currentPhase } from './milestone.service';
-import type { MilestonePhase, MilestoneStatus, QuestionStatus } from '$lib/types/enums';
+import type { MilestonePhase, MilestoneStatus, QuestionStatus, TaskStatus } from '$lib/types/enums';
 import { recentActivity } from '$lib/server/activity';
 import { getEvidenceCategories } from './evidence.service';
 import { listQuestions } from './question.service';
@@ -13,11 +13,10 @@ import { listTasks } from './task.service';
 export async function dashboardFor(workspaceId: string) {
     const now = new Date();
 
-    const [evidenceCategories, openQuestionsAll, milestonesAll, activity, quickLinks, quickLinkFolders, tasks] = await Promise.all([
+    const [evidenceCategories, questionsAll, milestonesAll, activity, quickLinks, quickLinkFolders, tasks] = await Promise.all([
         getEvidenceCategories(workspaceId),
-        listQuestions(workspaceId, { status: 'OPEN' as QuestionStatus }).then(async (rows) =>
-            rows.concat(await listQuestions(workspaceId, { status: 'RESEARCHING' as QuestionStatus }))
-        ),
+        // Optimization: Fetch all questions once instead of calling listQuestions twice for different statuses
+        listQuestions(workspaceId),
         listMilestones(workspaceId),
         recentActivity(workspaceId, 10),
         listQuickLinks(workspaceId),
@@ -39,7 +38,11 @@ export async function dashboardFor(workspaceId: string) {
     const gapsCount = evidenceCoverage.filter((c) => c.total < c.target).length;
 
     const openQuestionsCount: Record<string, number> = { LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0 };
-    for (const q of await openQuestionsAll) {
+    // Optimization: Filter for 'OPEN' or 'RESEARCHING' status from the single questions fetch
+    const openQuestionsAll = questionsAll.filter(
+        (q) => (q.status as QuestionStatus) === 'OPEN' || (q.status as QuestionStatus) === 'RESEARCHING'
+    );
+    for (const q of openQuestionsAll) {
         openQuestionsCount[q.priority] = (openQuestionsCount[q.priority] ?? 0) + 1;
     }
 
@@ -49,8 +52,16 @@ export async function dashboardFor(workspaceId: string) {
             status: m.status as MilestoneStatus
         }))
     );
+
+    // Optimization: Group milestones by phase in a single pass to avoid repeated filtering
+    const milestonesByPhase: Record<string, typeof milestonesAll> = {};
+    for (const m of milestonesAll) {
+        if (!milestonesByPhase[m.phase]) milestonesByPhase[m.phase] = [];
+        milestonesByPhase[m.phase].push(m);
+    }
+
     const phaseProgress = PHASE_ORDER.map((p) => {
-        const items = milestonesAll.filter((m) => m.phase === p);
+        const items = milestonesByPhase[p] ?? [];
         if (items.length === 0) return { phase: p, label: PHASE_LABELS[p], total: 0, done: 0 };
         const done = items.filter((m) => m.status === 'DONE' || m.status === ('SKIPPED' as MilestoneStatus)).length;
         return { phase: p, label: PHASE_LABELS[p], total: items.length, done };
@@ -83,14 +94,21 @@ export async function dashboardFor(workspaceId: string) {
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
         .slice(0, 5);
 
-    const taskSummary = {
-        pending: tasks.filter((task) => task.status === 'TODO').length,
-        inProgress: tasks.filter((task) => task.status === 'IN_PROGRESS').length,
-        completed: tasks.filter((task) => task.status === 'DONE').length
-    };
+    // Optimization: Consolidate task summary and preview preparation into a single pass
+    const taskSummary = { pending: 0, inProgress: 0, completed: 0 };
+    const tasksToPreview = [];
 
-    const tasksPreview = tasks
-        .filter((task) => task.status !== 'DONE')
+    for (const task of tasks) {
+        if (task.status === 'TODO') taskSummary.pending++;
+        else if (task.status === ('IN_PROGRESS' as TaskStatus)) taskSummary.inProgress++;
+        else if (task.status === 'DONE') taskSummary.completed++;
+
+        if (task.status !== 'DONE') {
+            tasksToPreview.push(task);
+        }
+    }
+
+    const tasksPreview = tasksToPreview
         .sort((a, b) => {
             const dueA = a.dueDate ? new Date(a.dueDate).getTime() : Number.POSITIVE_INFINITY;
             const dueB = b.dueDate ? new Date(b.dueDate).getTime() : Number.POSITIVE_INFINITY;
@@ -115,8 +133,8 @@ export async function dashboardFor(workspaceId: string) {
         countdowns,
         taskSummary,
         tasksPreview,
-        quickLinks: quickLinks,
-        quickLinkFolders: quickLinkFolders
+        quickLinks,
+        quickLinkFolders
     };
 }
 

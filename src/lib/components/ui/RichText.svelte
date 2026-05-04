@@ -14,23 +14,23 @@
     // Function to parse text and convert URLs and phone numbers to structured segments
     function parseText(text: string): TextSegment[][] {
         const lines: TextSegment[][] = [];
-        
+
         // Split by newlines
         const textLines = text.split('\n');
-        
+
         for (const line of textLines) {
             if (line.trim() === '') {
                 lines.push([{ type: 'text', content: '' }]);
                 continue;
             }
-            
+
             const segments: TextSegment[] = [];
-            
+
             // Find URLs
             const urlRegex = /(www\.[^\s]+|https?:\/\/[^\s]+)/g;
             let urlMatch;
             let lastIndex = 0;
-            
+
             while ((urlMatch = urlRegex.exec(line)) !== null) {
                 // Add text before the URL
                 if (urlMatch.index > lastIndex) {
@@ -39,15 +39,15 @@
                         segments.push({ type: 'text', content: textBefore });
                     }
                 }
-                
+
                 // Add the URL segment
                 const url = urlMatch[0];
                 const href = url.startsWith('www.') ? `https://${url}` : url;
                 segments.push({ type: 'url', content: url, href });
-                
+
                 lastIndex = urlRegex.lastIndex;
             }
-            
+
             // Add remaining text after last URL
             if (lastIndex < line.length) {
                 const remainingText = line.slice(lastIndex);
@@ -55,14 +55,14 @@
                     segments.push({ type: 'text', content: remainingText });
                 }
             }
-            
+
             // If no URLs found, process the whole line for phone numbers
             if (segments.length === 0) {
                 const phoneRegex = /\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g;
                 let phoneMatch;
                 let phoneLastIndex = 0;
                 const phoneSegments: TextSegment[] = [];
-                
+
                 while ((phoneMatch = phoneRegex.exec(line)) !== null) {
                     // Add text before the phone
                     if (phoneMatch.index > phoneLastIndex) {
@@ -71,15 +71,15 @@
                             phoneSegments.push({ type: 'text', content: textBefore });
                         }
                     }
-                    
+
                     // Add the phone segment
                     const phone = phoneMatch[0];
                     const digits = phone.replace(/\D/g, '');
                     phoneSegments.push({ type: 'phone', content: phone, href: `tel:${digits}` });
-                    
+
                     phoneLastIndex = phoneRegex.lastIndex;
                 }
-                
+
                 // Add remaining text after last phone
                 if (phoneLastIndex < line.length) {
                     const remainingText = line.slice(phoneLastIndex);
@@ -87,12 +87,12 @@
                         phoneSegments.push({ type: 'text', content: remainingText });
                     }
                 }
-                
+
                 // If no phones found, just add the whole line as text
                 if (phoneSegments.length === 0) {
                     phoneSegments.push({ type: 'text', content: line });
                 }
-                
+
                 lines.push(phoneSegments);
             } else {
                 // Process URL segments for phone numbers
@@ -102,7 +102,7 @@
                         const phoneRegex = /\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g;
                         let phoneMatch;
                         let phoneLastIndex = 0;
-                        
+
                         while ((phoneMatch = phoneRegex.exec(segment.content)) !== null) {
                             // Add text before the phone
                             if (phoneMatch.index > phoneLastIndex) {
@@ -111,15 +111,15 @@
                                     processedSegments.push({ type: 'text', content: textBefore });
                                 }
                             }
-                            
+
                             // Add the phone segment
                             const phone = phoneMatch[0];
                             const digits = phone.replace(/\D/g, '');
                             processedSegments.push({ type: 'phone', content: phone, href: `tel:${digits}` });
-                            
+
                             phoneLastIndex = phoneRegex.lastIndex;
                         }
-                        
+
                         // Add remaining text after last phone
                         if (phoneLastIndex < segment.content.length) {
                             const remainingText = segment.content.slice(phoneLastIndex);
@@ -134,7 +134,7 @@
                 lines.push(processedSegments);
             }
         }
-        
+
         return lines;
     }
 
@@ -163,12 +163,12 @@
         line-height: 1.5;
         white-space: pre-wrap;
     }
-    
+
     .link {
         color: var(--link, #0066cc);
         text-decoration: underline;
     }
-    
+
     .link:hover {
         color: var(--link-hover, #0052a3);
     }

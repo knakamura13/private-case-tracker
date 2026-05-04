@@ -72,9 +72,7 @@
                 <Input id="totp" inputmode="numeric" autocomplete="one-time-code" bind:value={totpCode} required />
             </div>
             {#if error}<p class="auth-text-sm auth-text-destructive">{error}</p>{/if}
-            <Button type="submit" {loading} class="auth-w-full">
-                Verify
-            </Button>
+            <Button type="submit" {loading} class="auth-w-full">Verify</Button>
         </form>
     {:else}
         <form class="auth-form" onsubmit={handleLogin}>

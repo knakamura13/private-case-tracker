@@ -1,7 +1,7 @@
 <script lang="ts">
     import PageHeader from '$lib/components/shared/PageHeader.svelte';
     import Button from '$lib/components/ui/Button.svelte';
-        import MilestoneModal from '$lib/components/timeline/MilestoneModal.svelte';
+    import MilestoneModal from '$lib/components/timeline/MilestoneModal.svelte';
     import { Plus, MapPin, Check, Clock } from 'lucide-svelte';
     import { fmtDate } from '$lib/utils/dates';
     import { PHASE_ORDER, PHASE_LABELS, PHASE_DESCRIPTIONS } from '$lib/constants/phases';

@@ -54,7 +54,6 @@
     const statusPillClass = $derived(() => taskStatusPillClass(statusValue));
     const statusLabel = $derived(() => taskStatusLabel(statusValue));
 
-
     $effect(() => {
         if (open) {
             if (mode === 'create') {
@@ -74,8 +73,7 @@
             }
         }
     });
-
-    </script>
+</script>
 
 {#snippet taskHeader()}
     <span class="pill {statusPillClass()}">{statusLabel()}</span>
@@ -153,12 +151,7 @@
     <Dialog {open} {onClose} ariaLabel="Edit task" header={taskHeader} footer={taskEditFooter}>
         <form id="task-edit-form" method="post" {action} class="modal-form">
             <div class="modal-title-row">
-                <Input
-                    name="title"
-                    bind:value={titleValue}
-                    class="modal-title-input display"
-                    placeholder="Task title"
-                />
+                <Input name="title" bind:value={titleValue} class="modal-title-input display" placeholder="Task title" />
             </div>
 
             <div class="modal-description-section">

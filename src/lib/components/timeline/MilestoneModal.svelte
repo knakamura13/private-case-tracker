@@ -4,7 +4,7 @@
     import Button from '$lib/components/ui/Button.svelte';
     import Dialog from '$lib/components/ui/Dialog.svelte';
     import ErrorDetails from '$lib/components/ErrorDetails.svelte';
-        import TaskChecklistEditor from '$lib/components/tasks/TaskChecklistEditor.svelte';
+    import TaskChecklistEditor from '$lib/components/tasks/TaskChecklistEditor.svelte';
     import { fieldFromInitial } from '$lib/utils/initialFields';
     import type { ManualEnhanceHandler } from '$lib/utils/enhanceSubmit';
     import type { TaskChecklistItem } from '$lib/tasks/taskChecklist';
@@ -75,7 +75,6 @@
     let dueDateInputEl = $state<HTMLInputElement | null>(null);
     let scheduledAtInputEl = $state<HTMLInputElement | null>(null);
 
-
     $effect(() => {
         if (open) {
             if (mode === 'create') {
@@ -136,7 +135,6 @@
         }
         showAppointmentDatePicker = false;
     }
-
 </script>
 
 {#snippet milestoneInlinePickers()}
@@ -235,12 +233,7 @@
     <Dialog {open} {onClose} ariaLabel="Edit milestone" header={milestoneEditHeader} footer={milestoneEditFooter}>
         <form id="milestone-edit-form" method="post" {action} class="modal-form">
             <div class="modal-title-row">
-                <Input
-                    name="title"
-                    bind:value={titleValue}
-                    class="modal-title-input display"
-                    placeholder="Milestone title"
-                />
+                <Input name="title" bind:value={titleValue} class="modal-title-input display" placeholder="Milestone title" />
             </div>
 
             {@render milestoneInlinePickers()}

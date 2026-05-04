@@ -79,7 +79,13 @@
                             <form
                                 method="post"
                                 action="?/renameCategory"
-                                use:enhance={({ formElement: _formElement, formData: _formData, action: _action, cancel: _cancel, submitter: _submitter }) => {
+                                use:enhance={({
+                                    formElement: _formElement,
+                                    formData: _formData,
+                                    action: _action,
+                                    cancel: _cancel,
+                                    submitter: _submitter
+                                }) => {
                                     return async ({ result, update }) => {
                                         await update();
                                         if (result.type === 'success') {
@@ -101,7 +107,9 @@
                             </Button>
                         </div>
                     {:else}
-                        <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;">{cat.category}</span>
+                        <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;"
+                            >{cat.category}</span
+                        >
                     {/if}
                 </div>
                 {#if data.isOwner}
@@ -174,7 +182,13 @@
             <form
                 method="post"
                 action="?/addCategory"
-                use:enhance={({ formElement: _formElement, formData: _formData, action: _action, cancel: _cancel, submitter: _submitter }) => {
+                use:enhance={({
+                    formElement: _formElement,
+                    formData: _formData,
+                    action: _action,
+                    cancel: _cancel,
+                    submitter: _submitter
+                }) => {
                     // Let the form submit normally
                     return async ({ result, update }) => {
                         await update();
@@ -229,7 +243,9 @@
                 Are you sure you want to delete <strong>"{deleteConfirmCategory}"</strong>?
                 {#if categoryToDelete && categoryToDelete.currentCount > 0}
                     <br /><br />
-                    <span style="color: var(--blush-d);">This category has {categoryToDelete.currentCount} items and cannot be deleted.</span>
+                    <span style="color: var(--blush-d);"
+                        >This category has {categoryToDelete.currentCount} items and cannot be deleted.</span
+                    >
                 {:else}
                     <br /><br />
                     This action cannot be undone.
