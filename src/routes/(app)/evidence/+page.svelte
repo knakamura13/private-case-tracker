@@ -60,7 +60,7 @@
             <div style="height: 6px; background: var(--surface-3); border-radius: 3px; overflow: hidden; margin-top: 12px;">
                 <div
                     style:width={`${Math.min(100, cat.targetCount > 0 ? (cat.currentCount / cat.targetCount) * 100 : 0)}%`}
-                    style="height: 100%; background: var(--lilac-d);"
+                    style="height: 100%; background: var(--lilac-d); transition: width 0.4s ease-in-out;"
                 ></div>
             </div>
         </div>

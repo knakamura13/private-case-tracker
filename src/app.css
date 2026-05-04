@@ -731,7 +731,7 @@ body,
 .modal-checklist-progress-fill {
     height: 100%;
     background: var(--sage-fill);
-    transition: width 0.3s ease;
+    transition: width 0.4s ease-in-out;
 }
 
 .modal-checklist-items {
