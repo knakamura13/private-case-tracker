@@ -6,14 +6,18 @@
     let {
         items,
         menuId,
-        position = 'bottom-right'
+        position = 'bottom-center'
     }: {
         items: DropdownMenuItem[];
         menuId: string;
-        position?: 'bottom-right' | 'bottom-left';
+        position?: 'bottom-right' | 'bottom-left' | 'bottom-center' | 'top-center';
     } = $props();
 
-    const dropdownPosition = $derived.by((): 'bottom-end' | 'bottom-start' => (position === 'bottom-left' ? 'bottom-start' : 'bottom-end'));
+    const dropdownPosition = $derived.by((): 'bottom-end' | 'bottom-start' | 'bottom-center' | 'top-center' => {
+        if (position === 'bottom-left') return 'bottom-start';
+        if (position === 'bottom-right') return 'bottom-end';
+        return position;
+    });
 </script>
 
 <DropdownMenu {items} {menuId} position={dropdownPosition} size="sm" triggerLabel="More options" triggerIcon={MoreHorizontal} />
