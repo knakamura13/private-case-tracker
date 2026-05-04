@@ -1,105 +1,101 @@
 <script lang="ts">
-	import PageHeader from '$lib/components/shared/PageHeader.svelte';
-	import Card from '$lib/components/ui/Card.svelte';
-	import Input from '$lib/components/ui/Input.svelte';
-	import Select from '$lib/components/ui/Select.svelte';
-	import Label from '$lib/components/ui/Label.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import Badge from '$lib/components/ui/Badge.svelte';
-	import { Trash2 } from 'lucide-svelte';
-	import { enhance } from '$app/forms';
-	import { fmtDate } from '$lib/utils/dates';
-	import type { ActionData, PageData } from './$types';
-	import { page } from '$app/stores';
+    import PageHeader from '$lib/components/shared/PageHeader.svelte';
+    import Button from '$lib/components/ui/Button.svelte';
+    import Select from '$lib/components/ui/Select.svelte';
+    import { Trash2, Copy, Shield, UserPlus } from 'lucide-svelte';
+    import { enhance } from '$app/forms';
+    import { getPageNumber } from '$lib/constants/navigation';
+    import type { ActionData, PageData } from './$types';
+    import { page } from '$app/state';
 
-	let { data, form }: { data: PageData; form: ActionData } = $props();
-	const isOwner = $derived($page.data.workspace?.role === 'OWNER');
+    let { data, form }: { data: PageData; form: ActionData } = $props();
+    const isOwner = $derived(page.data.workspace?.role === 'OWNER');
 
-	let copied = $state(false);
+    const inviteRoleOptions = [
+        { value: 'COLLABORATOR', label: 'Collaborator' },
+        { value: 'OWNER', label: 'Owner' }
+    ];
+    let inviteRole = $state('COLLABORATOR');
 
-	async function copyToClipboard(url: string) {
-		await navigator.clipboard.writeText(url);
-		copied = true;
-		setTimeout(() => (copied = false), 2000);
-	}
+    async function copyToClipboard(url: string) {
+        await navigator.clipboard.writeText(url);
+    }
 </script>
 
-<PageHeader title="Members" description="This workspace is designed for two users." />
+<PageHeader title="Settings" sub="Manage members, case access, and security." number={getPageNumber('/settings')} />
 
-<Card class="settings-members-card">
-	<h2>Active members</h2>
-	<ul class="settings-members-list">
-		{#each data.members as m (m.id)}
-			<li class="settings-members-item">
-				<div>
-					<p class="settings-members-font-medium">{m.user.name ?? m.user.email}</p>
-					<p class="settings-members-text-xs settings-members-text-muted">{m.user.email}</p>
-				</div>
-				<div class="settings-members-item-actions">
-					{#if isOwner && m.user.id !== $page.data.user?.id}
-						<form method="post" action="?/removeMember" use:enhance>
-							<input type="hidden" name="userId" value={m.user.id} />
-							<Button type="submit" variant="destructive" size="sm" aria-label="Remove member">
-								<Trash2 class="settings-members-icon-sm" />
-							</Button>
-						</form>
-					{/if}
-					<Badge>{m.role}</Badge>
-				</div>
-			</li>
-		{/each}
-	</ul>
-</Card>
+<div style="max-width: 880px; display: flex; flex-direction: column; gap: 24px;">
+    <div class="card" style="padding: 24px;">
+        <h2 class="display" style="font-size: 24px; margin-top: 0; margin-bottom: 20px;">Members</h2>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            {#each data.members as m (m.id)}
+                <div
+                    style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--surface-2); border-radius: var(--r-md);"
+                >
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div>
+                            <p style="font-size: 14px; font-weight: 500;">{m.user.name ?? m.user.email}</p>
+                            <p style="font-size: 12px; color: var(--ink-3);">{m.user.email}</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span class="pill {m.role === 'OWNER' ? 's-active' : 's-note'}" style="font-size: 10px;">{m.role}</span>
+                        {#if isOwner && m.user.id !== page.data.user?.id}
+                            <form method="post" action="?/removeMember" use:enhance>
+                                <input type="hidden" name="userId" value={m.user.id} />
+                                <button type="submit" style="background: none; border: none; cursor: pointer; color: var(--blush-d);">
+                                    <Trash2 style="width: 16px; height: 16px;" />
+                                </button>
+                            </form>
+                        {/if}
+                    </div>
+                </div>
+            {/each}
+        </div>
+        <div
+            style="margin-top: 16px; padding: 12px; border: 1px solid var(--lilac-d); border-radius: var(--r-sm); background: var(--lilac); display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-2);"
+        >
+            <Shield style="width: 16px; height: 16px;" />
+            This case is private. Only invited members can sign in.
+        </div>
+    </div>
 
-{#if isOwner}
-	<Card class="settings-members-card">
-		<h2>Invite a user</h2>
-		<form method="post" action="?/invite" use:enhance class="settings-members-invite-form">
-			<div>
-				<Label for="email">Email</Label>
-				<Input id="email" name="email" type="email" required />
-			</div>
-			<div>
-				<Label for="role">Role</Label>
-				<Select id="role" name="role" value="COLLABORATOR">
-					<option value="COLLABORATOR">Collaborator</option>
-					<option value="OWNER">Owner</option>
-				</Select>
-			</div>
-			<div class="settings-members-flex settings-members-items-end"><Button type="submit">Create invite link</Button></div>
-			{#if form?.error}<p class="settings-members-md-col-span-3 settings-members-text-sm settings-members-text-destructive">{form.error}</p>{/if}
-		</form>
-		{#if form?.ok && form?.inviteUrl}
-			<div class="settings-members-invite-result">
-				<p>Invite link created</p>
-				<div class="settings-members-invite-url">
-					<code>{form.inviteUrl}</code>
-					<Button onclick={() => copyToClipboard(form.inviteUrl)} size="sm" variant="outline">
-						{copied ? 'Copied!' : 'Copy'}
-					</Button>
-				</div>
-				<p class="settings-members-mt-2 settings-members-text-xs settings-members-text-muted">Share this link with the user. It expires in 7 days.</p>
-			</div>
-		{/if}
-	</Card>
+    {#if isOwner}
+        <div class="card" style="padding: 24px;">
+            <h2 class="display" style="font-size: 24px; margin-top: 0; margin-bottom: 20px;">Invite a user</h2>
+            <form
+                method="post"
+                action="?/invite"
+                use:enhance
+                style="display: grid; grid-template-columns: 1fr 160px auto; gap: 16px; align-items: end;"
+            >
+                <div>
+                    <label for="invite-email" style="display: block; font-size: 13px; margin-bottom: 4px;">Email</label>
+                    <input id="invite-email" name="email" type="email" class="input" style="width: 100%;" required />
+                </div>
+                <div>
+                    <label for="invite-role" style="display: block; font-size: 13px; margin-bottom: 4px;">Role</label>
+                    <Select id="invite-role" name="role" bind:value={inviteRole} options={inviteRoleOptions} fluid position="bottom-end" />
+                </div>
+                <Button type="submit"><UserPlus style="width: 14px; height: 14px; margin-right: 4px;" /> Create link</Button>
+            </form>
 
-	{#if data.invitations.length > 0}
-		<Card class="settings-members-card">
-			<h2>Pending invitations</h2>
-			<ul class="settings-members-list">
-				{#each data.invitations as inv (inv.id)}
-					<li class="settings-members-item">
-						<div>
-							<p class="settings-members-font-medium">{inv.email}</p>
-							<p class="settings-members-text-xs settings-members-text-muted">{inv.role} · expires {fmtDate(inv.expiresAt)}</p>
-						</div>
-						<form method="post" action="?/revoke" use:enhance>
-							<input type="hidden" name="id" value={inv.id} />
-							<Button type="submit" variant="outline" size="sm">Revoke</Button>
-						</form>
-					</li>
-				{/each}
-			</ul>
-		</Card>
-	{/if}
-{/if}
+            {#if form?.ok && form?.inviteUrl}
+                <div
+                    style="margin-top: 20px; padding: 16px; background: var(--surface-2); border-radius: var(--r-md); border: 1px dashed var(--hairline);"
+                >
+                    <p style="font-size: 13px; margin-bottom: 8px;">Invite link created</p>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <code
+                            style="font-family: var(--font-mono); font-size: 12px; padding: 6px; background: var(--surface); border: 1px solid var(--hairline); flex: 1;"
+                            >{form.inviteUrl}</code
+                        >
+                        <Button onclick={() => copyToClipboard(form.inviteUrl)} size="sm" variant="outline"
+                            ><Copy style="width: 14px; height: 14px;" /></Button
+                        >
+                    </div>
+                </div>
+            {/if}
+        </div>
+    {/if}
+</div>

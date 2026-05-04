@@ -5,24 +5,24 @@ import { ENV } from '$lib/server/env';
 const globalForDdb = globalThis as unknown as { ddbDoc?: DynamoDBDocumentClient };
 
 function createDocClient() {
-	const client = new DynamoDBClient({
-		region: ENV.AWS_REGION,
-		...(ENV.DYNAMO_ENDPOINT
-			? {
-					endpoint: ENV.DYNAMO_ENDPOINT,
-					// DynamoDB Local accepts any credentials but the SDK requires some value.
-					credentials: {
-						accessKeyId: 'local',
-						secretAccessKey: 'local'
-					}
-				}
-			: {})
-	});
-	return DynamoDBDocumentClient.from(client, {
-		marshallOptions: {
-			removeUndefinedValues: true
-		}
-	});
+    const client = new DynamoDBClient({
+        region: ENV.AWS_REGION,
+        ...(ENV.DYNAMO_ENDPOINT
+            ? {
+                  endpoint: ENV.DYNAMO_ENDPOINT,
+                  // DynamoDB Local accepts any credentials but the SDK requires some value.
+                  credentials: {
+                      accessKeyId: 'local',
+                      secretAccessKey: 'local'
+                  }
+              }
+            : {})
+    });
+    return DynamoDBDocumentClient.from(client, {
+        marshallOptions: {
+            removeUndefinedValues: true
+        }
+    });
 }
 
 export const ddb = globalForDdb.ddbDoc ?? createDocClient();

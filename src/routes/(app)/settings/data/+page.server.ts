@@ -6,44 +6,41 @@ import { listQuestions } from '$lib/server/services/question.service';
 import { listMilestones } from '$lib/server/services/milestone.service';
 
 export const load: PageServerLoad = async (event) => {
-	const { workspace } = requireWorkspace(event);
-	const [questions, milestones] = await Promise.all([
-		listQuestions(workspace.id),
-		listMilestones(workspace.id)
-	]);
+    const { workspace } = requireWorkspace(event);
+    const [questions, milestones] = await Promise.all([listQuestions(workspace.id), listMilestones(workspace.id)]);
 
-	// Evidence is now stored in workspace maps, not as separate entities
-	// No soft-delete mechanism for categories in the new model
-	const trashedEvidence = 0;
-	const trashedQuestions = questions.filter((q) => q.deletedAt != null).length;
-	const trashedMilestones = milestones.filter((m) => m.deletedAt != null).length;
-	return {
-		trashedCounts: {
-			evidence: trashedEvidence,
-			questions: trashedQuestions,
-			milestones: trashedMilestones
-		},
-		hasDemo: false
-	};
+    // Evidence is now stored in workspace maps, not as separate entities
+    // No soft-delete mechanism for categories in the new model
+    const trashedEvidence = 0;
+    const trashedQuestions = questions.filter((q) => q.deletedAt != null).length;
+    const trashedMilestones = milestones.filter((m) => m.deletedAt != null).length;
+    return {
+        trashedCounts: {
+            evidence: trashedEvidence,
+            questions: trashedQuestions,
+            milestones: trashedMilestones
+        },
+        hasDemo: false
+    };
 };
 
 export const actions: Actions = {
-	purgeTrash: async () => {
-		// Not implemented yet for DynamoDB single-table without scan + batch delete.
-		return fail(501, {
-			error: 'Not implemented yet for DynamoDB. Use S3 lifecycle + PITR for recovery.'
-		});
-	},
-	removeDemo: async () => {
-		return fail(501, { error: 'Not implemented yet for DynamoDB.' });
-	},
-	deleteWorkspace: async (event) => {
-		const { workspace } = requireOwner(event);
-		const form = await event.request.formData();
-		if (form.get('confirm') !== workspace.name) {
-			return fail(400, { error: 'Type the workspace name exactly to confirm.' });
-		}
-		await deleteWorkspace(workspace.id);
-		throw redirect(303, '/login');
-	}
+    purgeTrash: async () => {
+        // Not implemented yet for DynamoDB single-table without scan + batch delete.
+        return fail(501, {
+            error: 'Not implemented yet for DynamoDB. Use S3 lifecycle + PITR for recovery.'
+        });
+    },
+    removeDemo: async () => {
+        return fail(501, { error: 'Not implemented yet for DynamoDB.' });
+    },
+    deleteWorkspace: async (event) => {
+        const { workspace } = requireOwner(event);
+        const form = await event.request.formData();
+        if (form.get('confirm') !== workspace.name) {
+            return fail(400, { error: 'Type the workspace name exactly to confirm.' });
+        }
+        await deleteWorkspace(workspace.id);
+        throw redirect(303, '/login');
+    }
 };

@@ -1,13 +1,13 @@
 services:
-  dynamodb:
-    image: amazon/dynamodb-local:latest
-    container_name: case-tracker-dynamodb
-    restart: unless-stopped
-    command: '-jar DynamoDBLocal.jar -sharedDb'
-    ports:
-      - '8000:8000'
-    volumes:
-      - dynamodb_data:/home/dynamodblocal/data
+    dynamodb:
+        image: amazon/dynamodb-local:latest
+        container_name: case-tracker-dynamodb
+        restart: unless-stopped
+        command: '-jar DynamoDBLocal.jar -sharedDb'
+        ports:
+            - '8000:8000'
+        volumes:
+            - dynamodb_data:/home/dynamodblocal/data
 
 volumes:
-  dynamodb_data:
+    dynamodb_data:

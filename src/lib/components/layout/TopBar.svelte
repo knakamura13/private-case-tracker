@@ -1,135 +1,106 @@
 <script lang="ts">
-	import { Menu, Search, LogOut, Settings } from 'lucide-svelte';
-	import { initials } from '$lib/utils/format';
+    import { Search, Menu } from 'lucide-svelte';
 
-	let {
-		user,
-		onOpenSearch,
-		onToggleSidebar
-	}: {
-		user: { email: string; name: string | null; image: string | null };
-		onOpenSearch: () => void;
-		onToggleSidebar: () => void;
-	} = $props();
-
-	let menuOpen = $state(false);
-	let menuButtonEl = $state<HTMLButtonElement | null>(null);
-	let menuEl = $state<HTMLDivElement | null>(null);
-
-	function closeMenu() {
-		menuOpen = false;
-		queueMicrotask(() => menuButtonEl?.focus());
-	}
-
-	$effect(() => {
-		if (!menuOpen) return;
-		const controller = new AbortController();
-		const { signal } = controller;
-
-		function onKeydown(e: KeyboardEvent) {
-			if (e.key === 'Escape') closeMenu();
-		}
-		function onClick(e: MouseEvent) {
-			if (menuButtonEl?.contains(e.target as Node) || menuEl?.contains(e.target as Node)) return;
-			closeMenu();
-		}
-		window.addEventListener('keydown', onKeydown, { signal });
-		window.addEventListener('click', onClick, { capture: true, signal });
-
-		return () => {
-			controller.abort();
-		};
-	});
+    let { onOpenSearch, onToggleSidebar }: { onOpenSearch: () => void; onToggleSidebar: () => void } = $props();
 </script>
 
 <header class="topbar">
-	<div class="topbar-left">
-		<button
-			type="button"
-			class="topbar-menu-btn"
-			aria-label="Open sidebar"
-			onclick={onToggleSidebar}
-		>
-			<Menu class="topbar-icon-sm" />
-		</button>
-		<button
-			type="button"
-			onclick={onOpenSearch}
-			class="topbar-search-btn"
-		>
-			<Search class="topbar-icon-sm" />
-			<span class="topbar-truncate">Search tasks, forms, evidence…</span>
-			<span class="topbar-ml-auto topbar-hidden topbar-text-xs topbar-sm-inline">⌘K</span>
-		</button>
-	</div>
+    <!-- Mobile Menu Toggle -->
+    <button class="topbar-menu-btn" onclick={onToggleSidebar} aria-label="Toggle sidebar">
+        <Menu size={20} />
+    </button>
 
-	<div class="topbar-right">
-		<div class="relative">
-			<button
-				bind:this={menuButtonEl}
-				class="topbar-avatar-btn"
-				aria-label="Open user menu"
-				type="button"
-				aria-haspopup="true"
-				aria-expanded={menuOpen}
-				aria-controls="user-menu"
-				onclick={() => (menuOpen = !menuOpen)}
-			>
-				{initials(user.name, user.email)}
-			</button>
-			{#if menuOpen}
-				<div
-					bind:this={menuEl}
-					class="topbar-dropdown"
-					id="user-menu"
-					role="group"
-					aria-label="User menu"
-				>
-					<div class="topbar-dropdown-user">
-						<p class="topbar-dropdown-name">{user.name ?? user.email}</p>
-						<p class="topbar-dropdown-email">{user.email}</p>
-					</div>
-					<div class="topbar-dropdown-divider"></div>
-					<a
-						class="topbar-dropdown-item"
-						href="/settings/profile"
-						onclick={closeMenu}
-					>
-						Profile
-					</a>
-					<a
-						class="topbar-dropdown-item"
-						href="/settings/security"
-						onclick={closeMenu}
-					>
-						Security
-					</a>
-					<a
-						class="topbar-dropdown-item"
-						href="/settings/members"
-						onclick={closeMenu}
-					>
-						Members
-					</a>
-					<a
-						class="topbar-dropdown-item"
-						href="/settings"
-						onclick={closeMenu}
-					>
-						<Settings class="topbar-icon-sm" /> Settings
-					</a>
-					<div class="topbar-dropdown-divider"></div>
-					<form method="post" action="/auth/sign-out">
-						<button
-							class="topbar-dropdown-item topbar-dropdown-item-destructive"
-							type="submit"
-							onclick={closeMenu}
-						>
-							<LogOut class="topbar-icon-sm" /> Sign out
-						</button>
-					</form>
-				</div>
-			{/if}
-		</div>
-	</div>
+    <!-- Search Pill -->
+    <div class="search-container">
+        <Search size={16} class="search-icon" />
+        <button onclick={onOpenSearch} class="search-input" aria-label="Open search"> Search tasks, evidence… </button>
+        <span class="mono search-kb">⌘K</span>
+    </div>
+
+    <div style="flex: 1;"></div>
 </header>
+
+<style>
+    .topbar {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 32px 32px;
+        border-bottom: 1px solid var(--hairline);
+        background: var(--bg);
+    }
+
+    /* Responsive topbar for shorter screens */
+    @media (max-height: 800px) {
+        .topbar {
+            padding: 24px 24px;
+        }
+    }
+
+    @media (max-height: 700px) {
+        .topbar {
+            padding: 20px 20px;
+        }
+    }
+
+    @media (max-height: 600px) {
+        .topbar {
+            padding: 16px 16px;
+        }
+    }
+    .topbar-menu-btn {
+        display: none;
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        color: var(--ink-2);
+    }
+    @media (max-width: 768px) {
+        .topbar-menu-btn {
+            display: flex;
+        }
+    }
+    .search-container {
+        position: relative;
+        width: 33%;
+        min-width: 250px;
+        max-width: 100%;
+    }
+    :global(.search-icon) {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--ink-3);
+    }
+    .search-input {
+        width: 100%;
+        text-align: left;
+        padding: 0 44px;
+        height: 44px;
+        border-radius: 999px;
+        background: var(--surface);
+        border: 1px solid var(--hairline);
+        color: var(--ink-3);
+        font-size: 14px;
+        cursor: text;
+        transition: all 150ms ease;
+    }
+    .search-input:hover {
+        background: var(--surface-2);
+        border-color: var(--ink-3);
+        color: var(--ink-2);
+    }
+    .search-kb {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 11px;
+        color: var(--ink-3);
+        background: var(--surface-3);
+        padding: 2px 6px;
+        border-radius: 6px;
+    }
+</style>

@@ -1,341 +1,240 @@
 <script lang="ts">
-	import PageHeader from '$lib/components/shared/PageHeader.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import Card from '$lib/components/ui/Card.svelte';
-	import DropdownMenu from '$lib/components/ui/DropdownMenu.svelte';
-	import { enhance } from '$app/forms';
-	import { Plus, Minus, Check, X, MoreHorizontal, Pencil, Trash2 } from 'lucide-svelte';
-	import { getPageNumber } from '$lib/constants/navigation';
-	import type { PageData } from './$types';
+    import PageHeader from '$lib/components/shared/PageHeader.svelte';
+    import Button from '$lib/components/ui/Button.svelte';
+    import { enhance } from '$app/forms';
+    import { Plus, Check, Trash2, Edit2 } from 'lucide-svelte';
+    import { getPageNumber } from '$lib/constants/navigation';
+    import type { PageData } from './$types';
+    import Input from '$lib/components/ui/Input.svelte';
+    import ThreeDotsMenu from '$lib/components/ui/ThreeDotsMenu.svelte';
+    import Dialog from '$lib/components/ui/Dialog.svelte';
+    import type { DropdownMenuItem } from '$lib/components/ui/menuTypes';
 
-	let { data, form }: { data: PageData; form: { error?: string } } = $props();
+    let { data, form }: { data: PageData; form: { error?: string } } = $props();
 
-	let editingCategory = $state<string | null>(null);
-	let editTarget = $state(0);
-	let showAddModal = $state(false);
-	let showRenameModal = $state(false);
-	let showDeleteModal = $state(false);
-	let dropdownOpen = $state<string | null>(null);
-	let newCategoryName = $state('');
-	let renameOldName = $state('');
-	let renameNewName = $state('');
-	let deleteCategoryName = $state('');
+    let showAddModal = $state(false);
+    let newCategoryName = $state('');
+    let editingCategory = $state<string | null>(null);
+    let editCategoryName = $state('');
+    let deleteConfirmCategory = $state<string | null>(null);
 
-	function startEdit(category: string, currentTarget: number) {
-		editingCategory = category;
-		editTarget = currentTarget;
-		dropdownOpen = null;
-	}
+    function openAddModal() {
+        newCategoryName = '';
+        showAddModal = true;
+    }
 
-	function cancelEdit() {
-		editingCategory = null;
-	}
+    function startEdit(category: string) {
+        editingCategory = category;
+        editCategoryName = category;
+    }
 
-	function openAddModal() {
-		newCategoryName = '';
-		showAddModal = true;
-	}
+    function cancelEdit() {
+        editingCategory = null;
+        editCategoryName = '';
+    }
 
-	function openRenameModal(category: string) {
-		renameOldName = category;
-		renameNewName = category;
-		showRenameModal = true;
-		dropdownOpen = null;
-	}
-
-	function openDeleteModal(category: string) {
-		deleteCategoryName = category;
-		showDeleteModal = true;
-		dropdownOpen = null;
-	}
-
-	function toggleDropdown(category: string) {
-		dropdownOpen = dropdownOpen === category ? null : category;
-	}
+    function openDeleteConfirm(category: string) {
+        deleteConfirmCategory = category;
+    }
 </script>
 
-<PageHeader title="Evidence" description="Track evidence collection progress by category." number={getPageNumber('/evidence')}>
-	{#snippet actions()}
-		{#if data.isOwner}
-			<Button onclick={openAddModal}>
-				{#snippet children()}<Plus class="evidence-icon-sm" /> Add category{/snippet}
-			</Button>
-		{/if}
-	{/snippet}
+<PageHeader title="Evidence" sub="Track evidence collection progress by category." number={getPageNumber('/evidence')}>
+    {#snippet actions()}
+        {#if data.isOwner}
+            <Button onclick={openAddModal}>
+                {#snippet children()}<Plus style="width: 14px; height: 14px;" /> Add category{/snippet}
+            </Button>
+        {/if}
+    {/snippet}
 </PageHeader>
 
 {#if form?.error}
-	<Card class="evidence-mb-4 evidence-border-destructive evidence-bg-destructive-10 evidence-p-4 evidence-text-destructive">
-		{form.error}
-	</Card>
+    <div
+        class="card"
+        style="border: 1px solid var(--blush-d); background: var(--blush); padding: 16px; margin-bottom: 16px; color: var(--blush-d);"
+    >
+        {form.error}
+    </div>
 {/if}
 
-<div class="evidence-grid">
-	{#each data.categories as cat (cat.category)}
-		<Card class="evidence-card">
-			<div class="evidence-card-header">
-				<div class="evidence-card-title">
-					<h3>{cat.category}</h3>
-					{#if editingCategory === cat.category}
-						<form
-							method="post"
-							action="?/updateTarget"
-							class="evidence-target-edit"
-							use:enhance={() => {
-								return async ({ result: _result, update }) => {
-									await update({ reset: false });
-									cancelEdit();
-								};
-							}}
-						>
-							<input type="hidden" name="category" value={cat.category} />
-							<span class="evidence-text-sm evidence-text-muted">{cat.currentCount} / </span>
-							<input
-								type="number"
-								name="target"
-								bind:value={editTarget}
-								min="0"
-								max="99"
-								class="evidence-target-input"
-								onkeydown={(e) => { if (e.key === 'Escape') cancelEdit(); }}
-							/>
-							<button type="submit" class="evidence-text-success evidence-hover-success" aria-label="Save">
-								<Check class="evidence-icon-sm" />
-							</button>
-							<button type="button" class="evidence-text-muted evidence-hover-foreground" aria-label="Cancel" onclick={cancelEdit}>
-								<X class="evidence-icon-sm" />
-							</button>
-						</form>
-					{:else}
-						<button
-							type="button"
-							class="evidence-flex evidence-items-center evidence-gap-1 evidence-text-sm evidence-text-muted evidence-hover-foreground"
-							aria-label="Edit target for {cat.category}"
-							onclick={() => startEdit(cat.category, cat.targetCount)}
-						>
-							<span>{cat.currentCount} / {cat.targetCount}</span>
-							<Pencil class="evidence-icon-xs" />
-						</button>
-					{/if}
-				</div>
-				{#if data.isOwner}
-					<DropdownMenu isOpen={dropdownOpen === cat.category} onClose={() => dropdownOpen = null}>
-						{#snippet trigger()}
-							<button
-								type="button"
-								class="evidence-rounded evidence-p-1-5 evidence-text-muted evidence-hover-muted evidence-hover-foreground"
-								aria-label="Menu for {cat.category}"
-								onclick={() => toggleDropdown(cat.category)}
-							>
-								<MoreHorizontal class="evidence-icon-sm" />
-							</button>
-						{/snippet}
-						{#snippet children()}
-							<button
-								type="button"
-								class="evidence-flex evidence-w-full evidence-items-center evidence-gap-2 evidence-rounded evidence-px-2 evidence-py-1-5 evidence-text-sm evidence-text-left evidence-hover-muted"
-								onclick={() => openRenameModal(cat.category)}
-							>
-								<Pencil class="evidence-icon-xs" />
-								Rename
-							</button>
-							<button
-								type="button"
-								class="evidence-flex evidence-w-full evidence-items-center evidence-gap-2 evidence-rounded evidence-px-2 evidence-py-1-5 evidence-text-sm evidence-text-left evidence-text-destructive evidence-hover-destructive-10"
-								onclick={() => openDeleteModal(cat.category)}
-							>
-								<Trash2 class="evidence-icon-xs" />
-								Delete
-							</button>
-						{/snippet}
-					</DropdownMenu>
-				{/if}
-			</div>
-			<div class="evidence-progress-bar">
-				<div
-					class="evidence-progress-fill"
-					style:width={`${Math.min(100, cat.targetCount > 0 ? (cat.currentCount / cat.targetCount) * 100 : cat.currentCount > 0 ? 100 : 0)}%`}
-				></div>
-			</div>
-			<div class="evidence-card-actions">
-				<form method="post" action="?/adjustCount" class="evidence-flex evidence-gap-2" use:enhance>
-					<input type="hidden" name="category" value={cat.category} />
-					<input type="hidden" name="delta" value="-1" />
-					<button
-						type="submit"
-						class="evidence-count-btn"
-						disabled={cat.currentCount === 0}
-						aria-label="Decrease {cat.category} count"
-					>
-						<Minus class="evidence-icon-3-5" />
-					</button>
-				</form>
-				<form method="post" action="?/adjustCount" class="evidence-flex evidence-gap-2" use:enhance>
-					<input type="hidden" name="category" value={cat.category} />
-					<input type="hidden" name="delta" value="1" />
-					<button
-						type="submit"
-						class="evidence-count-btn"
-						aria-label="Increase {cat.category} count"
-					>
-						<Plus class="evidence-icon-3-5" />
-					</button>
-				</form>
-			</div>
-		</Card>
-	{/each}
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 48px;">
+    {#each data.categories as cat (cat.category)}
+        <div class="card" style="padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px; color: var(--ink-3); flex: 1; min-width: 0;">
+                    {#if editingCategory === cat.category}
+                        <div style="display: flex; align-items: center; gap: 4px; flex: 1;">
+                            <Input
+                                type="text"
+                                bind:value={editCategoryName}
+                                style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 8px; height: 24px;"
+                                onkeydown={(e) => {
+                                    if (e.key === 'Escape') cancelEdit();
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        (e.target as HTMLFormElement).closest('form')?.requestSubmit();
+                                    }
+                                }}
+                            />
+                            <form
+                                method="post"
+                                action="?/renameCategory"
+                                use:enhance={({ formElement: _formElement, formData: _formData, action: _action, cancel: _cancel, submitter: _submitter }) => {
+                                    return async ({ result, update }) => {
+                                        await update();
+                                        if (result.type === 'success') {
+                                            editingCategory = null;
+                                            editCategoryName = '';
+                                        }
+                                    };
+                                }}
+                                style="display: contents;"
+                            >
+                                <input type="hidden" name="oldName" value={cat.category} />
+                                <input type="hidden" name="newName" value={editCategoryName} />
+                                <Button type="submit" variant="ghost" size="icon" class="modal-icon-btn-sm">
+                                    <Check style="width: 14px; height: 14px;" />
+                                </Button>
+                            </form>
+                            <Button type="button" variant="ghost" size="icon" class="modal-icon-btn-sm" onclick={cancelEdit}>
+                                <span style="font-size: 16px; line-height: 1;">×</span>
+                            </Button>
+                        </div>
+                    {:else}
+                        <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;">{cat.category}</span>
+                    {/if}
+                </div>
+                {#if data.isOwner}
+                    <ThreeDotsMenu
+                        menuId={`evidence-menu-${cat.category}`}
+                        position="bottom-left"
+                        items={[
+                            {
+                                id: 'rename',
+                                label: 'Rename',
+                                icon: Edit2,
+                                action: () => startEdit(cat.category)
+                            },
+                            {
+                                id: 'delete',
+                                label: 'Delete',
+                                icon: Trash2,
+                                variant: 'destructive',
+                                action: () => openDeleteConfirm(cat.category),
+                                disabled: cat.currentCount > 0
+                            }
+                        ] satisfies DropdownMenuItem[]}
+                    />
+                {/if}
+            </div>
+            <div style="display: flex; align-items: baseline; gap: 4px; justify-content: space-between;">
+                <div style="font-family: var(--font-display); font-size: 44px; font-weight: 500; line-height: 1; margin-bottom: 4px;">
+                    {cat.currentCount}
+                    <span style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-3);">/ {cat.targetCount}</span>
+                </div>
+                <form method="post" action="?/adjustCount" use:enhance style="display: flex; gap: 4px;">
+                    <input type="hidden" name="category" value={cat.category} />
+                    <Button type="submit" name="delta" value="-1" variant="ghost" size="sm" disabled={cat.currentCount <= 0}>-</Button>
+                    <Button type="submit" name="delta" value="1" variant="ghost" size="sm">+</Button>
+                </form>
+            </div>
+            <div style="height: 6px; background: var(--surface-3); border-radius: 3px; overflow: hidden; margin-top: 12px;">
+                <div
+                    style:width={`${Math.min(100, cat.targetCount > 0 ? (cat.currentCount / cat.targetCount) * 100 : 0)}%`}
+                    style="height: 100%; background: var(--lilac-d); transition: width 0.4s ease-in-out;"
+                ></div>
+            </div>
+        </div>
+    {/each}
 </div>
 
 <!-- Add Category Modal -->
 {#if showAddModal}
-	<div
-		class="widget-popover"
-		role="dialog"
-		aria-modal="true"
-		tabindex="-1"
-		onclick={() => showAddModal = false}
-		onkeydown={(e) => { if (e.key === 'Escape') showAddModal = false; }}
-	>
-		<button
-			type="button"
-			class="widget-popover-overlay"
-			aria-label="Close"
-			onclick={() => showAddModal = false}
-		></button>
-		<Card class="widget-popover-panel modal-form" onclick={(e) => e.stopPropagation()}>
-			<h2 id="add-category-title" class="modal-header-title">Add Category</h2>
-			<form
-				method="post"
-				action="?/addCategory"
-				class="modal-form-grid"
-				use:enhance={() => {
-					return async ({ result, update }) => {
-						await update({ reset: false });
-						if (result.type !== 'failure') {
-							showAddModal = false;
-							newCategoryName = '';
-						}
-					};
-				}}
-		>
-				<div>
-					<label for="newCategory" class="form-label">Category name</label>
-					<input
-						id="newCategory"
-						name="category"
-						type="text"
-						bind:value={newCategoryName}
-						maxlength="80"
-						class="form-input"
-						placeholder="e.g., Passport"
-						onkeydown={(e) => { if (e.key === 'Escape') showAddModal = false; }}
-					/>
-				</div>
-				<div class="modal-actions">
-					<Button type="button" variant="ghost" onclick={() => showAddModal = false}>Cancel</Button>
-					<Button type="submit">Add</Button>
-				</div>
-			</form>
-		</Card>
-	</div>
+    <div
+        role="button"
+        tabindex="0"
+        style="position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(4px); background: rgba(26, 26, 24, 0.25);"
+        onclick={() => (showAddModal = false)}
+        onkeydown={(e) => {
+            if (e.key === 'Escape') showAddModal = false;
+        }}
+    >
+        <div
+            class="card"
+            style="width: 400px; padding: 24px;"
+            onclick={(e) => e.stopPropagation()}
+            onkeydown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
+            }}
+            role="dialog"
+            aria-modal="true"
+            tabindex="-1"
+        >
+            <h2 style="font-family: var(--font-display); font-size: 24px; margin-bottom: 16px;">Add Category</h2>
+            <form
+                method="post"
+                action="?/addCategory"
+                use:enhance={({ formElement: _formElement, formData: _formData, action: _action, cancel: _cancel, submitter: _submitter }) => {
+                    // Let the form submit normally
+                    return async ({ result, update }) => {
+                        await update();
+                        // Close modal on successful submission
+                        if (result.type === 'success') {
+                            showAddModal = false;
+                        }
+                    };
+                }}
+            >
+                <label for="newCategory" style="display: block; font-size: 13px; margin-bottom: 4px;">Category name</label>
+                <Input id="newCategory" name="category" type="text" bind:value={newCategoryName} placeholder="e.g., Passport" />
+                <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+                    <Button type="button" variant="ghost" onclick={() => (showAddModal = false)}>Cancel</Button>
+                    <Button type="submit">Add</Button>
+                </div>
+            </form>
+        </div>
+    </div>
 {/if}
 
-<!-- Rename Category Modal -->
-{#if showRenameModal}
-	<div
-		class="widget-popover"
-		role="dialog"
-		aria-modal="true"
-		tabindex="-1"
-		onclick={() => showRenameModal = false}
-		onkeydown={(e) => { if (e.key === 'Escape') showRenameModal = false; }}
-	>
-		<button
-			type="button"
-			class="widget-popover-overlay"
-			aria-label="Close"
-			onclick={() => showRenameModal = false}
-		></button>
-		<Card class="widget-popover-panel modal-form" onclick={(e) => e.stopPropagation()}>
-			<h2 class="modal-header-title">Rename Category</h2>
-			<form
-				method="post"
-				action="?/renameCategory"
-				class="modal-form-grid"
-				use:enhance={() => {
-					return async ({ result, update }) => {
-						await update({ reset: false });
-						if (result.type !== 'failure') {
-							showRenameModal = false;
-							renameOldName = '';
-							renameNewName = '';
-						}
-					};
-				}}
-		>
-				<input type="hidden" name="oldName" value={renameOldName} />
-				<div>
-					<label for="renameCategory" class="form-label">New name</label>
-					<input
-						id="renameCategory"
-						name="newName"
-						type="text"
-						bind:value={renameNewName}
-						maxlength="80"
-						class="form-input"
-						placeholder="e.g., Passport"
-						onkeydown={(e) => { if (e.key === 'Escape') showRenameModal = false; }}
-					/>
-				</div>
-				<div class="modal-actions">
-					<Button type="button" variant="ghost" onclick={() => showRenameModal = false}>Cancel</Button>
-					<Button type="submit">Rename</Button>
-				</div>
-			</form>
-		</Card>
-	</div>
-{/if}
-
-<!-- Delete Category Modal -->
-{#if showDeleteModal}
-	<div
-		class="widget-popover"
-		role="dialog"
-		aria-modal="true"
-		tabindex="-1"
-		onclick={() => showDeleteModal = false}
-		onkeydown={(e) => { if (e.key === 'Escape') showDeleteModal = false; }}
-	>
-		<button
-			type="button"
-			class="widget-popover-overlay"
-			aria-label="Close"
-			onclick={() => showDeleteModal = false}
-		></button>
-		<Card class="widget-popover-panel modal-form" onclick={(e) => e.stopPropagation()}>
-			<h2 class="modal-header-title">Delete Category</h2>
-			<p class="modal-description">
-				Are you sure you want to delete "{deleteCategoryName}"? This action cannot be undone.
-			</p>
-			<form
-				method="post"
-				action="?/deleteCategory"
-				use:enhance={() => {
-					return async ({ result, update }) => {
-						await update({ reset: false });
-						if (result.type !== 'failure') {
-							showDeleteModal = false;
-							deleteCategoryName = '';
-						}
-					};
-				}}
-			>
-				<input type="hidden" name="category" value={deleteCategoryName} />
-				<div class="modal-actions">
-					<Button type="button" variant="ghost" onclick={() => showDeleteModal = false}>Cancel</Button>
-					<Button type="submit" variant="destructive">Delete</Button>
-				</div>
-			</form>
-		</Card>
-	</div>
+<!-- Delete Confirmation Dialog -->
+{#if deleteConfirmCategory}
+    {@const categoryToDelete = data.categories.find((c) => c.category === deleteConfirmCategory)}
+    <Dialog
+        open={true}
+        onClose={() => {
+            deleteConfirmCategory = null;
+        }}
+        title="Delete Category"
+        contentWidth="sm"
+        cancelLabel="Cancel"
+        submitLabel="Delete"
+        submitVariant="destructive"
+        footerFormId="delete-category-form"
+    >
+        <form
+            id="delete-category-form"
+            method="post"
+            action="?/deleteCategory"
+            use:enhance={({ formElement: _formElement, formData: _formData, action: _action, cancel: _cancel, submitter: _submitter }) => {
+                return async ({ result, update }) => {
+                    await update();
+                    if (result.type === 'success') {
+                        deleteConfirmCategory = null;
+                    }
+                };
+            }}
+        >
+            <input type="hidden" name="category" value={deleteConfirmCategory} />
+            <p style="font-size: 14px; line-height: 1.5; color: var(--ink-2); margin: 0;">
+                Are you sure you want to delete <strong>"{deleteConfirmCategory}"</strong>?
+                {#if categoryToDelete && categoryToDelete.currentCount > 0}
+                    <br /><br />
+                    <span style="color: var(--blush-d);">This category has {categoryToDelete.currentCount} items and cannot be deleted.</span>
+                {:else}
+                    <br /><br />
+                    This action cannot be undone.
+                {/if}
+            </p>
+        </form>
+    </Dialog>
 {/if}

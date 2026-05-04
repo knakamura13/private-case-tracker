@@ -1,34 +1,25 @@
 <script lang="ts">
-	import SectionNumber from '$lib/components/signature/SectionNumber.svelte';
-	let {
-		title,
-		description,
-		actions,
-		number,
-		class: klass = ''
-	}: {
-		title: string;
-		description?: string;
-		actions?: import('svelte').Snippet;
-		number?: string | number;
-		class?: string;
-	} = $props();
+    import type { Snippet } from 'svelte';
+
+    let { title, sub, eyebrow, number, actions }: { title: string; sub?: string; eyebrow?: string; number?: string; actions?: Snippet } =
+        $props();
 </script>
 
-<header class={`page-header ${klass}`}>
-	<div class="page-header-main">
-		{#if number !== undefined}
-			<SectionNumber {number} {title} as="h1" class="-mt-4" />
-		{:else}
-			<h1 class="page-header-title">{title}</h1>
-		{/if}
-		<div class="page-header-meta">
-			{#if description}
-				<p class="page-header-description">{description}</p>
-			{/if}
-			{#if actions}
-				<div class="page-header-actions">{@render actions()}</div>
-			{/if}
-		</div>
-	</div>
-</header>
+<div style="display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 24px; gap: 24px; flex-wrap: wrap;">
+    <div>
+        {#if eyebrow || number}
+            <div class="eyebrow" style="margin-bottom: 12px;">{eyebrow || `PAGE ${number}`}</div>
+        {/if}
+        <h1 class="display" style="font-size: 56px; line-height: 1; margin: 0;">{title}</h1>
+        {#if sub}
+            <p
+                style="color: var(--ink-2); margin-top: 12px; margin-bottom: 0; font-size: 15px; max-width: 560px; line-height: 1.5; text-wrap: pretty;"
+            >
+                {sub}
+            </p>
+        {/if}
+    </div>
+    {#if actions}
+        {@render actions()}
+    {/if}
+</div>

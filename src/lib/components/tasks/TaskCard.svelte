@@ -1,143 +1,130 @@
 <script lang="ts">
-	import Card from '$lib/components/ui/Card.svelte';
-	import Badge from '$lib/components/ui/Badge.svelte';
-	import RichText from '$lib/components/ui/RichText.svelte';
-	import { titleCase } from '$lib/utils/format';
-	import { fmtDate } from '$lib/utils/dates';
-	import { GripVertical } from 'lucide-svelte';
+    import Card from '$lib/components/ui/Card.svelte';
+    import { fmtDate } from '$lib/utils/dates';
+    import { Calendar } from 'lucide-svelte';
 
-	let {
-		task,
-		onEdit,
-		draggable = false,
-		onDragStart,
-		onDragEnter,
-		onDragOver,
-		onDragLeave,
-		onDrop,
-		onDragEnd,
-		isDragging = false,
-		isDropTarget = false,
-		isAnyDragging = false,
-		dropPosition = null
-	}: {
-		task: {
-			id: string;
-			title: string;
-			description: string | null;
-			status: string;
-			priority: string;
-			dueDate: string | null;
-			owner: { id: string; name: string | null; email: string } | null;
-			checklist?: Array<{ id: string; text: string; done: boolean }>;
-		};
-		onEdit?: (id: string) => void;
-		draggable?: boolean;
-		onDragStart?: (e: DragEvent, id: string) => void;
-		onDragEnter?: (e: DragEvent, id: string) => void;
-		onDragOver?: (e: DragEvent, id: string) => void;
-		onDragLeave?: () => void;
-		onDrop?: (e: DragEvent, id: string, status: string) => void;
-		onDragEnd?: () => void;
-		isDragging?: boolean;
-		isDropTarget?: boolean;
-		isAnyDragging?: boolean;
-		dropPosition?: 'before' | 'after' | null;
-	} = $props();
+    let {
+        task,
+        onEdit,
+        draggable = false,
+        onDragStart,
+        onDragEnter,
+        onDragOver,
+        onDragLeave,
+        onDrop,
+        onDragEnd,
+        isDragging = false,
+        isDropTarget = false,
+        isAnyDragging = false,
+        dropPosition = null
+    }: {
+        task: {
+            id: string;
+            title: string;
+            description: string | null;
+            status: string;
+            priority: string;
+            dueDate: string | null;
+            checklist?: Array<{ id: string; text: string; done: boolean }>;
+        };
+        onEdit?: (id: string) => void;
+        draggable?: boolean;
+        onDragStart?: (e: DragEvent, id: string) => void;
+        onDragEnter?: (e: DragEvent, id: string) => void;
+        onDragOver?: (e: DragEvent, id: string) => void;
+        onDragLeave?: () => void;
+        onDrop?: (e: DragEvent, id: string, status: string) => void;
+        onDragEnd?: () => void;
+        isDragging?: boolean;
+        isDropTarget?: boolean;
+        isAnyDragging?: boolean;
+        dropPosition?: 'before' | 'after' | null;
+    } = $props();
 
-	function hasMeaningfulDescription(description: string | null) {
-		return /[\p{L}\p{N}]/u.test(description?.trim() ?? '');
-	}
+    function hasMeaningfulDescription(description: string | null) {
+        return /[\p{L}\p{N}]/u.test(description?.trim() ?? '');
+    }
 
-	function ownerLabel(owner: { id: string; name: string | null; email: string } | null) {
-		return owner?.name?.trim() || owner?.email?.trim() || '';
-	}
+    const isOverdue = $derived(
+        task.dueDate && task.status !== 'DONE' && new Date(task.dueDate) < new Date(new Date().setHours(0, 0, 0, 0))
+    );
 
-	const taskCardClasses = $derived(
-		`task-card-inner ${!isAnyDragging ? 'task-card-hoverable' : ''} ${isDragging ? 'task-card-dragging' : ''}`.trim()
-	);
+    const taskCardClasses = $derived(
+        `task-card-inner ${!isAnyDragging ? 'task-card-hoverable' : ''} ${isDragging ? 'task-card-dragging' : ''} ${task.status === 'DONE' ? 'task-card-done' : ''}`.trim()
+    );
 </script>
 
 <div
-	class="task-card"
-	role="listitem"
-	ondragenter={(e) => {
-		if (onDragEnter) {
-			e.stopPropagation();
-			onDragEnter(e, task.id);
-		}
-	}}
-	ondragover={(e) => {
-		if (onDragOver) {
-			e.stopPropagation();
-			onDragOver(e, task.id);
-		}
-	}}
-	ondragleave={() => onDragLeave && onDragLeave()}
-	ondrop={(e) => onDrop && onDrop(e, task.id, task.status)}
+    class="task-card"
+    role="listitem"
+    ondragenter={(e) => {
+        if (onDragEnter) {
+            e.stopPropagation();
+            onDragEnter(e, task.id);
+        }
+    }}
+    ondragover={(e) => {
+        if (onDragOver) {
+            e.stopPropagation();
+            onDragOver(e, task.id);
+        }
+    }}
+    ondragleave={() => onDragLeave && onDragLeave()}
+    ondrop={(e) => onDrop && onDrop(e, task.id, task.status)}
 >
-	{#if isDropTarget && dropPosition === 'before'}
-		<div class="task-card-drop-indicator"></div>
-	{/if}
+    {#if isDropTarget && dropPosition === 'before'}
+        <div class="task-card-drop-indicator"></div>
+    {/if}
 
-	<div
-		class={taskCardClasses}
-		draggable={draggable}
-		data-task-id={task.id}
-		ondragstart={(e) => onDragStart && onDragStart(e, task.id)}
-		ondragend={() => onDragEnd && onDragEnd()}
-		onclick={() => onEdit && onEdit(task.id)}
-		onkeydown={(e) => {
-			if ((e.key === 'Enter' || e.key === ' ') && onEdit) {
-				e.preventDefault();
-				onEdit(task.id);
-			}
-		}}
-		role="button"
-		tabindex="0"
-		aria-label={task.title}
-	>
-		<Card class="task-card-p-4 task-card-border-none task-card-shadow-none task-card-bg-transparent">
-		<div class="task-card-content">
-			<GripVertical class="task-card-grip task-card-icon-4 task-card-shrink-0 text-muted-foreground" />
-			<div class="task-card-body">
-				<p class="task-card-title">{task.title}</p>
-				{#if task.priority !== 'MEDIUM'}
-					<Badge variant="outline" class="task-card-shrink-0">{titleCase(task.priority)}</Badge>
-				{/if}
-				{#if hasMeaningfulDescription(task.description)}
-					<RichText text={task.description} lineClamp={true} class="task-card-mt-1" />
-				{/if}
-				{#if task.checklist && task.checklist.length > 0}
-					<div class="task-card-checklist">
-						<div class="task-card-checklist-summary">
-							{task.checklist.filter((ci) => ci.done).length}/{task.checklist.length} checklist items
-						</div>
-						<ul class="task-card-checklist-list">
-							{#each task.checklist.slice(0, 3) as ci (ci.id)}
-								<li class="task-card-checklist-item">
-									<input type="checkbox" checked={ci.done} disabled class="task-card-checklist-checkbox" />
-									<span class={ci.done ? 'task-card-checklist-text-done' : ''}>{ci.text}</span>
-								</li>
-							{/each}
-							{#if task.checklist.length > 3}
-								<li class="task-card-checklist-more">+{task.checklist.length - 3} more</li>
-							{/if}
-						</ul>
-					</div>
-				{/if}
-				{#if task.dueDate || ownerLabel(task.owner)}
-					<div class="task-card-meta">
-						{#if task.dueDate}<span>Due {fmtDate(task.dueDate)}</span>{/if}
-						{#if ownerLabel(task.owner)}<span>{ownerLabel(task.owner)}</span>{/if}
-					</div>
-				{/if}
-			</div>
-		</div>
-		</Card>
-	</div>
+    <div
+        class={taskCardClasses}
+        {draggable}
+        data-task-id={task.id}
+        ondragstart={(e) => onDragStart && onDragStart(e, task.id)}
+        ondragend={() => onDragEnd && onDragEnd()}
+        onclick={() => onEdit && onEdit(task.id)}
+        onkeydown={(e) => {
+            if ((e.key === 'Enter' || e.key === ' ') && onEdit) {
+                e.preventDefault();
+                onEdit(task.id);
+            }
+        }}
+        role="button"
+        tabindex="0"
+        aria-label={task.title}
+    >
+        <Card class="task-card-body task-card-border-none task-card-shadow-none task-card-bg-transparent">
+            {#if isOverdue}
+                <div class="task-card-overdue">● overdue</div>
+            {/if}
+            <p class="task-card-title">{task.title}</p>
+            {#if hasMeaningfulDescription(task.description)}
+                <div class="task-card-description task-card-description--clamped">{task.description}</div>
+            {/if}
+            {#if task.checklist && task.checklist.length > 0}
+                <div class="task-card-checklist">
+                    <div class="task-card-checklist-summary">
+                        {task.checklist.filter((ci) => ci.done).length}/{task.checklist.length}
+                    </div>
+                </div>
+            {/if}
+            <div class="task-card-footer">
+                {#if task.dueDate}
+                    <div class="task-card-due mono">
+                        <Calendar class="task-card-icon-xs" />
+                        {fmtDate(task.dueDate)}
+                    </div>
+                {/if}
+                {#if task.checklist && task.checklist.length > 0}
+                    <span class="task-card-subtask-count mono"
+                        >{task.checklist.filter((ci) => ci.done).length}/{task.checklist.length}</span
+                    >
+                {/if}
+            </div>
+        </Card>
+    </div>
 
-	{#if isDropTarget && dropPosition === 'after'}
-		<div class="task-card-drop-indicator task-card-drop-indicator-bottom"></div>
-	{/if}
+    {#if isDropTarget && dropPosition === 'after'}
+        <div class="task-card-drop-indicator task-card-drop-indicator-bottom"></div>
+    {/if}
 </div>

@@ -1,1206 +1,735 @@
 <script lang="ts">
-	import type { QuickLink, QuickLinkFolder } from '$lib/types/enums';
-	import { tick } from 'svelte';
-	import { enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
-	import { EllipsisVertical, MoreHorizontal, Plus, Link2, Folder, X } from 'lucide-svelte';
-	import Input from '$lib/components/ui/Input.svelte';
-	import Textarea from '$lib/components/ui/Textarea.svelte';
-	import Label from '$lib/components/ui/Label.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import ErrorDetails from '$lib/components/ErrorDetails.svelte';
-	import Dialog from '$lib/components/ui/Dialog.svelte';
+    import type { QuickLink, QuickLinkFolder } from '$lib/types/enums';
+    import { tick } from 'svelte';
+    import { invalidateAll } from '$app/navigation';
+    import { Plus, Link2, Folder, Edit, Trash2, CornerUpLeft } from 'lucide-svelte';
+    import Button from '$lib/components/ui/Button.svelte';
+    import Dialog from '$lib/components/ui/Dialog.svelte';
+    import QuickLinksManageDialog from '$lib/components/dashboard/QuickLinksManageDialog.svelte';
+    import ThreeDotsMenu from '$lib/components/ui/ThreeDotsMenu.svelte';
 
-	type ActionForm = { error?: string; errorId?: string | null } | undefined;
-	type DropIntent = 'reorder' | 'merge' | 'move-into';
+    type ActionForm = { error?: string; errorId?: string | null } | undefined;
 
-	let { links, folders, form }: { links: QuickLink[]; folders: QuickLinkFolder[]; form?: ActionForm } = $props();
+    let { links, folders = [], form }: { links: QuickLink[]; folders: QuickLinkFolder[]; form?: ActionForm } = $props();
 
-	let modalOpen = $state(false);
-	let modalMode = $state<'link' | 'folder'>('link');
-	let editing = $state<QuickLink | null>(null);
-	let editingFolder = $state<QuickLinkFolder | null>(null);
-	let addingToFolder = $state<QuickLinkFolder | null>(null);
-	let draftUrl = $state('');
-	let draftTitle = $state('');
-	let draftDescription = $state('');
-	let draftFolderName = $state('');
-	let menuOpenId = $state<string | null>(null);
-	let folderPopoverId = $state<string | null>(null);
-	let brokenFavicons = $state<Set<string>>(new Set());
-	let preloadedFavicons = $state<Set<string>>(new Set());
-	let draggingId = $state<string | null>(null);
-	let dropTargetId = $state<string | null>(null);
-	let dropIntent = $state<DropIntent | null>(null);
-	let dragEnterCount = $state(0);
-	let dropInsertIndex = $state<number | null>(null);
-	let isDragging = $state(false);
-	let menuPosition = $state<{ top: number; left: number } | null>(null);
-	let optimisticFolders = $state<QuickLinkFolder[]>([]);
-	let inlineEditingFolderId = $state<string | null>(null);
-	let inlineFolderName = $state('');
-	let inlineFolderInputEl = $state<HTMLInputElement | null>(null);
-	let creatingFolder = $state(false);
-	let folderDialogMenuOpen = $state(false);
-	let folderDialogName = $state('');
-	let folderDialogInputEl = $state<HTMLInputElement | null>(null);
+    let qlDialog = $state<QuickLinksManageDialog | null>(null);
+    let folderPopoverId = $state<string | null>(null);
+    let brokenFavicons = $state<Set<string>>(new Set());
+    let preloadedFavicons = $state<Set<string>>(new Set());
+    let draggingId = $state<string | null>(null);
+    let dragEnterCount = $state(0);
+    let isDragging = $state(false);
+    let optimisticFolders = $state<QuickLinkFolder[]>([]);
+    let inlineEditingFolderId = $state<string | null>(null);
+    let inlineFolderInputEl = $state<HTMLInputElement | null>(null);
+    let folderDialogInputEl = $state<HTMLInputElement | null>(null);
+    let liveRegionMessage = $state<string>('');
 
-	let visibleFolders = $derived(
-		[...folders, ...optimisticFolders].sort((a, b) => a.order - b.order)
-	);
+    let visibleFolders = $derived([...folders, ...optimisticFolders].sort((a, b) => a.order - b.order));
 
-	// Separate root links and folder links
-	let rootLinks = $derived(links.filter((l) => !l.folderId));
-	let folderLinksMap = $derived(
-		visibleFolders.reduce((acc, f) => {
-			acc[f.id] = links.filter((l) => l.folderId === f.id);
-			return acc;
-		}, {} as Record<string, QuickLink[]>)
-	);
+    // Separate root links and folder links
+    let rootLinks = $derived(links.filter((l) => !l.folderId));
+    let folderLinksMap = $derived(
+        visibleFolders.reduce(
+            (acc, f) => {
+                acc[f.id] = links.filter((l) => l.folderId === f.id);
+                return acc;
+            },
+            {} as Record<string, QuickLink[]>
+        )
+    );
 
-	// Combine folders and root links for drag context
-	let allItems = $derived([...visibleFolders, ...rootLinks]);
-	let itemIds = $derived(allItems.map((item) => item.id));
+    // Combine folders and root links for drag context
+    let allItems = $derived([...visibleFolders, ...rootLinks]);
+    let itemIds = $derived(allItems.map((item) => item.id));
 
-	const faviconCache = new Map<string, string>();
-	const fallbackFaviconCache = new Map<string, string>();
+    const faviconCache = new Map<string, string>();
+    const fallbackFaviconCache = new Map<string, string>();
 
-	function prettyHostname(url: string): string {
-		try {
-			return new URL(url).hostname;
-		} catch {
-			return 'Link';
-		}
-	}
+    function prettyHostname(url: string): string {
+        try {
+            return new URL(url).hostname;
+        } catch {
+            return 'Link';
+        }
+    }
 
-	function faviconForLink(link: QuickLink): string {
-		// Use cached faviconUrl from database if available
-		if (link.faviconUrl) return link.faviconUrl;
+    function faviconForLink(link: QuickLink): string {
+        // Use cached faviconUrl from database if available
+        if (link.faviconUrl) return link.faviconUrl;
 
-		// Check cache first
-		if (faviconCache.has(link.url)) {
-			return faviconCache.get(link.url) || '';
-		}
+        // Check cache first
+        if (faviconCache.has(link.url)) {
+            return faviconCache.get(link.url) || '';
+        }
 
-		// Fallback to direct domain favicon (no placeholders)
-		try {
-			const h = new URL(link.url).hostname;
-			// Skip localhost and internal domains
-			if (/^(localhost|127\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/.test(h)) {
-				faviconCache.set(link.url, ''); // Cache empty string for internal domains
-				return '';
-			}
-			const faviconUrl = `https://${h}/favicon.ico`;
-			faviconCache.set(link.url, faviconUrl); // Cache the URL
-			return faviconUrl;
-		} catch {
-			faviconCache.set(link.url, ''); // Cache empty string on error
-			return '';
-		}
-	}
+        // Fallback to direct domain favicon (no placeholders)
+        try {
+            const h = new URL(link.url).hostname;
+            // Skip localhost and internal domains
+            if (/^(localhost|127\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/.test(h)) {
+                faviconCache.set(link.url, ''); // Cache empty string for internal domains
+                return '';
+            }
+            const faviconUrl = `https://${h}/favicon.ico`;
+            faviconCache.set(link.url, faviconUrl); // Cache the URL
+            return faviconUrl;
+        } catch {
+            faviconCache.set(link.url, ''); // Cache empty string on error
+            return '';
+        }
+    }
 
-	function getFallbackFavicon(link: QuickLink): string {
-		// Check fallback cache
-		if (fallbackFaviconCache.has(link.url)) {
-			return fallbackFaviconCache.get(link.url) || '';
-		}
+    function getFallbackFavicon(link: QuickLink): string {
+        // Check fallback cache
+        if (fallbackFaviconCache.has(link.url)) {
+            return fallbackFaviconCache.get(link.url) || '';
+        }
 
-		try {
-			const h = new URL(link.url).hostname;
-			if (/^(localhost|127\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/.test(h)) {
-				fallbackFaviconCache.set(link.url, '');
-				return '';
-			}
-			const fallbackUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(h)}&sz=128`;
-			fallbackFaviconCache.set(link.url, fallbackUrl);
-			return fallbackUrl;
-		} catch {
-			fallbackFaviconCache.set(link.url, '');
-			return '';
-		}
-	}
+        try {
+            const h = new URL(link.url).hostname;
+            if (/^(localhost|127\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/.test(h)) {
+                fallbackFaviconCache.set(link.url, '');
+                return '';
+            }
+            const fallbackUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(h)}&sz=128`;
+            fallbackFaviconCache.set(link.url, fallbackUrl);
+            return fallbackUrl;
+        } catch {
+            fallbackFaviconCache.set(link.url, '');
+            return '';
+        }
+    }
 
-	// Preload all favicons to prevent flickering
-	$effect(() => {
-		const allLinks = [...links];
-		const imageElements: HTMLImageElement[] = [];
+    // Preload all favicons to prevent flickering
+    $effect(() => {
+        const allLinks = [...links];
+        const imageElements: HTMLImageElement[] = [];
 
-		const preloadPromises = allLinks.map((link) => {
-			// Skip if already processed
-			if (preloadedFavicons.has(link.id) || brokenFavicons.has(link.id)) {
-				return Promise.resolve();
-			}
+        const preloadPromises = allLinks.map((link) => {
+            // Skip if already processed
+            if (preloadedFavicons.has(link.id) || brokenFavicons.has(link.id)) {
+                return Promise.resolve();
+            }
 
-			const url = faviconForLink(link);
-			if (!url) return Promise.resolve();
+            const url = faviconForLink(link);
+            if (!url) return Promise.resolve();
 
-			return new Promise<void>((resolve) => {
-				const img = new Image();
-				imageElements.push(img);
-				img.onload = () => {
-					const next = new Set(preloadedFavicons);
-					next.add(link.id);
-					preloadedFavicons = next;
-					resolve();
-				};
-				img.onerror = () => {
-					// Try fallback favicon if direct fails
-					const fallbackUrl = getFallbackFavicon(link);
-					if (fallbackUrl) {
-						const fallbackImg = new Image();
-						imageElements.push(fallbackImg);
-						fallbackImg.onload = () => {
-							const next = new Set(preloadedFavicons);
-							next.add(link.id);
-							preloadedFavicons = next;
-							resolve();
-						};
-						fallbackImg.onerror = () => {
-							const next = new Set(brokenFavicons);
-							next.add(link.id);
-							brokenFavicons = next;
-							resolve();
-						};
-						fallbackImg.src = fallbackUrl;
-					} else {
-						const next = new Set(brokenFavicons);
-						next.add(link.id);
-						brokenFavicons = next;
-						resolve();
-					}
-				};
-				img.src = url;
-			});
-		});
-		// Don't await - let preloading happen in background
-		void Promise.all(preloadPromises);
+            return new Promise<void>((resolve) => {
+                const img = new Image();
+                imageElements.push(img);
+                img.onload = () => {
+                    const next = new Set(preloadedFavicons);
+                    next.add(link.id);
+                    preloadedFavicons = next;
+                    resolve();
+                };
+                img.onerror = () => {
+                    // Try fallback favicon if direct fails
+                    const fallbackUrl = getFallbackFavicon(link);
+                    if (fallbackUrl) {
+                        const fallbackImg = new Image();
+                        imageElements.push(fallbackImg);
+                        fallbackImg.onload = () => {
+                            const next = new Set(preloadedFavicons);
+                            next.add(link.id);
+                            preloadedFavicons = next;
+                            resolve();
+                        };
+                        fallbackImg.onerror = () => {
+                            const next = new Set(brokenFavicons);
+                            next.add(link.id);
+                            brokenFavicons = next;
+                            resolve();
+                        };
+                        fallbackImg.src = fallbackUrl;
+                    } else {
+                        const next = new Set(brokenFavicons);
+                        next.add(link.id);
+                        brokenFavicons = next;
+                        resolve();
+                    }
+                };
+                img.src = url;
+            });
+        });
+        // Don't await - let preloading happen in background
+        void Promise.all(preloadPromises);
 
-		// Cleanup: abort image loading on effect rerun or unmount
-		return () => {
-			imageElements.forEach((img) => {
-				img.src = '';
-				img.onload = null;
-				img.onerror = null;
-			});
-		};
-	});
+        // Cleanup: abort image loading on effect rerun or unmount
+        return () => {
+            imageElements.forEach((img) => {
+                img.src = '';
+                img.onload = null;
+                img.onerror = null;
+            });
+        };
+    });
 
-	function labelFor(link: QuickLink) {
-		return link.title?.trim() ? link.title : prettyHostname(link.url);
-	}
+    function labelFor(link: QuickLink) {
+        return link.title?.trim() ? link.title : prettyHostname(link.url);
+    }
 
-	function openLink(url: string) {
-		window.open(url, '_blank', 'noopener,noreferrer');
-	}
+    function openLink(url: string) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+    }
 
-	function handleLinkKeydown(event: KeyboardEvent, url: string) {
-		if (event.key === 'Enter' || event.key === ' ') {
-			event.preventDefault();
-			openLink(url);
-		}
-	}
+    function openAdd(folder?: QuickLinkFolder) {
+        qlDialog?.openAddLink(folder ?? null);
+    }
 
-	function openAdd(folder?: QuickLinkFolder) {
-		modalMode = 'link';
-		editing = null;
-		editingFolder = null;
-		addingToFolder = folder ?? null;
-		draftUrl = '';
-		draftTitle = '';
-		draftDescription = '';
-		draftFolderName = '';
-		modalOpen = true;
-	}
+    function openEdit(link: QuickLink) {
+        qlDialog?.openEditLink(link);
+    }
 
-	function openEdit(link: QuickLink) {
-		modalMode = 'link';
-		editing = link;
-		editingFolder = null;
-		draftUrl = link.url;
-		draftTitle = link.title ?? '';
-		draftDescription = link.description ?? '';
-		draftFolderName = '';
-		modalOpen = true;
-		menuOpenId = null;
-	}
+    function openEditFolder(folder: QuickLinkFolder) {
+        qlDialog?.openEditFolder(folder);
+    }
 
-	function openAddFolder() {
-		void createFolderInline();
-	}
+    function closeFolderDialog() {
+        folderPopoverId = null;
+    }
 
-	function openEditFolder(folder: QuickLinkFolder) {
-		modalMode = 'folder';
-		editing = null;
-		editingFolder = folder;
-		draftUrl = '';
-		draftTitle = '';
-		draftDescription = '';
-		draftFolderName = folder.name ?? '';
-		modalOpen = true;
-		menuOpenId = null;
-	}
+    $effect(() => {
+        if (!inlineEditingFolderId || !inlineFolderInputEl) return;
+        void tick().then(() => {
+            inlineFolderInputEl?.focus();
+            inlineFolderInputEl?.select();
+        });
+    });
 
-	function closeModal() {
-		modalOpen = false;
-	}
+    $effect(() => {
+        if (!folderPopoverId || !folderDialogInputEl) return;
+        void tick().then(() => {
+            folderDialogInputEl?.focus();
+            folderDialogInputEl?.select();
+        });
+    });
 
-	function closeFolderDialog() {
-		folderPopoverId = null;
-		folderDialogMenuOpen = false;
-	}
+    function toggleFolderPopover(folderId: string, e: Event) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (folderPopoverId === folderId) {
+            closeFolderDialog();
+        } else {
+            folderPopoverId = folderId;
+        }
+    }
 
-	$effect(() => {
-		if (!inlineEditingFolderId || !inlineFolderInputEl) return;
-		void tick().then(() => {
-			inlineFolderInputEl?.focus();
-			inlineFolderInputEl?.select();
-		});
-	});
+    function handleDragStart(event: DragEvent, id: string) {
+        if (isDragging) return; // Prevent concurrent drag operations
+        isDragging = true; // Set immediately to prevent race condition
+        dragEnterCount = 0;
+        if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', id);
+            event.dataTransfer.setData('application/x-quicklink-id', id);
+        }
+        // Hide element after browser captures drag ghost image
+        setTimeout(() => {
+            draggingId = id;
+        }, 0);
+    }
 
-	$effect(() => {
-		if (!folderPopoverId || !folderDialogInputEl) return;
-		void tick().then(() => {
-			folderDialogInputEl?.focus();
-			folderDialogInputEl?.select();
-		});
-	});
+    function handleDragEnd() {
+        draggingId = null;
+        dragEnterCount = 0;
+        isDragging = false;
+    }
 
-	async function createFolderInline() {
-		if (creatingFolder) return;
-		creatingFolder = true;
-		try {
-			const response = await fetch('/dashboard/api/quick-link-folders', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ name: '' })
-			});
-			if (!response.ok) {
-				console.error('Failed to create folder:', response.statusText);
-				return;
-			}
+    function handleDragEnter(event: DragEvent, _id: string) {
+        event.preventDefault();
+        dragEnterCount++;
+    }
 
-			const folder = (await response.json()) as QuickLinkFolder;
-			optimisticFolders = [...optimisticFolders, folder];
-			inlineEditingFolderId = folder.id;
-			inlineFolderName = '';
-		} catch (error) {
-			console.error('Failed to create folder:', error);
-		} finally {
-			creatingFolder = false;
-		}
-	}
+    function handleDragLeave() {
+        dragEnterCount--;
+        if (dragEnterCount <= 0) {
+            dragEnterCount = 0;
+        }
+    }
 
-	async function saveInlineFolderName(folderId: string) {
-		const formData = new FormData();
-		formData.append('id', folderId);
-		formData.append('name', inlineFolderName);
+    function handleDragOver(event: DragEvent, _id: string) {
+        event.preventDefault();
+        if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = 'move';
+        }
+    }
 
-		try {
-			const response = await fetch('?/updateFolder', {
-				method: 'POST',
-				body: formData
-			});
-			if (!response.ok) {
-				console.error('Failed to update folder:', response.statusText);
-				return;
-			}
-			optimisticFolders = optimisticFolders.filter((folder) => folder.id !== folderId);
-			inlineEditingFolderId = null;
-			inlineFolderName = '';
-			await invalidateAll();
-		} catch (error) {
-			console.error('Failed to update folder:', error);
-		}
-	}
+    async function handleDrop(event: DragEvent, targetId: string) {
+        event.preventDefault();
+        const activeId = draggingId;
+        // Reset immediately so UI clears
+        draggingId = null;
+        dragEnterCount = 0;
+        isDragging = false;
+        if (!activeId || activeId === targetId) return;
 
-	function cancelInlineFolderName() {
-		inlineEditingFolderId = null;
-		inlineFolderName = '';
-	}
+        const activeLink = links.find((l) => l.id === activeId);
+        const targetLink = links.find((l) => l.id === targetId);
+        const targetFolder = visibleFolders.find((f) => f.id === targetId);
 
-	function toggleMenu(id: string, e: MouseEvent) {
-		e.preventDefault();
-		e.stopPropagation();
-		if (menuOpenId === id) {
-			menuOpenId = null;
-			menuPosition = null;
-		} else {
-			menuOpenId = id;
-			const target = e.currentTarget as HTMLElement;
-			const rect = target.getBoundingClientRect();
-			const dropdownHeight = 150; // Estimated dropdown height in pixels
-			const spaceBelow = window.innerHeight - rect.bottom;
-			
-			// Flip dropdown to appear above if there's not enough space below
-			const top = spaceBelow < dropdownHeight ? rect.top - dropdownHeight - 4 : rect.bottom + 4;
-			
-			menuPosition = {
-				top,
-				left: rect.left + rect.width / 2
-			};
-		}
-	}
+        try {
+            // 1. Drop a root link onto another root link → create folder with both
+            if (activeLink && targetLink && !activeLink.folderId && !targetLink.folderId) {
+                const response = await fetch('/dashboard/api/quick-link-folders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: '' })
+                });
+                if (!response.ok) {
+                    console.error('Failed to create folder:', response.statusText);
+                    return;
+                }
+                const folder = await response.json();
 
-	function toggleFolderPopover(folderId: string, e: Event) {
-		e.preventDefault();
-		e.stopPropagation();
-		if (folderPopoverId === folderId) {
-			closeFolderDialog();
-		} else {
-			const folder = visibleFolders.find((f) => f.id === folderId);
-			folderPopoverId = folderId;
-			folderDialogName = folder?.name ?? '';
-			folderDialogMenuOpen = false;
-		}
-		menuOpenId = null;
-		menuPosition = null;
-	}
+                if (folder?.id) {
+                    try {
+                        await Promise.all([moveLinkToFolderAction(activeId, folder.id), moveLinkToFolderAction(targetId, folder.id)]);
+                        await invalidateAll();
+                    } catch (error) {
+                        console.error('Failed to move links to folder:', error);
+                        throw error; // Re-throw to be caught by outer try/catch
+                    }
+                }
+                return;
+            }
 
-	$effect(() => {
-		if (menuOpenId === null && folderPopoverId === null) return;
-		const onDoc = (e: MouseEvent) => {
-			const t = e.target;
-			if (!(t instanceof HTMLElement)) return;
-			if (t.closest('[data-quicklink-menu]')) return;
-			if (t.closest('[data-folder-popover="trigger"]')) return;
-			if (t.closest('[data-folder-popover="panel"]') && !t.closest('[data-quicklink-menu="panel"]')) {
-				menuOpenId = null;
-				menuPosition = null;
-				return;
-			}
-			menuOpenId = null;
-			menuPosition = null;
-			folderPopoverId = null;
-		};
-		document.addEventListener('click', onDoc, true);
-		return () => document.removeEventListener('click', onDoc, true);
-	});
+            // 2. Drop a link onto a folder → move link into that folder
+            if (activeLink && targetFolder) {
+                await moveLinkToFolderAction(activeId, targetFolder.id);
+                await invalidateAll();
+                return;
+            }
 
-	$effect(() => {
-		if (menuOpenId === null && folderPopoverId === null) return;
-		const onKey = (e: KeyboardEvent) => {
-			if (e.key === 'Escape') {
-				menuOpenId = null;
-				menuPosition = null;
-				folderPopoverId = null;
-			}
-		};
-		document.addEventListener('keydown', onKey, true);
-		return () => document.removeEventListener('keydown', onKey, true);
-	});
+            // 3. Reorder (folders and root links share the same order)
+            const oldIndex = itemIds.indexOf(activeId);
+            const newIndex = itemIds.indexOf(targetId);
 
-	function handleDragStart(event: DragEvent, id: string) {
-		if (isDragging) return; // Prevent concurrent drag operations
-		isDragging = true; // Set immediately to prevent race condition
-		dropTargetId = null;
-		dropIntent = null;
-		dragEnterCount = 0;
-		if (event.dataTransfer) {
-			event.dataTransfer.effectAllowed = 'move';
-			event.dataTransfer.setData('text/plain', id);
-			event.dataTransfer.setData('application/x-quicklink-id', id);
-		}
-		// Hide element after browser captures drag ghost image
-		setTimeout(() => {
-			draggingId = id;
-		}, 0);
-	}
+            if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+                const newOrder = [...itemIds];
+                newOrder.splice(oldIndex, 1);
+                newOrder.splice(newIndex, 0, activeId);
 
-	function handleDragEnd() {
-		draggingId = null;
-		dropTargetId = null;
-		dropIntent = null;
-		dragEnterCount = 0;
-		dropInsertIndex = null;
-		isDragging = false;
-	}
+                const isFolderDrag = visibleFolders.some((f) => f.id === activeId);
+                const formData = new FormData();
+                if (isFolderDrag) {
+                    newOrder.filter((id) => visibleFolders.some((f) => f.id === id)).forEach((id) => formData.append('folderIds', id));
+                    const response = await fetch('?/reorderFolders', { method: 'POST', body: formData });
+                    if (!response.ok) {
+                        console.error('Failed to reorder folders:', response.statusText);
+                        return;
+                    }
+                } else {
+                    newOrder.filter((id) => rootLinks.some((l) => l.id === id)).forEach((id) => formData.append('linkIds', id));
+                    const response = await fetch('?/reorderLinks', { method: 'POST', body: formData });
+                    if (!response.ok) {
+                        console.error('Failed to reorder links:', response.statusText);
+                        return;
+                    }
+                }
+                await invalidateAll();
+            }
+        } catch (error) {
+            console.error('Drag operation failed:', error);
+        }
+    }
 
-	function handleDragEnter(event: DragEvent, id: string) {
-		event.preventDefault();
-		dragEnterCount++;
-		if (draggingId && draggingId !== id) {
-			dropTargetId = id;
-			// Determine drop intent based on what's being dragged and what it's over
-			const activeLink = links.find((l) => l.id === draggingId);
-			const targetLink = links.find((l) => l.id === id);
-				const targetFolder = visibleFolders.find((f) => f.id === id);
+    async function moveLinkToFolderAction(linkId: string, folderId: string | null) {
+        const formData = new FormData();
+        formData.append('linkId', linkId);
+        if (folderId) formData.append('folderId', folderId);
+        const response = await fetch('?/moveToFolder', { method: 'POST', body: formData });
+        if (!response.ok) {
+            console.error('Failed to move link to folder:', response.statusText);
+            throw new Error('Failed to move link');
+        }
+    }
 
-			if (activeLink && targetLink && !activeLink.folderId && !targetLink.folderId) {
-				dropIntent = 'merge';
-			} else if (activeLink && targetFolder && !activeLink.folderId) {
-				dropIntent = 'move-into';
-			} else {
-				dropIntent = 'reorder';
-				// Calculate insert index for visual feedback
-				const oldIndex = itemIds.indexOf(draggingId);
-				const newIndex = itemIds.indexOf(id);
-				dropInsertIndex = newIndex > oldIndex ? newIndex + 1 : newIndex;
-			}
-		}
-	}
+    async function moveLinkToRoot(linkId: string) {
+        try {
+            await moveLinkToFolderAction(linkId, null);
+            await invalidateAll();
+        } catch (error) {
+            console.error('Failed to move link to root:', error);
+        }
+    }
 
-	function handleDragLeave() {
-		dragEnterCount--;
-		if (dragEnterCount <= 0) {
-			dragEnterCount = 0;
-			dropTargetId = null;
-			dropIntent = null;
-			dropInsertIndex = null;
-		}
-	}
+    async function handleItemKeydown(event: KeyboardEvent, itemId: string) {
+        if (!event.altKey) return;
 
-	function handleDragOver(event: DragEvent, _id: string) {
-		event.preventDefault();
-		if (event.dataTransfer) {
-			event.dataTransfer.dropEffect = 'move';
-		}
-	}
+        const currentIndex = itemIds.indexOf(itemId);
+        if (currentIndex === -1) return;
 
-	async function handleDrop(event: DragEvent, targetId: string) {
-		event.preventDefault();
-		const activeId = draggingId;
-		// Reset immediately so UI clears
-		draggingId = null;
-		dropTargetId = null;
-		dropIntent = null;
-		dragEnterCount = 0;
-		dropInsertIndex = null;
-		isDragging = false;
-		if (!activeId || activeId === targetId) return;
+        const itemsPerRow = Math.max(1, Math.floor(window.innerWidth / 96)); // 80px + 16px gap
+        const maxIndex = itemIds.length - 1;
+        let newIndex = currentIndex;
 
-		const activeLink = links.find((l) => l.id === activeId);
-		const targetLink = links.find((l) => l.id === targetId);
-		const targetFolder = visibleFolders.find((f) => f.id === targetId);
+        switch (event.key) {
+            case 'ArrowRight': {
+                event.preventDefault();
+                newIndex = Math.min(currentIndex + 1, maxIndex);
+                break;
+            }
+            case 'ArrowLeft': {
+                event.preventDefault();
+                newIndex = Math.max(currentIndex - 1, 0);
+                break;
+            }
+            case 'ArrowDown': {
+                event.preventDefault();
+                newIndex = Math.min(currentIndex + itemsPerRow, maxIndex);
+                break;
+            }
+            case 'ArrowUp': {
+                event.preventDefault();
+                newIndex = Math.max(currentIndex - itemsPerRow, 0);
+                break;
+            }
+            default:
+                return;
+        }
 
-		try {
-			// 1. Drop a root link onto another root link → create folder with both
-			if (activeLink && targetLink && !activeLink.folderId && !targetLink.folderId) {
-					const response = await fetch('/dashboard/api/quick-link-folders', {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({ name: '' })
-					});
-				if (!response.ok) {
-					console.error('Failed to create folder:', response.statusText);
-					return;
-				}
-				const folder = await response.json();
+        if (newIndex === currentIndex) return;
 
-				if (folder?.id) {
-					try {
-						await Promise.all([
-							moveLinkToFolderAction(activeId, folder.id),
-							moveLinkToFolderAction(targetId, folder.id)
-						]);
-						await invalidateAll();
-					} catch (error) {
-						console.error('Failed to move links to folder:', error);
-						throw error; // Re-throw to be caught by outer try/catch
-					}
-				}
-				return;
-			}
+        const targetId = itemIds[newIndex];
+        const isFolder = visibleFolders.some((f) => f.id === itemId);
+        const targetFolder = visibleFolders.find((f) => f.id === targetId);
+        const itemLabel = isFolder
+            ? visibleFolders.find((f) => f.id === itemId)?.name || 'Folder'
+            : labelFor(links.find((l) => l.id === itemId)!) || 'Link';
 
-			// 2. Drop a link onto a folder → move link into that folder
-			if (activeLink && targetFolder) {
-				await moveLinkToFolderAction(activeId, targetFolder.id);
-				await invalidateAll();
-				return;
-			}
+        try {
+            const oldIndex = itemIds.indexOf(itemId);
+            const newOrder = [...itemIds];
+            newOrder.splice(oldIndex, 1);
+            newOrder.splice(newIndex, 0, itemId);
 
-			// 3. Reorder (folders and root links share the same order)
-			const oldIndex = itemIds.indexOf(activeId);
-			const newIndex = itemIds.indexOf(targetId);
+            const isFolderDrag = visibleFolders.some((f) => f.id === itemId);
+            const formData = new FormData();
+            if (isFolderDrag) {
+                newOrder.filter((id) => visibleFolders.some((f) => f.id === id)).forEach((id) => formData.append('folderIds', id));
+                const response = await fetch('?/reorderFolders', { method: 'POST', body: formData });
+                if (!response.ok) {
+                    console.error('Failed to reorder folders:', response.statusText);
+                    return;
+                }
+            } else {
+                newOrder.filter((id) => rootLinks.some((l) => l.id === id)).forEach((id) => formData.append('linkIds', id));
+                const response = await fetch('?/reorderLinks', { method: 'POST', body: formData });
+                if (!response.ok) {
+                    console.error('Failed to reorder links:', response.statusText);
+                    return;
+                }
+            }
 
-			if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-				const newOrder = [...itemIds];
-				newOrder.splice(oldIndex, 1);
-				newOrder.splice(newIndex, 0, activeId);
-
-					const isFolderDrag = visibleFolders.some((f) => f.id === activeId);
-					const formData = new FormData();
-					if (isFolderDrag) {
-						newOrder
-							.filter((id) => visibleFolders.some((f) => f.id === id))
-							.forEach((id) => formData.append('folderIds', id));
-					const response = await fetch('?/reorderFolders', { method: 'POST', body: formData });
-					if (!response.ok) {
-						console.error('Failed to reorder folders:', response.statusText);
-						return;
-					}
-				} else {
-					newOrder
-						.filter((id) => rootLinks.some((l) => l.id === id))
-						.forEach((id) => formData.append('linkIds', id));
-					const response = await fetch('?/reorderLinks', { method: 'POST', body: formData });
-					if (!response.ok) {
-						console.error('Failed to reorder links:', response.statusText);
-						return;
-					}
-				}
-				await invalidateAll();
-			}
-		} catch (error) {
-			console.error('Drag operation failed:', error);
-		}
-	}
-
-	async function moveLinkToFolderAction(linkId: string, folderId: string | null) {
-		const formData = new FormData();
-		formData.append('linkId', linkId);
-		if (folderId) formData.append('folderId', folderId);
-		const response = await fetch('?/moveToFolder', { method: 'POST', body: formData });
-		if (!response.ok) {
-			console.error('Failed to move link to folder:', response.statusText);
-			throw new Error('Failed to move link');
-		}
-	}
-
-	async function moveLinkToRoot(linkId: string) {
-		try {
-			await moveLinkToFolderAction(linkId, null);
-			await invalidateAll();
-		} catch (error) {
-			console.error('Failed to move link to root:', error);
-		}
-	}
-
-	async function deleteFolder(folderId: string) {
-		if (!confirm('Delete this folder? Links will be moved to the root level.')) return;
-		try {
-			const formData = new FormData();
-			formData.append('id', folderId);
-			const response = await fetch('?/deleteFolder', { method: 'POST', body: formData });
-			if (!response.ok) {
-				console.error('Failed to delete folder:', response.statusText);
-				return;
-			}
-			closeFolderDialog();
-			await invalidateAll();
-		} catch (error) {
-			console.error('Failed to delete folder:', error);
-		}
-	}
-
-	async function saveFolderDialogName(folder: QuickLinkFolder) {
-		if (folderDialogName === (folder.name ?? '')) return;
-		const formData = new FormData();
-		formData.append('id', folder.id);
-		formData.append('name', folderDialogName);
-
-		try {
-			const response = await fetch('?/updateFolder', {
-				method: 'POST',
-				body: formData
-			});
-			if (!response.ok) {
-				console.error('Failed to update folder:', response.statusText);
-				return;
-			}
-			await invalidateAll();
-		} catch (error) {
-			console.error('Failed to update folder:', error);
-		}
-	}
+            liveRegionMessage = `Moved "${itemLabel}" to new position`;
+            await invalidateAll();
+        } catch (error) {
+            console.error('Keyboard operation failed:', error);
+        }
+    }
 </script>
 
-<!--
-  Each tile: fixed width, flex-col, circle on top, label below.
-  The ⋮ button is positioned relative to the circle span itself,
-  so it doesn't push the circle down or affect alignment.
--->
-<div class="widget-container">
-	{#each visibleFolders as folder (folder.id)}
-		{@const folderLinks = folderLinksMap[folder.id] ?? []}
-		{@const previewLinks = folderLinks.slice(0, 4)}
-		<div
-			class="widget-item"
-			draggable={true}
-			ondragstart={(e) => handleDragStart(e, folder.id)}
-			ondragenter={(e) => handleDragEnter(e, folder.id)}
-			ondragover={(e) => handleDragOver(e, folder.id)}
-			ondragleave={handleDragLeave}
-			ondrop={(e) => handleDrop(e, folder.id)}
-			ondragend={handleDragEnd}
-			class:widget-drop-target={dropTargetId === folder.id && (dropIntent === 'reorder' || dropIntent === 'move-into')}
-			class:widget-drop-target-reorder={dropTargetId === folder.id && dropIntent === 'reorder'}
-			class:widget-drop-target-move-into={dropTargetId === folder.id && dropIntent === 'move-into'}
-			class:widget-dragging={draggingId === folder.id}
-			class:widget-insert-indicator={dropInsertIndex !== null && allItems.findIndex((i) => i.id === folder.id) === dropInsertIndex}
-			role="button"
-			tabindex="0"
-			aria-label={folder.name ?? 'Folder'}
-		>
-			<!-- Circle + ⋮ menu wrapper -->
-			<div class="widget-circle-wrapper">
-				<!-- ⋮ button anchored to the top-right corner of the circle -->
-				<button
-					type="button"
-					draggable={false}
-					class="widget-action-btn"
-					aria-label={`Actions for ${folder.name ?? 'Folder'}`}
-					aria-expanded={menuOpenId === folder.id}
-					aria-haspopup="true"
-					data-quicklink-menu="trigger"
-					onclick={(e) => toggleMenu(folder.id, e)}
-				>
-					<EllipsisVertical class="widget-icon-3-5" />
-				</button>
+<div aria-live="polite" aria-atomic="true" class="sr-only">{liveRegionMessage}</div>
 
-				{#if menuOpenId === folder.id}
-					<div
-						class="widget-dropdown"
-						data-quicklink-menu="panel"
-						role="menu"
-					>
-						<button
-							type="button"
-							class="widget-dropdown-item"
-							role="menuitem"
-							onclick={() => openEditFolder(folder)}
-						>
-							Rename
-						</button>
-						<button
-							type="button"
-							class="widget-dropdown-item widget-dropdown-item-destructive"
-							role="menuitem"
-							onclick={() => deleteFolder(folder.id)}
-						>
-							Delete
-						</button>
-					</div>
-				{/if}
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 16px; padding: 12px 0;">
+    {#each visibleFolders as folder (folder.id)}
+        {@const folderLinks = folderLinksMap[folder.id] ?? []}
+        <div
+            class="widget-item widget-item--dash-ql"
+            role="group"
+            aria-label={folder.name ? `Folder: ${folder.name}` : 'Folder'}
+            style="display: flex; flex-direction: column; align-items: center; gap: 8px;"
+            draggable={true}
+            ondragstart={(e) => handleDragStart(e, folder.id)}
+            ondragenter={(e) => handleDragEnter(e, folder.id)}
+            ondragover={(e) => handleDragOver(e, folder.id)}
+            ondragleave={handleDragLeave}
+            ondrop={(e) => handleDrop(e, folder.id)}
+            ondragend={handleDragEnd}
+            onkeydown={(e) => handleItemKeydown(e, folder.id)}
+            tabindex="0"
+        >
+            <div class="widget-item-menu-wrap" onclick={(e) => e.stopPropagation()} role="presentation">
+                <div class="widget-item-menu-inner">
+                    <ThreeDotsMenu
+                        menuId={`qlw-grid-folder-${folder.id}`}
+                        items={[
+                            {
+                                label: 'Edit',
+                                icon: Edit,
+                                action: () => openEditFolder(folder)
+                            },
+                            {
+                                label: 'Delete',
+                                icon: Trash2,
+                                variant: 'destructive',
+                                action: () => qlDialog?.openDelete('folder', folder.id, folder.name || 'Untitled folder')
+                            }
+                        ]}
+                    />
+                </div>
+            </div>
+            <button
+                type="button"
+                style="display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; background: none; border: none; padding: 0;"
+                onclick={(e) => toggleFolderPopover(folder.id, e)}
+                onkeydown={(e) => e.key === 'Enter' && toggleFolderPopover(folder.id, e)}
+            >
+                <div
+                    style="width: 48px; height: 48px; background: var(--lilac); border: 1px solid var(--lilac-d); border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative;"
+                >
+                    <Folder style="width: 24px; height: 24px; color: var(--lilac-d);" />
+                    {#if folderLinks.length > 0}
+                        <div
+                            style="position: absolute; top: -4px; right: -4px; background: var(--lilac-d); color: white; font-size: 10px; font-weight: 700; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--surface);"
+                        >
+                            {folderLinks.length}
+                        </div>
+                    {/if}
+                </div>
+                <span style="font-size: 11px; font-weight: 500; text-align: center;">{folder.name || 'Untitled'}</span>
+            </button>
+        </div>
+    {/each}
 
-				<!-- Folder circle with preview icons -->
-				<div
-					onclick={(e) => toggleFolderPopover(folder.id, e)}
-					onkeydown={(e) => {
-						if (e.key === 'Enter' || e.key === ' ') {
-							e.preventDefault();
-							toggleFolderPopover(folder.id, e);
-						}
-					}}
-					class="widget-circle"
-					role="button"
-					tabindex="0"
-					aria-label={folder.name ?? 'Folder'}
-				>
-					<Folder class="widget-icon-6 text-muted-foreground" aria-hidden="true" />
-					<!-- Preview icons (up to 4) -->
-					{#if previewLinks.length > 0}
-						<div class="widget-preview-icons">
-							{#each previewLinks.slice(0, 2) as pl}
-								{#if pl.faviconUrl || preloadedFavicons.has(pl.id)}
-									<img
-										src={faviconForLink(pl)}
-										alt=""
-										class="widget-preview-icon"
-										referrerpolicy="no-referrer"
-										class:opacity-50={previewLinks.length > 1}
-										draggable={false}
-										style="image-rendering: crisp-edges"
-									/>
-								{/if}
-							{/each}
-						</div>
-					{/if}
-				</div>
-			</div>
+    {#each rootLinks as link (link.id)}
+        <div
+            class="widget-item widget-item--dash-ql"
+            role="group"
+            aria-label={`Link: ${labelFor(link)}`}
+            style="display: flex; flex-direction: column; align-items: center; gap: 8px;"
+            draggable={true}
+            ondragstart={(e) => handleDragStart(e, link.id)}
+            ondragenter={(e) => handleDragEnter(e, link.id)}
+            ondragover={(e) => handleDragOver(e, link.id)}
+            ondragleave={handleDragLeave}
+            ondrop={(e) => handleDrop(e, link.id)}
+            ondragend={handleDragEnd}
+            onkeydown={(e) => handleItemKeydown(e, link.id)}
+            tabindex="0"
+        >
+            <div class="widget-item-menu-wrap" onclick={(e) => e.stopPropagation()} role="presentation">
+                <div class="widget-item-menu-inner">
+                    <ThreeDotsMenu
+                        menuId={`qlw-grid-link-${link.id}`}
+                        items={[
+                            {
+                                label: 'Edit',
+                                icon: Edit,
+                                action: () => openEdit(link)
+                            },
+                            {
+                                label: 'Delete',
+                                icon: Trash2,
+                                variant: 'destructive',
+                                action: () => qlDialog?.openDelete('link', link.id, labelFor(link))
+                            }
+                        ]}
+                    />
+                </div>
+            </div>
+            <button
+                type="button"
+                style="display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; background: none; border: none; padding: 0;"
+                onclick={() => openLink(link.url)}
+            >
+                <div
+                    style="width: 48px; height: 48px; background: var(--surface-2); border: 1px solid var(--hairline); border-radius: 12px; display: flex; align-items: center; justify-content: center;"
+                >
+                    {#if brokenFavicons.has(link.id) || !(link.faviconUrl || preloadedFavicons.has(link.id))}
+                        <Link2 style="width: 24px; height: 24px; color: var(--ink-3);" />
+                    {:else}
+                        <img src={faviconForLink(link)} alt="" style="width: 24px; height: 24px; object-fit: contain;" />
+                    {/if}
+                </div>
+                <span style="font-size: 11px; font-weight: 500; text-align: center;">{labelFor(link)}</span>
+            </button>
+        </div>
+    {/each}
 
-			<!-- Label: up to 2 lines, then ellipsis -->
-				{#if inlineEditingFolderId === folder.id}
-					<input
-						bind:this={inlineFolderInputEl}
-						bind:value={inlineFolderName}
-						placeholder="Name this folder"
-						class="widget-folder-input"
-						onclick={(event) => event.stopPropagation()}
-						onkeydown={(event) => {
-							event.stopPropagation();
-							if (event.key === 'Enter') {
-								event.preventDefault();
-								void saveInlineFolderName(folder.id);
-							}
-							if (event.key === 'Escape') {
-								event.preventDefault();
-								cancelInlineFolderName();
-							}
-						}}
-						onblur={() => void saveInlineFolderName(folder.id)}
-					/>
-				{:else if folder.name}
-					<span
-						class="widget-label"
-						title={folder.name}
-					>
-					{folder.name}
-				</span>
-			{/if}
-		</div>
+    <button
+        type="button"
+        class="add-link-button"
+        style="display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; background: none; border: none;"
+        onclick={() => openAdd()}
+    >
+        <div
+            class="add-link-icon"
+            style="width: 48px; height: 48px; background: var(--surface-3); border: 1px dashed var(--hairline); border-radius: 12px; display: flex; align-items: center; justify-content: center;"
+        >
+            <Plus style="width: 24px; height: 24px; color: var(--ink-4);" />
+        </div>
+        <span style="font-size: 11px; font-weight: 500; color: var(--ink-3);">Add link</span>
+    </button>
 
-		<!-- Folder popover -->
-		{#if folderPopoverId === folder.id}
-			<div
-				class="widget-popover"
-				data-folder-popover="panel"
-				role="dialog"
-				aria-modal="true"
-			>
-				<button
-					type="button"
-					class="widget-popover-overlay"
-					aria-label="Close"
-					onclick={closeFolderDialog}
-				></button>
-				<div
-					class="widget-popover-panel"
-				>
-					<div class="widget-popover-header folder-popover-header">
-						<input
-							bind:this={folderDialogInputEl}
-							bind:value={folderDialogName}
-							aria-label="Folder name"
-							placeholder="Folder"
-							class="folder-popover-input"
-							onkeydown={(event) => {
-								if (event.key === 'Enter') {
-									event.preventDefault();
-									void saveFolderDialogName(folder);
-									folderDialogInputEl?.blur();
-								}
-								if (event.key === 'Escape') {
-									event.preventDefault();
-									folderDialogName = folder.name ?? '';
-									folderDialogInputEl?.blur();
-								}
-							}}
-							onblur={() => void saveFolderDialogName(folder)}
-						/>
-						<div class="folder-popover-actions">
-							<div class="relative" data-quicklink-menu>
-								<button
-									type="button"
-									class="folder-popover-btn"
-									aria-label={`Actions for ${folder.name ?? 'Folder'}`}
-									aria-expanded={folderDialogMenuOpen}
-									aria-haspopup="true"
-									onclick={() => (folderDialogMenuOpen = !folderDialogMenuOpen)}
-								>
-									<MoreHorizontal class="widget-icon-4" aria-hidden="true" />
-								</button>
-								{#if folderDialogMenuOpen}
-									<div class="folder-popover-menu" role="menu">
-										<button
-											type="button"
-											class="folder-popover-menu-item"
-											role="menuitem"
-											onclick={() => deleteFolder(folder.id)}
-										>
-											Delete
-										</button>
-									</div>
-								{/if}
-							</div>
-							<button
-								type="button"
-								class="folder-popover-btn folder-popover-close"
-								aria-label="Close"
-								onclick={closeFolderDialog}
-							>
-								<span class="sr-only">Close</span>
-								<span aria-hidden="true" class="folder-popover-close">×</span>
-							</button>
-						</div>
-					</div>
-					<div class="widget-popover-body">
-						{#if folderLinks.length === 0}
-							<div class="folder-popover-empty">
-								<p class="folder-popover-empty-text">This folder is empty</p>
-								<button
-									type="button"
-									class="folder-popover-add-btn"
-									onclick={() => openAdd(folder)}
-								>
-									<Plus class="widget-icon-4" aria-hidden="true" />
-									Add link
-								</button>
-							</div>
-						{/if}
-						{#each folderLinks as link (link.id)}
-							<div
-								class="widget-item"
-							>
-								<div class="widget-circle-wrapper">
-									<button
-										type="button"
-										draggable={false}
-										class="widget-action-btn"
-										aria-label={`Actions for ${labelFor(link)}`}
-										onclick={(e) => toggleMenu(link.id, e)}
-									>
-										<EllipsisVertical class="widget-icon-3-5" />
-									</button>
-
-									{#if menuOpenId === link.id && menuPosition}
-										<div
-											style="top: {menuPosition.top}px; left: {menuPosition.left}px;"
-											class="widget-dropdown"
-											data-quicklink-menu="panel"
-											role="menu"
-										>
-											<button
-												type="button"
-												class="widget-dropdown-item"
-												role="menuitem"
-												onclick={() => openEdit(link)}
-											>
-												Edit
-											</button>
-											<button
-												type="button"
-												class="widget-dropdown-item"
-												role="menuitem"
-												onclick={() => moveLinkToRoot(link.id)}
-											>
-												Move to root
-											</button>
-											<form
-												method="post"
-												action="?/delete"
-												use:enhance={() => {
-													return async ({ result, update }) => {
-														await update();
-														if (result.type === 'redirect') closeModal();
-													};
-												}}
-											>
-												<input type="hidden" name="id" value={link.id} />
-												<button
-													type="submit"
-													class="widget-dropdown-item widget-dropdown-item-destructive"
-													role="menuitem"
-												>
-													Remove
-												</button>
-											</form>
-										</div>
-									{/if}
-
-									<div
-										onclick={() => openLink(link.url)}
-										onkeydown={(e) => handleLinkKeydown(e, link.url)}
-										aria-label={labelFor(link)}
-										role="button"
-										tabindex="0"
-										class="widget-circle"
-									>
-										{#if brokenFavicons.has(link.id)}
-											<Link2 class="widget-icon-6 text-muted-foreground" aria-hidden="true" />
-										{:else if link.faviconUrl || preloadedFavicons.has(link.id)}
-											<img
-												src={faviconForLink(link)}
-												alt=""
-												class="widget-icon-8 rounded-sm object-contain"
-												referrerpolicy="no-referrer"
-												style="image-rendering: crisp-edges"
-											/>
-										{:else}
-											<!-- Show Link2 icon while preloading -->
-											<Link2 class="widget-icon-6 text-muted-foreground" aria-hidden="true" />
-										{/if}
-									</div>
-								</div>
-								<span
-									class="widget-label"
-									title={labelFor(link)}
-								>
-									{labelFor(link)}
-								</span>
-							</div>
-						{/each}
-					</div>
-				</div>
-			</div>
-		{/if}
-	{/each}
-
-	{#each rootLinks as link (link.id)}
-		<div
-			class="widget-item"
-			draggable={true}
-			ondragstart={(e) => handleDragStart(e, link.id)}
-			ondragenter={(e) => handleDragEnter(e, link.id)}
-			ondragover={(e) => handleDragOver(e, link.id)}
-			ondragleave={handleDragLeave}
-			ondrop={(e) => handleDrop(e, link.id)}
-			ondragend={handleDragEnd}
-			class:widget-drop-target={dropTargetId === link.id && (dropIntent === 'reorder' || dropIntent === 'merge')}
-			class:widget-drop-target-reorder={dropTargetId === link.id && dropIntent === 'reorder'}
-			class:widget-drop-target-merge={dropTargetId === link.id && dropIntent === 'merge'}
-			class:widget-dragging={draggingId === link.id}
-			class:widget-insert-indicator={dropInsertIndex !== null && allItems.findIndex((i) => i.id === link.id) === dropInsertIndex}
-			role="button"
-			tabindex="0"
-			aria-label={labelFor(link)}
-		>
-			<!-- Circle + ⋮ menu wrapper -->
-			<div class="widget-circle-wrapper">
-				<!-- ⋮ button anchored to the top-right corner of the circle -->
-				<button
-					type="button"
-					draggable={false}
-					class="widget-action-btn"
-					aria-label={`Actions for ${labelFor(link)}`}
-					aria-expanded={menuOpenId === link.id}
-					aria-haspopup="true"
-					data-quicklink-menu="trigger"
-					onclick={(e) => toggleMenu(link.id, e)}
-				>
-					<EllipsisVertical class="widget-icon-3-5" />
-				</button>
-
-				{#if menuOpenId === link.id}
-					<div
-						class="widget-dropdown"
-						data-quicklink-menu="panel"
-						role="menu"
-					>
-						<button
-							type="button"
-							class="widget-dropdown-item"
-							role="menuitem"
-							onclick={() => openEdit(link)}
-						>
-							Edit
-						</button>
-						<form
-							method="post"
-							action="?/delete"
-							use:enhance={() => {
-								return async ({ result, update }) => {
-									await update();
-									if (result.type === 'redirect') closeModal();
-								};
-							}}
-						>
-							<input type="hidden" name="id" value={link.id} />
-							<button
-								type="submit"
-								class="widget-dropdown-item widget-dropdown-item-destructive"
-								role="menuitem"
-							>
-								Remove
-							</button>
-						</form>
-					</div>
-				{/if}
-
-				<!-- Favicon circle is a plain div (no extra padding) -->
-				<div
-					onclick={() => openLink(link.url)}
-					onkeydown={(e) => handleLinkKeydown(e, link.url)}
-					aria-label={labelFor(link)}
-					role="button"
-					tabindex="0"
-					class="widget-circle"
-				>
-					{#if brokenFavicons.has(link.id)}
-						<Link2 class="widget-icon-6 text-muted-foreground" aria-hidden="true" />
-					{:else if link.faviconUrl || preloadedFavicons.has(link.id)}
-						<img
-							src={faviconForLink(link)}
-							alt=""
-							class="widget-icon-8 rounded-sm object-contain"
-							referrerpolicy="no-referrer"
-							draggable={false}
-							style="image-rendering: crisp-edges"
-						/>
-					{:else}
-						<!-- Show Link2 icon while preloading -->
-						<Link2 class="widget-icon-6 text-muted-foreground" aria-hidden="true" />
-					{/if}
-				</div>
-			</div>
-
-			<!-- Label: up to 2 lines, then ellipsis -->
-			<span
-				class="widget-label"
-				title={labelFor(link)}
-			>
-				{labelFor(link)}
-			</span>
-		</div>
-	{/each}
-
-	<!-- Add link tile — same structure: circle on top, label below -->
-	<button
-		type="button"
-		class="widget-item text-muted-foreground hover:text-foreground"
-		onclick={() => openAdd()}
-	>
-		<span class="widget-circle">
-			<Plus class="widget-icon-6" aria-hidden="true" />
-		</span>
-		<span class="widget-label">Add link</span>
-	</button>
-
-	<!-- Add folder tile -->
-	<button
-		type="button"
-		class="widget-item text-muted-foreground hover:text-foreground"
-		onclick={openAddFolder}
-	>
-		<span class="widget-circle">
-			<Folder class="widget-icon-6" aria-hidden="true" />
-		</span>
-		<span class="widget-label">Add folder</span>
-	</button>
+    <button
+        type="button"
+        class="add-folder-button"
+        style="display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; background: none; border: none;"
+        onclick={() => qlDialog?.openAddFolder()}
+    >
+        <div
+            class="add-folder-icon"
+            style="width: 48px; height: 48px; background: var(--lilac); border: 1px dashed var(--lilac-d); border-radius: 12px; display: flex; align-items: center; justify-content: center;"
+        >
+            <Folder style="width: 24px; height: 24px; color: var(--lilac-d);" />
+        </div>
+        <span style="font-size: 11px; font-weight: 500; color: var(--lilac-d);">Add folder</span>
+    </button>
 </div>
 
-{#if modalOpen}
-	<Dialog open={modalOpen} onClose={closeModal} maxWidth="max-w-md">
-		{#if modalMode === 'folder'}
-			<form
-				method="post"
-				action="?/updateFolder"
-				class="modal-form"
-				use:enhance={() => {
-					return async ({ result, update }) => {
-						await update();
-						if (result.type === 'redirect') closeModal();
-					};
-				}}
-			>
-				<input type="hidden" name="id" value={editingFolder?.id} />
-				<div class="modal-header">
-					<div class="widget-flex widget-flex-1 widget-items-start">
-						<Input
-							name="name"
-							bind:value={draftFolderName}
-							class="modal-title-input"
-							placeholder="Folder name (optional)"
-						/>
-					</div>
-					<Button type="button" variant="ghost" size="sm" onclick={closeModal} class="shrink-0">
-						{#snippet children()}<X class="widget-icon-5" />{/snippet}
-					</Button>
-				</div>
-				<div class="modal-content">
-					{#if form?.error}
-						<div class="modal-error">
-							<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
-						</div>
-					{/if}
-				</div>
-				<div class="modal-footer">
-					<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
-					<Button type="submit">Save</Button>
-				</div>
-			</form>
-		{:else}
-			{#if editing}
-				<form
-					method="post"
-					action="?/update"
-					class="modal-form"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							await update();
-							if (result.type === 'redirect') closeModal();
-						};
-					}}
-				>
-					<input type="hidden" name="id" value={editing.id} />
-					<div class="modal-header">
-						<div class="widget-flex widget-flex-1 widget-items-start">
-							<Input
-								name="url"
-								bind:value={draftUrl}
-								class="modal-title-input"
-								placeholder="URL"
-								required
-							/>
-						</div>
-						<Button type="button" variant="ghost" size="sm" onclick={closeModal} class="shrink-0">
-							{#snippet children()}<X class="widget-icon-5" />{/snippet}
-						</Button>
-					</div>
-					<div class="modal-content">
-						<div>
-							<Label for="ql-title">Title (optional)</Label>
-							<Input id="ql-title" name="title" bind:value={draftTitle} placeholder={prettyHostname(draftUrl)} />
-						</div>
-						<div>
-							<Label for="ql-description">Description (optional)</Label>
-							<Textarea id="ql-description" name="description" rows={2} bind:value={draftDescription} />
-						</div>
-						{#if form?.error}
-							<div class="modal-error">
-								<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
-							</div>
-						{/if}
-					</div>
-					<div class="modal-footer">
-						<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
-						<Button type="submit">Save</Button>
-					</div>
-				</form>
-			{:else}
-				<form
-					method="post"
-					action="?/create"
-					class="modal-form"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							await update();
-							if (result.type === 'redirect') closeModal();
-						};
-					}}
-				>
-					{#if addingToFolder}
-						<input type="hidden" name="folderId" value={addingToFolder.id} />
-					{/if}
-					<div class="modal-header">
-						<div class="widget-flex widget-flex-1 widget-items-start">
-							<Input
-								name="url"
-								bind:value={draftUrl}
-								class="modal-title-input"
-								placeholder="URL"
-								required
-							/>
-						</div>
-						<Button type="button" variant="ghost" size="sm" onclick={closeModal} class="shrink-0">
-							{#snippet children()}<X class="widget-icon-5" />{/snippet}
-						</Button>
-					</div>
-					<div class="modal-content">
-						<div>
-							<Label for="ql-title-new">Title (optional)</Label>
-							<Input
-								id="ql-title-new"
-								name="title"
-								bind:value={draftTitle}
-								placeholder={draftUrl ? prettyHostname(draftUrl) : 'Shown under the icon'}
-							/>
-						</div>
-						<div>
-							<Label for="ql-description-new">Description (optional)</Label>
-							<Textarea id="ql-description-new" name="description" rows={2} bind:value={draftDescription} />
-						</div>
-						{#if form?.error}
-							<div class="modal-error">
-								<ErrorDetails status={400} message={form.error} errorId={form.errorId ?? undefined} />
-							</div>
-						{/if}
-					</div>
-					<div class="modal-footer">
-						<Button type="button" variant="outline" onclick={closeModal}>Cancel</Button>
-						<Button type="submit">Add</Button>
-					</div>
-				</form>
-			{/if}
-		{/if}
-	</Dialog>
+{#if folderPopoverId}
+    {@const folder = visibleFolders.find((f) => f.id === folderPopoverId)}
+    {@const folderLinks = folderLinksMap[folderPopoverId as keyof typeof folderLinksMap] ?? []}
+    {#snippet qlFolderPopoverHeader()}
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div
+                style="width: 32px; height: 32px; background: var(--lilac); border-radius: 8px; display: flex; align-items: center; justify-content: center;"
+            >
+                <Folder style="width: 16px; height: 16px; color: var(--lilac-d);" />
+            </div>
+            <h3 class="display" style="font-size: 20px; margin: 0;">{folder?.name || 'Untitled Folder'}</h3>
+        </div>
+    {/snippet}
+    {#snippet qlFolderPopoverActions()}
+        {#if folder}
+            <ThreeDotsMenu
+                menuId={`qlw-folder-${folder.id}`}
+                items={[
+                    {
+                        label: 'Edit',
+                        icon: Edit,
+                        action: () => openEditFolder(folder)
+                    },
+                    {
+                        label: 'Delete',
+                        icon: Trash2,
+                        variant: 'destructive',
+                        action: () => qlDialog?.openDelete('folder', folder.id, folder.name || 'Untitled folder')
+                    }
+                ]}
+            />
+        {/if}
+    {/snippet}
+    {#snippet qlFolderPopoverFooter()}
+        <Button variant="outline" style="width: 100%;" onclick={() => folder && openAdd(folder)}>
+            <Plus size={16} style="margin-right: 8px;" /> Add link to folder
+        </Button>
+    {/snippet}
+    <Dialog
+        open={!!folderPopoverId}
+        onClose={closeFolderDialog}
+        contentWidth="md"
+        ariaLabel={folder?.name ? `Folder ${folder.name}` : 'Folder'}
+        titleLevel="h3"
+        header={qlFolderPopoverHeader}
+        headerActions={qlFolderPopoverActions}
+        footer={qlFolderPopoverFooter}
+    >
+        {#each folderLinks as link}
+            <div
+                class="card"
+                style="padding: 12px; display: flex; align-items: center; justify-content: space-between; background: var(--surface-2); border-color: transparent;"
+            >
+                <div
+                    style="display: flex; align-items: center; gap: 12px; cursor: pointer; flex: 1; min-width: 0;"
+                    onclick={() => openLink(link.url)}
+                    onkeydown={(e) => e.key === 'Enter' && openLink(link.url)}
+                    role="button"
+                    tabindex="0"
+                >
+                    <div
+                        style="width: 32px; height: 32px; background: var(--surface); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"
+                    >
+                        {#if brokenFavicons.has(link.id) || !(link.faviconUrl || preloadedFavicons.has(link.id))}
+                            <Link2 style="width: 16px; height: 16px; color: var(--ink-3);" />
+                        {:else}
+                            <img src={faviconForLink(link)} alt="" style="width: 16px; height: 16px; object-fit: contain;" />
+                        {/if}
+                    </div>
+                    <span style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                        >{labelFor(link)}</span
+                    >
+                </div>
+                <ThreeDotsMenu
+                    menuId={`qlw-folder-link-${link.id}`}
+                    items={[
+                        {
+                            label: 'Move to root',
+                            icon: CornerUpLeft,
+                            action: () => moveLinkToRoot(link.id)
+                        },
+                        {
+                            label: 'Edit',
+                            icon: Edit,
+                            action: () => openEdit(link)
+                        },
+                        {
+                            label: 'Delete',
+                            icon: Trash2,
+                            variant: 'destructive',
+                            action: () => qlDialog?.openDelete('link', link.id, labelFor(link))
+                        }
+                    ]}
+                />
+            </div>
+        {/each}
+        {#if folderLinks.length === 0}
+            <div style="text-align: center; color: var(--ink-3); font-size: 13px;">This folder is empty.</div>
+        {/if}
+    </Dialog>
 {/if}
+
+<QuickLinksManageDialog bind:this={qlDialog} {links} {form} enableDeleteDialog={true} />
+
+<style>
+    .add-link-button {
+        transition: transform 0.2s ease;
+        padding: 0;
+    }
+
+    .add-link-button:hover {
+        transform: scale(1.05);
+    }
+
+    .add-link-icon {
+        transition:
+            background 0.2s ease,
+            border-color 0.2s ease;
+    }
+
+    .add-link-button:hover .add-link-icon {
+        background: var(--surface-2);
+        border-color: var(--ink-2);
+    }
+
+    .add-link-button:hover .add-link-icon :global(svg) {
+        color: var(--ink-3);
+    }
+
+    .add-folder-button {
+        transition: transform 0.2s ease;
+        padding: 0;
+    }
+
+    .add-folder-button:hover {
+        transform: scale(1.05);
+    }
+
+    .add-folder-icon {
+        transition:
+            background 0.2s ease,
+            border-color 0.2s ease;
+    }
+
+    .add-folder-button:hover .add-folder-icon {
+        background: var(--lilac-d);
+        border-color: var(--lilac);
+    }
+
+    .add-folder-button:hover .add-folder-icon :global(svg) {
+        color: white;
+    }
+</style>
