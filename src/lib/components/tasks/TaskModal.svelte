@@ -8,7 +8,6 @@
     import TaskChecklistEditor from '$lib/components/tasks/TaskChecklistEditor.svelte';
     import { fieldFromInitial } from '$lib/utils/initialFields';
     import { taskStatusLabel, taskStatusPillClass } from '$lib/tasks/taskStatusDisplay';
-    import { createTaskAutoSave } from '$lib/tasks/taskAutoSave';
     import { parseTaskChecklist, type TaskChecklistItem } from '$lib/tasks/taskChecklist';
     import type { ManualEnhanceHandler } from '$lib/utils/enhanceSubmit';
     import { enhance } from '$app/forms';
@@ -60,22 +59,6 @@
     const statusPillClass = $derived(() => taskStatusPillClass(statusValue));
     const statusLabel = $derived(() => taskStatusLabel(statusValue));
 
-    const autoSave = createTaskAutoSave({
-        getOpen: () => open,
-        getAction: () => action,
-        getOnEnhance: () => (mode === 'edit' ? (onenhance as ManualEnhanceHandler) : undefined),
-        buildFormData: () => {
-            const formData = new FormData();
-            formData.append('id', val('id'));
-            formData.append('title', titleValue);
-            formData.append('description', descriptionValue);
-            formData.append('status', statusValue);
-            formData.append('priority', priorityValue);
-            formData.append('dueDate', dueDateValue);
-            formData.append('checklist', checklistJson);
-            return formData;
-        }
-    });
 
     $effect(() => {
         if (open) {
@@ -96,11 +79,9 @@
                 editableChecklist = parseTaskChecklist(initial.checklist);
                 dueDateValue = val('dueDate');
                 isEditingDescription = false;
-                autoSave.onOpen();
                 showDueDatePicker = false;
             }
         } else if (mode === 'edit') {
-            autoSave.reset();
             showDueDatePicker = false;
             isEditingDescription = false;
         }
@@ -111,19 +92,9 @@
             dueDateInputEl.value = dueDateValue;
         }
         showDueDatePicker = false;
-        if (mode === 'edit') void autoSave.triggerAutoSave();
     }
 
-    async function onChecklistMutate(immediate = false) {
-        if (mode === 'edit') {
-            await autoSave.triggerAutoSave(immediate, false);
-        }
-    }
-
-    async function saveBeforeCloseWrapper() {
-        await autoSave.saveBeforeClose(onClose);
-    }
-</script>
+    </script>
 
 {#snippet taskHeader()}
     <span class="pill {statusPillClass()}">{statusLabel()}</span>
@@ -209,18 +180,12 @@
         </form>
     </Dialog>
 {:else}
-    <Dialog {open} onClose={saveBeforeCloseWrapper} ariaLabel="Edit task" header={taskHeader} footer={taskEditFooter}>
+    <Dialog {open} {onClose} ariaLabel="Edit task" header={taskHeader} footer={taskEditFooter}>
         <form id="task-edit-form" method="post" {action} class="modal-form">
             <div class="modal-title-row">
                 <Input
                     name="title"
                     bind:value={titleValue}
-                    oninput={() => void autoSave.triggerAutoSave()}
-                    onfocus={() => autoSave.markFocused('title')}
-                    onblur={() => {
-                        autoSave.markBlurred('title');
-                        void autoSave.triggerAutoSave(true);
-                    }}
                     class="modal-title-input display"
                     placeholder="Task title"
                 />
@@ -239,12 +204,8 @@
                     <Textarea
                         name="description"
                         bind:value={descriptionValue}
-                        oninput={() => void autoSave.triggerAutoSave()}
-                        onfocus={() => autoSave.markFocused('description')}
                         onblur={() => {
-                            autoSave.markBlurred('description');
                             isEditingDescription = false;
-                            void autoSave.triggerAutoSave(true);
                         }}
                         onkeydown={(e) => {
                             if (e.key === 'Escape') {
@@ -277,7 +238,7 @@
                 {/if}
             </div>
 
-            <TaskChecklistEditor bind:items={editableChecklist} onMutate={onChecklistMutate} />
+            <TaskChecklistEditor bind:items={editableChecklist} />
 
             {#if error}<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />{/if}
             <input type="hidden" name="checklist" value={checklistJson} />

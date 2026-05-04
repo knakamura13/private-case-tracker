@@ -7,7 +7,6 @@
     import RichText from '$lib/components/ui/RichText.svelte';
     import TaskChecklistEditor from '$lib/components/tasks/TaskChecklistEditor.svelte';
     import { fieldFromInitial } from '$lib/utils/initialFields';
-    import { createMilestoneAutoSave } from '$lib/timeline/milestoneAutoSave';
     import type { ManualEnhanceHandler } from '$lib/utils/enhanceSubmit';
     import type { TaskChecklistItem } from '$lib/tasks/taskChecklist';
     import { PHASE_LABELS } from '$lib/constants/phases';
@@ -78,25 +77,6 @@
     let dueDateInputEl = $state<HTMLInputElement | null>(null);
     let scheduledAtInputEl = $state<HTMLInputElement | null>(null);
 
-    const autoSave = createMilestoneAutoSave({
-        getOpen: () => open,
-        getAction: () => action,
-        getOnEnhance: () => (mode === 'edit' ? (onenhance as ManualEnhanceHandler) : undefined),
-        buildFormData: () => {
-            const formData = new FormData();
-            formData.append('id', val('id'));
-            formData.append('title', titleValue);
-            formData.append('description', descriptionValue);
-            formData.append('phase', phaseValue);
-            formData.append('status', statusValue);
-            formData.append('priority', priorityValue);
-            formData.append('dueDate', dueDateValue);
-            formData.append('scheduledAt', appointmentDateValue);
-            formData.append('subTasks', subTasksJson);
-            formData.append('location', currentLocation);
-            return formData;
-        }
-    });
 
     $effect(() => {
         if (open) {
@@ -126,14 +106,12 @@
                 appointmentDateValue = val('scheduledAt');
                 currentLocation = val('location', '');
                 isEditingDescription = false;
-                autoSave.onOpen();
                 showLocationInput = false;
                 showDueDatePicker = false;
                 showAppointmentDatePicker = false;
                 isEditingLocation = false;
             }
         } else if (mode === 'edit') {
-            autoSave.reset();
             showLocationInput = false;
             showDueDatePicker = false;
             showAppointmentDatePicker = false;
@@ -148,7 +126,6 @@
         locationAddress = '';
         showLocationInput = false;
         isEditingLocation = false;
-        if (mode === 'edit') void autoSave.triggerAutoSave();
     }
 
     function handleDueDateSave() {
@@ -156,7 +133,6 @@
             dueDateInputEl.value = dueDateValue;
         }
         showDueDatePicker = false;
-        if (mode === 'edit') void autoSave.triggerAutoSave();
     }
 
     function handleAppointmentDateSave() {
@@ -164,14 +140,8 @@
             scheduledAtInputEl.value = appointmentDateValue;
         }
         showAppointmentDatePicker = false;
-        if (mode === 'edit') void autoSave.triggerAutoSave();
     }
 
-    async function onSubtaskMutate(immediate = false) {
-        if (mode === 'edit') {
-            await autoSave.triggerAutoSave(immediate);
-        }
-    }
 </script>
 
 {#snippet milestoneInlinePickers()}
@@ -302,7 +272,6 @@
                 <Input
                     name="title"
                     bind:value={titleValue}
-                    oninput={() => void autoSave.triggerAutoSave()}
                     class="modal-title-input display"
                     placeholder="Milestone title"
                 />
@@ -311,15 +280,12 @@
             {@render milestoneInlinePickers()}
 
             <div class="modal-description-section">
-                <input type="hidden" name="description" value={descriptionValue} />
                 {#if isEditingDescription}
                     <Textarea
                         name="description"
                         bind:value={descriptionValue}
-                        oninput={() => void autoSave.triggerAutoSave()}
                         onblur={() => {
                             isEditingDescription = false;
-                            void autoSave.triggerAutoSave(true);
                         }}
                         onkeydown={(e) => {
                             if (e.key === 'Escape') {
@@ -352,7 +318,7 @@
                 {/if}
             </div>
 
-            <TaskChecklistEditor bind:items={editableSubTasks} onMutate={onSubtaskMutate} />
+            <TaskChecklistEditor bind:items={editableSubTasks} />
 
             {#if error}<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />{/if}
             <input type="hidden" name="subTasks" value={subTasksJson} />
