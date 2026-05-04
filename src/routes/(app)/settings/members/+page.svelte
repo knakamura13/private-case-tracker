@@ -2,7 +2,6 @@
     import PageHeader from '$lib/components/shared/PageHeader.svelte';
     import Button from '$lib/components/ui/Button.svelte';
     import Select from '$lib/components/ui/Select.svelte';
-    import ByAvatar from '$lib/components/shared/ByAvatar.svelte';
     import { Trash2, Copy, Shield, UserPlus } from 'lucide-svelte';
     import { enhance } from '$app/forms';
     import { getPageNumber } from '$lib/constants/navigation';
@@ -34,7 +33,6 @@
                     style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--surface-2); border-radius: var(--r-md);"
                 >
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <ByAvatar owner={{ id: m.user.id, name: m.user.name, email: m.user.email }} />
                         <div>
                             <p style="font-size: 14px; font-weight: 500;">{m.user.name ?? m.user.email}</p>
                             <p style="font-size: 12px; color: var(--ink-3);">{m.user.email}</p>

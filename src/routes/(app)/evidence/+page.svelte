@@ -16,13 +16,9 @@
         newCategoryName = '';
         showAddModal = true;
     }
-
-    const totalCollected = $derived(data.categories.reduce((acc, cat) => acc + cat.currentCount, 0));
-    const totalTarget = $derived(data.categories.reduce((acc, cat) => acc + cat.targetCount, 0));
 </script>
 
 <PageHeader
-    eyebrow={`${totalCollected} of ${totalTarget} items collected`}
     title="Evidence"
     sub="Track evidence collection progress by category."
     number={getPageNumber('/evidence')}

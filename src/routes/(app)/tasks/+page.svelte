@@ -45,8 +45,7 @@
         { id: 'DONE', label: 'Done', pillClass: 's-done' }
     ] as const;
 
-    const membersById = $derived(new Map(data.members.map((member) => [member.id, member])));
-
+    
     const grouped = $derived(
         COLUMNS.map((col) => ({
             ...col,
@@ -54,8 +53,7 @@
                 .filter((t) => t.status === col.id)
                 .sort((a, b) => a.order - b.order)
                 .map((t) => ({
-                    ...t,
-                    owner: t.ownerId ? (membersById.get(t.ownerId) ?? null) : null
+                    ...t
                 }))
         }))
     );
@@ -356,7 +354,6 @@
                 await updateUrl(null);
             }}
             action="?/update"
-            deleteAction="?/delete"
             onenhance={({ formData, cancel }: { formData: FormData; cancel: () => void }) => {
                 return async () => {
                     const response = await fetch('?/update', { method: 'POST', body: formData });
@@ -368,14 +365,12 @@
                     }
                 };
             }}
-            members={data.members}
             initial={{
                 id: task.id,
                 title: task.title,
                 description: task.description,
                 status: task.status,
                 priority: task.priority,
-                ownerId: task.ownerId,
                 dueDate: task.dueDate,
                 checklist: task.checklist
             }}
@@ -395,7 +390,6 @@
         }}
         action="?/create"
         {defaultStatus}
-        members={data.members}
         error={form?.error}
         errorId={form?.errorId}
         onenhance={() => {

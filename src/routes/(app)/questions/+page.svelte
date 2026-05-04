@@ -34,13 +34,9 @@
         { label: 'Community / anecdotal', items: data.community, class: 's-active' },
         { label: 'Other', items: data.other, class: 's-note' }
     ]);
-
-    const totalThreads = $derived(sections.length);
-    const totalQuestions = $derived(data.items.length);
 </script>
 
 <PageHeader
-    eyebrow={`${totalThreads} threads · ${totalQuestions} questions`}
     title="Questions"
     sub="Track unresolved questions, their sources, and answers."
     number={getPageNumber('/questions')}
@@ -96,7 +92,6 @@
                 await updateUrl(null);
             }}
             action="?/update"
-            deleteAction="?/delete"
             onenhance={({ formData, cancel }: { formData: FormData; cancel: () => void }) => {
                 return async () => {
                     const response = await fetch('?/update', { method: 'POST', body: formData });

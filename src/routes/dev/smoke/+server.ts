@@ -34,15 +34,13 @@ export const POST = async () => {
         dueDate: null,
         priority: 'MEDIUM',
         status: 'TODO',
-        ownerId: null,
         linkedEvidenceId: null,
         linkedMilestoneId: null,
         order: 0,
         createdAt: now,
         updatedAt: now,
         deletedAt: null,
-        checklist: [],
-        tags: []
+        checklist: []
     };
 
     await Promise.all([ddbPut(workspace), ddbPut(task)]);

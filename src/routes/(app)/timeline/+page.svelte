@@ -3,7 +3,6 @@
     import Button from '$lib/components/ui/Button.svelte';
     import MarkdownRenderer from '$lib/components/shared/MarkdownRenderer.svelte';
     import MilestoneModal from '$lib/components/timeline/MilestoneModal.svelte';
-    import ByAvatar from '$lib/components/shared/ByAvatar.svelte';
     import { Plus, MapPin, Check, Clock } from 'lucide-svelte';
     import { fmtDate } from '$lib/utils/dates';
     import { PHASE_ORDER, PHASE_LABELS, PHASE_DESCRIPTIONS } from '$lib/constants/phases';
@@ -190,9 +189,6 @@
                                                     {(m as MilestoneItem).location}
                                                 </a>
                                             {/if}
-                                            {#if m.owner}
-                                                <ByAvatar owner={m.owner as { id: string; name: string | null; email: string }} size="sm" />
-                                            {/if}
                                         </div>
                                     </div>
                                 </button>
@@ -264,7 +260,6 @@
                 await updateUrl(null);
             }}
             action="?/update"
-            deleteAction="?/delete"
             onenhance={({ formData, cancel }: { formData: FormData; cancel: () => void }) => {
                 return async () => {
                     const response = await fetch('?/update', { method: 'POST', body: formData });
@@ -283,8 +278,6 @@
                 phase: milestone.phase,
                 status: milestone.status,
                 priority: milestone.priority,
-                ownerId: milestone.ownerId,
-                owner: milestone.owner,
                 dueDate: milestone.dueDate,
                 scheduledAt: milestone.scheduledAt,
                 notes: (milestone as { notes?: string }).notes,
@@ -306,7 +299,6 @@
             defaultPhase = undefined;
         }}
         action="?/create"
-        members={data.members}
         {defaultPhase}
         error={form?.error}
         errorId={form?.errorId}
