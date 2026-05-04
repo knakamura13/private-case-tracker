@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { optionalDateLoose, priorityEnum, stringOrEmpty } from './common';
+import { optionalDateOnly, priorityEnum, stringOrEmpty } from './common';
 
 export const taskStatusEnum = z.enum(['TODO', 'IN_PROGRESS', 'WAITING', 'DONE']);
 
@@ -18,7 +18,7 @@ export type ChecklistItem = z.infer<typeof checklistItemSchema>;
 export const taskCreateSchema = z.object({
     title: z.string().min(1).max(200),
     description: stringOrEmpty(5000),
-    dueDate: optionalDateLoose,
+    dueDate: optionalDateOnly,
     priority: priorityEnum.default('MEDIUM'),
     status: taskStatusEnum.default('TODO'),
     checklist: z.array(checklistItemSchema).default([])

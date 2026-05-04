@@ -1,5 +1,6 @@
 import { ddbQuery } from '$lib/server/dynamo/ops';
 import { gsi1UserPk } from '$lib/server/dynamo/keys';
+import type { MemberRole } from '$lib/types/enums';
 
 const CACHE_TTL_MS = 60_000; // 60 seconds
 
@@ -7,7 +8,7 @@ interface CacheEntry {
     data: {
         id: string;
         name: string;
-        role: 'OWNER' | 'COLLABORATOR';
+        role: MemberRole;
     } | null;
     timestamp: number;
 }
@@ -24,7 +25,7 @@ export async function getWorkspace(userId: string) {
 
     const memberships = await ddbQuery<{
         workspaceId: string;
-        role: 'OWNER' | 'COLLABORATOR';
+        role: MemberRole;
         acceptedAt: string | null;
         workspaceName?: string;
     }>({

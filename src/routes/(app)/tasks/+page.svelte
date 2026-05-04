@@ -188,7 +188,7 @@
             }
 
             // Insert active task at target position
-            targetColumnTasks.splice(targetIndex, 0, { ...activeTask, status: targetStatus });
+            targetColumnTasks.splice(targetIndex, 0, { ...activeTask, status: targetStatus as import('$lib/types/enums').TaskStatus });
 
             // Assign new order values for target column
             targetColumnTasks.forEach((t, idx) => {
@@ -262,7 +262,7 @@
 
         // Update target column (append the task at the end)
         const targetColumnTasks = allTasks.filter((t) => t.status === targetStatus).sort((a, b) => a.order - b.order);
-        targetColumnTasks.push({ ...activeTask, status: targetStatus });
+        targetColumnTasks.push({ ...activeTask, status: targetStatus as import('$lib/types/enums').TaskStatus });
 
         // Assign new order values for target column
         targetColumnTasks.forEach((t, idx) => {

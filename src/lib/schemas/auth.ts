@@ -1,4 +1,7 @@
 import { z } from 'zod';
+import type { MemberRole } from '$lib/types/enums';
+
+export const memberRoleEnum = z.enum(['OWNER', 'COLLABORATOR'] as [MemberRole, ...MemberRole[]]);
 
 export const emailSchema = z.string().email().trim().toLowerCase();
 export const passwordSchema = z.string().min(12, 'Password must be at least 12 characters').max(256);
@@ -19,7 +22,7 @@ export const signupSchema = z.object({
 
 export const inviteSchema = z.object({
     email: emailSchema,
-    role: z.enum(['OWNER', 'COLLABORATOR']).default('COLLABORATOR')
+    role: memberRoleEnum.default('COLLABORATOR')
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

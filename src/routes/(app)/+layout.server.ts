@@ -10,7 +10,12 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
     }
     if (!locals.workspace) throw redirect(303, '/onboarding');
 
-    const milestones = await listMilestones(locals.workspace.id);
+    let milestones: Awaited<ReturnType<typeof listMilestones>> = [];
+    try {
+        milestones = await listMilestones(locals.workspace.id);
+    } catch (err) {
+        console.error('[layout] Failed to load milestones', err);
+    }
 
     // Find the next milestone: first non-DONE milestone in phase order
     let nextMilestone = null;

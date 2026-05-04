@@ -9,6 +9,8 @@ import {
     deleteEvidenceCategory
 } from '$lib/server/services/evidence.service';
 import { fail } from '@sveltejs/kit';
+import { logActionError } from '$lib/server/services/actionError.service';
+import { evidenceCategoryEditSchema } from '$lib/schemas/evidence';
 
 export const load: PageServerLoad = async (event) => {
     const { workspace } = requireWorkspace(event);
@@ -99,20 +101,14 @@ export const actions: Actions = {
     },
     editCategory: async (event) => {
         const { workspace, user } = requireOwner(event);
-        const formData = await event.request.formData();
-        const oldCategory = formData.get('oldCategory') as string;
-        const newCategory = formData.get('newCategory') as string;
-        const newTargetStr = formData.get('newTarget') as string;
-
-        if (!oldCategory || !newCategory || !newTargetStr) {
-            return fail(400, { error: 'All fields are required' });
+        const raw = Object.fromEntries(await event.request.formData());
+        const parsed = evidenceCategoryEditSchema.safeParse(raw);
+        if (!parsed.success) {
+            const errorId = await logActionError(event, { message: parsed.error.message, status: 400, stack: undefined });
+            return fail(400, { error: parsed.error.message, errorId });
         }
 
-        const newTarget = parseInt(newTargetStr, 10);
-        if (isNaN(newTarget) || newTarget < 0) {
-            return fail(400, { error: 'Invalid target value' });
-        }
-
+        const { oldCategory, newCategory, newTarget } = parsed.data;
         try {
             // Update category name if it changed
             if (oldCategory !== newCategory) {
@@ -122,7 +118,9 @@ export const actions: Actions = {
             await updateEvidenceTarget(workspace.id, user.id, newCategory, newTarget);
             return {};
         } catch (e) {
-            return fail(400, { error: e instanceof Error ? e.message : 'Failed to edit category' });
+            const message = e instanceof Error ? e.message : 'Failed to edit category';
+            const errorId = await logActionError(event, { message, status: 500, stack: e instanceof Error ? e.stack : undefined });
+            return fail(500, { error: message, errorId });
         }
     },
     deleteCategory: async (event) => {

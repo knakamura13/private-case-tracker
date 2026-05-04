@@ -28,8 +28,16 @@ export const evidenceCountIncrementSchema = z.object({
     delta: z.coerce.number().int()
 });
 
+// Schema for editing an evidence category (rename + update target in one action)
+export const evidenceCategoryEditSchema = z.object({
+    oldCategory: z.string().min(1).max(80),
+    newCategory: z.string().min(1).max(80),
+    newTarget: z.coerce.number().int().min(0)
+});
+
 export type EvidenceCategoryAdd = z.infer<typeof evidenceCategoryAddSchema>;
 export type EvidenceCategoryRename = z.infer<typeof evidenceCategoryRenameSchema>;
 export type EvidenceCategoryDelete = z.infer<typeof evidenceCategoryDeleteSchema>;
 export type EvidenceTargetUpdate = z.infer<typeof evidenceTargetUpdateSchema>;
 export type EvidenceCountIncrement = z.infer<typeof evidenceCountIncrementSchema>;
+export type EvidenceCategoryEdit = z.infer<typeof evidenceCategoryEditSchema>;

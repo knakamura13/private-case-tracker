@@ -1,16 +1,18 @@
-/** Lucide Svelte icons are class-based components; typing them as `Component` breaks assignment. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type DropdownMenuIcon = any;
 
-export type DropdownMenuItem = {
+type DropdownMenuItemBase = {
     /** Stable key for `{#each}`; falls back to label + index */
     id?: string;
     label: string;
-    action?: () => void;
     icon?: DropdownMenuIcon;
     variant?: 'default' | 'destructive';
     disabled?: boolean;
-    href?: string;
 };
+
+type DropdownMenuActionItem = DropdownMenuItemBase & { action: () => void; href?: never };
+type DropdownMenuLinkItem = DropdownMenuItemBase & { href: string; action?: never };
+
+export type DropdownMenuItem = DropdownMenuActionItem | DropdownMenuLinkItem;
 
 export type DropdownMenuEntry = DropdownMenuItem | 'separator';

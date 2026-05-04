@@ -80,6 +80,19 @@ const sessionHandle: Handle = async ({ event, resolve }) => {
         }
     } catch (err) {
         console.error('[hooks] session load error', err);
+        logError({
+            requestId: event.locals.requestId,
+            source: 'SERVER',
+            status: 500,
+            route: event.url.pathname,
+            method: event.request.method,
+            message: err instanceof Error ? err.message : String(err),
+            stack: err instanceof Error ? (err.stack ?? null) : null,
+            userId: null,
+            workspaceId: null,
+            userAgent: event.request.headers.get('user-agent'),
+            context: { phase: 'session-load' }
+        }).catch(() => {});
     }
 
     return resolve(event);

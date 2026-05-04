@@ -12,18 +12,18 @@
 <PageHeader title="Overview" number={getPageNumber('/dashboard')} sub="Welcome back. Here is what is happening with your case today." />
 
 <!-- Top Stats Row -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 32px;">
+<div class="stats-row">
     <div class="card tinted-sage">
         <div class="eyebrow">Pending tasks</div>
-        <div class="display" style="font-size: 32px;">{data.taskSummary.pending}</div>
+        <div class="display stat-display">{data.taskSummary.pending}</div>
     </div>
     <div class="card tinted-butter">
         <div class="eyebrow">In progress</div>
-        <div class="display" style="font-size: 32px;">{data.taskSummary.inProgress}</div>
+        <div class="display stat-display">{data.taskSummary.inProgress}</div>
     </div>
     <div class="card tinted-peri">
         <div class="eyebrow">Total evidence</div>
-        <div class="display" style="font-size: 32px;">{data.evidenceCoverage.reduce((a, b) => a + b.total, 0)}</div>
+        <div class="display stat-display">{data.evidenceCoverage.reduce((a, b) => a + b.total, 0)}</div>
     </div>
 </div>
 
@@ -45,9 +45,9 @@
                     {#each data.tasksPreview as task}
                         <div class="task-item">
                             <CheckSquare size={18} style="color: var(--ink-3);" />
-                            <div style="flex: 1;">
-                                <div style="font-size: 14px; font-weight: 600;">{task.title}</div>
-                                <div class="mono" style="font-size: 11px; color: var(--ink-3);">
+                            <div class="task-info">
+                                <div class="task-title">{task.title}</div>
+                                <div class="mono task-due-date">
                                     Due {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No date'}
                                 </div>
                             </div>
@@ -67,14 +67,14 @@
                 <div class="countdown-list">
                     {#each data.countdowns.slice(0, 3) as c}
                         <div class="countdown-item">
-                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <div class="countdown-header">
                                 <Clock size={14} style="color: var(--ink-3);" />
-                                <div class="eyebrow" style="margin: 0;">{c.label}</div>
+                                <div class="eyebrow countdown-eyebrow">{c.label}</div>
                             </div>
-                            <div class="display" style="font-size: 20px;">
+                            <div class="display countdown-display">
                                 {Math.abs(Math.floor((new Date(c.date).getTime() - Date.now()) / 86400000))} days
                             </div>
-                            <div class="mono" style="font-size: 11px; color: var(--ink-3);">{new Date(c.date).toLocaleDateString()}</div>
+                            <div class="mono countdown-date">{new Date(c.date).toLocaleDateString()}</div>
                         </div>
                     {/each}
                 </div>
@@ -142,5 +142,41 @@
         gap: 10px;
         font-size: 13px;
         line-height: 1.4;
+    }
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 32px;
+    }
+    .stat-display {
+        font-size: 32px;
+    }
+    .task-info {
+        flex: 1;
+    }
+    .task-title {
+        font-size: 14px;
+        font-weight: 600;
+    }
+    .task-due-date {
+        font-size: 11px;
+        color: var(--ink-3);
+    }
+    .countdown-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 4px;
+    }
+    .countdown-eyebrow {
+        margin: 0;
+    }
+    .countdown-display {
+        font-size: 20px;
+    }
+    .countdown-date {
+        font-size: 11px;
+        color: var(--ink-3);
     }
 </style>

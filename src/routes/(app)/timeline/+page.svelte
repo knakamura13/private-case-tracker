@@ -126,7 +126,7 @@
                     <div class="timeline-phase-meta">
                         {#if g.items.length > 0}
                             <span class="pill {statusPillClass(g.items[0]?.status ?? 'PLANNED')}">{progress}% complete</span>
-                            <span class="mono" style="font-size: 11px; color: var(--ink-3);">{g.items.length} milestones</span>
+                            <span class="mono milestone-count">{g.items.length} milestones</span>
                         {/if}
                     </div>
                 </div>
@@ -137,7 +137,7 @@
                         <div class="timeline-rail-line"></div>
                         {#each g.items as m, _mi (m.id)}
                             {@const nodeStatus = milestoneNodeStatus(m.status)}
-                            <div style="position: relative; margin-bottom: 12px;">
+                            <div class="milestone-wrapper">
                                 <div
                                     class="timeline-milestone-node {nodeStatus === 'done'
                                         ? 'timeline-milestone-node-done'
@@ -158,7 +158,7 @@
                                         e.currentTarget.blur();
                                         await updateUrl(m.id);
                                     }}
-                                    style="background: none; border: none; cursor: pointer; width: 100%; text-align: left; padding: 0;"
+                                    class="milestone-btn"
                                 >
                                     <div class="timeline-milestone-card {nodeStatus === 'active' ? 'timeline-milestone-card-active' : ''}">
                                         {#if m.dueDate}
@@ -173,7 +173,7 @@
                                         <div class="timeline-milestone-footer">
                                             <span class="pill {statusPillClass(m.status)}">{statusLabel(m.status)}</span>
                                             {#if m.subTasks && m.subTasks.length > 0}
-                                                <span style="font-size: 11px; color: var(--ink-3);">
+                                                <span class="subtask-count">
                                                     {m.subTasks.filter((st) => st.done).length}/{m.subTasks.length} subtasks
                                                 </span>
                                             {/if}
@@ -182,7 +182,7 @@
                                                     href={generateGoogleMapsUrl((m as MilestoneItem).location)}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--ink-2); text-decoration: none;"
+                                                    class="location-link"
                                                 >
                                                     <MapPin style="width: 12px; height: 12px;" />
                                                     {(m as MilestoneItem).location}
@@ -241,9 +241,9 @@
         <!-- Now Card -->
         {#if currentPhase}
             <div class="timeline-sidebar-card timeline-sidebar-card-tinted-peri">
-                <div style="font-family: var(--font-display); font-size: 22px; font-weight: 500; margin-bottom: 4px;">Now</div>
+                <div class="now-heading">Now</div>
                 <div class="timeline-sidebar-label">{PHASE_LABELS[currentPhase.phase]}</div>
-                <p style="font-size: 12px; color: var(--ink-2); margin-top: 8px;">{PHASE_DESCRIPTIONS[currentPhase.phase]}</p>
+                <p class="now-description">{PHASE_DESCRIPTIONS[currentPhase.phase]}</p>
             </div>
         {/if}
     </div>
@@ -311,3 +311,45 @@
         }}
     />
 {/if}
+
+<style>
+    .milestone-count {
+        font-size: 11px;
+        color: var(--ink-3);
+    }
+    .milestone-wrapper {
+        position: relative;
+        margin-bottom: 12px;
+    }
+    .milestone-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+        text-align: left;
+        padding: 0;
+    }
+    .subtask-count {
+        font-size: 11px;
+        color: var(--ink-3);
+    }
+    .location-link {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        color: var(--ink-2);
+        text-decoration: none;
+    }
+    .now-heading {
+        font-family: var(--font-display);
+        font-size: 22px;
+        font-weight: 500;
+        margin-bottom: 4px;
+    }
+    .now-description {
+        font-size: 12px;
+        color: var(--ink-2);
+        margin-top: 8px;
+    }
+</style>

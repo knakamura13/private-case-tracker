@@ -11,10 +11,11 @@ import { logActionError } from '$lib/server/services/actionError.service';
 export async function parseJsonField<T>(raw: Record<string, unknown>, field: string, event: RequestEvent): Promise<T> {
     try {
         return JSON.parse(raw[field] as string) as T;
-    } catch {
+    } catch (e) {
         const errorId = await logActionError(event, {
             message: `Invalid ${field} format`,
-            status: 400
+            status: 400,
+            stack: e instanceof Error ? e.stack : undefined
         });
         throw fail(400, { error: `Invalid ${field} format`, errorId });
     }

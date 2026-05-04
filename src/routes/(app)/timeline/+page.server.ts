@@ -37,7 +37,7 @@ export const actions: Actions = {
             subTasks
         });
         if (!parsed.success) {
-            const errorId = await logActionError(event, { message: parsed.error.message, status: 400 });
+            const errorId = await logActionError(event, { message: parsed.error.message, status: 400, stack: undefined });
             return fail(400, { error: parsed.error.message, errorId });
         }
         const m = await createMilestone(workspace.id, user.id, parsed.data);
@@ -53,7 +53,7 @@ export const actions: Actions = {
             subTasks
         });
         if (!parsed.success) {
-            const errorId = await logActionError(event, { message: parsed.error.message, status: 400 });
+            const errorId = await logActionError(event, { message: parsed.error.message, status: 400, stack: undefined });
             return fail(400, { error: parsed.error.message, errorId });
         }
         await updateMilestone(workspace.id, user.id, id, parsed.data);

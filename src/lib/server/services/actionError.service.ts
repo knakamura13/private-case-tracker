@@ -30,7 +30,8 @@ export async function logActionError(
             }
         });
         return created.id;
-    } catch {
+    } catch (err) {
+        console.error('[actionError] logError persistence failed', err);
         return undefined;
     }
 }

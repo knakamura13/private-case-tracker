@@ -42,7 +42,7 @@ export const actions: Actions = {
         const raw = Object.fromEntries(await event.request.formData());
         const parsed = questionCreateSchema.safeParse(raw);
         if (!parsed.success) {
-            const errorId = await logActionError(event, { message: parsed.error.message, status: 400 });
+            const errorId = await logActionError(event, { message: parsed.error.message, status: 400, stack: undefined });
             return fail(400, { error: parsed.error.message, errorId });
         }
         await createQuestion(workspace.id, user.id, parsed.data);
@@ -56,7 +56,7 @@ export const actions: Actions = {
 
         const parsed = questionUpdateSchema.safeParse(raw);
         if (!parsed.success) {
-            const errorId = await logActionError(event, { message: parsed.error.message, status: 400 });
+            const errorId = await logActionError(event, { message: parsed.error.message, status: 400, stack: undefined });
             return fail(400, { error: parsed.error.message, errorId });
         }
         await updateQuestion(workspace.id, user.id, questionId, parsed.data);

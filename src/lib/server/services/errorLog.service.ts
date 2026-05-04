@@ -134,6 +134,9 @@ export async function getError(id: string, workspaceId: string | null, includeGl
             Limit: 50
         });
         const hit = rows.find((r) => (r as Record<string, unknown>).id === id);
+        if (!hit && rows.length === 50) {
+            console.warn('[getError] ID not found but Limit was reached — record may be older than the fetch window', { id });
+        }
         if (hit) {
             const hitRecord = hit as Record<string, unknown>;
             const occurredAt = hitRecord.occurredAt as string | undefined;

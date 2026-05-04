@@ -29,13 +29,19 @@ export const POST: RequestHandler = async ({ request }) => {
 
     // We don't know the workspaceId yet; simplest is to rely on hooks membership load later.
     // If the user is already attached to any workspace, no-op.
-    const existing = await ddbQuery<Record<string, unknown>>({
-        IndexName: 'GSI1',
-        KeyConditionExpression: 'GSI1PK = :pk',
-        ExpressionAttributeValues: { ':pk': `USER#${session.user.id}` },
-        Limit: 1
-    }).catch(() => [] as Record<string, unknown>[]);
-    if (existing) return json({ ok: true });
+    let existing: Record<string, unknown>[];
+    try {
+        existing = await ddbQuery<Record<string, unknown>>({
+            IndexName: 'GSI1',
+            KeyConditionExpression: 'GSI1PK = :pk',
+            ExpressionAttributeValues: { ':pk': `USER#${session.user.id}` },
+            Limit: 1
+        });
+    } catch (err) {
+        console.error('[post-signup] DynamoDB lookup for existing membership failed', err);
+        return json({ error: 'Internal server error' }, { status: 500 });
+    }
+    if (existing.length > 0) return json({ ok: true });
 
     const totalWorkspaces = (
         await ddbQuery<Record<string, unknown>>({

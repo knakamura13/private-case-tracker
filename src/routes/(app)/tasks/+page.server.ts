@@ -51,7 +51,7 @@ export const actions: Actions = {
             checklist
         });
         if (!parsed.success) {
-            const errorId = await logActionError(event, { message: parsed.error.message, status: 400 });
+            const errorId = await logActionError(event, { message: parsed.error.message, status: 400, stack: undefined });
             return fail(400, { error: parsed.error.message, errorId });
         }
         await createTask(workspace.id, user.id, parsed.data);
@@ -69,7 +69,7 @@ export const actions: Actions = {
             checklist
         });
         if (!parsed.success) {
-            const errorId = await logActionError(event, { message: parsed.error.message, status: 400 });
+            const errorId = await logActionError(event, { message: parsed.error.message, status: 400, stack: undefined });
             return fail(400, { error: parsed.error.message, errorId });
         }
         await updateTask(workspace.id, user.id, taskId, parsed.data);

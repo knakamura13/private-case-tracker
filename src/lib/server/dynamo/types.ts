@@ -1,3 +1,5 @@
+import type { MemberRole, MilestonePhase, MilestoneStatus, Priority, TaskStatus } from '$lib/types/enums';
+
 export type DynamoBaseItem = {
     PK: string;
     SK: string;
@@ -23,8 +25,8 @@ export type TaskItem = DynamoBaseItem & {
     title: string;
     description: string | null;
     dueDate: string | null;
-    priority: string;
-    status: string; // Stored as string, validated as TaskStatus at service layer
+    priority: Priority;
+    status: TaskStatus;
     order: number;
     checklist?: Array<{ id: string; taskId: string; text: string; done: boolean; order: number }>;
 };
@@ -35,7 +37,7 @@ export type QuestionItem = DynamoBaseItem & {
     question: string;
     answer: string | null;
     status: string; // Stored as string, validated as QuestionStatus at service layer
-    priority: string;
+    priority: Priority;
     sourceType: string; // Stored as string, validated as QuestionSourceType at service layer
     source: string | null;
     category: string | null;
@@ -52,9 +54,9 @@ export type MilestoneItem = DynamoBaseItem & {
     workspaceId: string;
     title: string;
     description: string | null;
-    phase: string; // Stored as string, validated as MilestonePhase at service layer
-    status: string; // Stored as string, validated as MilestoneStatus at service layer
-    priority: string;
+    phase: MilestonePhase;
+    status: MilestoneStatus;
+    priority: Priority;
     dueDate: string;
     scheduledAt: string | null;
     completedAt: string | null;
@@ -94,7 +96,7 @@ export type MembershipItem = DynamoBaseItem & {
     id: string;
     workspaceId: string;
     userId: string;
-    role: string;
+    role: MemberRole;
     acceptedAt: string | null;
     workspaceName?: string;
 };
@@ -104,7 +106,7 @@ export type InvitationItem = DynamoBaseItem & {
     workspaceId: string;
     inviterUserId: string;
     email: string;
-    role: string;
+    role: MemberRole;
     token: string;
     expiresAt: string;
     acceptedAt: string | null;
