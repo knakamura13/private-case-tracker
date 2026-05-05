@@ -1491,6 +1491,11 @@ select {
     transform: none;
 }
 
+.widget-item:hover,
+.widget-item:focus-within {
+    z-index: 10;
+}
+
 .widget-item:hover {
     transform: translateY(-2px);
 }
