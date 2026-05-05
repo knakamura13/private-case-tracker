@@ -2,7 +2,7 @@
     import PageHeader from '$lib/components/shared/PageHeader.svelte';
     import Widget from '$lib/components/dashboard/Widget.svelte';
     import { getPageNumber } from '$lib/constants/navigation';
-    import { CheckSquare, Clock, AlertTriangle } from 'lucide-svelte';
+    import { CheckSquare, AlertTriangle } from 'lucide-svelte';
     import QuickLinksWidget from '$lib/components/dashboard/QuickLinksWidget.svelte';
     import type { PageData } from './$types';
 
@@ -32,6 +32,17 @@
     <div class="card tinted-peri">
         <div class="eyebrow">Total evidence</div>
         <div class="display stat-display">{data.evidenceCoverage.reduce((a, b) => a + b.total, 0)}</div>
+    </div>
+    <div class="card tinted-blush">
+        <div class="eyebrow">Heads up</div>
+        <div class="heads-up-list">
+            {#each data.missingCritical as m}
+                <div class="heads-up-item">
+                    <AlertTriangle size={16} style="flex-shrink: 0; color: var(--blush-fill);" />
+                    <span>{m}</span>
+                </div>
+            {/each}
+        </div>
     </div>
 </div>
 
@@ -78,64 +89,23 @@
             {/snippet}
         </Widget>
     </div>
-
-    <!-- Right Column -->
-    <div class="bento-col-right">
-        <!-- Countdown / Upcoming -->
-        <Widget title="Milestones" href="/timeline">
-            {#snippet children()}
-                <div class="countdown-list">
-                    {#each data.countdowns.slice(0, 3) as c}
-                        <div class="countdown-item">
-                            <div class="countdown-header">
-                                <Clock size={14} style="color: var(--ink-3);" />
-                                <div class="eyebrow countdown-eyebrow">{c.label}</div>
-                            </div>
-                            <div class="display countdown-display">
-                                {Math.abs(Math.floor((new Date(c.date).getTime() - Date.now()) / 86400000))} days
-                            </div>
-                            <div class="mono countdown-date">{new Date(c.date).toLocaleDateString()}</div>
-                        </div>
-                    {/each}
-                </div>
-            {/snippet}
-        </Widget>
-
-        <!-- Heads up -->
-        <Widget title="Heads up" class="tinted-blush">
-            {#snippet children()}
-                <div class="heads-up-list">
-                    {#each data.missingCritical as m}
-                        <div class="heads-up-item">
-                            <AlertTriangle size={16} style="flex-shrink: 0; color: var(--blush-fill);" />
-                            <span>{m}</span>
-                        </div>
-                    {/each}
-                </div>
-            {/snippet}
-        </Widget>
-    </div>
 </div>
 
 <style>
     .bento-grid {
         display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 28px;
     }
     @media (max-width: 1024px) {
         .bento-grid {
             grid-template-columns: 1fr;
         }
     }
-    .bento-col-left,
-    .bento-col-right {
+    .bento-col-left {
         display: flex;
         flex-direction: column;
         gap: 28px;
     }
     .task-list,
-    .countdown-list,
     .heads-up-list {
         display: flex;
         flex-direction: column;
@@ -154,14 +124,6 @@
     .task-item:hover {
         background: var(--surface-3);
     }
-    .countdown-list {
-        gap: 16px;
-    }
-    .countdown-item {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
     .heads-up-item {
         display: flex;
         gap: 10px;
@@ -176,9 +138,14 @@
     }
     @media (min-width: 640px) {
         .stats-row {
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 20px;
             margin-bottom: 32px;
+        }
+    }
+    @media (min-width: 1024px) {
+        .stats-row {
+            grid-template-columns: repeat(4, 1fr);
         }
     }
     .stat-display {
@@ -192,22 +159,6 @@
         font-weight: 600;
     }
     .task-due-date {
-        font-size: 11px;
-        color: var(--ink-3);
-    }
-    .countdown-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 4px;
-    }
-    .countdown-eyebrow {
-        margin: 0;
-    }
-    .countdown-display {
-        font-size: 20px;
-    }
-    .countdown-date {
         font-size: 11px;
         color: var(--ink-3);
     }
