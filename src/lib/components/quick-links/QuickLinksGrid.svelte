@@ -1,5 +1,6 @@
 <script lang="ts">
     import { flip } from 'svelte/animate';
+    import { untrack } from 'svelte';
     import { invalidateAll } from '$app/navigation';
     import { showErrorToast } from '$lib/stores/toast';
     import { Folder, Link2, Plus, Edit, Trash2 } from 'lucide-svelte';
@@ -91,10 +92,13 @@
             .slice()
             .sort((a, b) => a.order - b.order)
             .map((link) => link.id);
-        if (folderOrder.length === 0) folderOrder = nextFolderOrder;
-        if (linkOrder.length === 0) linkOrder = nextLinkOrder;
-        confirmedOrders.set('folder', nextFolderOrder);
-        confirmedOrders.set('link', nextLinkOrder);
+
+        untrack(() => {
+            if (folderOrder.length === 0) folderOrder = nextFolderOrder;
+            if (linkOrder.length === 0) linkOrder = nextLinkOrder;
+            confirmedOrders.set('folder', nextFolderOrder);
+            confirmedOrders.set('link', nextLinkOrder);
+        });
     });
 
     function byId<T extends { id: string }>(items: T[]) {
