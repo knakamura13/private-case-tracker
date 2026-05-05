@@ -1,6 +1,7 @@
 <script lang="ts">
     import Input from '$lib/components/ui/Input.svelte';
     import Textarea from '$lib/components/ui/Textarea.svelte';
+    import Select from '$lib/components/ui/Select.svelte';
     import Button from '$lib/components/ui/Button.svelte';
     import Dialog from '$lib/components/ui/Dialog.svelte';
     import ErrorDetails from '$lib/components/ErrorDetails.svelte';
@@ -37,6 +38,13 @@
     const submitEnhance = $derived(onenhance as SubmitFunction | undefined);
 
     const TASK_ALLOWED = ['id', 'title', 'description', 'status', 'priority', 'dueDate', 'checklist'] as const;
+
+    const taskStatusOptions = [
+        { value: 'TODO', label: 'This week' },
+        { value: 'IN_PROGRESS', label: 'Soon' },
+        { value: 'WAITING', label: 'Waiting' },
+        { value: 'DONE', label: 'Done' }
+    ];
 
     function val(name: string, fallback = '') {
         return fieldFromInitial(initial, TASK_ALLOWED, name, fallback);
@@ -75,8 +83,88 @@
     });
 </script>
 
+<style>
+    :global(button.task-status-trigger) {
+        height: 24px;
+        min-height: 24px;
+        padding: 0 10px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        font-size: 11px;
+        font-weight: 600;
+        gap: 6px;
+        box-shadow: none;
+    }
+
+    :global(button.task-status-trigger .select-trigger-label) {
+        text-transform: none;
+    }
+
+    :global(button.task-status-trigger .select-trigger-chevron) {
+        opacity: 0.75;
+        width: 12px;
+        height: 12px;
+    }
+
+    :global(button.task-status-trigger.s-active) {
+        background: var(--peri);
+        color: var(--peri-d);
+        border-color: color-mix(in srgb, var(--peri-d) 18%, transparent);
+    }
+
+    :global(button.task-status-trigger.s-active:hover) {
+        background: color-mix(in srgb, var(--peri) 82%, var(--peri-d) 18%);
+        border-color: color-mix(in srgb, var(--peri-d) 24%, transparent);
+    }
+
+    :global(button.task-status-trigger.s-done) {
+        background: var(--sage);
+        color: var(--sage-d);
+        border-color: color-mix(in srgb, var(--sage-d) 18%, transparent);
+    }
+
+    :global(button.task-status-trigger.s-done:hover) {
+        background: color-mix(in srgb, var(--sage) 80%, var(--sage-d) 20%);
+        border-color: color-mix(in srgb, var(--sage-d) 24%, transparent);
+    }
+
+    :global(button.task-status-trigger.s-note) {
+        background: var(--surface-3);
+        color: var(--ink-2);
+        border-color: color-mix(in srgb, var(--ink-2) 10%, transparent);
+    }
+
+    :global(button.task-status-trigger.s-note:hover) {
+        background: color-mix(in srgb, var(--surface-3) 86%, var(--ink-2) 14%);
+        border-color: color-mix(in srgb, var(--ink-2) 16%, transparent);
+    }
+
+    :global(button.task-status-trigger.s-waiting) {
+        background: var(--blush);
+        color: var(--blush-d);
+        border-color: color-mix(in srgb, var(--blush-d) 18%, transparent);
+    }
+
+    :global(button.task-status-trigger.s-waiting:hover) {
+        background: color-mix(in srgb, var(--blush) 80%, var(--blush-d) 20%);
+        border-color: color-mix(in srgb, var(--blush-d) 24%, transparent);
+    }
+</style>
+
 {#snippet taskHeader()}
-    <span class="pill {statusPillClass()}">{statusLabel()}</span>
+    {#if mode === 'edit'}
+        <Select
+            id="task-status"
+            bind:value={statusValue}
+            options={taskStatusOptions}
+            ariaLabel="Task status"
+            size="sm"
+            menuClass="dropdown-menu--min-12rem"
+            triggerClass={`task-status-trigger ${statusPillClass()}`}
+        />
+    {:else}
+        <span class="pill {statusPillClass()}">{statusLabel()}</span>
+    {/if}
 {/snippet}
 
 {#snippet taskEditFooter()}
