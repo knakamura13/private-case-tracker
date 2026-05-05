@@ -98,9 +98,7 @@
             }}
         />
         <main id="main" tabindex="-1" class="main-content">
-            {#key page.url.pathname}
-                {@render children()}
-            {/key}
+            {@render children()}
         </main>
     </div>
 </div>

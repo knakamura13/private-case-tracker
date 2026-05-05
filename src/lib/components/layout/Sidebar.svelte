@@ -2,6 +2,7 @@
     import { page } from '$app/state';
     import { navigation, getPageNumber as _getPageNumber } from '$lib/constants/navigation';
     import { Settings, Clock } from 'lucide-svelte';
+    import { PHASE_ORDER } from '$lib/constants/phases';
 
     let { workspaceName: _workspaceName, onNavigate }: { workspaceName: string; onNavigate?: () => void } = $props();
 </script>
@@ -9,7 +10,13 @@
 <aside class="sidebar">
     <!-- Header -->
     <div style="display: flex; align-items: center; gap: 12px; padding: 0 8px;">
-        <img src="/monarch-logo.png" alt="Monarch" width="40" height="32" style="flex-shrink: 0; display: block; object-fit: contain;" />
+        <img
+            src="/monarch-logo.png"
+            alt="Monarch"
+            width="40"
+            height="32"
+            style="flex-shrink: 0; display: block; object-fit: contain;"
+        />
         <div class="display" style="font-size: 24px; line-height: 1; letter-spacing: -0.01em;">monarch</div>
     </div>
 
@@ -51,25 +58,39 @@
     <!-- Footer -->
     <div style="margin-top: auto;">
         <!-- Next Step Widget -->
-        {#if page.data.nextMilestone}
-            <div
-                class="card-tight"
-                style="background: var(--peri); border: 1px solid transparent; padding: 14px; border-radius: var(--r-sm); margin-bottom: 12px;"
-            >
-                <div class="eyebrow" style="margin-bottom: 6px;">Next step</div>
-                <div style="font-size: 13px; font-weight: 600; margin-bottom: 4px; line-height: 1.3;">
-                    {page.data.nextMilestone.title}
+        {#await page.data.streamed?.milestones}
+            <!-- Loading state optional, or just wait -->
+        {:then milestones}
+            {@const next = (() => {
+                if (!milestones) return null;
+                for (const phase of PHASE_ORDER) {
+                    const inPhase = milestones.filter((m: any) => m.phase === phase);
+                    const incomplete = inPhase.find((m: any) => m.status !== 'DONE' && m.status !== 'SKIPPED');
+                    if (incomplete) return incomplete;
+                }
+                return null;
+            })()}
+
+            {#if next}
+                <div
+                    class="card-tight"
+                    style="background: var(--peri); border: 1px solid transparent; padding: 14px; border-radius: var(--r-sm); margin-bottom: 12px;"
+                >
+                    <div class="eyebrow" style="margin-bottom: 6px;">Next step</div>
+                    <div style="font-size: 13px; font-weight: 600; margin-bottom: 4px; line-height: 1.3;">
+                        {next.title}
+                    </div>
+                    <div class="mono" style="font-size: 11px; color: oklch(0.32 0.13 265);">
+                        <Clock size={11} style="vertical-align: -2px; margin-right: 4px;" />
+                        {#if next.dueDate}
+                            {new Date(next.dueDate).toLocaleDateString()}
+                        {:else}
+                            {next.status.toLowerCase().replace('_', ' ')}
+                        {/if}
+                    </div>
                 </div>
-                <div class="mono" style="font-size: 11px; color: oklch(0.32 0.13 265);">
-                    <Clock size={11} style="vertical-align: -2px; margin-right: 4px;" />
-                    {#if page.data.nextMilestone.dueDate}
-                        {new Date(page.data.nextMilestone.dueDate).toLocaleDateString()}
-                    {:else}
-                        {page.data.nextMilestone.status.toLowerCase().replace('_', ' ')}
-                    {/if}
-                </div>
-            </div>
-        {/if}
+            {/if}
+        {/await}
     </div>
 </aside>
 
