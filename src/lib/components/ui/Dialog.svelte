@@ -70,8 +70,16 @@
     }
 
     $effect(() => {
-        if (open && panelEl) {
-            queueMicrotask(() => panelEl?.focus());
+        if (open) {
+            const focusDialog = () => {
+                const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
+                if (dialog && document.activeElement !== dialog) {
+                    dialog.focus();
+                }
+            };
+            
+            // Use requestAnimationFrame to ensure the DOM is ready
+            requestAnimationFrame(focusDialog);
         }
     });
 </script>
