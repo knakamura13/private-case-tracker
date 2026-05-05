@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import MilestoneModal from '$lib/components/timeline/MilestoneModal.svelte';
+import type { SubmitFunction } from '@sveltejs/kit';
 
 describe('MilestoneModal (edit)', () => {
     const mockOnClose = vi.fn();
-    const mockOnEnhance = vi.fn();
+    const mockOnEnhance: SubmitFunction = vi.fn();
     const mockMembers = [
         { id: '1', name: 'John Doe', email: 'john@example.com' },
         { id: '2', name: 'Jane Smith', email: 'jane@example.com' }
@@ -15,8 +16,7 @@ describe('MilestoneModal (edit)', () => {
         open: true,
         onClose: mockOnClose,
         action: '/timeline/update',
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onenhance: mockOnEnhance as any,
+        onenhance: mockOnEnhance,
         members: mockMembers,
         initial: {
             id: 'milestone-1',

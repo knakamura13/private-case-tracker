@@ -1,5 +1,6 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type DropdownMenuIcon = any;
+import type { Component } from 'svelte';
+
+export type DropdownMenuIcon = Component;
 
 type DropdownMenuItemBase = {
     /** Stable key for `{#each}`; falls back to label + index */

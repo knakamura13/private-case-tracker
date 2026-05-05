@@ -1,7 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { getEvidenceCategories, updateEvidenceTarget, incrementEvidenceCount } from '$lib/server/services/evidence.service';
 import { createMilestone, listMilestones, softDeleteMilestone, updateMilestone } from '$lib/server/services/milestone.service';
 import { createQuestion, listQuestions, softDeleteQuestion, updateQuestion } from '$lib/server/services/question.service';
@@ -41,16 +39,16 @@ describe('cross-domain DynamoDB smoke', () => {
             title: 'Collect marriage certificate',
             description: '',
             phase: 'MARRIAGE_LICENSE',
-            dueDate: null,
+            dueDate: undefined,
+            scheduledAt: undefined,
             status: 'PLANNED',
-            ownerId: null,
             priority: 'MEDIUM',
-            notes: '',
-            subTasks: []
-        } as any);
+            subTasks: [],
+            location: ''
+        });
 
         expect((await listMilestones(ws)).some((m) => m.id === created.id)).toBe(true);
-        await updateMilestone(ws, actorId, created.id, { status: 'IN_PROGRESS' } as any);
+        await updateMilestone(ws, actorId, created.id, { status: 'IN_PROGRESS' });
         await softDeleteMilestone(ws, actorId, created.id);
         expect((await listMilestones(ws)).length).toBe(0);
     });
@@ -64,15 +62,15 @@ describe('cross-domain DynamoDB smoke', () => {
             status: 'OPEN',
             answer: '',
             sourceType: 'OTHER',
-            citationUrl: null,
-            answeredAt: null,
-            relatedTaskId: null,
-            relatedFormId: null,
-            relatedEvidenceId: null
-        } as any);
+            citationUrl: undefined,
+            answeredAt: undefined,
+            relatedTaskId: undefined,
+            relatedFormId: undefined,
+            relatedEvidenceId: undefined
+        });
 
         expect((await listQuestions(ws)).some((q) => q.id === created.id)).toBe(true);
-        await updateQuestion(ws, actorId, created.id, { status: 'RESEARCHING' } as any);
+        await updateQuestion(ws, actorId, created.id, { status: 'RESEARCHING' });
         await softDeleteQuestion(ws, actorId, created.id);
         expect((await listQuestions(ws)).length).toBe(0);
     });
@@ -83,8 +81,8 @@ describe('cross-domain DynamoDB smoke', () => {
             url: 'https://uscis.gov',
             title: 'USCIS',
             description: '',
-            notes: ''
-        } as any);
+            folderId: null
+        });
 
         expect((await listQuickLinks(ws)).length).toBe(1);
         await updateQuickLink(ws, actorId, created.id, {
@@ -92,8 +90,8 @@ describe('cross-domain DynamoDB smoke', () => {
             url: 'https://www.uscis.gov',
             title: 'USCIS (updated)',
             description: '',
-            notes: ''
-        } as any);
+            folderId: null
+        });
         await softDeleteQuickLink(ws, actorId, created.id);
         expect((await listQuickLinks(ws)).length).toBe(0);
     });
@@ -105,13 +103,13 @@ describe('cross-domain DynamoDB smoke', () => {
             title: 'M1',
             description: '',
             phase: 'PREPARATION',
-            dueDate: null,
+            dueDate: undefined,
+            scheduledAt: undefined,
             status: 'PLANNED',
-            ownerId: null,
             priority: 'MEDIUM',
-            notes: '',
-            subTasks: []
-        } as any);
+            subTasks: [],
+            location: ''
+        });
 
         const d = await dashboardFor(wsId);
         expect(d).toBeTruthy();
