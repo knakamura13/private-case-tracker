@@ -43,8 +43,9 @@ export const actions: Actions = {
             await createQuickLink(workspace.id, user.id, parsed.data);
         } catch (e) {
             const message = e instanceof Error ? e.message : 'Failed to create quick link';
-            const errorId = await logActionError(event, { message, status: 500, stack: e instanceof Error ? e.stack : undefined });
-            return fail(500, { error: message, errorId });
+            const status = message === 'Quick link folder not found' ? 404 : 500;
+            const errorId = await logActionError(event, { message, status, stack: e instanceof Error ? e.stack : undefined });
+            return fail(status, { error: message, errorId });
         }
         throw redirect(303, '/dashboard');
     },
@@ -60,7 +61,7 @@ export const actions: Actions = {
             await updateQuickLink(workspace.id, user.id, parsed.data.id, parsed.data);
         } catch (e) {
             const message = e instanceof Error ? e.message : 'Failed to update quick link';
-            const status = message === 'Quick link not found' ? 404 : 500;
+            const status = message === 'Quick link not found' || message === 'Quick link folder not found' ? 404 : 500;
             const errorId = await logActionError(event, { message, status, stack: e instanceof Error ? e.stack : undefined });
             return fail(status, { error: message, errorId });
         }
@@ -150,14 +151,15 @@ export const actions: Actions = {
             return { success: true };
         } catch (e) {
             const message = e instanceof Error ? e.message : 'Failed to move link';
-            const status = message === 'Quick link not found' ? 404 : 500;
+            const status = message === 'Quick link not found' || message === 'Quick link folder not found' ? 404 : 500;
             const errorId = await logActionError(event, { message, status, stack: e instanceof Error ? e.stack : undefined });
             return fail(status, { error: message, errorId });
         }
     },
     reorderLinks: async (event) => {
         const { workspace, user } = requireWorkspace(event);
-        const raw = Object.fromEntries(await event.request.formData());
+        const formData = await event.request.formData();
+        const raw = { linkIds: formData.getAll('linkIds') };
         const parsed = quickLinkReorderSchema.safeParse(raw);
         if (!parsed.success) {
             const errorId = await logActionError(event, { message: parsed.error.message, status: 400, stack: undefined });
@@ -168,13 +170,15 @@ export const actions: Actions = {
             return { success: true };
         } catch (e) {
             const message = e instanceof Error ? e.message : 'Failed to reorder links';
-            const errorId = await logActionError(event, { message, status: 500, stack: e instanceof Error ? e.stack : undefined });
-            return fail(500, { error: message, errorId });
+            const status = message === 'Quick link not found' ? 404 : 500;
+            const errorId = await logActionError(event, { message, status, stack: e instanceof Error ? e.stack : undefined });
+            return fail(status, { error: message, errorId });
         }
     },
     reorderFolders: async (event) => {
         const { workspace, user } = requireWorkspace(event);
-        const raw = Object.fromEntries(await event.request.formData());
+        const formData = await event.request.formData();
+        const raw = { folderIds: formData.getAll('folderIds') };
         const parsed = quickLinkFolderReorderSchema.safeParse(raw);
         if (!parsed.success) {
             const errorId = await logActionError(event, { message: parsed.error.message, status: 400, stack: undefined });
@@ -185,8 +189,9 @@ export const actions: Actions = {
             return { success: true };
         } catch (e) {
             const message = e instanceof Error ? e.message : 'Failed to reorder folders';
-            const errorId = await logActionError(event, { message, status: 500, stack: e instanceof Error ? e.stack : undefined });
-            return fail(500, { error: message, errorId });
+            const status = message === 'Quick link folder not found' ? 404 : 500;
+            const errorId = await logActionError(event, { message, status, stack: e instanceof Error ? e.stack : undefined });
+            return fail(status, { error: message, errorId });
         }
     }
 };

@@ -5,6 +5,7 @@ import { ENV } from './env';
 export const DEV_USER = {
     id: 'dev_user_local',
     email: 'dev@localhost',
+    emailVerified: true,
     name: 'Dev User',
     image: null
 } as const;

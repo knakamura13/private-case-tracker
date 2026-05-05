@@ -40,7 +40,7 @@ export const actions: Actions = {
             await createQuickLink(workspace.id, user.id, parsed.data);
         } catch (e) {
             const message = e instanceof Error ? e.message : 'Failed to create quick link';
-            const status = message === 'Invalid URL' ? 400 : 500;
+            const status = message === 'Invalid URL' ? 400 : message === 'Quick link folder not found' ? 404 : 500;
             const errorId = await logActionError(event, { message, status, stack: e instanceof Error ? e.stack : undefined });
             return fail(status, { error: message, errorId });
         }
@@ -58,7 +58,7 @@ export const actions: Actions = {
             await updateQuickLink(workspace.id, user.id, parsed.data.id, parsed.data);
         } catch (e) {
             const message = e instanceof Error ? e.message : 'Failed to update quick link';
-            const status = message === 'Quick link not found' ? 404 : 500;
+            const status = message === 'Quick link not found' || message === 'Quick link folder not found' ? 404 : 500;
             const errorId = await logActionError(event, { message, status, stack: e instanceof Error ? e.stack : undefined });
             return fail(status, { error: message, errorId });
         }

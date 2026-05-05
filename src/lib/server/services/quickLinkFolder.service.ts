@@ -7,6 +7,24 @@ import { extractHostname } from '$lib/server/utils/url';
 
 /* eslint-disable security/detect-object-injection */
 
+async function requireActiveFolder(workspaceId: string, folderId: string) {
+    const folder = await ddbGet<QuickLinkFolderItem>({
+        PK: wsPk(workspaceId),
+        SK: entitySk('QuickLinkFolder', folderId)
+    });
+    if (!folder || folder.deletedAt || folder.workspaceId !== workspaceId) throw new Error('Quick link folder not found');
+    return folder;
+}
+
+async function requireActiveLink(workspaceId: string, linkId: string) {
+    const link = await ddbGet<QuickLinkItem>({
+        PK: wsPk(workspaceId),
+        SK: entitySk('QuickLink', linkId)
+    });
+    if (!link || link.deletedAt || link.workspaceId !== workspaceId) throw new Error('Quick link not found');
+    return link;
+}
+
 export async function listQuickLinkFolders(workspaceId: string, limit?: number) {
     const rows = await ddbQuery<QuickLinkFolderItem>({
         KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
@@ -137,18 +155,15 @@ export async function deleteQuickLinkFolder(workspaceId: string, actorId: string
 }
 
 export async function moveLinkToFolder(workspaceId: string, actorId: string, linkId: string, folderId: string | null) {
-    const existing = await ddbGet<QuickLinkItem>({
-        PK: wsPk(workspaceId),
-        SK: entitySk('QuickLink', linkId)
-    });
-    if (!existing) throw new Error('Quick link not found');
-    if (existing.deletedAt) throw new Error('Quick link not found');
+    const existing = await requireActiveLink(workspaceId, linkId);
+    if (folderId) await requireActiveFolder(workspaceId, folderId);
 
     await ddbUpdate(
         { PK: wsPk(workspaceId), SK: entitySk('QuickLink', linkId) },
         'SET #folderId = :f, #updatedAt = :u',
         { ':f': folderId, ':u': new Date().toISOString() },
-        { '#folderId': 'folderId', '#updatedAt': 'updatedAt' }
+        { '#folderId': 'folderId', '#updatedAt': 'updatedAt' },
+        { ConditionExpression: 'attribute_exists(PK) AND attribute_exists(SK)' }
     );
 
     const label = existing.title ?? extractHostname(existing.url);
@@ -164,13 +179,18 @@ export async function moveLinkToFolder(workspaceId: string, actorId: string, lin
 }
 
 export async function reorderQuickLinks(workspaceId: string, actorId: string, linkIds: string[]) {
+    for (const linkId of linkIds) {
+        if (!linkId) continue;
+        await requireActiveLink(workspaceId, linkId);
+    }
     for (const [i, linkId] of linkIds.entries()) {
         if (!linkId) continue;
         await ddbUpdate(
             { PK: wsPk(workspaceId), SK: entitySk('QuickLink', linkId) },
             'SET #order = :o, #updatedAt = :u',
             { ':o': i, ':u': new Date().toISOString() },
-            { '#order': 'order', '#updatedAt': 'updatedAt' }
+            { '#order': 'order', '#updatedAt': 'updatedAt' },
+            { ConditionExpression: 'attribute_exists(PK) AND attribute_exists(SK)' }
         );
     }
 
@@ -185,13 +205,18 @@ export async function reorderQuickLinks(workspaceId: string, actorId: string, li
 }
 
 export async function reorderQuickLinkFolders(workspaceId: string, actorId: string, folderIds: string[]) {
+    for (const folderId of folderIds) {
+        if (!folderId) continue;
+        await requireActiveFolder(workspaceId, folderId);
+    }
     for (const [i, folderId] of folderIds.entries()) {
         if (!folderId) continue;
         await ddbUpdate(
             { PK: wsPk(workspaceId), SK: entitySk('QuickLinkFolder', folderId) },
             'SET #order = :o, #updatedAt = :u',
             { ':o': i, ':u': new Date().toISOString() },
-            { '#order': 'order', '#updatedAt': 'updatedAt' }
+            { '#order': 'order', '#updatedAt': 'updatedAt' },
+            { ConditionExpression: 'attribute_exists(PK) AND attribute_exists(SK)' }
         );
     }
 

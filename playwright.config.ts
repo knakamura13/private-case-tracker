@@ -12,9 +12,10 @@ export default defineConfig({
     webServer: process.env.E2E_BASE_URL
         ? undefined
         : {
-              command: 'pnpm dev --port 5173',
+              command:
+                  'APP_URL=http://localhost:5173 BETTER_AUTH_URL=http://localhost:5173 BETTER_AUTH_SECRET=test-secret-test-secret-test-secret-test FIELD_ENCRYPTION_KEY=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= NODE_ENV=test DEV_MODE=disabled pnpm dev --port 5173',
               port: 5173,
-              reuseExistingServer: true,
+              reuseExistingServer: false,
               timeout: 60_000
           },
     projects: [{ name: 'chromium', use: devices['Desktop Chrome'] }]

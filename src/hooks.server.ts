@@ -38,7 +38,7 @@ const sessionHandle: Handle = async ({ event, resolve }) => {
     event.locals.session = null;
     event.locals.workspace = null;
 
-    if (dev) {
+    if (dev && ENV.DEV_MODE === 'unsafe') {
         try {
             await ensureDevUserSeeded();
             event.locals.user = DEV_USER;
@@ -46,8 +46,7 @@ const sessionHandle: Handle = async ({ event, resolve }) => {
             event.locals.workspace = DEV_WORKSPACE;
             return resolve(event);
         } catch (err) {
-            // Dev user seeding failed (likely DEV_MODE not set to unsafe).
-            // Fall through to normal auth flow.
+            // Fall through to normal auth flow when explicit dev seeding fails.
             console.warn('[hooks] dev user seeding skipped:', err);
         }
     }
@@ -58,6 +57,7 @@ const sessionHandle: Handle = async ({ event, resolve }) => {
             event.locals.user = {
                 id: session.user.id,
                 email: session.user.email,
+                emailVerified: session.user.emailVerified,
                 name: session.user.name ?? null,
                 image: session.user.image ?? null
             };

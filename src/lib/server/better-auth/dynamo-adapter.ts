@@ -1,6 +1,6 @@
 /* eslint-disable security/detect-object-injection */
 import { createAdapterFactory, type DBAdapterDebugLogOption } from 'better-auth/adapters';
-import { ddbPut, ddbQuery, ddbUpdate, ddbDelete } from '$lib/server/dynamo/ops';
+import { ddbPut, ddbGet, ddbQueryAll, ddbUpdate, ddbDelete } from '$lib/server/dynamo/ops';
 import { baPk } from '$lib/server/dynamo/keys';
 
 type Where = {
@@ -41,6 +41,87 @@ function matchesWhere(row: Record<string, unknown>, where: Where[]) {
     return result;
 }
 
+function decorateAuthIndexes(model: string, row: Record<string, unknown>) {
+    const next = { ...row };
+    if (model === 'user' && typeof next.email === 'string') {
+        next.GSI2PK = `BA#user#email#${next.email.toLowerCase()}`;
+        next.GSI2SK = String(next.id);
+    }
+    if (model === 'session' && typeof next.token === 'string') {
+        next.GSI3PK = `BA#session#token#${next.token}`;
+        next.GSI3SK = String(next.id);
+    }
+    if (model === 'verification' && typeof next.identifier === 'string') {
+        next.GSI3PK = `BA#verification#identifier#${next.identifier}`;
+        next.GSI3SK = `${String(next.createdAt ?? '')}#${String(next.id)}`;
+    }
+    if (model === 'account' && typeof next.providerId === 'string' && typeof next.accountId === 'string') {
+        next.GSI2PK = `BA#account#provider#${next.providerId}#${next.accountId}`;
+        next.GSI2SK = String(next.id);
+    }
+    return next;
+}
+
+function exactClause(where: Where[], field: string) {
+    return where.find((c) => c.field === field && (c.operator ?? 'eq') === 'eq' && c.value != null);
+}
+
+async function indexedCandidates(model: string, where: Where[]) {
+    if (model === 'user') {
+        const email = exactClause(where, 'email')?.value;
+        if (typeof email === 'string') {
+            return ddbQueryAll<Record<string, unknown>>({
+                IndexName: 'GSI2',
+                KeyConditionExpression: 'GSI2PK = :pk',
+                ExpressionAttributeValues: { ':pk': `BA#user#email#${email.toLowerCase()}` }
+            });
+        }
+    }
+    if (model === 'session') {
+        const token = exactClause(where, 'token')?.value;
+        if (typeof token === 'string') {
+            return ddbQueryAll<Record<string, unknown>>({
+                IndexName: 'GSI3',
+                KeyConditionExpression: 'GSI3PK = :pk',
+                ExpressionAttributeValues: { ':pk': `BA#session#token#${token}` }
+            });
+        }
+    }
+    if (model === 'verification') {
+        const identifier = exactClause(where, 'identifier')?.value;
+        if (typeof identifier === 'string') {
+            return ddbQueryAll<Record<string, unknown>>({
+                IndexName: 'GSI3',
+                KeyConditionExpression: 'GSI3PK = :pk',
+                ExpressionAttributeValues: { ':pk': `BA#verification#identifier#${identifier}` }
+            });
+        }
+    }
+    if (model === 'account') {
+        const providerId = exactClause(where, 'providerId')?.value;
+        const accountId = exactClause(where, 'accountId')?.value;
+        if (typeof providerId === 'string' && typeof accountId === 'string') {
+            return ddbQueryAll<Record<string, unknown>>({
+                IndexName: 'GSI2',
+                KeyConditionExpression: 'GSI2PK = :pk',
+                ExpressionAttributeValues: { ':pk': `BA#account#provider#${providerId}#${accountId}` }
+            });
+        }
+    }
+    return null;
+}
+
+async function queryAuthPartition(model: string, where: Where[]) {
+    const indexed = await indexedCandidates(model, where);
+    const rows =
+        indexed ??
+        (await ddbQueryAll<Record<string, unknown>>({
+            KeyConditionExpression: 'PK = :pk',
+            ExpressionAttributeValues: { ':pk': baPk(model) }
+        }));
+    return rows.filter((r) => matchesWhere(r, where));
+}
+
 export interface DynamoBetterAuthAdapterConfig {
     debugLogs?: DBAdapterDebugLogOption;
 }
@@ -71,11 +152,12 @@ export const dynamoBetterAuthAdapter = (config: DynamoBetterAuthAdapterConfig = 
                 create: async ({ data, model, select }) => {
                     const row = (await transformInput(data, model, 'create')) as Record<string, unknown>;
                     const id = String(row.id);
-                    await ddbPut({
+                    const stored = decorateAuthIndexes(model, {
                         PK: baPk(model),
                         SK: id,
                         ...row
                     });
+                    await ddbPut(stored);
                     const out = (await transformOutput(row, model)) as Record<string, unknown>;
                     if (Array.isArray(select) && select.length) {
                         const picked: Record<string, unknown> = {};
@@ -92,10 +174,14 @@ export const dynamoBetterAuthAdapter = (config: DynamoBetterAuthAdapterConfig = 
                     const idClause = w.find((c) => c.field === 'id' && (c.operator ?? 'eq') === 'eq');
                     if (idClause && idClause.value != null) {
                         const id = String(idClause.value);
+                        const existing = await ddbGet<Record<string, unknown>>({ PK: baPk(model), SK: id });
+                        if (!existing) return null;
+                        const next = decorateAuthIndexes(model, { ...existing, ...patch, PK: baPk(model), SK: id });
                         const names: Record<string, string> = {};
                         const values: Record<string, unknown> = {};
                         const sets: string[] = [];
-                        for (const [k, v] of Object.entries(patch)) {
+                        for (const [k, v] of Object.entries(next)) {
+                            if (k === 'PK' || k === 'SK') continue;
                             const nk = `#${k}`;
                             const vk = `:${k}`;
                             names[nk] = k;
@@ -113,12 +199,7 @@ export const dynamoBetterAuthAdapter = (config: DynamoBetterAuthAdapterConfig = 
                     }
 
                     // Fallback: find first match, then update by its id.
-                    const found = await ddbQuery<Record<string, unknown>>({
-                        KeyConditionExpression: 'PK = :pk',
-                        ExpressionAttributeValues: { ':pk': baPk(model) },
-                        Limit: 200
-                    });
-                    const hit = found.find((r) => matchesWhere(r, w));
+                    const hit = (await queryAuthPartition(model, w))[0];
                     if (!hit) return null;
                     // @ts-expect-error - Dynamic adapter method call with unknown return
                     const updated = await (this as Record<string, unknown>).update({
@@ -132,12 +213,7 @@ export const dynamoBetterAuthAdapter = (config: DynamoBetterAuthAdapterConfig = 
                     const w = (await transformWhereClause({ where, model, action: 'updateMany' })) as Where[];
                     // transformInput currently distinguishes only create/update transformations.
                     const patch = (await transformInput(update as Record<string, unknown>, model, 'update')) as Record<string, unknown>;
-                    const found = await ddbQuery<Record<string, unknown>>({
-                        KeyConditionExpression: 'PK = :pk',
-                        ExpressionAttributeValues: { ':pk': baPk(model) },
-                        Limit: 500
-                    });
-                    const hits = found.filter((r) => matchesWhere(r, w));
+                    const hits = await queryAuthPartition(model, w);
                     for (const h of hits) {
                         // @ts-expect-error - Dynamic adapter method call with unknown return
                         await (this as Record<string, unknown>).update({
@@ -156,35 +232,20 @@ export const dynamoBetterAuthAdapter = (config: DynamoBetterAuthAdapterConfig = 
                         return;
                     }
                     // Fallback: scan small partition and delete first match.
-                    const found = await ddbQuery<Record<string, unknown>>({
-                        KeyConditionExpression: 'PK = :pk',
-                        ExpressionAttributeValues: { ':pk': baPk(model) },
-                        Limit: 200
-                    });
-                    const hit = found.find((r) => matchesWhere(r, w));
+                    const hit = (await queryAuthPartition(model, w))[0];
                     if (hit) await ddbDelete({ PK: baPk(model), SK: String(hit.id) });
                 },
                 deleteMany: async ({ where, model }) => {
                     const w = (await transformWhereClause({ where, model, action: 'deleteMany' })) as Where[];
-                    const found = await ddbQuery<Record<string, unknown>>({
-                        KeyConditionExpression: 'PK = :pk',
-                        ExpressionAttributeValues: { ':pk': baPk(model) },
-                        Limit: 500
-                    });
-                    const hits = found.filter((r) => matchesWhere(r, w));
+                    const hits = await queryAuthPartition(model, w);
                     for (const h of hits) await ddbDelete({ PK: baPk(model), SK: String(h.id) });
                     return hits.length;
                 },
                 findOne: async ({ where, model, select }) => {
                     const w = (await transformWhereClause({ where, model, action: 'findOne' })) as Where[];
-                    const idClause = w.find((c) => c.field === 'id' && (c.operator ?? 'eq') === 'eq');
+                    const idClause = exactClause(w, 'id');
                     if (idClause?.value != null) {
-                        const res = await ddbQuery<Record<string, unknown>>({
-                            KeyConditionExpression: 'PK = :pk AND SK = :sk',
-                            ExpressionAttributeValues: { ':pk': baPk(model), ':sk': String(idClause.value) },
-                            Limit: 1
-                        });
-                        const hit = res[0];
+                        const hit = await ddbGet<Record<string, unknown>>({ PK: baPk(model), SK: String(idClause.value) });
                         if (!hit) return null;
                         const out = (await transformOutput(hit, model)) as Record<string, unknown>;
                         if (Array.isArray(select) && select.length) {
@@ -195,12 +256,7 @@ export const dynamoBetterAuthAdapter = (config: DynamoBetterAuthAdapterConfig = 
                         return out;
                     }
 
-                    const found = await ddbQuery<Record<string, unknown>>({
-                        KeyConditionExpression: 'PK = :pk',
-                        ExpressionAttributeValues: { ':pk': baPk(model) },
-                        Limit: 200
-                    });
-                    const hit = found.find((r) => matchesWhere(r, w));
+                    const hit = (await queryAuthPartition(model, w))[0];
                     if (!hit) return null;
                     const out = (await transformOutput(hit, model)) as Record<string, unknown>;
                     if (Array.isArray(select) && select.length) {
@@ -212,23 +268,13 @@ export const dynamoBetterAuthAdapter = (config: DynamoBetterAuthAdapterConfig = 
                 },
                 findMany: async ({ where, model, limit, offset }) => {
                     const w = (await transformWhereClause({ where, model, action: 'findMany' })) as Where[];
-                    const found = await ddbQuery<Record<string, unknown>>({
-                        KeyConditionExpression: 'PK = :pk',
-                        ExpressionAttributeValues: { ':pk': baPk(model) },
-                        Limit: Math.min(500, (limit ?? 50) + (offset ?? 0))
-                    });
-                    const hits = found.filter((r) => matchesWhere(r, w));
+                    const hits = await queryAuthPartition(model, w);
                     const sliced = hits.slice(offset ?? 0, (offset ?? 0) + (limit ?? hits.length));
                     return (await Promise.all(sliced.map((r) => transformOutput(r, model)))) as Record<string, unknown>[];
                 },
                 count: async ({ where, model }) => {
                     const w = (await transformWhereClause({ where, model, action: 'count' })) as Where[];
-                    const found = await ddbQuery<Record<string, unknown>>({
-                        KeyConditionExpression: 'PK = :pk',
-                        ExpressionAttributeValues: { ':pk': baPk(model) },
-                        Limit: 500
-                    });
-                    return found.filter((r) => matchesWhere(r, w)).length;
+                    return (await queryAuthPartition(model, w)).length;
                 }
             };
         }

@@ -316,8 +316,9 @@
         if (!activeTask) return;
 
         const currentColumnIdx = COLUMNS.findIndex((c) => c.id === activeTask.status);
-        const currentColumn = grouped[currentColumnIdx];
-        if (!currentColumn || currentColumnIdx === -1) return;
+        if (currentColumnIdx === -1) return;
+        const currentColumn = grouped.find((column) => column.id === activeTask.status);
+        if (!currentColumn) return;
 
         const allTasks = [...data.tasks];
         const currentTaskIdx = currentColumn.tasks.findIndex((t) => t.id === taskId);

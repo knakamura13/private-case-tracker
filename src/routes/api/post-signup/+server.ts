@@ -43,13 +43,19 @@ export const POST: RequestHandler = async ({ request }) => {
     }
     if (existing.length > 0) return json({ ok: true });
 
-    const totalWorkspaces = (
-        await ddbQuery<Record<string, unknown>>({
-            KeyConditionExpression: 'PK = :pk',
-            ExpressionAttributeValues: { ':pk': 'WS_INDEX' },
-            Limit: 1
-        }).catch(() => [] as Record<string, unknown>[])
-    ).length;
+    let totalWorkspaces: number;
+    try {
+        totalWorkspaces = (
+            await ddbQuery<Record<string, unknown>>({
+                KeyConditionExpression: 'PK = :pk',
+                ExpressionAttributeValues: { ':pk': 'WS_INDEX' },
+                Limit: 1
+            })
+        ).length;
+    } catch (err) {
+        console.error('[post-signup] DynamoDB lookup for workspace index failed', err);
+        return json({ error: 'Internal server error' }, { status: 500 });
+    }
     if (totalWorkspaces > 0) {
         return json({ error: 'Signup is closed. Ask the workspace owner for an invitation.' }, { status: 403 });
     }

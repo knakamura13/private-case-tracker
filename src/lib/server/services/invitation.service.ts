@@ -4,7 +4,7 @@ import { ENV } from '$lib/server/env';
 import { logActivity } from '$lib/server/activity';
 import type { MemberRole } from '$lib/types/enums';
 import { randomUUID } from 'node:crypto';
-import { ddbGet, ddbPut, ddbQuery, ddbUpdate, ddbDelete } from '$lib/server/dynamo/ops';
+import { ddbGet, ddbPut, ddbQuery, ddbDelete, ddbTransactWrite } from '$lib/server/dynamo/ops';
 import { baPk, entitySk, gsi1Sk, gsi1UserPk, wsPk } from '$lib/server/dynamo/keys';
 import { invalidateMembers } from '$lib/server/cache/membersCache';
 import { invalidateWorkspace } from '$lib/server/cache/workspaceCache';
@@ -78,6 +78,12 @@ export async function acceptInvitation(token: string, userId: string) {
     // Better Auth user record is stored in DynamoDB under BA#user.
     const user = await ddbGet<BetterAuthUserItem>({ PK: baPk('user'), SK: userId });
     if (!user) throw new Error('User not found');
+    if (user.email.toLowerCase().trim() !== invitation.email.toLowerCase().trim()) {
+        throw new Error('Invitation email does not match signed-in user');
+    }
+    if (user.emailVerified !== true) {
+        throw new Error('Email must be verified before accepting invitation');
+    }
 
     const membershipKey = { PK: wsPk(invitation.workspaceId), SK: entitySk('Membership', userId) };
     const existingMembership = await ddbGet<MembershipItem>(membershipKey);
@@ -92,16 +98,26 @@ export async function acceptInvitation(token: string, userId: string) {
         GSI1SK: gsi1Sk('Membership', invitation.workspaceId),
         workspaceName: invitation.workspace?.name ?? 'Workspace'
     };
-    await ddbPut({ ...membershipKey, ...membership });
+    const acceptedAt = now.toISOString();
+    await ddbTransactWrite([
+        {
+            Put: {
+                Item: { ...membershipKey, ...membership, acceptedAt },
+                ConditionExpression: existingMembership ? undefined : 'attribute_not_exists(PK) AND attribute_not_exists(SK)'
+            }
+        },
+        {
+            Update: {
+                Key: { PK: wsPk(invitation.workspaceId), SK: entitySk('Invitation', invitation.id) },
+                UpdateExpression: 'SET #acceptedAt = :a',
+                ExpressionAttributeValues: { ':a': acceptedAt, ':null': null },
+                ExpressionAttributeNames: { '#acceptedAt': 'acceptedAt' },
+                ConditionExpression: '#acceptedAt = :null'
+            }
+        }
+    ]);
     invalidateMembers(invitation.workspaceId);
     invalidateWorkspace(userId);
-
-    await ddbUpdate(
-        { PK: wsPk(invitation.workspaceId), SK: entitySk('Invitation', invitation.id) },
-        'SET #acceptedAt = :a',
-        { ':a': now.toISOString() },
-        { '#acceptedAt': 'acceptedAt' }
-    );
     await logActivity({
         workspaceId: invitation.workspaceId,
         userId,

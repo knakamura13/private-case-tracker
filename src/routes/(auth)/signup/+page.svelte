@@ -4,8 +4,6 @@
     import Input from '$lib/components/ui/Input.svelte';
     import Label from '$lib/components/ui/Label.svelte';
     import { authClient } from '$lib/client/auth-client';
-    import { goto } from '$app/navigation';
-    import { page } from '$app/state';
     import type { PageData } from './$types';
 
     let { data }: { data: PageData } = $props();
@@ -16,6 +14,7 @@
     let workspaceName = $state('Our case');
     let loading = $state(false);
     let error = $state<string | null>(null);
+    let verificationSent = $state(false);
 
     async function handleSubmit(e: SubmitEvent) {
         e.preventDefault();
@@ -27,18 +26,8 @@
             error = res.error.message ?? 'Sign-up failed';
             return;
         }
-        const formData = new FormData();
-        formData.set('workspaceName', workspaceName || 'Our case');
-        const inviteToken = page.url.searchParams.get('invite');
-        if (inviteToken) formData.set('inviteToken', inviteToken);
-        const setup = await fetch('/api/post-signup', { method: 'POST', body: formData });
         loading = false;
-        if (!setup.ok) {
-            const body = (await setup.json().catch(() => ({}))) as { error?: string };
-            error = body.error ?? 'Workspace setup failed';
-            return;
-        }
-        await goto('/dashboard', { invalidateAll: true });
+        verificationSent = true;
     }
 </script>
 
@@ -48,30 +37,39 @@
         ? 'You are the first user — this account will own the workspace.'
         : 'Complete your signup to join the workspace.'}
 >
-    <form class="auth-form" onsubmit={handleSubmit}>
-        <div>
-            <Label for="name">Your name</Label>
-            <Input id="name" autocomplete="name" bind:value={name} required />
+    {#if verificationSent}
+        <div class="auth-form">
+            <p class="auth-text-sm">
+                Check your email to verify your account before signing in. Invite memberships are not created until the verified account accepts the invitation.
+            </p>
+            <Button href="/login" class="auth-w-full">Go to sign in</Button>
         </div>
-        <div>
-            <Label for="email">Email</Label>
-            <Input id="email" type="email" autocomplete="email" bind:value={email} required />
-        </div>
-        <div>
-            <Label for="password">Password (min 12 chars)</Label>
-            <Input id="password" type="password" autocomplete="new-password" bind:value={password} minlength={12} required />
-        </div>
-        {#if data.isFirstUser}
+    {:else}
+        <form class="auth-form" onsubmit={handleSubmit}>
             <div>
-                <Label for="ws">Workspace name</Label>
-                <Input id="ws" bind:value={workspaceName} required />
+                <Label for="name">Your name</Label>
+                <Input id="name" autocomplete="name" bind:value={name} required />
             </div>
-        {/if}
-        {#if error}<p class="auth-text-sm auth-text-destructive">{error}</p>{/if}
-        <Button type="submit" disabled={loading} class="auth-w-full">{loading ? 'Creating…' : 'Create account'}</Button>
-    </form>
-    <p class="auth-footer">
-        Already have an account?
-        <a class="auth-text-primary auth-underline-offset-4 auth-hover-underline" href="/login">Sign in</a>
-    </p>
+            <div>
+                <Label for="email">Email</Label>
+                <Input id="email" type="email" autocomplete="email" bind:value={email} required />
+            </div>
+            <div>
+                <Label for="password">Password (min 12 chars)</Label>
+                <Input id="password" type="password" autocomplete="new-password" bind:value={password} minlength={12} required />
+            </div>
+            {#if data.isFirstUser}
+                <div>
+                    <Label for="ws">Workspace name</Label>
+                    <Input id="ws" bind:value={workspaceName} required />
+                </div>
+            {/if}
+            {#if error}<p class="auth-text-sm auth-text-destructive">{error}</p>{/if}
+            <Button type="submit" disabled={loading} class="auth-w-full">{loading ? 'Creating…' : 'Create account'}</Button>
+        </form>
+        <p class="auth-footer">
+            Already have an account?
+            <a class="auth-text-primary auth-underline-offset-4 auth-hover-underline" href="/login">Sign in</a>
+        </p>
+    {/if}
 </AuthShell>

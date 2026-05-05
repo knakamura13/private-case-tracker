@@ -23,10 +23,26 @@ export const auth = betterAuth({
     },
     emailAndPassword: {
         enabled: true,
-        requireEmailVerification: false,
+        requireEmailVerification: true,
         minPasswordLength: 12,
         maxPasswordLength: 256,
-        autoSignIn: true
+        autoSignIn: false
+    },
+    emailVerification: {
+        sendOnSignUp: true,
+        sendOnSignIn: true,
+        autoSignInAfterVerification: false,
+        sendVerificationEmail: async ({ user, url }) => {
+            const verificationUrl = new URL(url);
+            const appUrl = new URL(ENV.APP_URL);
+            verificationUrl.protocol = appUrl.protocol;
+            verificationUrl.host = appUrl.host;
+
+            if (ENV.NODE_ENV === 'production') {
+                console.warn('[auth] email verification provider not configured; logging verification URL fallback');
+            }
+            console.info(`[auth] verification email for ${user.email}: ${verificationUrl.toString()}`);
+        }
     },
     rateLimit: {
         enabled: true,

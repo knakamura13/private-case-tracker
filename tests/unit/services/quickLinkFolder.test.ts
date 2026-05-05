@@ -5,9 +5,12 @@ import {
     deleteQuickLinkFolder,
     listQuickLinkFolders,
     moveLinkToFolder,
+    reorderQuickLinks,
     reorderQuickLinkFolders
 } from '$lib/server/services/quickLinkFolder.service';
 import { createQuickLink, listQuickLinks } from '$lib/server/services/quickLink.service';
+import { ddbGet } from '$lib/server/dynamo/ops';
+import { entitySk, wsPk } from '$lib/server/dynamo/keys';
 
 const actorId = 'test-user';
 
@@ -191,6 +194,47 @@ describe('quickLinkFolder.service', () => {
 
             await expect(moveLinkToFolder(ws, actorId, 'nonexistent-link-id', folder.id)).rejects.toThrow('Quick link not found');
         });
+
+        it('throws when the target folder does not exist', async () => {
+            const ws = workspaceId();
+            const link = await createQuickLink(ws, actorId, {
+                url: 'https://moveme.com',
+                title: 'Move Me',
+                description: null
+            });
+
+            await expect(moveLinkToFolder(ws, actorId, link.id, 'missing-folder')).rejects.toThrow('Quick link folder not found');
+        });
+    });
+
+    describe('createQuickLink', () => {
+        it('throws when a requested folder does not exist', async () => {
+            const ws = workspaceId();
+
+            await expect(
+                createQuickLink(ws, actorId, {
+                    url: 'https://example.com',
+                    title: 'Example',
+                    description: null,
+                    folderId: 'missing-folder'
+                })
+            ).rejects.toThrow('Quick link folder not found');
+        });
+    });
+
+    describe('reorderQuickLinks', () => {
+        it('rejects missing link ids instead of creating sparse records', async () => {
+            const ws = workspaceId();
+            const link = await createQuickLink(ws, actorId, {
+                url: 'https://example.com',
+                title: 'Example',
+                description: null
+            });
+
+            await expect(reorderQuickLinks(ws, actorId, [link.id, 'missing-link'])).rejects.toThrow('Quick link not found');
+
+            await expect(ddbGet({ PK: wsPk(ws), SK: entitySk('QuickLink', 'missing-link') })).resolves.toBeUndefined();
+        });
     });
 
     // -------------------------------------------------------------------------
@@ -233,6 +277,15 @@ describe('quickLinkFolder.service', () => {
 
             const folders = await listQuickLinkFolders(ws);
             expect(folders).toHaveLength(2);
+        });
+
+        it('rejects missing folder ids instead of creating sparse records', async () => {
+            const ws = workspaceId();
+            const folder = await createQuickLinkFolder(ws, actorId, 'One');
+
+            await expect(reorderQuickLinkFolders(ws, actorId, [folder.id, 'missing-folder'])).rejects.toThrow('Quick link folder not found');
+
+            await expect(ddbGet({ PK: wsPk(ws), SK: entitySk('QuickLinkFolder', 'missing-folder') })).resolves.toBeUndefined();
         });
     });
 });

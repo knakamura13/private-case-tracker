@@ -47,10 +47,11 @@ test.describe('session security', () => {
     test('invalid session is rejected', async ({ request }) => {
         // Test that requests with invalid session cookies are rejected
         const res = await request.get('/dashboard', {
+            maxRedirects: 0,
             headers: {
                 cookie: 'session=invalid-session-token'
             }
         });
-        expect([302, 401, 403]).toContain(res.status());
+        expect([302, 303, 401, 403]).toContain(res.status());
     });
 });

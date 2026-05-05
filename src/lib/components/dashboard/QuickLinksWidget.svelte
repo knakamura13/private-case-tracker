@@ -343,7 +343,7 @@
 
         const itemsPerRow = Math.max(1, Math.floor(window.innerWidth / 96)); // 80px + 16px gap
         const maxIndex = itemIds.length - 1;
-        let nextIndex = currentIndex;
+        let nextIndex: number;
 
         switch (event.key) {
             case 'ArrowRight': {
@@ -416,7 +416,7 @@
         {@const folderLinks = folderLinksMap[folder.id] ?? []}
         <div
             class="widget-item widget-item--dash-ql"
-            role="group"
+            role="button"
             aria-label={folder.name ? `Folder: ${folder.name}` : 'Folder'}
             style="display: flex; flex-direction: column; align-items: center; gap: 8px;"
             draggable={true}
@@ -475,7 +475,7 @@
     {#each rootLinks as link (link.id)}
         <div
             class="widget-item widget-item--dash-ql"
-            role="group"
+            role="button"
             aria-label={`Link: ${labelFor(link)}`}
             style="display: flex; flex-direction: column; align-items: center; gap: 8px;"
             draggable={true}

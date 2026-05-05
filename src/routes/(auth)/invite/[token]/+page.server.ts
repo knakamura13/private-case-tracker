@@ -13,6 +13,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         },
         isSignedIn: Boolean(locals.user),
         currentUserEmail: locals.user?.email ?? null,
+        currentUserEmailVerified: locals.user?.emailVerified ?? false,
         token: params.token
     };
 };
@@ -20,7 +21,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 export const actions: Actions = {
     accept: async ({ params, locals }) => {
         if (!locals.user) throw redirect(303, `/signup?invite=${params.token}`);
-        await acceptInvitation(params.token, locals.user.id);
+        try {
+            await acceptInvitation(params.token, locals.user.id);
+        } catch (err) {
+            return { error: (err as Error).message };
+        }
         throw redirect(303, '/dashboard');
     }
 };

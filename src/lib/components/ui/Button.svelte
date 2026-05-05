@@ -1,23 +1,6 @@
 <script lang="ts" module>
-    const buttonVariants = {
-        variant: {
-            default: 'primary',
-            destructive: 'destructive',
-            outline: 'outline',
-            secondary: 'secondary',
-            ghost: 'ghost',
-            link: 'link'
-        },
-        size: {
-            default: '',
-            sm: 'sm',
-            lg: 'lg',
-            icon: 'icon'
-        }
-    } as const;
-
-    export type ButtonVariant = keyof typeof buttonVariants.variant;
-    export type ButtonSize = keyof typeof buttonVariants.size;
+    export type ButtonVariant = 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+    export type ButtonSize = 'default' | 'sm' | 'lg' | 'icon';
 </script>
 
 <script lang="ts">
@@ -47,10 +30,37 @@
 
     const isDisabled = $derived(disabled || loading);
 
-    // eslint-disable-next-line security/detect-object-injection
-    const classes = $derived(
-        `btn ${buttonVariants.variant[variant]} ${buttonVariants.size[size]} ${loading ? 'loading' : ''} ${klass}`.trim()
-    );
+    function variantClass(value: ButtonVariant) {
+        switch (value) {
+            case 'destructive':
+                return 'destructive';
+            case 'outline':
+                return 'outline';
+            case 'secondary':
+                return 'secondary';
+            case 'ghost':
+                return 'ghost';
+            case 'link':
+                return 'link';
+            case 'default':
+                return 'primary';
+        }
+    }
+
+    function sizeClass(value: ButtonSize) {
+        switch (value) {
+            case 'sm':
+                return 'sm';
+            case 'lg':
+                return 'lg';
+            case 'icon':
+                return 'icon';
+            case 'default':
+                return '';
+        }
+    }
+
+    const classes = $derived(`btn ${variantClass(variant)} ${sizeClass(size)} ${loading ? 'loading' : ''} ${klass}`.trim());
 
     const title = $derived(rest.title || (size === 'icon' ? (rest['aria-label'] as string) : undefined));
 </script>

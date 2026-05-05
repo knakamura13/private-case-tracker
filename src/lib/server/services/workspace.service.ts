@@ -3,7 +3,7 @@ import { logActivity } from '$lib/server/activity';
 import type { MemberRole } from '$lib/types/enums';
 import { EVIDENCE_CATEGORIES, EVIDENCE_TARGETS } from '$lib/constants/categories';
 import { randomUUID } from 'node:crypto';
-import { ddbPut, ddbGet, ddbQuery, ddbUpdate, ddbDelete } from '$lib/server/dynamo/ops';
+import { ddbGet, ddbQuery, ddbUpdate, ddbDelete, ddbQueryAll, ddbTransactWrite } from '$lib/server/dynamo/ops';
 import { baPk, entitySk, gsi1Sk, gsi1UserPk, wsPk } from '$lib/server/dynamo/keys';
 import { invalidateMembers } from '$lib/server/cache/membersCache';
 import { invalidateWorkspace } from '$lib/server/cache/workspaceCache';
@@ -27,27 +27,41 @@ export async function createWorkspace(input: { name: string; ownerUserId: string
         updatedAt: now
     };
 
-    await ddbPut({
-        PK: wsPk(workspaceId),
-        SK: entitySk('Workspace', workspaceId),
-        ...ws
-    });
-    // Singleton marker used by onboarding to detect "first workspace created".
-    await ddbPut({ PK: 'WS_INDEX', SK: `Workspace#${workspaceId}` });
-
-    await ddbPut({
-        PK: wsPk(workspaceId),
-        SK: entitySk('Membership', input.ownerUserId),
-        id: randomUUID(),
-        workspaceId,
-        userId: input.ownerUserId,
-        role: 'OWNER' as const,
-        acceptedAt: now,
-        createdAt: now,
-        GSI1PK: gsi1UserPk(input.ownerUserId),
-        GSI1SK: gsi1Sk('Membership', workspaceId),
-        workspaceName: ws.name
-    });
+    await ddbTransactWrite([
+        {
+            Put: {
+                Item: {
+                    PK: wsPk(workspaceId),
+                    SK: entitySk('Workspace', workspaceId),
+                    ...ws
+                }
+            }
+        },
+        {
+            Put: {
+                Item: { PK: 'WS_INDEX', SK: 'Workspace#SINGLETON', workspaceId, createdAt: now, updatedAt: now },
+                ConditionExpression: 'attribute_not_exists(PK) AND attribute_not_exists(SK)'
+            }
+        },
+        {
+            Put: {
+                Item: {
+                    PK: wsPk(workspaceId),
+                    SK: entitySk('Membership', input.ownerUserId),
+                    id: randomUUID(),
+                    workspaceId,
+                    userId: input.ownerUserId,
+                    role: 'OWNER' as const,
+                    acceptedAt: now,
+                    createdAt: now,
+                    updatedAt: now,
+                    GSI1PK: gsi1UserPk(input.ownerUserId),
+                    GSI1SK: gsi1Sk('Membership', workspaceId),
+                    workspaceName: ws.name
+                }
+            }
+        }
+    ]);
     await logActivity({
         workspaceId: ws.id,
         userId: input.ownerUserId,
@@ -120,10 +134,9 @@ export async function removeMember(workspaceId: string, userId: string) {
     invalidateWorkspace(userId);
 
     // Invalidate all sessions for the user to immediately revoke access
-    const sessions = await ddbQuery<BetterAuthSessionItem>({
+    const sessions = await ddbQueryAll<BetterAuthSessionItem>({
         KeyConditionExpression: 'PK = :pk',
-        ExpressionAttributeValues: { ':pk': baPk('session') },
-        Limit: 500
+        ExpressionAttributeValues: { ':pk': baPk('session') }
     });
 
     for (const session of sessions) {
@@ -160,6 +173,42 @@ export async function renameWorkspace(workspaceId: string, name: string, actorId
 }
 
 export async function deleteWorkspace(workspaceId: string) {
-    // Minimal delete: remove workspace root item. (Full cleanup can be added later.)
-    await ddbDelete({ PK: wsPk(workspaceId), SK: entitySk('Workspace', workspaceId) });
+    const workspacePartition = await ddbQueryAll<{ PK: string; SK: string; userId?: string }>({
+        KeyConditionExpression: 'PK = :pk',
+        ExpressionAttributeValues: { ':pk': wsPk(workspaceId) }
+    });
+    const memberIds = new Set(
+        workspacePartition
+            .filter((item) => String(item.SK).startsWith('Membership#') && typeof item.userId === 'string')
+            .map((item) => item.userId as string)
+    );
+
+    const sessions = await ddbQueryAll<BetterAuthSessionItem>({
+        KeyConditionExpression: 'PK = :pk',
+        ExpressionAttributeValues: { ':pk': baPk('session') }
+    });
+
+    for (const session of sessions) {
+        if (memberIds.has(session.userId)) {
+            await ddbDelete({ PK: baPk('session'), SK: session.id });
+        }
+    }
+
+    for (const item of workspacePartition) {
+        await ddbDelete({ PK: item.PK, SK: item.SK });
+    }
+
+    const errorLogs = await ddbQueryAll<{ PK: string; SK: string }>({
+        KeyConditionExpression: 'PK = :pk',
+        ExpressionAttributeValues: { ':pk': `ERR#WS#${workspaceId}` }
+    });
+    for (const item of errorLogs) {
+        await ddbDelete({ PK: item.PK, SK: item.SK });
+    }
+
+    await ddbDelete({ PK: 'WS_INDEX', SK: 'Workspace#SINGLETON' });
+    for (const userId of memberIds) {
+        invalidateWorkspace(userId);
+    }
+    invalidateMembers(workspaceId);
 }

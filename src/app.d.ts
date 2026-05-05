@@ -7,6 +7,7 @@ declare global {
             user: {
                 id: string;
                 email: string;
+                emailVerified: boolean;
                 name: string | null;
                 image: string | null;
             } | null;

@@ -2,7 +2,7 @@
     import AuthShell from '$lib/components/layout/AuthShell.svelte';
     import Button from '$lib/components/ui/Button.svelte';
     import type { PageData } from './$types';
-    let { data }: { data: PageData } = $props();
+    let { data, form }: { data: PageData; form?: { error?: string } } = $props();
 </script>
 
 <AuthShell title="You've been invited" subtitle={`Join "${data.invitation.workspaceName}" as ${data.invitation.role.toLowerCase()}.`}>
@@ -22,8 +22,13 @@
                 You are signed in as {data.currentUserEmail}, but this invitation was sent to
                 {data.invitation.email}. <a class="invite-underline" href="/logout">Sign out</a> and sign back in.
             </p>
+        {:else if !data.currentUserEmailVerified}
+            <p class="invite-text-sm invite-text-destructive">
+                Verify {data.currentUserEmail} before accepting this invitation.
+            </p>
         {:else}
             <form method="post" action="?/accept" class="auth-form">
+                {#if form?.error}<p class="invite-text-sm invite-text-destructive">{form.error}</p>{/if}
                 <Button type="submit" class="invite-w-full">Accept invitation</Button>
             </form>
         {/if}
