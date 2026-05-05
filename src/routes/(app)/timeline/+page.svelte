@@ -265,6 +265,7 @@
                     if (response.ok) {
                         await invalidateAll();
                         showSuccessToast('Milestone updated successfully');
+                        await updateUrl(null);
                     } else {
                         cancel();
                     }

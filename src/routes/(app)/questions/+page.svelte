@@ -94,6 +94,7 @@
                     if (response.ok) {
                         await invalidateAll();
                         showSuccessToast('Question updated successfully');
+                        await updateUrl(null);
                     } else {
                         cancel();
                     }

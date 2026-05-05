@@ -467,6 +467,7 @@
                     if (response.ok) {
                         await invalidateAll();
                         showSuccessToast('Task updated successfully');
+                        await updateUrl(null);
                     } else {
                         cancel();
                     }
