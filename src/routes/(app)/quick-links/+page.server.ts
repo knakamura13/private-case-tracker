@@ -17,6 +17,20 @@ import {
     quickLinkFolderUpdateSchema,
     quickLinkFolderDeleteSchema
 } from '$lib/schemas/quickLink';
+import {
+    moveLinkToFolder,
+    reorderQuickLinks,
+    reorderQuickLinkFolders
+} from '$lib/server/services/quickLinkFolder.service';
+import { quickLinkMoveToFolderSchema, quickLinkFolderReorderSchema, quickLinkReorderSchema } from '$lib/schemas/quickLink';
+
+function formArray(formData: FormData, key: string) {
+    return formData
+        .getAll(key)
+        .flatMap((value) => (typeof value === 'string' && value.trim().startsWith('[') ? (JSON.parse(value) as unknown[]) : [value]))
+        .map((value) => String(value))
+        .filter((value) => value.length > 0);
+}
 
 export const load: PageServerLoad = async (event) => {
     const { workspace } = requireWorkspace(event);
@@ -133,6 +147,58 @@ export const actions: Actions = {
             const status = message === 'Quick link folder not found' ? 404 : 500;
             const errorId = await logActionError(event, { message, status, stack: e instanceof Error ? e.stack : undefined });
             return fail(status, { error: message, errorId });
+        }
+    },
+    moveToFolder: async (event) => {
+        const { workspace, user } = requireWorkspace(event);
+        const raw = Object.fromEntries(await event.request.formData());
+        const parsed = quickLinkMoveToFolderSchema.safeParse(raw);
+        if (!parsed.success) {
+            const errorId = await logActionError(event, { message: parsed.error.message, status: 400, stack: undefined });
+            return fail(400, { error: parsed.error.message, errorId });
+        }
+        try {
+            await moveLinkToFolder(workspace.id, user.id, parsed.data.linkId, parsed.data.folderId ?? null);
+            return { success: true };
+        } catch (e) {
+            const message = e instanceof Error ? e.message : 'Failed to move link';
+            const status = message === 'Quick link not found' ? 404 : 500;
+            const errorId = await logActionError(event, { message, status, stack: e instanceof Error ? e.stack : undefined });
+            return fail(status, { error: message, errorId });
+        }
+    },
+    reorderLinks: async (event) => {
+        const { workspace, user } = requireWorkspace(event);
+        const formData = await event.request.formData();
+        const parsed = quickLinkReorderSchema.safeParse({ linkIds: formArray(formData, 'linkIds') });
+        if (!parsed.success) {
+            const errorId = await logActionError(event, { message: parsed.error.message, status: 400, stack: undefined });
+            return fail(400, { error: parsed.error.message, errorId });
+        }
+        try {
+            await reorderQuickLinks(workspace.id, user.id, parsed.data.linkIds);
+            return { success: true };
+        } catch (e) {
+            const message = e instanceof Error ? e.message : 'Failed to reorder links';
+            const errorId = await logActionError(event, { message, status: 500, stack: e instanceof Error ? e.stack : undefined });
+            return fail(500, { error: message, errorId });
+        }
+    },
+    reorderFolders: async (event) => {
+        const { workspace, user } = requireWorkspace(event);
+        const formData = await event.request.formData();
+        const parsed = quickLinkFolderReorderSchema.safeParse({ folderIds: formArray(formData, 'folderIds') });
+        if (!parsed.success) {
+            const errorId = await logActionError(event, { message: parsed.error.message, status: 400, stack: undefined });
+            return fail(400, { error: parsed.error.message, errorId });
+        }
+        try {
+            await reorderQuickLinkFolders(workspace.id, user.id, parsed.data.folderIds);
+            return { success: true };
+        } catch (e) {
+            const message = e instanceof Error ? e.message : 'Failed to reorder folders';
+            const errorId = await logActionError(event, { message, status: 500, stack: e instanceof Error ? e.stack : undefined });
+            return fail(500, { error: message, errorId });
         }
     }
 };

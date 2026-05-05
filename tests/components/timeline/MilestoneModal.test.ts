@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import MilestoneModal from '$lib/components/timeline/MilestoneModal.svelte';
 
 describe('MilestoneModal (edit)', () => {
@@ -50,11 +50,8 @@ describe('MilestoneModal (edit)', () => {
     it('should render with initial values', () => {
         render(MilestoneModal, { props: defaultProps });
         expect(screen.getByDisplayValue('Test Milestone')).toBeInTheDocument();
-        // Check for hidden input with description value (textarea binding doesn't work in test environment)
-        const form = screen.getByRole('dialog').querySelector('form');
-        const descriptionInput = form?.querySelector('input[type="hidden"][name="description"]') as HTMLInputElement;
-        expect(descriptionInput).toBeInTheDocument();
-        expect(descriptionInput?.value).toBe('Test description');
+        expect(screen.getByDisplayValue('Test description')).toBeInTheDocument();
+        expect(screen.getByText('Preparation')).toBeInTheDocument();
     });
 
     it('should render form with correct action', () => {
@@ -72,5 +69,18 @@ describe('MilestoneModal (edit)', () => {
         render(MilestoneModal, { props: defaultProps });
         // Verify members are passed and used in the component
         expect(mockMembers.length).toBeGreaterThan(0);
+    });
+
+    it('should allow changing milestone status from the edit header', async () => {
+        render(MilestoneModal, { props: defaultProps });
+
+        await fireEvent.click(screen.getByRole('button', { name: 'Milestone status' }));
+        await fireEvent.click(screen.getByRole('option', { name: 'Blocked' }));
+
+        const form = screen.getByRole('dialog').querySelector('form');
+        const statusInput = form?.querySelector('input[type="hidden"][name="status"]') as HTMLInputElement;
+
+        expect(screen.getByRole('button', { name: 'Milestone status' })).toHaveTextContent('Blocked');
+        expect(statusInput.value).toBe('BLOCKED');
     });
 });

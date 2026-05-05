@@ -123,6 +123,39 @@ export async function updateMilestone(workspaceId: string, actorId: string, id: 
     return milestone;
 }
 
+export async function reorderMilestonesInPhase(workspaceId: string, actorId: string, phase: MilestonePhase, milestoneIds: string[]) {
+    const existing = await listMilestones(workspaceId, { phase });
+    const existingIds = existing.map((m) => m.id);
+
+    if (existingIds.length !== milestoneIds.length) {
+        throw new Error('Milestone reorder payload did not match phase contents');
+    }
+
+    const existingSet = new Set(existingIds);
+    if (milestoneIds.some((id) => !existingSet.has(id))) {
+        throw new Error('Milestone reorder payload did not match phase contents');
+    }
+
+    const now = new Date().toISOString();
+    for (const [index, milestoneId] of milestoneIds.entries()) {
+        await ddbUpdate(
+            { PK: wsPk(workspaceId), SK: entitySk('TimelineMilestone', milestoneId) },
+            'SET #order = :o, #updatedAt = :u',
+            { ':o': index, ':u': now },
+            { '#order': 'order', '#updatedAt': 'updatedAt' }
+        );
+    }
+
+    await logActivity({
+        workspaceId,
+        userId: actorId,
+        action: 'MILESTONE_UPDATED',
+        entityType: 'TimelineMilestone',
+        entityId: phase,
+        summary: `Reordered ${milestoneIds.length} milestones in ${phase}`
+    });
+}
+
 export async function softDeleteMilestone(workspaceId: string, actorId: string, id: string) {
     const existing = await ddbGet<MilestoneItem>({
         PK: wsPk(workspaceId),

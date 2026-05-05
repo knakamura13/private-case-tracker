@@ -7,9 +7,10 @@ import {
     currentPhase,
     updateMilestone,
     softDeleteMilestone,
-    createMilestone
+    createMilestone,
+    reorderMilestonesInPhase
 } from '$lib/server/services/milestone.service';
-import { milestoneUpdateSchema, milestoneCreateSchema } from '$lib/schemas/milestone';
+import { milestoneUpdateSchema, milestoneCreateSchema, milestoneReorderSchema } from '$lib/schemas/milestone';
 import { getMembers } from '$lib/server/cache/membersCache';
 import type { MilestonePhase, MilestoneStatus } from '$lib/types/enums';
 import { parseJsonField } from '$lib/server/utils/parse';
@@ -57,6 +58,21 @@ export const actions: Actions = {
             return fail(400, { error: parsed.error.message, errorId });
         }
         await updateMilestone(workspace.id, user.id, id, parsed.data);
+        return { ok: true };
+    },
+    reorder: async (event) => {
+        const { workspace, user } = requireWorkspace(event);
+        const raw = Object.fromEntries(await event.request.formData());
+        const milestoneIds = raw.milestoneIds ? await parseJsonField<string[]>(raw, 'milestoneIds', event) : [];
+        const parsed = milestoneReorderSchema.safeParse({
+            phase: raw.phase,
+            milestoneIds
+        });
+        if (!parsed.success) {
+            const errorId = await logActionError(event, { message: parsed.error.message, status: 400, stack: undefined });
+            return fail(400, { error: parsed.error.message, errorId });
+        }
+        await reorderMilestonesInPhase(workspace.id, user.id, parsed.data.phase, parsed.data.milestoneIds);
         return { ok: true };
     },
     delete: async (event) => {

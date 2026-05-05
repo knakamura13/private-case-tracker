@@ -36,5 +36,11 @@ export const milestoneCreateSchema = z.object({
 
 export const milestoneUpdateSchema = milestoneCreateSchema.partial();
 
+export const milestoneReorderSchema = z.object({
+    phase: milestonePhaseEnum,
+    milestoneIds: z.array(z.string().uuid())
+});
+
 export type MilestoneCreate = z.infer<typeof milestoneCreateSchema>;
 export type MilestoneUpdate = z.infer<typeof milestoneUpdateSchema>;
+export type MilestoneReorder = z.infer<typeof milestoneReorderSchema>;

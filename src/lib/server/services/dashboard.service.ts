@@ -56,8 +56,8 @@ export async function dashboardFor(workspaceId: string) {
     // Optimization: Group milestones by phase in a single pass to avoid repeated filtering
     const milestonesByPhase: Record<string, typeof milestonesAll> = {};
     for (const m of milestonesAll) {
-        if (!milestonesByPhase[m.phase]) milestonesByPhase[m.phase] = [];
-        milestonesByPhase[m.phase].push(m);
+        const phaseMilestones = (milestonesByPhase[m.phase] ??= []);
+        phaseMilestones.push(m);
     }
 
     const phaseProgress = PHASE_ORDER.map((p) => {

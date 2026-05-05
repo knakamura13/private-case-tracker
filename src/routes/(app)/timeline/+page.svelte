@@ -1,29 +1,55 @@
 <script lang="ts">
+    import { flip } from 'svelte/animate';
     import PageHeader from '$lib/components/shared/PageHeader.svelte';
     import Button from '$lib/components/ui/Button.svelte';
     import MilestoneModal from '$lib/components/timeline/MilestoneModal.svelte';
-    import { Plus, MapPin, Check, Clock } from 'lucide-svelte';
+    import { Plus, MapPin, Check, Clock, GripVertical } from 'lucide-svelte';
     import { fmtDate } from '$lib/utils/dates';
     import { PHASE_ORDER, PHASE_LABELS, PHASE_DESCRIPTIONS } from '$lib/constants/phases';
     import { page } from '$app/state';
-    import { onMount } from 'svelte';
+    import { onDestroy, onMount } from 'svelte';
     import { getPageNumber } from '$lib/constants/navigation';
-    import { invalidateAll, goto } from '$app/navigation';
-    import { showSuccessToast } from '$lib/stores/toast';
+    import { goto, invalidateAll } from '$app/navigation';
+    import { showErrorToast, showSuccessToast } from '$lib/stores/toast';
     import type { PageData } from './$types';
     import type { MilestoneItem } from '$lib/server/dynamo/types';
+    import type { MilestonePhase } from '$lib/types/enums';
 
     interface TimelinePageData extends PageData {
         members: { id: string; name: string | null; email: string }[];
     }
 
+    type DragState = {
+        id: string;
+        phase: MilestonePhase;
+        item: MilestoneItem;
+        pointerOffsetY: number;
+        railTop: number;
+        railBottom: number;
+        left: number;
+        width: number;
+        height: number;
+        currentTop: number;
+    };
+
+    const REORDER_FLIP_DURATION_MS = 180;
+    const REORDER_SAVE_DEBOUNCE_MS = 700;
+
     let { data, form }: { data: TimelinePageData; form: { error?: string; errorId?: string } } = $props();
 
     let showCreateModal = $state(false);
     let defaultPhase = $state<string | undefined>(undefined);
+    let milestones = $state<MilestoneItem[]>([]);
+    let dragState = $state<DragState | null>(null);
+    let lastSyncedMilestoneSignature = '';
+
+    const confirmedOrders = new Map<MilestonePhase, string[]>();
+    const reorderTimeouts = new Map<MilestonePhase, ReturnType<typeof setTimeout>>();
+    const savingPhases = new Set<MilestonePhase>();
+    const dirtyWhileSaving = new Set<MilestonePhase>();
 
     const editParam = $derived(page.url.searchParams.get('edit'));
-    const editingMilestone = $derived(editParam && data.milestones.some((m) => m.id === editParam) ? { id: editParam } : null);
+    const editingMilestone = $derived(editParam && milestones.some((m) => m.id === editParam) ? { id: editParam } : null);
 
     async function updateUrl(id: string | null) {
         const url = new URL(window.location.href);
@@ -38,7 +64,7 @@
     const grouped = $derived(
         PHASE_ORDER.map((p) => ({
             phase: p,
-            items: data.milestones.filter((m) => m.phase === p)
+            items: milestones.filter((m) => m.phase === p)
         }))
     );
 
@@ -85,6 +111,165 @@
         return `https://www.google.com/maps/search/?api=1&query=${query}`;
     }
 
+    function syncMilestonesFromData(nextMilestones: MilestoneItem[]) {
+        milestones = nextMilestones;
+        lastSyncedMilestoneSignature = milestoneDataSignature(nextMilestones);
+        for (const phase of PHASE_ORDER) {
+            confirmedOrders.set(
+                phase,
+                nextMilestones.filter((m) => m.phase === phase).map((m) => m.id)
+            );
+        }
+    }
+
+    $effect(() => {
+        const signature = milestoneDataSignature(data.milestones);
+        if (!dragState && signature !== lastSyncedMilestoneSignature) {
+            syncMilestonesFromData(data.milestones);
+        }
+    });
+
+    function milestoneDataSignature(nextMilestones: MilestoneItem[]) {
+        return nextMilestones.map((m) => `${m.id}:${m.phase}:${m.order}:${m.updatedAt}`).join('|');
+    }
+
+    function phaseMilestoneIds(phase: MilestonePhase) {
+        return milestones.filter((m) => m.phase === phase).map((m) => m.id);
+    }
+
+    function arraysEqual(left: string[], right: string[]) {
+        return left.length === right.length && left.every((value, index) => value === right[index]);
+    }
+
+    function replacePhaseMilestonesByIds(phase: MilestonePhase, orderedIds: string[]) {
+        const phaseMilestones = new Map(milestones.filter((m) => m.phase === phase).map((m) => [m.id, m]));
+        const nextPhaseMilestones = orderedIds.map((id) => phaseMilestones.get(id)).filter((m): m is MilestoneItem => Boolean(m));
+        milestones = [...milestones.filter((m) => m.phase !== phase), ...nextPhaseMilestones];
+    }
+
+    function clamp(value: number, min: number, max: number) {
+        return Math.min(Math.max(value, min), max);
+    }
+
+    function getDragIndex(phase: MilestonePhase, activeId: string, pointerY: number) {
+        const wrappers = Array.from(
+            document.querySelectorAll<HTMLElement>(`.milestone-wrapper[data-phase="${phase}"][data-milestone-id]:not([data-milestone-id="${activeId}"])`)
+        );
+        const index = wrappers.findIndex((wrapper) => {
+            const rect = wrapper.getBoundingClientRect();
+            return pointerY < rect.top + rect.height / 2;
+        });
+        return index === -1 ? wrappers.length : index;
+    }
+
+    function updateDraggedMilestonePosition(event: PointerEvent) {
+        if (!dragState) return;
+
+        const pointerY = clamp(event.clientY, dragState.railTop, dragState.railBottom);
+        const nextTop = clamp(event.clientY - dragState.pointerOffsetY, dragState.railTop, dragState.railBottom - dragState.height);
+        const targetIndex = getDragIndex(dragState.phase, dragState.id, pointerY);
+        const orderedIds = phaseMilestoneIds(dragState.phase).filter((id) => id !== dragState?.id);
+        orderedIds.splice(targetIndex, 0, dragState.id);
+
+        dragState = { ...dragState, currentTop: nextTop };
+        if (!arraysEqual(orderedIds, phaseMilestoneIds(dragState.phase))) {
+            replacePhaseMilestonesByIds(dragState.phase, orderedIds);
+        }
+    }
+
+    function handleWindowPointerMove(event: PointerEvent) {
+        event.preventDefault();
+        updateDraggedMilestonePosition(event);
+    }
+
+    function handleWindowPointerUp(event: PointerEvent) {
+        event.preventDefault();
+        const phase = dragState?.phase;
+        dragState = null;
+        document.body.style.removeProperty('user-select');
+        window.removeEventListener('pointermove', handleWindowPointerMove);
+        window.removeEventListener('pointerup', handleWindowPointerUp);
+        if (phase) schedulePhaseSave(phase);
+    }
+
+    function beginMilestoneDrag(event: PointerEvent, milestone: MilestoneItem, phase: MilestonePhase) {
+        if (event.button !== 0) return;
+        const handle = event.currentTarget as HTMLElement;
+        const wrapper = handle.closest<HTMLElement>('.milestone-wrapper');
+        const rail = handle.closest<HTMLElement>('.timeline-milestone-rail');
+        if (!wrapper || !rail) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const wrapperRect = wrapper.getBoundingClientRect();
+        const railRect = rail.getBoundingClientRect();
+        dragState = {
+            id: milestone.id,
+            phase,
+            item: milestone,
+            pointerOffsetY: event.clientY - wrapperRect.top,
+            railTop: railRect.top,
+            railBottom: railRect.bottom,
+            left: wrapperRect.left,
+            width: wrapperRect.width,
+            height: wrapperRect.height,
+            currentTop: wrapperRect.top
+        };
+
+        document.body.style.userSelect = 'none';
+        window.addEventListener('pointermove', handleWindowPointerMove, { passive: false });
+        window.addEventListener('pointerup', handleWindowPointerUp, { passive: false });
+    }
+
+    async function persistPhaseOrder(phase: MilestonePhase, milestoneIds: string[]) {
+        const formData = new FormData();
+        formData.append('phase', phase);
+        formData.append('milestoneIds', JSON.stringify(milestoneIds));
+        const response = await fetch('?/reorder', { method: 'POST', body: formData });
+        if (!response.ok) {
+            throw new Error(`Failed to reorder milestones (${response.status})`);
+        }
+    }
+
+    function schedulePhaseSave(phase: MilestonePhase) {
+        const existingTimeout = reorderTimeouts.get(phase);
+        if (existingTimeout) clearTimeout(existingTimeout);
+
+        const timeout = setTimeout(async () => {
+            reorderTimeouts.delete(phase);
+            const currentIds = phaseMilestoneIds(phase);
+            const confirmed = confirmedOrders.get(phase) ?? [];
+
+            if (arraysEqual(currentIds, confirmed)) return;
+
+            if (savingPhases.has(phase)) {
+                dirtyWhileSaving.add(phase);
+                return;
+            }
+
+            savingPhases.add(phase);
+            try {
+                await persistPhaseOrder(phase, currentIds);
+                confirmedOrders.set(phase, currentIds);
+            } catch (error) {
+                console.error(error);
+                showErrorToast('Failed to save milestone order');
+                await invalidateAll();
+                return;
+            } finally {
+                savingPhases.delete(phase);
+            }
+
+            const latestIds = phaseMilestoneIds(phase);
+            if (dirtyWhileSaving.delete(phase) || !arraysEqual(latestIds, confirmedOrders.get(phase) ?? [])) {
+                schedulePhaseSave(phase);
+            }
+        }, REORDER_SAVE_DEBOUNCE_MS);
+
+        reorderTimeouts.set(phase, timeout);
+    }
+
     const totalPhases = $derived(PHASE_ORDER.length);
     const completedPhases = $derived(grouped.filter((g) => phaseStatus(g.items) === 'done').length);
     const currentPhaseIndex = $derived(grouped.findIndex((g) => phaseStatus(g.items) === 'active'));
@@ -101,6 +286,17 @@
                     element.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }, 100);
             }
+        }
+    });
+
+    onDestroy(() => {
+        for (const timeout of reorderTimeouts.values()) clearTimeout(timeout);
+        if (typeof window !== 'undefined') {
+            window.removeEventListener('pointermove', handleWindowPointerMove);
+            window.removeEventListener('pointerup', handleWindowPointerUp);
+        }
+        if (typeof document !== 'undefined') {
+            document.body.style.removeProperty('user-select');
         }
     });
 </script>
@@ -133,11 +329,17 @@
 
                 <!-- Milestone Rail -->
                 {#if g.items.length > 0}
-                    <div class="timeline-milestone-rail">
+                    <div class="timeline-milestone-rail" aria-label={`Milestones in ${PHASE_LABELS[g.phase]}`}>
                         <div class="timeline-rail-line"></div>
                         {#each g.items as m, _mi (m.id)}
                             {@const nodeStatus = milestoneNodeStatus(m.status)}
-                            <div class="milestone-wrapper">
+                            <div
+                                class="milestone-wrapper {dragState?.id === m.id ? 'milestone-wrapper-placeholder' : ''}"
+                                animate:flip={{ duration: REORDER_FLIP_DURATION_MS }}
+                                data-milestone-id={m.id}
+                                data-phase={g.phase}
+                                aria-label={m.title}
+                            >
                                 <div
                                     class="timeline-milestone-node {nodeStatus === 'done'
                                         ? 'timeline-milestone-node-done'
@@ -153,7 +355,17 @@
                                 </div>
                                 <button
                                     type="button"
+                                    class="milestone-drag-handle"
+                                    aria-label={`Reorder ${m.title}`}
+                                    tabindex={dragState?.id === m.id ? -1 : 0}
+                                    onpointerdown={(event) => beginMilestoneDrag(event, m, g.phase)}
+                                >
+                                    <GripVertical style="width: 14px; height: 14px;" />
+                                </button>
+                                <button
+                                    type="button"
                                     id={m.id}
+                                    data-milestone-card-id={m.id}
                                     onclick={async (e) => {
                                         e.currentTarget.blur();
                                         await updateUrl(m.id);
@@ -249,8 +461,44 @@
     </div>
 </div>
 
+{#if dragState}
+    {@const ghost = dragState.item}
+    {@const ghostNodeStatus = milestoneNodeStatus(ghost.status)}
+    <div
+        class="milestone-drag-ghost"
+        style={`left: ${dragState.left}px; top: ${dragState.currentTop}px; width: ${dragState.width}px; height: ${dragState.height}px;`}
+        aria-hidden="true"
+    >
+        <div class="timeline-milestone-card {ghostNodeStatus === 'active' ? 'timeline-milestone-card-active' : ''}">
+            {#if ghost.dueDate}
+                <div class="timeline-milestone-date">{fmtDate(ghost.dueDate)}</div>
+            {/if}
+            <h3 class="timeline-milestone-title">{ghost.title}</h3>
+            {#if ghost.description}
+                <div class="timeline-milestone-body">
+                    <div class="timeline-milestone-description">{ghost.description}</div>
+                </div>
+            {/if}
+            <div class="timeline-milestone-footer">
+                <span class="pill {statusPillClass(ghost.status)}">{statusLabel(ghost.status)}</span>
+                {#if ghost.subTasks && ghost.subTasks.length > 0}
+                    <span class="subtask-count">
+                        {ghost.subTasks.filter((st) => st.done).length}/{ghost.subTasks.length} subtasks
+                    </span>
+                {/if}
+                {#if ghost.location}
+                    <span class="location-link">
+                        <MapPin style="width: 12px; height: 12px;" />
+                        {ghost.location}
+                    </span>
+                {/if}
+            </div>
+        </div>
+    </div>
+{/if}
+
 {#if editingMilestone}
-    {@const milestone = data.milestones.find((m) => m.id === editingMilestone?.id)}
+    {@const milestone = milestones.find((m) => m.id === editingMilestone?.id)}
     {#if milestone}
         <MilestoneModal
             mode="edit"
@@ -322,6 +570,12 @@
         position: relative;
         margin-bottom: 12px;
     }
+    .milestone-wrapper-placeholder {
+        opacity: 0.22;
+    }
+    .milestone-wrapper-placeholder .milestone-drag-handle {
+        visibility: hidden;
+    }
     .milestone-btn {
         background: none;
         border: none;
@@ -329,6 +583,40 @@
         width: 100%;
         text-align: left;
         padding: 0;
+    }
+    .milestone-drag-handle {
+        position: absolute;
+        top: 18px;
+        right: 18px;
+        z-index: 2;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--ink-3);
+        touch-action: none;
+        cursor: grab;
+    }
+    .milestone-drag-handle:hover {
+        color: var(--ink-1);
+        border-color: color-mix(in srgb, var(--ink-2) 22%, transparent);
+    }
+    .milestone-drag-handle:active {
+        cursor: grabbing;
+    }
+    .milestone-drag-ghost {
+        position: fixed;
+        z-index: 9999;
+        pointer-events: none;
+        cursor: grabbing;
+        box-shadow: 0 18px 45px color-mix(in srgb, var(--ink-1) 18%, transparent);
+    }
+    .milestone-drag-ghost .timeline-milestone-card {
+        height: 100%;
     }
     .subtask-count {
         font-size: 11px;
