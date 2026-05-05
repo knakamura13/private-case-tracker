@@ -51,12 +51,12 @@
             {#snippet children()}
                 <div class="task-list">
                     {#each data.tasksPreview as task}
-                        <div 
+                        <div
                             class="task-item"
                             role="button"
                             tabindex="0"
                             aria-label={`Task: ${task.title}`}
-                            onclick={() => window.location.href = `/tasks?edit=${task.id}`}
+                            onclick={() => (window.location.href = `/tasks?edit=${task.id}`)}
                             onkeydown={(e) => {
                                 if (e.key === 'Enter' || e.key === ' ') {
                                     e.preventDefault();

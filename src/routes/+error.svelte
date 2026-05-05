@@ -45,13 +45,6 @@
         color: var(--ink-3);
     }
 
-    .error-page__hint {
-        margin: 0;
-        font-size: 13px;
-        color: var(--ink-3);
-        line-height: 1.5;
-    }
-
     .error-page__actions {
         margin-top: 24px;
         text-align: center;

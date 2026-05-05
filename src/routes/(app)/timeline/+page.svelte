@@ -153,7 +153,9 @@
 
     function getDragIndex(phase: MilestonePhase, activeId: string, pointerY: number) {
         const wrappers = Array.from(
-            document.querySelectorAll<HTMLElement>(`.milestone-wrapper[data-phase="${phase}"][data-milestone-id]:not([data-milestone-id="${activeId}"])`)
+            document.querySelectorAll<HTMLElement>(
+                `.milestone-wrapper[data-phase="${phase}"][data-milestone-id]:not([data-milestone-id="${activeId}"])`
+            )
         );
         const index = wrappers.findIndex((wrapper) => {
             const rect = wrapper.getBoundingClientRect();

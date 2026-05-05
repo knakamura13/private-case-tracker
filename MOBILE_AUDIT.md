@@ -7,8 +7,8 @@
 - **CSS Strategy:** Vanilla scoped Svelte styles + global `src/app.css` (No Tailwind/UnoCSS).
 - **Image Strategy:** Standard `<img>` tags (No `@sveltejs/enhanced-img`).
 - **PWA Integration:** `@vite-pwa/sveltekit` (Vite PWA Plugin path).
-  - **Strategy:** `generateSW` (Workbox-managed).
-  - **Update Flow:** `autoUpdate`.
+    - **Strategy:** `generateSW` (Workbox-managed).
+    - **Update Flow:** `autoUpdate`.
 - **Manifest:** Dual-source (defined in `vite.config.ts` and `static/manifest.webmanifest`).
 - **Rendering:** SSR (default), no explicit prerendering detected.
 
@@ -34,6 +34,7 @@
 ### A. Mobile loading performance
 
 #### [A-001] Sequential data dependencies in server load functions
+
 - **Dimension:** A1
 - **Severity:** High
 - **Confidence:** High
@@ -41,15 +42,13 @@
 - **What's wrong:** Data fetches for `tasks` and `members` (or `questions` and `members`) are awaited sequentially.
 - **Why it hurts mobile:** On high-latency mobile networks, the TTFB is the sum of all serial DB queries.
 - **Recommended remediation:** Use `Promise.all`.
-  ```ts
-  const [tasks, members] = await Promise.all([
-      listTasks(workspace.id),
-      getMembers(workspace.id)
-  ]);
-  ```
+    ```ts
+    const [tasks, members] = await Promise.all([listTasks(workspace.id), getMembers(workspace.id)]);
+    ```
 - **Verification:** Compare "Server Response Time" in Chrome DevTools Network tab before and after.
 
 #### [A-004] Missing image optimization hints
+
 - **Dimension:** A4
 - **Severity:** Medium
 - **Confidence:** High
@@ -63,6 +62,7 @@
 ### B. Svelte/SvelteKit runtime efficiency
 
 #### [B-001] Unkeyed `{#each}` blocks on mutable lists
+
 - **Dimension:** B1
 - **Severity:** High
 - **Confidence:** High
@@ -70,9 +70,9 @@
 - **What's wrong:** Lists of links and rich text segments are iterated without keys.
 - **Why it hurts mobile:** Causes full DOM teardown/re-insertion on reorders (common in Quick Links), leading to "jank" on throttled CPUs.
 - **Recommended remediation:**
-  ```svelte
-  {#each visibleFolders as folder (folder.id)}
-  ```
+    ```svelte
+    {#each visibleFolders as folder (folder.id)}
+    ```
 - **Verification:** Use Svelte DevTools to observe minimal DOM updates during drag-and-drop.
 
 ---
@@ -80,6 +80,7 @@
 ### C. Screen-size adaptiveness
 
 #### [C-001] Viewport zoom restricted
+
 - **Dimension:** C1
 - **Severity:** Critical
 - **Confidence:** High
@@ -90,6 +91,7 @@
 - **Verification:** Lighthouse "Accessibility" audit: "Has a `<meta name="viewport">` tag with `width` or `initial-scale`".
 
 #### [C-002] Fixed `min-width` on UI components
+
 - **Dimension:** C2 / C3
 - **Severity:** Medium
 - **Confidence:** High
@@ -103,6 +105,7 @@
 ### D. Touch-input compatibility
 
 #### [D-001] Sub-minimal tap targets for icon buttons
+
 - **Dimension:** D1
 - **Severity:** High
 - **Confidence:** High
@@ -112,6 +115,7 @@
 - **Recommended remediation:** Increase `min-width` and `height` to `44px` for mobile viewports using media queries.
 
 #### [D-003] Hover-gated functionality
+
 - **Dimension:** D3
 - **Severity:** High
 - **Confidence:** High
@@ -121,6 +125,7 @@
 - **Recommended remediation:** Ensure menus are always visible or use a tap-to-reveal pattern with `aria-expanded`.
 
 #### [D-007] Lack of visual tap feedback
+
 - **Dimension:** D7
 - **Severity:** Medium
 - **Confidence:** High
@@ -134,6 +139,7 @@
 ### F. PWA-specific concerns
 
 #### [F-003] Missing iOS Status Bar configuration
+
 - **Dimension:** F3 / F23
 - **Severity:** Medium
 - **Confidence:** High
@@ -143,6 +149,7 @@
 - **Recommended remediation:** Add `<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">`.
 
 #### [F-009] Conflicting Manifest Sources
+
 - **Dimension:** F9
 - **Severity:** Low
 - **Confidence:** High
@@ -154,6 +161,7 @@
 ---
 
 ## Out of scope / unverified
+
 - **Runtime Bundle Size:** Static analysis suggests root layout imports are lightweight, but a `vite-bundle-visualizer` run is recommended.
 - **Offline Fallback Page:** The Workbox config is `generateSW`, but a custom `/offline` route is not explicitly precached in `vite.config.ts`.
 

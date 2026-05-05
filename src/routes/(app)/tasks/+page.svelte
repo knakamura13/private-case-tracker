@@ -24,10 +24,10 @@
     // Check if we're coming from dashboard with pre-fetched data
     let _isFromDashboard = $state(false);
     let _showInstantDialog = $state(false);
-    
+
     $effect(() => {
         const timestamp = sessionStorage.getItem('prefetched-tasks-timestamp');
-        
+
         if (timestamp && editParam) {
             // Show dialog instantly while data loads in background
             _isFromDashboard = true;

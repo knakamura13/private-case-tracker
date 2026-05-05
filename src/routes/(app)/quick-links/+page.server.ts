@@ -17,11 +17,7 @@ import {
     quickLinkFolderUpdateSchema,
     quickLinkFolderDeleteSchema
 } from '$lib/schemas/quickLink';
-import {
-    moveLinkToFolder,
-    reorderQuickLinks,
-    reorderQuickLinkFolders
-} from '$lib/server/services/quickLinkFolder.service';
+import { moveLinkToFolder, reorderQuickLinks, reorderQuickLinkFolders } from '$lib/server/services/quickLinkFolder.service';
 import { quickLinkMoveToFolderSchema, quickLinkFolderReorderSchema, quickLinkReorderSchema } from '$lib/schemas/quickLink';
 
 function formArray(formData: FormData, key: string) {

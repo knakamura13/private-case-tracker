@@ -83,74 +83,6 @@
     });
 </script>
 
-<style>
-    :global(button.task-status-trigger) {
-        height: 24px;
-        min-height: 24px;
-        padding: 0 10px;
-        border-radius: 999px;
-        border: 1px solid transparent;
-        font-size: 11px;
-        font-weight: 600;
-        gap: 6px;
-        box-shadow: none;
-    }
-
-    :global(button.task-status-trigger .select-trigger-label) {
-        text-transform: none;
-    }
-
-    :global(button.task-status-trigger .select-trigger-chevron) {
-        opacity: 0.75;
-        width: 12px;
-        height: 12px;
-    }
-
-    :global(button.task-status-trigger.s-active) {
-        background: var(--peri);
-        color: var(--peri-d);
-        border-color: color-mix(in srgb, var(--peri-d) 18%, transparent);
-    }
-
-    :global(button.task-status-trigger.s-active:hover) {
-        background: color-mix(in srgb, var(--peri) 82%, var(--peri-d) 18%);
-        border-color: color-mix(in srgb, var(--peri-d) 24%, transparent);
-    }
-
-    :global(button.task-status-trigger.s-done) {
-        background: var(--sage);
-        color: var(--sage-d);
-        border-color: color-mix(in srgb, var(--sage-d) 18%, transparent);
-    }
-
-    :global(button.task-status-trigger.s-done:hover) {
-        background: color-mix(in srgb, var(--sage) 80%, var(--sage-d) 20%);
-        border-color: color-mix(in srgb, var(--sage-d) 24%, transparent);
-    }
-
-    :global(button.task-status-trigger.s-note) {
-        background: var(--surface-3);
-        color: var(--ink-2);
-        border-color: color-mix(in srgb, var(--ink-2) 10%, transparent);
-    }
-
-    :global(button.task-status-trigger.s-note:hover) {
-        background: color-mix(in srgb, var(--surface-3) 86%, var(--ink-2) 14%);
-        border-color: color-mix(in srgb, var(--ink-2) 16%, transparent);
-    }
-
-    :global(button.task-status-trigger.s-waiting) {
-        background: var(--blush);
-        color: var(--blush-d);
-        border-color: color-mix(in srgb, var(--blush-d) 18%, transparent);
-    }
-
-    :global(button.task-status-trigger.s-waiting:hover) {
-        background: color-mix(in srgb, var(--blush) 80%, var(--blush-d) 20%);
-        border-color: color-mix(in srgb, var(--blush-d) 24%, transparent);
-    }
-</style>
-
 {#snippet taskHeader()}
     {#if mode === 'edit'}
         <Select
@@ -285,3 +217,71 @@
         </form>
     </Dialog>
 {/if}
+
+<style>
+    :global(button.task-status-trigger) {
+        height: 24px;
+        min-height: 24px;
+        padding: 0 10px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        font-size: 11px;
+        font-weight: 600;
+        gap: 6px;
+        box-shadow: none;
+    }
+
+    :global(button.task-status-trigger .select-trigger-label) {
+        text-transform: none;
+    }
+
+    :global(button.task-status-trigger .select-trigger-chevron) {
+        opacity: 0.75;
+        width: 12px;
+        height: 12px;
+    }
+
+    :global(button.task-status-trigger.s-active) {
+        background: var(--peri);
+        color: var(--peri-d);
+        border-color: color-mix(in srgb, var(--peri-d) 18%, transparent);
+    }
+
+    :global(button.task-status-trigger.s-active:hover) {
+        background: color-mix(in srgb, var(--peri) 82%, var(--peri-d) 18%);
+        border-color: color-mix(in srgb, var(--peri-d) 24%, transparent);
+    }
+
+    :global(button.task-status-trigger.s-done) {
+        background: var(--sage);
+        color: var(--sage-d);
+        border-color: color-mix(in srgb, var(--sage-d) 18%, transparent);
+    }
+
+    :global(button.task-status-trigger.s-done:hover) {
+        background: color-mix(in srgb, var(--sage) 80%, var(--sage-d) 20%);
+        border-color: color-mix(in srgb, var(--sage-d) 24%, transparent);
+    }
+
+    :global(button.task-status-trigger.s-note) {
+        background: var(--surface-3);
+        color: var(--ink-2);
+        border-color: color-mix(in srgb, var(--ink-2) 10%, transparent);
+    }
+
+    :global(button.task-status-trigger.s-note:hover) {
+        background: color-mix(in srgb, var(--surface-3) 86%, var(--ink-2) 14%);
+        border-color: color-mix(in srgb, var(--ink-2) 16%, transparent);
+    }
+
+    :global(button.task-status-trigger.s-waiting) {
+        background: var(--blush);
+        color: var(--blush-d);
+        border-color: color-mix(in srgb, var(--blush-d) 18%, transparent);
+    }
+
+    :global(button.task-status-trigger.s-waiting:hover) {
+        background: color-mix(in srgb, var(--blush) 80%, var(--blush-d) 20%);
+        border-color: color-mix(in srgb, var(--blush-d) 24%, transparent);
+    }
+</style>

@@ -67,8 +67,8 @@
 </script>
 
 <QuickLinksGrid
-    links={links}
-    folders={folders}
+    {links}
+    {folders}
     size="compact"
     onOpenLink={(link) => window.open(link.url, '_blank', 'noopener,noreferrer')}
     onOpenFolder={(folder) => {
@@ -88,7 +88,13 @@
 
 {#if folderPopoverId}
     {@const folder = folders.find((f) => f.id === folderPopoverId)}
-    <Dialog open={!!folderPopoverId} onClose={closeFolderDialog} contentWidth="md" ariaLabel={folder?.name ? `Folder ${folder.name}` : 'Folder'} titleLevel="h3">
+    <Dialog
+        open={!!folderPopoverId}
+        onClose={closeFolderDialog}
+        contentWidth="md"
+        ariaLabel={folder?.name ? `Folder ${folder.name}` : 'Folder'}
+        titleLevel="h3"
+    >
         <div style="display: flex; gap: 12px; flex-direction: column;">
             <div style="display: flex; align-items: center; gap: 12px;">
                 <Folder style="width: 16px; height: 16px; color: var(--lilac-d);" />
@@ -101,4 +107,4 @@
     </Dialog>
 {/if}
 
-<QuickLinksManageDialog bind:this={qlDialog} links={links} {form} />
+<QuickLinksManageDialog bind:this={qlDialog} {links} {form} />

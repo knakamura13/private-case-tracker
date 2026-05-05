@@ -36,8 +36,6 @@ describe('QuickLinksWidget', () => {
         const appCssPath = path.resolve(process.cwd(), 'src/app.css');
         const appCss = readFileSync(appCssPath, 'utf8');
 
-        expect(appCss).toMatch(
-            /\.widget-item:hover,\s*\.widget-item:focus-within\s*\{[^}]*z-index:\s*[1-9]\d*;[^}]*\}/s
-        );
+        expect(appCss).toMatch(/\.widget-item:hover,\s*\.widget-item:focus-within\s*\{[^}]*z-index:\s*[1-9]\d*;[^}]*\}/s);
     });
 });

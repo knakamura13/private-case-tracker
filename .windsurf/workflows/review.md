@@ -26,17 +26,20 @@ Your task is to find all potential bugs and code improvements in the code change
 ## Instructions
 
 ### Full Codebase Review
+
 - Analyze architecture, design patterns, security vulnerabilities
 - Review performance bottlenecks and optimization opportunities
 - Ensure coding standards consistency
 
-### Branch/PR Review  
+### Branch/PR Review
+
 - Focus on specific branch/PR changes
 - Compare against main for conflicts
 - Verify changes align with intended feature/fix
 - Check testing coverage of new changes
 
 ### Unstaged Changes Review
+
 - Review modified files in working directory
 - Check for incomplete implementations or debug code
 - Verify changes don't break existing functionality

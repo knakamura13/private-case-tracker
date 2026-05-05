@@ -2,13 +2,14 @@
 description: SvelteKit Mobile Optimization Audit
 auto_execution_mode: 3
 ---
+
 ## Quick Audit Commands
 
 ```bash
 # Lighthouse mobile audit
 npx lighthouse http://localhost:5173 --preset=desktop --emulated-form-factor=mobile
 
-# PWA validation  
+# PWA validation
 npx @vite-pwa/sveltekit-check
 
 # Bundle analysis
@@ -18,7 +19,7 @@ pnpm build && npx vite-bundle-visualizer
 ## Critical Fixes (Priority Order)
 
 1. **Viewport Scaling** - Remove `user-scalable=0` from meta viewport tag
-2. **Tap Targets** - Increase `.btn.icon` from 28px to 44px minimum  
+2. **Tap Targets** - Increase `.btn.icon` from 28px to 44px minimum
 3. **Server Performance** - Use `Promise.all` for parallel data loading
 4. **Hover Menus** - Make dropdowns accessible without hover state
 5. **Keyed Lists** - Add keys to `{#each}` blocks in QuickLinksWidget and RichText

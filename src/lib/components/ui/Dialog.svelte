@@ -77,7 +77,7 @@
                     dialog.focus();
                 }
             };
-            
+
             // Use requestAnimationFrame to ensure the DOM is ready
             requestAnimationFrame(focusDialog);
         }

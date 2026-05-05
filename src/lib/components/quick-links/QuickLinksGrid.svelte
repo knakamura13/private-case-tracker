@@ -84,8 +84,15 @@
     const fallbackFaviconCache = new Map<string, string>();
 
     $effect(() => {
-        const nextFolderOrder = folders.slice().sort((a, b) => a.order - b.order).map((folder) => folder.id);
-        const nextLinkOrder = links.filter((link) => !link.folderId).slice().sort((a, b) => a.order - b.order).map((link) => link.id);
+        const nextFolderOrder = folders
+            .slice()
+            .sort((a, b) => a.order - b.order)
+            .map((folder) => folder.id);
+        const nextLinkOrder = links
+            .filter((link) => !link.folderId)
+            .slice()
+            .sort((a, b) => a.order - b.order)
+            .map((link) => link.id);
         if (folderOrder.length === 0) folderOrder = nextFolderOrder;
         if (linkOrder.length === 0) linkOrder = nextLinkOrder;
         confirmedOrders.set('folder', nextFolderOrder);
@@ -104,7 +111,9 @@
             .filter((value): value is QuickLink => Boolean(value))
             .filter((value) => !value.folderId)
     );
-    const visibleFolders = $derived(folderOrder.map((id) => folderById.get(id)).filter((value): value is QuickLinkFolder => Boolean(value)));
+    const visibleFolders = $derived(
+        folderOrder.map((id) => folderById.get(id)).filter((value): value is QuickLinkFolder => Boolean(value))
+    );
     const _folderLinksMap = $derived(
         visibleFolders.reduce(
             (acc, folder) => {
@@ -269,10 +278,12 @@
     }
 
     function otherItems(kind: DragKind, activeId: string) {
-        return Array.from(document.querySelectorAll<HTMLElement>(`.ql-item[data-kind="${kind}"]:not([data-id="${activeId}"])`)).map((node) => {
-            const rect = node.getBoundingClientRect();
-            return { id: node.dataset.id ?? '', midX: rect.left + rect.width / 2, midY: rect.top + rect.height / 2 };
-        });
+        return Array.from(document.querySelectorAll<HTMLElement>(`.ql-item[data-kind="${kind}"]:not([data-id="${activeId}"])`)).map(
+            (node) => {
+                const rect = node.getBoundingClientRect();
+                return { id: node.dataset.id ?? '', midX: rect.left + rect.width / 2, midY: rect.top + rect.height / 2 };
+            }
+        );
     }
 
     function updateDrag(event: PointerEvent) {
@@ -374,12 +385,28 @@
         <div class="ql-item {dragState?.id === folder.id ? 'ql-item-placeholder' : ''}" data-kind="folder" data-id={folder.id} animate:flip>
             <div class="widget-item-menu-wrap" onclick={(e) => e.stopPropagation()} role="presentation">
                 <div class="widget-item-menu-inner">
-                    <ThreeDotsMenu menuId={`ql-folder-${folder.id}`} items={[{ label: 'Edit', icon: Edit, action: () => onEditFolder(folder) }, { label: 'Delete', icon: Trash2, variant: 'destructive', action: () => onDeleteFolder(folder) }]} />
+                    <ThreeDotsMenu
+                        menuId={`ql-folder-${folder.id}`}
+                        items={[
+                            { label: 'Edit', icon: Edit, action: () => onEditFolder(folder) },
+                            { label: 'Delete', icon: Trash2, variant: 'destructive', action: () => onDeleteFolder(folder) }
+                        ]}
+                    />
                 </div>
             </div>
-            <button type="button" class="ql-button" onclick={() => { if (wasDragging) return; openFolder(folder); }} onpointerdown={(e) => beginDrag(e, folder.id, 'folder')}>
+            <button
+                type="button"
+                class="ql-button"
+                onclick={() => {
+                    if (wasDragging) return;
+                    openFolder(folder);
+                }}
+                onpointerdown={(e) => beginDrag(e, folder.id, 'folder')}
+            >
                 <div class="ql-icon ql-icon--folder" style={`width: ${tileSize}px; height: ${tileSize}px;`}>
-                    <Folder style={`width: ${size === 'compact' ? 24 : 32}px; height: ${size === 'compact' ? 24 : 32}px; color: var(--lilac-d);`} />
+                    <Folder
+                        style={`width: ${size === 'compact' ? 24 : 32}px; height: ${size === 'compact' ? 24 : 32}px; color: var(--lilac-d);`}
+                    />
                 </div>
                 <span class="ql-label" style={`font-size: ${labelSize}px;`}>{folder.name || 'Untitled'}</span>
             </button>
@@ -390,15 +417,35 @@
         <div class="ql-item {dragState?.id === link.id ? 'ql-item-placeholder' : ''}" data-kind="link" data-id={link.id} animate:flip>
             <div class="widget-item-menu-wrap" onclick={(e) => e.stopPropagation()} role="presentation">
                 <div class="widget-item-menu-inner">
-                    <ThreeDotsMenu menuId={`ql-link-${link.id}`} items={[{ label: 'Edit', icon: Edit, action: () => onEditLink(link) }, { label: 'Delete', icon: Trash2, variant: 'destructive', action: () => onDeleteLink(link) }]} />
+                    <ThreeDotsMenu
+                        menuId={`ql-link-${link.id}`}
+                        items={[
+                            { label: 'Edit', icon: Edit, action: () => onEditLink(link) },
+                            { label: 'Delete', icon: Trash2, variant: 'destructive', action: () => onDeleteLink(link) }
+                        ]}
+                    />
                 </div>
             </div>
-            <button type="button" class="ql-button" onclick={() => { if (wasDragging) return; onOpenLink(link); }} onpointerdown={(e) => beginDrag(e, link.id, 'link')}>
+            <button
+                type="button"
+                class="ql-button"
+                onclick={() => {
+                    if (wasDragging) return;
+                    onOpenLink(link);
+                }}
+                onpointerdown={(e) => beginDrag(e, link.id, 'link')}
+            >
                 <div class="ql-icon ql-icon--link" style={`width: ${tileSize}px; height: ${tileSize}px;`}>
                     {#if brokenFavicons.has(link.id) || !(link.faviconUrl || preloadedFavicons.has(link.id))}
-                        <Link2 style={`width: ${size === 'compact' ? 24 : 32}px; height: ${size === 'compact' ? 24 : 32}px; color: var(--ink-3);`} />
+                        <Link2
+                            style={`width: ${size === 'compact' ? 24 : 32}px; height: ${size === 'compact' ? 24 : 32}px; color: var(--ink-3);`}
+                        />
                     {:else}
-                        <img src={faviconForLink(link)} alt="" style={`width: ${size === 'compact' ? 24 : 32}px; height: ${size === 'compact' ? 24 : 32}px; object-fit: contain;`} />
+                        <img
+                            src={faviconForLink(link)}
+                            alt=""
+                            style={`width: ${size === 'compact' ? 24 : 32}px; height: ${size === 'compact' ? 24 : 32}px; object-fit: contain;`}
+                        />
                     {/if}
                 </div>
                 <span class="ql-label" style={`font-size: ${labelSize}px;`}>{labelFor(link)}</span>
@@ -423,22 +470,38 @@
 
 {#if dragState}
     {@const item = dragState.item}
-    <div class="ql-ghost" style={`left: ${dragState.left}px; top: ${dragState.top}px; width: ${dragState.width}px; height: ${dragState.height}px;`}>
+    <div
+        class="ql-ghost"
+        style={`left: ${dragState.left}px; top: ${dragState.top}px; width: ${dragState.width}px; height: ${dragState.height}px;`}
+    >
         <div class="ql-ghost-card">
             <div class="ql-button" style="width: 100%; height: 100%;">
-                <div class="ql-icon {dragState.kind === 'folder' ? 'ql-icon--folder' : 'ql-icon--link'}" style={`width: ${tileSize}px; height: ${tileSize}px;`}>
+                <div
+                    class="ql-icon {dragState.kind === 'folder' ? 'ql-icon--folder' : 'ql-icon--link'}"
+                    style={`width: ${tileSize}px; height: ${tileSize}px;`}
+                >
                     {#if dragState.kind === 'folder'}
-                        <Folder style={`width: ${size === 'compact' ? 24 : 32}px; height: ${size === 'compact' ? 24 : 32}px; color: var(--lilac-d);`} />
+                        <Folder
+                            style={`width: ${size === 'compact' ? 24 : 32}px; height: ${size === 'compact' ? 24 : 32}px; color: var(--lilac-d);`}
+                        />
                     {:else}
                         {@const link = item as QuickLink}
                         {#if brokenFavicons.has(link.id) || !(link.faviconUrl || preloadedFavicons.has(link.id))}
-                            <Link2 style={`width: ${size === 'compact' ? 24 : 32}px; height: ${size === 'compact' ? 24 : 32}px; color: var(--ink-3);`} />
+                            <Link2
+                                style={`width: ${size === 'compact' ? 24 : 32}px; height: ${size === 'compact' ? 24 : 32}px; color: var(--ink-3);`}
+                            />
                         {:else}
-                            <img src={faviconForLink(link)} alt="" style={`width: ${size === 'compact' ? 24 : 32}px; height: ${size === 'compact' ? 24 : 32}px; object-fit: contain;`} />
+                            <img
+                                src={faviconForLink(link)}
+                                alt=""
+                                style={`width: ${size === 'compact' ? 24 : 32}px; height: ${size === 'compact' ? 24 : 32}px; object-fit: contain;`}
+                            />
                         {/if}
                     {/if}
                 </div>
-                <span class="ql-label" style={`font-size: ${labelSize}px;`}>{dragState.kind === 'folder' ? (item as QuickLinkFolder).name || 'Untitled' : labelFor(item as QuickLink)}</span>
+                <span class="ql-label" style={`font-size: ${labelSize}px;`}
+                    >{dragState.kind === 'folder' ? (item as QuickLinkFolder).name || 'Untitled' : labelFor(item as QuickLink)}</span
+                >
             </div>
         </div>
     </div>
