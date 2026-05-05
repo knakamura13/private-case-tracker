@@ -541,6 +541,21 @@
         flex-direction: column;
         align-items: center;
         gap: 8px;
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .ql-button:hover {
+        transform: translateY(-2px);
+    }
+    .ql-button:hover .ql-icon--folder {
+        background: var(--lilac-light);
+    }
+    .ql-button:hover .ql-icon--link {
+        background: var(--surface-3);
+    }
+    .ql-button:hover .ql-icon--add-link,
+    .ql-button:hover .ql-icon--add-folder {
+        background: var(--surface-4);
+        border-color: var(--ink-3);
     }
     .ql-icon {
         display: flex;
