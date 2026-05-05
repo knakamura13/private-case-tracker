@@ -1,6 +1,7 @@
 <script lang="ts">
     import { flip } from 'svelte/animate';
     import { onDestroy } from 'svelte';
+    import { browser } from '$app/environment';
     import { invalidateAll } from '$app/navigation';
     import { showErrorToast } from '$lib/stores/toast';
     import { Folder, Link2, Plus, Edit, Trash2 } from 'lucide-svelte';
@@ -216,9 +217,11 @@
 
     function clearDrag() {
         dragState = null;
-        document.body.style.removeProperty('user-select');
-        window.removeEventListener('pointermove', handlePointerMove);
-        window.removeEventListener('pointerup', handlePointerUp);
+        if (browser) {
+            document.body.style.removeProperty('user-select');
+            window.removeEventListener('pointermove', handlePointerMove);
+            window.removeEventListener('pointerup', handlePointerUp);
+        }
         setTimeout(() => {
             wasDragging = false;
         }, 0);

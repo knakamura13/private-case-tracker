@@ -6,7 +6,6 @@
 <main class="error-page">
     <div class="error-page__intro">
         <p class="error-page__status">Error {page.status}</p>
-        <p class="error-page__hint">This is a private organizational dashboard. If this error persists, let your workspace owner know.</p>
     </div>
 
     <ErrorDetails
