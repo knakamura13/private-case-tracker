@@ -12,6 +12,9 @@
     import { PHASE_LABELS } from '$lib/constants/phases';
     import { enhance } from '$app/forms';
     import type { SubmitFunction } from '@sveltejs/kit';
+    import ThreeDotsMenu from '$lib/components/ui/ThreeDotsMenu.svelte';
+    import { Trash2 } from 'lucide-svelte';
+    import { showSuccessToast, showErrorToast } from '$lib/stores/toast';
 
     let {
         mode,
@@ -90,6 +93,51 @@
 
     let dueDateInputEl = $state<HTMLInputElement | null>(null);
     let scheduledAtInputEl = $state<HTMLInputElement | null>(null);
+
+    async function handleDelete() {
+        const id = val('id');
+        if (!id) return;
+
+        // Close immediately
+        void onClose();
+
+        try {
+            const formData = new FormData();
+            formData.set('id', id);
+
+            const response = await fetch(`${action.split('?')[0]}?/delete`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const text = await response.text();
+            let result;
+            try {
+                result = JSON.parse(text);
+            } catch {
+                showErrorToast('Failed to delete milestone');
+                return;
+            }
+
+            if (result.type === 'success' || (result.type === 'redirect' && !result.error)) {
+                showSuccessToast('Milestone deleted');
+            } else {
+                const data = result.data ? (typeof result.data === 'string' ? JSON.parse(result.data) : result.data) : {};
+                showErrorToast(data.error || 'Failed to delete milestone');
+            }
+        } catch (e) {
+            showErrorToast('Failed to delete milestone');
+        }
+    }
+
+    const menuItems = $derived([
+        {
+            label: 'Delete',
+            icon: Trash2,
+            variant: 'destructive' as const,
+            action: handleDelete
+        }
+    ]);
 
     $effect(() => {
         if (open) {
@@ -197,18 +245,21 @@
 {/snippet}
 
 {#snippet milestoneEditHeader()}
+    <span class="pill s-note">{PHASE_LABELS[phaseValue as keyof typeof PHASE_LABELS]}</span>
+    <Select
+        id="milestone-status"
+        bind:value={statusValue}
+        options={milestoneStatusOptions}
+        ariaLabel="Milestone status"
+        size="sm"
+        menuClass="dropdown-menu--min-12rem"
+        triggerClass={`milestone-status-trigger ${milestoneStatusPillClass(statusValue)}`}
+    />
+{/snippet}
+
+{#snippet milestoneHeaderActions()}
     {#if mode === 'edit'}
-        <Select
-            id="milestone-status"
-            bind:value={statusValue}
-            options={milestoneStatusOptions}
-            ariaLabel="Milestone status"
-            size="sm"
-            menuClass="dropdown-menu--min-12rem"
-            triggerClass={`milestone-status-trigger ${milestoneStatusPillClass(statusValue)}`}
-        />
-    {:else}
-        <span class="pill s-note">{PHASE_LABELS[phaseValue as keyof typeof PHASE_LABELS]}</span>
+        <ThreeDotsMenu items={menuItems} menuId="milestone-options" />
     {/if}
 {/snippet}
 
@@ -258,15 +309,10 @@
         </form>
     </Dialog>
 {:else}
-    <Dialog {open} {onClose} ariaLabel="Edit milestone" header={milestoneEditHeader} footer={milestoneEditFooter}>
+    <Dialog {open} {onClose} ariaLabel="Edit milestone" header={milestoneEditHeader} headerActions={milestoneHeaderActions} footer={milestoneEditFooter}>
         <form id="milestone-edit-form" method="post" {action} use:enhance={submitEnhance!} class="modal-form">
             <div class="modal-title-row">
                 <Input name="title" bind:value={titleValue} class="modal-title-input display" placeholder="Milestone title" />
-            </div>
-
-            <div class="modal-metadata-item">
-                <span class="modal-metadata-label">Phase</span>
-                <span class="modal-metadata-value">{PHASE_LABELS[phaseValue as keyof typeof PHASE_LABELS]}</span>
             </div>
 
             {@render milestoneInlinePickers()}
