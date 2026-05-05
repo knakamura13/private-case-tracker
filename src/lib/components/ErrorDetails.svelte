@@ -5,9 +5,19 @@
     export let requestId: string | undefined = undefined;
     export let stack: string | undefined = undefined;
 
-    async function copy(text: string) {
+    async function copyError() {
+        let errorReport = '## Error Details\n';
+        errorReport += '- **Status**: ' + (status || 'Unknown') + '\n';
+        errorReport += '- **Message**: ' + message + '\n';
+        errorReport += '- **Error ID**: ' + (errorId || 'Unknown') + '\n';
+        errorReport += '- **Request ID**: ' + (requestId || 'Unknown') + '\n';
+
+        if (stack) {
+            errorReport += '\n## Error Stack Trace\n\n```\n' + stack + '\n```';
+        }
+
         try {
-            await navigator.clipboard.writeText(text);
+            await navigator.clipboard.writeText(errorReport);
         } catch {
             // ignore
         }
@@ -35,7 +45,7 @@
         </div>
 
         {#if errorId}
-            <button type="button" class="error-details__copy" onclick={() => copy(errorId)}> Copy error ID </button>
+            <button type="button" class="error-details__copy" onclick={() => copyError()}> Copy error </button>
         {/if}
     </div>
 
