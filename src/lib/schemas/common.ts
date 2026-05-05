@@ -22,6 +22,7 @@ export const optionalDateLoose = z
 export const optionalDateOnly = z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD')
+    .or(z.string().length(0))
     .optional()
     .nullable()
     .transform((v) => (v && v.length ? new Date(v + 'T00:00:00') : null));

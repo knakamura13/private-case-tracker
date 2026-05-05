@@ -34,7 +34,7 @@
         onenhance?: SubmitFunction | ManualEnhanceHandler;
     } = $props();
 
-    const submitEnhance = $derived(mode === 'create' ? (onenhance as SubmitFunction | undefined) : undefined);
+    const submitEnhance = $derived(onenhance as SubmitFunction | undefined);
 
     const MILESTONE_ALLOWED = [
         'id',
@@ -231,7 +231,7 @@
     </Dialog>
 {:else}
     <Dialog {open} {onClose} ariaLabel="Edit milestone" header={milestoneEditHeader} footer={milestoneEditFooter}>
-        <form id="milestone-edit-form" method="post" {action} class="modal-form">
+        <form id="milestone-edit-form" method="post" {action} use:enhance={submitEnhance!} class="modal-form">
             <div class="modal-title-row">
                 <Input name="title" bind:value={titleValue} class="modal-title-input display" placeholder="Milestone title" />
             </div>
@@ -251,7 +251,6 @@
             <TaskChecklistEditor bind:items={editableSubTasks} />
 
             {#if error}<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />{/if}
-            <input type="hidden" name="description" value={descriptionValue} />
             <input type="hidden" name="subTasks" value={subTasksJson} />
             <input type="hidden" name="id" value={val('id')} />
             <input type="hidden" name="dueDate" value={dueDateValue} bind:this={dueDateInputEl} />

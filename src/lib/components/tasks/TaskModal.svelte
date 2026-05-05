@@ -34,7 +34,7 @@
         onenhance?: SubmitFunction | ManualEnhanceHandler;
     } = $props();
 
-    const submitEnhance = $derived(mode === 'create' ? (onenhance as SubmitFunction | undefined) : undefined);
+    const submitEnhance = $derived(onenhance as SubmitFunction | undefined);
 
     const TASK_ALLOWED = ['id', 'title', 'description', 'status', 'priority', 'dueDate', 'checklist'] as const;
 
@@ -104,7 +104,6 @@
             </div>
 
             <div class="modal-description-section">
-                <input type="hidden" name="description" value={descriptionValue} />
                 <Textarea
                     name="description"
                     bind:value={descriptionValue}
@@ -132,7 +131,7 @@
                         <option value="LOW">Low</option>
                         <option value="MEDIUM">Medium</option>
                         <option value="HIGH">High</option>
-                        <option value="URGENT">Urgent</option>
+                        <option value="CRITICAL">Urgent</option>
                     </select>
                 </div>
             </div>
@@ -149,7 +148,7 @@
     </Dialog>
 {:else}
     <Dialog {open} {onClose} ariaLabel="Edit task" header={taskHeader} footer={taskEditFooter}>
-        <form id="task-edit-form" method="post" {action} class="modal-form">
+        <form id="task-edit-form" method="post" {action} use:enhance={submitEnhance!} class="modal-form">
             <div class="modal-title-row">
                 <Input name="title" bind:value={titleValue} class="modal-title-input display" placeholder="Task title" />
             </div>
@@ -182,7 +181,7 @@
                         <option value="LOW">Low</option>
                         <option value="MEDIUM">Medium</option>
                         <option value="HIGH">High</option>
-                        <option value="URGENT">Urgent</option>
+                        <option value="CRITICAL">Urgent</option>
                     </select>
                 </div>
             </div>
@@ -193,7 +192,6 @@
             </div>
 
             {#if error}<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />{/if}
-            <input type="hidden" name="description" value={descriptionValue} />
             <input type="hidden" name="checklist" value={checklistJson} />
             <input type="hidden" name="id" value={val('id')} />
         </form>
