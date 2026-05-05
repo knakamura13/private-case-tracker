@@ -7,11 +7,14 @@
     import ErrorDetails from '$lib/components/ErrorDetails.svelte';
     import TaskChecklistEditor from '$lib/components/tasks/TaskChecklistEditor.svelte';
     import { fieldFromInitial } from '$lib/utils/initialFields';
-    import { taskStatusLabel, taskStatusPillClass } from '$lib/tasks/taskStatusDisplay';
+    import { taskStatusPillClass } from '$lib/tasks/taskStatusDisplay';
     import { parseTaskChecklist, type TaskChecklistItem } from '$lib/tasks/taskChecklist';
     import type { ManualEnhanceHandler } from '$lib/utils/enhanceSubmit';
     import { enhance } from '$app/forms';
     import type { SubmitFunction } from '@sveltejs/kit';
+    import ThreeDotsMenu from '$lib/components/ui/ThreeDotsMenu.svelte';
+    import { Trash2 } from 'lucide-svelte';
+    import { showSuccessToast, showErrorToast } from '$lib/stores/toast';
 
     let {
         mode,
@@ -60,7 +63,52 @@
     let priorityValue = $state('MEDIUM');
 
     const statusPillClass = $derived(() => taskStatusPillClass(statusValue));
-    const statusLabel = $derived(() => taskStatusLabel(statusValue));
+
+    async function handleDelete() {
+        const id = val('id');
+        if (!id) return;
+
+        // Close immediately
+        void onClose();
+
+        try {
+            const formData = new FormData();
+            formData.set('id', id);
+
+            const response = await fetch(`${action.split('?')[0]}?/delete`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const text = await response.text();
+            let result;
+            try {
+                result = JSON.parse(text);
+            } catch {
+                // SvelteKit might return a non-JSON response in some error cases
+                showErrorToast('Failed to delete task');
+                return;
+            }
+
+            if (result.type === 'success' || (result.type === 'redirect' && !result.error)) {
+                showSuccessToast('Task deleted');
+            } else {
+                const data = result.data ? (typeof result.data === 'string' ? JSON.parse(result.data) : result.data) : {};
+                showErrorToast(data.error || 'Failed to delete task');
+            }
+        } catch (e) {
+            showErrorToast('Failed to delete task');
+        }
+    }
+
+    const menuItems = $derived([
+        {
+            label: 'Delete',
+            icon: Trash2,
+            variant: 'destructive' as const,
+            action: handleDelete
+        }
+    ]);
 
     $effect(() => {
         if (open) {
@@ -84,18 +132,20 @@
 </script>
 
 {#snippet taskHeader()}
+    <Select
+        id="task-status"
+        bind:value={statusValue}
+        options={taskStatusOptions}
+        ariaLabel="Task status"
+        size="sm"
+        menuClass="dropdown-menu--min-12rem"
+        triggerClass={`task-status-trigger ${statusPillClass()}`}
+    />
+{/snippet}
+
+{#snippet taskHeaderActions()}
     {#if mode === 'edit'}
-        <Select
-            id="task-status"
-            bind:value={statusValue}
-            options={taskStatusOptions}
-            ariaLabel="Task status"
-            size="sm"
-            menuClass="dropdown-menu--min-12rem"
-            triggerClass={`task-status-trigger ${statusPillClass()}`}
-        />
-    {:else}
-        <span class="pill {statusPillClass()}">{statusLabel()}</span>
+        <ThreeDotsMenu items={menuItems} menuId="task-options" />
     {/if}
 {/snippet}
 
@@ -117,6 +167,8 @@
         submitClass="modal-footer-save"
     >
         <form id="task-create-form" method="post" {action} use:enhance={submitEnhance!} class="modal-form">
+            <input type="hidden" name="status" value={statusValue} />
+            <input type="hidden" name="priority" value={priorityValue} />
             <input type="hidden" name="checklist" value={checklistJson} />
 
             <div class="modal-title-row">
@@ -135,27 +187,6 @@
 
             <TaskChecklistEditor bind:items={editableChecklist} />
 
-            <div class="modal-metadata-grid">
-                <div class="modal-metadata-item">
-                    <label class="modal-metadata-label" for="status">Status</label>
-                    <select name="status" id="status" bind:value={statusValue} class="input">
-                        <option value="TODO">This week</option>
-                        <option value="IN_PROGRESS">Soon</option>
-                        <option value="WAITING">Waiting</option>
-                        <option value="DONE">Done</option>
-                    </select>
-                </div>
-                <div class="modal-metadata-item">
-                    <label class="modal-metadata-label" for="priority">Priority</label>
-                    <select name="priority" id="priority" bind:value={priorityValue} class="input">
-                        <option value="LOW">Low</option>
-                        <option value="MEDIUM">Medium</option>
-                        <option value="HIGH">High</option>
-                        <option value="CRITICAL">Urgent</option>
-                    </select>
-                </div>
-            </div>
-
             <div class="modal-metadata-item">
                 <label class="modal-metadata-label" for="dueDate">Due Date</label>
                 <Input name="dueDate" id="dueDate" type="date" bind:value={dueDateValue} />
@@ -167,8 +198,13 @@
         </form>
     </Dialog>
 {:else}
-    <Dialog {open} {onClose} ariaLabel="Edit task" header={taskHeader} footer={taskEditFooter}>
+    <Dialog {open} {onClose} ariaLabel="Edit task" header={taskHeader} headerActions={taskHeaderActions} footer={taskEditFooter}>
         <form id="task-edit-form" method="post" {action} use:enhance={submitEnhance!} class="modal-form">
+            <input type="hidden" name="status" value={statusValue} />
+            <input type="hidden" name="priority" value={priorityValue} />
+            <input type="hidden" name="checklist" value={checklistJson} />
+            <input type="hidden" name="id" value={val('id')} />
+
             <div class="modal-title-row">
                 <Input name="title" bind:value={titleValue} class="modal-title-input display" placeholder="Task title" />
             </div>
@@ -185,35 +221,12 @@
 
             <TaskChecklistEditor bind:items={editableChecklist} />
 
-            <div class="modal-metadata-grid">
-                <div class="modal-metadata-item">
-                    <label class="modal-metadata-label" for="edit-status">Status</label>
-                    <select name="status" id="edit-status" bind:value={statusValue} class="input">
-                        <option value="TODO">This week</option>
-                        <option value="IN_PROGRESS">Soon</option>
-                        <option value="WAITING">Waiting</option>
-                        <option value="DONE">Done</option>
-                    </select>
-                </div>
-                <div class="modal-metadata-item">
-                    <label class="modal-metadata-label" for="edit-priority">Priority</label>
-                    <select name="priority" id="edit-priority" bind:value={priorityValue} class="input">
-                        <option value="LOW">Low</option>
-                        <option value="MEDIUM">Medium</option>
-                        <option value="HIGH">High</option>
-                        <option value="CRITICAL">Urgent</option>
-                    </select>
-                </div>
-            </div>
-
             <div class="modal-metadata-item">
                 <label class="modal-metadata-label" for="edit-dueDate">Due Date</label>
                 <Input name="dueDate" id="edit-dueDate" type="date" bind:value={dueDateValue} />
             </div>
 
             {#if error}<ErrorDetails status={400} message={error} errorId={errorId ?? undefined} />{/if}
-            <input type="hidden" name="checklist" value={checklistJson} />
-            <input type="hidden" name="id" value={val('id')} />
         </form>
     </Dialog>
 {/if}
