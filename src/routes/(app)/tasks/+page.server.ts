@@ -15,7 +15,9 @@ export const load: PageServerLoad = async (event) => {
 
     return {
         tasks,
-        members: members.map((m) => ({ id: m.user.id, name: m.user.name, email: m.user.email }))
+        members: members.map((m) => ({ id: m.user.id, name: m.user.name, email: m.user.email })),
+        // Add timestamp to indicate fresh data
+        timestamp: Date.now()
     };
 };
 

@@ -7,6 +7,14 @@
     import type { PageData } from './$types';
 
     let { data }: { data: PageData } = $props();
+
+    // Pre-fetch tasks data for instant navigation
+    $effect(() => {
+        if (data.tasksPreview && data.tasksPreview.length > 0) {
+            // Store timestamp to indicate pre-fetched data is available
+            sessionStorage.setItem('prefetched-tasks-timestamp', Date.now().toString());
+        }
+    });
 </script>
 
 <PageHeader title="Overview" number={getPageNumber('/dashboard')} sub="Welcome back. Here is what is happening with your case today." />
@@ -43,7 +51,19 @@
             {#snippet children()}
                 <div class="task-list">
                     {#each data.tasksPreview as task}
-                        <div class="task-item">
+                        <div 
+                            class="task-item"
+                            role="button"
+                            tabindex="0"
+                            aria-label={`Task: ${task.title}`}
+                            onclick={() => window.location.href = `/tasks?edit=${task.id}`}
+                            onkeydown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    window.location.href = `/tasks?edit=${task.id}`;
+                                }
+                            }}
+                        >
                             <CheckSquare size={18} style="color: var(--ink-3);" />
                             <div class="task-info">
                                 <div class="task-title">{task.title}</div>
@@ -128,6 +148,11 @@
         padding: 12px;
         background: var(--surface-2);
         border-radius: var(--r-md);
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+    .task-item:hover {
+        background: var(--surface-3);
     }
     .countdown-list {
         gap: 16px;

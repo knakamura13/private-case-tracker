@@ -21,6 +21,22 @@
     const editParam = $derived(page.url.searchParams.get('edit'));
     const editingTask = $derived(editParam && data.tasks.some((t) => t.id === editParam) ? { id: editParam } : null);
 
+    // Check if we're coming from dashboard with pre-fetched data
+    let _isFromDashboard = $state(false);
+    let _showInstantDialog = $state(false);
+    
+    $effect(() => {
+        const timestamp = sessionStorage.getItem('prefetched-tasks-timestamp');
+        
+        if (timestamp && editParam) {
+            // Show dialog instantly while data loads in background
+            _isFromDashboard = true;
+            _showInstantDialog = true;
+            // Clear the flag after using it
+            sessionStorage.removeItem('prefetched-tasks-timestamp');
+        }
+    });
+
     // Drag and drop state
     let draggingId = $state<string | null>(null);
     let dropTargetId = $state<string | null>(null);
@@ -301,7 +317,7 @@
 
         const currentColumnIdx = COLUMNS.findIndex((c) => c.id === activeTask.status);
         const currentColumn = grouped[currentColumnIdx];
-        if (!currentColumn) return;
+        if (!currentColumn || currentColumnIdx === -1) return;
 
         const allTasks = [...data.tasks];
         const currentTaskIdx = currentColumn.tasks.findIndex((t) => t.id === taskId);
@@ -311,7 +327,9 @@
             case 'ArrowRight': {
                 event.preventDefault();
                 if (currentColumnIdx >= COLUMNS.length - 1) return;
-                const targetStatus = COLUMNS[currentColumnIdx + 1].id;
+                const nextColumn = COLUMNS[currentColumnIdx + 1];
+                if (!nextColumn) return;
+                const targetStatus = nextColumn.id;
                 const sourceColumnTasks = allTasks.filter((t) => t.status === activeTask.status).sort((a, b) => a.order - b.order);
                 sourceColumnTasks.forEach((t, idx) => {
                     if (t.id !== taskId) {
@@ -323,13 +341,15 @@
                 targetColumnTasks.forEach((t, idx) => {
                     updates.push({ id: t.id, status: t.status, order: idx });
                 });
-                liveRegionMessage = `Moved "${activeTask.title}" to ${COLUMNS[currentColumnIdx + 1].label}`;
+                liveRegionMessage = `Moved "${activeTask.title}" to ${nextColumn.label}`;
                 break;
             }
             case 'ArrowLeft': {
                 event.preventDefault();
                 if (currentColumnIdx <= 0) return;
-                const targetStatus = COLUMNS[currentColumnIdx - 1].id;
+                const prevColumn = COLUMNS[currentColumnIdx - 1];
+                if (!prevColumn) return;
+                const targetStatus = prevColumn.id;
                 const sourceColumnTasks = allTasks.filter((t) => t.status === activeTask.status).sort((a, b) => a.order - b.order);
                 sourceColumnTasks.forEach((t, idx) => {
                     if (t.id !== taskId) {
@@ -341,7 +361,7 @@
                 targetColumnTasks.forEach((t, idx) => {
                     updates.push({ id: t.id, status: t.status, order: idx });
                 });
-                liveRegionMessage = `Moved "${activeTask.title}" to ${COLUMNS[currentColumnIdx - 1].label}`;
+                liveRegionMessage = `Moved "${activeTask.title}" to ${prevColumn.label}`;
                 break;
             }
             case 'ArrowDown': {
@@ -393,7 +413,7 @@
 
 <PageHeader title="Tasks" sub="Personal todos and errands (not legal proceedings)." number={getPageNumber('/tasks')} />
 
-<div class="tasks-board" bind:this={scrollContainer} ontouchmove={handleTouchMove}>
+<div class="tasks-board" bind:this={scrollContainer} ontouchmove={handleTouchMove} role="application">
     {#each grouped as column (column.id)}
         <div class="tasks-column">
             <div class="tasks-column-header">
@@ -411,7 +431,8 @@
                 aria-dropeffect="move"
             >
                 {#each column.tasks as task (task.id)}
-                    <div onkeydown={(e) => handleTaskKeydown(e, task.id)}>
+                    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+                    <div role="group" aria-label={`Task actions for ${task.title}`} onkeydown={(e) => handleTaskKeydown(e, task.id)}>
                         <TaskCard
                             {task}
                             onEdit={async (id: string) => {
