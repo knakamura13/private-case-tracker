@@ -4,15 +4,15 @@
     import { afterNavigate } from '$app/navigation';
     let { children } = $props();
 
-    if (typeof window !== 'undefined') {
-        afterNavigate(() => {
+    afterNavigate(() => {
+        if (typeof window !== 'undefined') {
             window.scrollTo(0, 0);
             const main = document.getElementById('main');
             if (main) {
                 main.scrollTo(0, 0);
             }
-        });
-    }
+        }
+    });
 </script>
 
 <Toaster richColors position="top-right" />

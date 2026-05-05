@@ -1,7 +1,5 @@
 <script lang="ts">
     import { flip } from 'svelte/animate';
-    import { onDestroy } from 'svelte';
-    import { browser } from '$app/environment';
     import { invalidateAll } from '$app/navigation';
     import { showErrorToast } from '$lib/stores/toast';
     import { Folder, Link2, Plus, Edit, Trash2 } from 'lucide-svelte';
@@ -226,7 +224,7 @@
 
     function clearDrag() {
         dragState = null;
-        if (browser) {
+        if (typeof document !== 'undefined') {
             document.body.style.removeProperty('user-select');
             window.removeEventListener('pointermove', handlePointerMove);
             window.removeEventListener('pointerup', handlePointerUp);
@@ -294,7 +292,8 @@
             top: clamp(event.clientY - dragState.offsetY, dragState.gridTop, dragState.gridBottom - dragState.height)
         };
         const candidates = otherItems(dragState.kind, dragState.id);
-        const target = candidates.find((item) => event.clientY < item.midY || event.clientX < item.midX) ?? candidates.at(-1);
+        const target =
+            candidates.find((item) => event.clientY < item.midY || event.clientX < item.midX) ?? candidates.at(-1);
         if (!target || target.id === dragState.id) return;
         const current = orderedIds(dragState.kind);
         const from = current.indexOf(dragState.id);
@@ -375,8 +374,10 @@
         onOpenFolder?.(folder);
     }
 
-    onDestroy(() => clearDrag());
-</script>
+    $effect(() => {
+        return () => clearDrag();
+    });
+    </script>
 
 <div aria-live="polite" aria-atomic="true" class="sr-only">{liveRegionMessage}</div>
 
