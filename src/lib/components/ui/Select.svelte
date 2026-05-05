@@ -247,6 +247,7 @@
         text-align: left;
         border: none;
         background: transparent;
+        white-space: nowrap;
     }
 
     .select-item:hover,
