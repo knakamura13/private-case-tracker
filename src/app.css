@@ -1031,6 +1031,7 @@ button.modal-checklist-text-btn {
     color: var(--ink);
     transition: all 150ms ease;
     width: 100%;
+    resize: none;
 }
 
 /* Add cursor pointer to select elements */
